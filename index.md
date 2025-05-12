@@ -4,6 +4,8 @@ title: Willkommen auf meiner Spielwiese für strukturierte Dokumente
 
 Ich erprobe Methoden für die Erstellung strukturierter Dokumente und
 deren Veröffentlichung in unterschiedlichen Formaten (HTML und PDF).
+Vieles ist durch meine berufliche Tätigkeit in der
+[KoSIT](https://www.xoev.de) motiviert.
 
 ## Strukturierte Dokumente schreiben …
 
@@ -40,11 +42,12 @@ Lesen.
 
 ## Dokumente
 
-- Das [Handbuch](handbuch/index.html) beschreibt den Umgang mit
-  strukturierten Dokumenten im Detail.
+- Das **Handbuch** ([HTML](handbuch/index.html)
+  [PDF](handbuch/handbuch.pdf)) beschreibt den Umgang mit
+  strukturierten Dokumenten in der KoSIT im Detail.
 
 ## Disclaimer {#disclaimer}
 Dies ist eine private Webseite, die ich ausschließlich mit dem Ziel
 meiner eigenen Fortbildung in technischen Fragestellungen
-betreibe. Ich bin per EMail an [frank.steimke (at) gmail.com]{.mono}
+betreibe. Ich bin per EMail an `frank.steimke (at) gmail.com`
 erreichbar.

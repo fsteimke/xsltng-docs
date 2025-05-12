@@ -5,7 +5,7 @@ title: Willkommen auf meiner Spielwiese für strukturierte Dokumente
 Ich erprobe Methoden für die Erstellung strukturierter Dokumente und
 deren Veröffentlichung in unterschiedlichen Formaten (HTML und PDF).
 
-## Strukturierte Dokumente schreiben und veröffentlichen
+## Strukturierte Dokumente schreiben …
 
 Die Dokumente werden im Format [DocBook
 5.2](https://tdg.docbook.org/tdg/5.2/) erstellt. Grundsätzlich könnten
@@ -24,7 +24,7 @@ dem [XÖV
 Rahmenwerk](https://www.xoev.de/xoev/xoev-produkte/xoev-handbuch-5060)
 automatisch generiert.
 
-### veröffentlichen
+### … und veröffentlichen
 Veröffentlichungsreife Formate (HTML und PDF) werden mit den [xslTNG
 Stylesheets](https://xsltng.docbook.org/) und dem [DocBook tng Framework
 für Oxygen](https://projekte.kosit.org/steimke/xsltng-kosit/) erstellt.
@@ -38,9 +38,13 @@ der Praxis ist wahrscheinlich beides erforderlich: HTML im Browser für
 die schnelle und leichtgewichtige Information, PDF für sequentielles
 Lesen. 
 
-::: {#disclaimer}
-© Frank Steimke, Bremen. Dies ist eine private Webseite, die
-ausschließlich mit dem Ziel meiner eigenen Fortbildung in technischen
-Fragestellungen betrieben wird. Ich bin per EMail an [frank.steimke (at)
-gmail.com]{.mono} erreichbar.
-:::
+## Dokumente
+
+- Das [Handbuch](handbuch/index.html) beschreibt den Umgang mit
+  strukturierten Dokumenten im Detail.
+
+## Disclaimer {#disclaimer}
+Dies ist eine private Webseite, die ich ausschließlich mit dem Ziel
+meiner eigenen Fortbildung in technischen Fragestellungen
+betreibe. Ich bin per EMail an [frank.steimke (at) gmail.com]{.mono}
+erreichbar.

@@ -51,9 +51,10 @@ Darüberhinaus gibt es eine *experimentelle* Unterstützung für Office Formate.
 
 ## Dokumente
 
-- Das **Handbuch** ([HTML](handbuch/index.html)
-  | [PDF](handbuch/handbuch.pdf)) beschreibt den Umgang mit
-  strukturierten Dokumenten in der KoSIT im Detail.
+- Das **Handbuch** ([HTML](handbuch/index.html) |
+  [PDF](handbuch/handbuch.pdf)) wird irgendwnn den Umgang mit
+  strukturierten Dokumenten im Detail beschreiben. Derzeit ist es nur
+  eine Sammlung von Textfragmenten.
 
 ## Disclaimer
 Dies ist eine private Webseite, die ich ausschließlich mit dem Ziel

@@ -15,7 +15,7 @@ innerhalb der KoSIT: das [DocBook tng Framework für
 Oxygen](https://projekte.kosit.org/steimke/xsltng-kosit/) im
 KoSIT-internen GitLab.
 
-## Strukturierte Dokumente schreiben …
+## Strukturierte Dokumente schreiben und veröffentlichen
 
 Die Dokumente werden im Format [DocBook
 5.2](https://tdg.docbook.org/tdg/5.2/) erstellt. Grundsätzlich könnten
@@ -38,13 +38,17 @@ dem [XÖV
 Rahmenwerk](https://www.xoev.de/xoev/xoev-produkte/xoev-handbuch-5060)
 automatisch generiert.
 
-### … und veröffentlichen
 Veröffentlichungsreife Formate (HTML und PDF) werden mit den [xslTNG
-Stylesheets](https://xsltng.docbook.org/) und dem *DocBook tng Framework für Oxygen* erstellt.
-Sie generieren *clean, semantically rich HTML5*.  [Chunked HTML](https://xsltng.docbook.org/guide/2.1.9/ch-using#chunking)
-für umfangreiche Dokumente wird unterstützt. Die Veröffentlichung kann
+Stylesheets](https://xsltng.docbook.org/) und dem *DocBook tng
+Framework für Oxygen* erstellt.  Sie generieren *clean, semantically
+rich HTML5*.  [Chunked
+HTML](https://xsltng.docbook.org/guide/2.1.9/ch-using#chunking) für
+umfangreiche Dokumente wird unterstützt. Die Veröffentlichung kann
 sowohl innerhalb der Oxygen IDE mit Transformationsszenarien erfolgen,
-oder vollautomatisiert (derzeit mittels eines bash Scripts).
+oder vollautomatisiert mit [XPROC 3](https://xproc.org/), [XML
+Calabash 3](https://docs.xmlcalabash.com/) (und ich gehe jede Wette
+ein, dass Norman Walsh die Dokumentation mit xslTNG erstellt hat
+&#x1F601;), sowie [bash](https://de.wikipedia.org/wiki/Bash_(Shell)).
 
 Für die Veröffentlichung im PDF Format stehen drei Möglichkeiten zur
 Verfügung:

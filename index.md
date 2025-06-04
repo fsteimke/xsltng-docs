@@ -7,6 +7,14 @@ deren Veröffentlichung in unterschiedlichen Formaten (HTML und PDF).
 Vieles ist durch meine berufliche Tätigkeit in der
 [KoSIT](https://www.xoev.de) motiviert.
 
+Das zentrale Ergebnis meiner Arbeiten ist das "DocBook tng Framework
+für Oxygen". Es basiert auf den [xslTNG
+Stylesheets](https://xsltng.docbook.org/) von Norman Walsh. Der
+folgende Link zum Bezug des Framework funktioniert derzeit nur
+innerhalb der KoSIT: das [DocBook tng Framework für
+Oxygen](https://projekte.kosit.org/steimke/xsltng-kosit/) im
+KoSIT-internen GitLab.
+
 ## Strukturierte Dokumente schreiben …
 
 Die Dokumente werden im Format [DocBook
@@ -32,17 +40,17 @@ automatisch generiert.
 
 ### … und veröffentlichen
 Veröffentlichungsreife Formate (HTML und PDF) werden mit den [xslTNG
-Stylesheets](https://xsltng.docbook.org/) und dem [DocBook tng Framework
-für Oxygen](https://projekte.kosit.org/steimke/xsltng-kosit/) erstellt.
-Die xslTNG Stylesheets generieren *clean, semantically rich HTML5*.
-[Chunked
-HTML](https://xsltng.docbook.org/guide/2.1.9/ch-using#chunking) für
-umfangreiche Dokumente wird unterstützt.
+Stylesheets](https://xsltng.docbook.org/) und dem *DocBook tng Framework für Oxygen* erstellt.
+Sie generieren *clean, semantically rich HTML5*.  [Chunked HTML](https://xsltng.docbook.org/guide/2.1.9/ch-using#chunking)
+für umfangreiche Dokumente wird unterstützt. Die Veröffentlichung kann
+sowohl innerhalb der Oxygen IDE mit Transformationsszenarien erfolgen,
+oder vollautomatisiert (derzeit mittels eines bash Scripts).
 
-Für PDF stehen drei Möglichkeiten zur Verfügung:
+Für die Veröffentlichung im PDF Format stehen drei Möglichkeiten zur
+Verfügung:
 
 * [Oxygen PDF Chemistry](https://www.oxygenxml.com/chemistry-html-to-pdf-converter.html) ist im Lieferumfang des [Oxygen XML
-Editor](https://www.oxygenxml.com/xml_editor.html) enthalten;
+Editor](https://www.oxygenxml.com/xml_editor.html) enthalten, und wird genutzt wenn man ausschließlich ;
 * [Antenna House
 Formatter](https://www.antennahouse.com/formatter-v7) ist eine kommerzielle *PDF Rendering Engine*;
 * [Weasyprint](https://weasyprint.org) ist eine kostenfreie *PDF Rendering Engine*.
@@ -51,12 +59,37 @@ Darüberhinaus gibt es eine *experimentelle* Unterstützung für Office Formate.
 
 ## Dokumente
 
+- Der **Datensatz für das Meldewesen** ([HTML](dsmeld/index.html) |
+  [PDF](dsmeld/dsmeld.pdf)) wird von der KoSIT herausgegeben. Im
+  Gegensatz zur offiziellen Fassung sind die einzelnen DSMeld-Blätter
+  jeweils als [DocBook Reference
+  Page](https://tdg.docbook.org/tdg/5.2/ch02#making-refentry)
+  ausgeführt.
+  
+- Die Spezifikation **XMeld** ([HTML](xmeld/index.html) |
+  [PDF](xmeld/xmeld-34.pdf)) ist das umfangreichste Dokument. Die
+  vollautomatisierte Veröffntlichung in den Formaten PDF, chunked HTML
+  und HTML für Microsoft Word dauert auf meinem privaten Lenovo T480
+  mit 16GB unter Linux mit Weasyprint für PDF ca. 25 Minuten.
+
+- Das **XInneres-Basismodul** ([HTML](basismodul/index.html) |
+  [PDF](basismodul/xinneres.pdf)) definiert wiederverwendbare
+  Komponenten für den Standard XInneres der Innenverwaltung.
+  
+- **XNachweis** ([HTML](xnachweis/index.html) |
+  [PDF](xnachweis/spezifikation.pdf)) wird von der KoSIT für das BVA
+  erstellt.
+  
+- **XBestellung** ([HTML](xbestellung/index.html) |
+  [PDF](xbestellung/xbestellung.pdf)) ist eine Profilierung von PEPPOL
+  BIS Order only
+
 - Das **Handbuch** ([HTML](handbuch/index.html) |
-  [PDF](handbuch/handbuch.pdf)) wird irgendwnn den Umgang mit
-  strukturierten Dokumenten im Detail beschreiben. Derzeit ist es nur
+  [PDF](handbuch/handbuch.pdf)) wird irgendwann den Umgang mit DocBook
+  tng Framework für Oxygen im Detail beschreiben. Derzeit ist es nur
   eine Sammlung von Textfragmenten.
 
-## Disclaimer
+## Impressum
 Dies ist eine private Webseite, die ich ausschließlich mit dem Ziel
 meiner eigenen Fortbildung in technischen Fragestellungen
 betreibe. Ich bin per EMail an `frank.steimke (at) gmail.com`

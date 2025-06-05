@@ -93,6 +93,10 @@ Darüberhinaus gibt es eine *experimentelle* Unterstützung für Office Formate.
 - **XBestellung** ([HTML](xbestellung/index.html) |
   [PDF](xbestellung/xbestellung.pdf)) ist eine Profilierung von PEPPOL
   BIS Order only
+  
+- XUnternehmen.Basismodu ([HTML](xunternehmen/index.html) |
+  [PDF](xunternehmen/xu-basismodul.pdf)) wird von der KoSIT
+  im Auftrag der Wirtschaftsministerkonferenz herausgegeben.
 
 - Das **Handbuch** ([HTML](handbuch/index.html) |
   [PDF](handbuch/handbuch.pdf)) wird irgendwann den Umgang mit DocBook

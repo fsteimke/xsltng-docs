@@ -94,9 +94,14 @@ Darüberhinaus gibt es eine *experimentelle* Unterstützung für Office Formate.
   [PDF](xbestellung/xbestellung.pdf)) ist eine Profilierung von PEPPOL
   BIS Order only
   
-- XUnternehmen.Basismodu ([HTML](xunternehmen/index.html) |
+- Das **XUnternehmen.Basismodul** ([HTML](xunternehmen/index.html) |
   [PDF](xunternehmen/xu-basismodul.pdf)) wird von der KoSIT
   im Auftrag der Wirtschaftsministerkonferenz herausgegeben.
+  
+- **CAMSS** ([HTML](camss/index.html) | [PDF](camss/camss-de.pdf)) ist
+  der europäische Leitfaden für die Bewertung und Auswahl von Normen
+  und Spezifikationen. Neben zwei europäischen Profilen (EIF und MSP)
+  enthält das Dokument auch Entwürfe für nationale Bewertungsprofile.
 
 - Das **Handbuch** ([HTML](handbuch/index.html) |
   [PDF](handbuch/handbuch.pdf)) wird irgendwann den Umgang mit DocBook

@@ -44,11 +44,10 @@ Framework für Oxygen* erstellt.  Sie generieren *clean, semantically
 rich HTML5*.  [Chunked
 HTML](https://xsltng.docbook.org/guide/2.1.9/ch-using#chunking) für
 umfangreiche Dokumente wird unterstützt. Die Veröffentlichung kann
-sowohl innerhalb der Oxygen IDE mit Transformationsszenarien erfolgen,
-oder vollautomatisiert mit [XPROC 3](https://xproc.org/), [XML
-Calabash 3](https://docs.xmlcalabash.com/) (und ich gehe jede Wette
-ein, dass Norman Walsh die Dokumentation mit xslTNG erstellt hat
-&#x1F601;), sowie [bash](https://de.wikipedia.org/wiki/Bash_(Shell)).
+sowohl mit Transformationsszenarien innerhalb der Oxygen IDE erfolgen,
+als auch vollautomatisiert mit [XPROC 3](https://xproc.org/), [XML
+Calabash 3](https://docs.xmlcalabash.com/)), sowie
+[bash](https://de.wikipedia.org/wiki/Bash_(Shell)).
 
 Für die Veröffentlichung im PDF Format stehen drei Möglichkeiten zur
 Verfügung:

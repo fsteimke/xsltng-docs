@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.10.&nbsp;Importing TLS server certificates and keys</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s09.html" rel="prev">
+      <link href="bk06partich04s11.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s11.html">Next</a> <a href="bk06partich04s09.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s10.html" db-id="d616951e160075" id="sec-security-ldap-server-ca" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Importing TLS server certificates and keys</h2>
+            </header>
+            
+            
+            <p>You can manage your CA certificates and keys for 389 Directory Server with the following
+               command line tools: <code class="command">certutil</code>, <code class="command">openssl</code>, and <code class="command">pk12util</code>.</p>
+            
+            <p>For testing purposes, you can use the self-signed certificate that <code class="command">dscreate</code> creates when you create a new 389&nbsp;DS instance. Find the certificate at <code class="filename">/etc/dirsrv/slapd-<em class="replaceable">INSTANCE-NAME</em>/ca.crt</code>.</p>
+            
+            <p>For production environments, it is a best practice to use a third-party certificate
+               authority, such as Let's Encrypt, CAcert.org, SSL.com, or whatever CA you choose.
+               Request a server certificate, a client certificate, and a root certificate.</p>
+            
+            <div class="informalobject procedure" id="sec-security-ldap-server-ca_proc1">
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Important</div>
+                        </header>
+                        <div>
+                           
+                           <p>The Mozilla NSS (Network Security Services) toolkit uses nicknames for certificates
+                              in the certificate store. The server certificate uses the nickname <em>Server-Cert</em>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Use the following commands to remove the Self-Signed-CA and Server-Cert from the instance:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> tls remove-cert Self-Signed-CA</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> tls remove-cert Server-Cert</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>Replace <em class="replaceable">INSTANCE_NAME</em> with the instance name of the directory server. This is LDAP1 in the previous sections.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Import the CA that has signed your certificate.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">sudo dsctl <em class="replaceable">INSTANCE_NAME</em> tls import-ca /path/to/CA/in/PEM/format/CA.pem <em class="replaceable">NICKNAME_FOR_CA</em></code></code></span></span></pre>
+                     </div>
+                     
+                     <p>Replace <code class="literal">INSTANCE_NAME</code> with the instance name of the directory server. Replace <code class="literal">/path/to/CA/in/PEM/format/CA.pem</code> with the full path to the CA certificate file in PEM format. Replace <code class="literal">NICKNAME_FOR_CA</code> with a nickname for the CA.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Import the server certificate and the key for the certificate.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> tls import-server-key-cert <em class="replaceable">/path/to/SERVER.pem</em><em class="replaceable">/path/to/SERVER.key</em></code></code></span></span></pre>
+                     </div>
+                     
+                     <p>Replace <code class="literal">INSTANCE_NAME</code> with the instance name of the directory server. Replace <code class="literal">/path/to/SERVER.pem</code> with the full path to the server certificate in PEM format. Replace <code class="literal">/path/to/SERVER.key</code> with the full path to the server certificate key file in PEM format.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Restart the instance so that the new certificates are used.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl restart dirsrv@<em class="replaceable">INSTANCE-NAME.</em>.service</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>Replace <code class="literal">INSTANCE_NAME</code> with the instance name of the directory server.</p>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s09.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s11.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Migrating to 389 Directory Server from OpenLDAP</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Setting up replication</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

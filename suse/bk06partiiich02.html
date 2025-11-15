@@ -1,0 +1,274 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;22.&nbsp;Securing network operations with OpenSSH</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich01.html" rel="prev">
+      <link href="bk06partiiich02s02.html" rel="next">
+      <link href="bk06partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiii.html">Up</a> <a href="bk06partiiich02s02.html">Next</a> <a href="bk06partiiich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partiiich02.html" db-id="d616951e175887" id="cha-ssh" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">22</span><span class="sep">.&nbsp;</span>Securing network operations with OpenSSH</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-ssh-overview">
+               <header>
+                  <h2><span class="label">22<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>OpenSSH overview</h2>
+               </header>
+               
+               
+               <p>SSH is a network protocol that provides end-to-end protection for communications between
+                  the computers on your network, or between computers on your network and systems outside
+                  your network. You may open an SSH session to any other computer, if you have a login
+                  and the correct authentication methods for the remote computer.</p>
+               
+               <p>SSH is a client-server protocol. Any host running the <code class="daemon systemitem">sshd</code> daemon can accept SSH connections from any other host. Every host running <code class="daemon systemitem">sshd</code> can have their own custom configurations, such as limiting who can have access, and
+                  which authentication methods are allowed.</p>
+               
+               <p>Authentication and encryption are provided by encryption key pairs. Each key pair
+                  has a public key and a private key. Public keys encrypt, and private keys decrypt.
+                  Public keys are meant to be freely shared, while private keys must be protected and
+                  not shared. When a private key is compromised, anyone who has possession of it can
+                  masquerade as the original key owner.</p>
+               
+               <p>SSH provides strong protection, because the server and client must both authenticate
+                  to each other. When a client first attempts to open an SSH session, the server presents
+                  its public host key. If the client already possesses a copy of this key (stored in
+                  <code class="filename">~/.ssh/known_hosts</code> on the client machine), the client knows to trust the server. If the client does
+                  not have the appropriate host key, it is asked whether it should trust the server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>The authenticity of host '192.168.22.219 (192.168.22.219)'</code></span></span>
+<span class="line"><span class="ld"><code>   can't be established. ECDSA key fingerprint is</code></span></span>
+<span class="line"><span class="ld"><code>   SHA256:yXf6pjV26N0fegvEYIt3HgG95s3Q1X6WYRhtHLF99pUo.</code></span></span>
+<span class="line"><span class="ld"><code>   Are you sure you want to continue connecting (yes/no/[fingerprint])?</code></span></span></pre>
+               </div>
+               
+               <p>The user can type <code class="literal">yes</code> or <code class="literal">no</code>, or paste their copy of the host key fingerprint for comparison.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Matching host key fingerprints</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Distributing copies of your host key fingerprints to your users enables them to verify
+                              that they are receiving the correct host keys. When they paste their copy of a host
+                              key fingerprint, <code class="command">ssh</code> compares the fingerprints, and accepts the offered host key when the fingerprints
+                              match. This ensures a more accurate match than a visual comparison.</p>
+                           
+                           <p>You cannot rely on users to use correct verification methods. If the fingerprints
+                              do not match, the user can still type <code class="literal">yes</code>, or copy the fingerprint in the message, and complete the connection. A stronger
+                              alternative is to use certificate authentication, which provides a global authentication
+                              mechanism, and does not require perfect behavior from users (see <a class="xref xref-sect1" href="bk06partiiich02s08.html">the section called “OpenSSH certificate authentication”</a>).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>If the public keys of a host have changed, the connection is denied with an alarming
+                  warning:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</code></span></span>
+<span class="line"><span class="ld"><code>@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @</code></span></span>
+<span class="line"><span class="ld"><code>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</code></span></span>
+<span class="line"><span class="ld"><code>IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!</code></span></span>
+<span class="line"><span class="ld"><code>Someone could be eavesdropping on you right now (man-in-the-middle attack)!</code></span></span>
+<span class="line"><span class="ld"><code>It is also possible that a host key has just been changed.</code></span></span>
+<span class="line"><span class="ld"><code>The fingerprint for the ECDSA key sent by the remote host is</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:keNu/rJFWmpQu9B0SjIuo8NLjbeDY/x3Tktpl7oDJqo.</code></span></span>
+<span class="line"><span class="ld"><code>Please contact your system administrator.</code></span></span>
+<span class="line"><span class="ld"><code>Add correct host key in /home/geeko/.ssh/known_hosts to get rid of this message.</code></span></span>
+<span class="line"><span class="ld"><code>Offending ECDSA key in /home/geeko/.ssh/known_hosts:210</code></span></span>
+<span class="line"><span class="ld"><code>You can use following command to remove the offending key:</code></span></span>
+<span class="line"><span class="ld"><code>ssh-keygen -R 192.168.121.219 -f /home/geeko/.ssh/known_hosts</code></span></span>
+<span class="line"><span class="ld"><code>ECDSA host key for 192.168.121.219 has changed and you have requested strict</code></span></span>
+<span class="line"><span class="ld"><code>checking.</code></span></span>
+<span class="line"><span class="ld"><code>Host key verification failed.</code></span></span></pre>
+               </div>
+               
+               <p>The remedy is to delete the offending key from <code class="filename">~/.ssh/known_hosts</code> with the command given in the warning, then reconnect and accept the new host key.
+                  </p>
+               
+               <p>The <code class="package">openssh</code> package installs the server, client, file transfer commands, and certain utilities.</p>
+               
+               <p>OpenSSH supports several different types of authentication:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Password authentication</span></dt>
+                     <dd>
+                        
+                        <p>Uses any system login and password on the remote machine. This is the simplest and
+                           most flexible authentication because you can open an SSH session from anywhere, on
+                           any machine. It is also the least secure, because it is vulnerable to password-cracking
+                           and keystroke logging.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Public key authentication</span></dt>
+                     <dd>
+                        
+                        <p>Authenticates with your personal SSH keys, rather than a login and password. This
+                           is less flexible than password authentication, because you can open SSH sessions only
+                           from a machine that holds your private identity key. It is much stronger because it
+                           is not vulnerable to password cracking or keystroke logging; an attacker must possess
+                           your private key and know its passphrase.</p>
+                        
+                        <p>See <a class="xref xref-sect1" href="bk06partiiich02s09.html">the section called “Automated public key logins with gnome-keyring”</a> to learn how to use <code class="command">gnome-keyring</code> for automated public key authentication in GNOME sessions.</p>
+                        
+                        <p>See <a class="xref xref-sect1" href="bk06partiiich02s10.html">the section called “Automated public key logins with ssh-agent”</a> to learn how to use <code class="literal">ssh-agent</code> for automated public key authentication in console sessions.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Passphrase-less public key authentication</span></dt>
+                     <dd>
+                        
+                        <p>Public key authentication, paired with private identity keys that do not have passphrases.
+                           This is useful for automated services, like scripts and cron jobs. You must protect
+                           private keys, because anyone who gains access to them can easily masquerade as the
+                           key owner.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Certificate authentication</span></dt>
+                     <dd>
+                        
+                        <p>OpenSSH supports certification authentication, for easier key management, stronger
+                           authentication, and large-scale SSH deployments.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> installs the OpenSSH package by default, providing the following commands:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">ssh</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The client command for initiating an SSH connection to a remote host.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">scp</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Secure file copy from or to a remote host.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">sftp</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Secure file transfer between a client and an SFTP server. (The SFTP protocol (SSH
+                           FTP) is not related to FTPS or FTPES (FTP over SSL/TLS), but was written independently.)</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">ssh-add</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Add private key identities to the authentication agent, <code class="literal">ssh-agent</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">ssh-agent</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Manages a user's private identity keys and their passphrases, for public key authentication.
+                           <code class="literal">ssh-agent</code> holds the passphrases in memory and applies them as needed, so that users do not
+                           have to re-type their passphrases to authenticate.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">ssh-copy-id</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Securely transfer a public key to a remote host, to set up public key authentication.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich01.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich02s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">21</span><span class="sep">.&nbsp;</span>X Window System and X authentication</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Server hardening</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

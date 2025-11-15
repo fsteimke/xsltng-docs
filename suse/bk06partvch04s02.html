@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>34.2.&nbsp;Profile types</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch04.html" rel="prev">
+      <link href="bk06partvch04s03.html" rel="next">
+      <link href="bk06partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch04.html">Up</a> <a href="bk06partvch04s03.html">Next</a> <a href="bk06partvch04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch04s02.html" db-id="d616951e184242" id="sec-apparmor-profiles-types">
+            <header>
+               <h2><span class="label">34<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Profile types</h2>
+            </header>
+            
+            
+            <p>AppArmor knows four different types of profiles: standard profiles, unattached profiles,
+               local profiles and hats. Standard and unattached profiles are stand-alone profiles,
+               each stored in a file under <code class="filename">/etc/apparmor.d/</code>. Local profiles and hats are children profiles embedded inside of a parent profile
+               used to provide tighter or alternate confinement for a subtask of an application.</p>
+            
+            <section class="sect2" id="sec-apparmor-profiles-types-attached">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Standard profiles</h3>
+               </header>
+               
+               
+               <p>The default AppArmor profile is attached to a program by its name, so a profile name
+                  must match the path to the application it is to confine.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/bin/foo {</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>This profile is automatically used whenever an unconfined process executes <code class="filename">/usr/bin/foo</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-types-unattached">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Unattached profiles</h3>
+               </header>
+               
+               
+               <p>Unattached profiles do not reside in the file system namespace and therefore are not
+                  automatically attached to an application. The name of an unattached profile is preceded
+                  by the keyword <code class="literal">profile</code>. You can freely choose a profile name, except for the following limitations: the
+                  name must not begin with a <code class="literal">:</code> or <code class="literal">.</code> character. If it contains a whitespace, it must be quoted. If the name begins with
+                  a <code class="literal">/</code>, the profile is considered to be a standard profile, so the following two profiles
+                  are identical:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>profile /usr/bin/foo {</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/foo {</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>Unattached profiles are never used automatically, nor can they be transitioned to
+                  through a <code class="literal">Px</code> rule. They need to be attached to a program by either using a named profile transition
+                  (see <a class="xref xref-sect2" href="bk06partvch04s12.html#sec-apparmor-profiles-exec-named">the section called “Named profile transitions”</a>) or with the <code class="literal">change_profile</code> rule (see <a class="xref xref-sect2" href="#sec-apparmor-profiles-types-change">the section called “Change rules”</a>).</p>
+               
+               <p>Unattached profiles are useful for specialized profiles for system utilities that
+                  generally should not be confined by a system-wide profile (for example, <code class="literal">/bin/bash</code>). They can also be used to set up roles or to confine a user.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-types-local">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Local profiles</h3>
+               </header>
+               
+               
+               <p>Local profiles provide a convenient way to provide specialized confinement for utility
+                  programs launched by a confined application. They are specified like standard profiles,
+                  except that they are embedded in a parent profile and begin with the <code class="literal">profile</code> keyword:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/parent/profile {</code></span></span>
+<span class="line"><span class="ld"><code>   ...</code></span></span>
+<span class="line"><span class="ld"><code>   profile /local/profile {</code></span></span>
+<span class="line"><span class="ld"><code>      ...</code></span></span>
+<span class="line"><span class="ld"><code>   }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>To transition to a local profile, either use a <code class="literal">cx</code> rule (see <a class="xref xref-sect2" href="bk06partvch04s12.html#sec-apparmor-profiles-exec-cx">the section called “Discrete local profile execute mode (cx)”</a>) or a named profile transition (see <a class="xref xref-sect2" href="bk06partvch04s12.html#sec-apparmor-profiles-exec-named">the section called “Named profile transitions”</a>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-types-hat">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Hats</h3>
+               </header>
+               
+               
+               <p>AppArmor "hats" are a local profiles with certain additional restrictions and an implicit
+                  rule allowing for <code class="literal">change_hat</code> to be used to transition to them. Refer to <a class="xref xref-chapter" href="bk06partvch08.html">Chapter&nbsp;<span class="label">38</span>, Profiling your Web applications using ChangeHat</a> for a detailed description.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-types-change">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Change rules</h3>
+               </header>
+               
+               
+               <p>AppArmor provides <code class="literal">change_hat</code> and <code class="literal">change_profile</code> rules that control domain transitioning. <code class="literal">change_hat</code> are specified by defining hats in a profile, while <code class="literal">change_profile</code> rules refer to another profile and start with the keyword <code class="literal">change_profile</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>change_profile -&gt; /usr/bin/foobar,</code></span></span></pre>
+               </div>
+               
+               <p>Both <code class="literal">change_hat</code> and <code class="literal">change_profile</code> provide for an application directed profile transition, without having to launch
+                  a separate application. <code class="literal">change_profile</code> provides a generic one way transition between any of the loaded profiles. <code class="literal">change_hat</code> provides for a returnable parent child transition where an application can switch
+                  from the parent profile to the hat profile and if it provides the correct secret key
+                  return to the parent profile at a later time.</p>
+               
+               <p><code class="literal">change_profile</code> is best used in situations where an application goes through a trusted setup phase
+                  and then can lower its privilege level. Any resources mapped or opened during the
+                  start-up phase may still be accessible after the profile change, but the new profile
+                  restricts the opening of new resources, and limits certain resources opened before
+                  the switch. Specifically, memory resources are still available while capability and
+                  file resources (if they are not memory mapped) can be limited.</p>
+               
+               <p><code class="literal">change_hat</code> is best used in situations where an application runs a virtual machine or an interpreter
+                  that does not provide direct access to the applications resources (for example Apache's
+                  <code class="literal">mod_php</code>). Since <code class="literal">change_hat</code> stores the return secret key in the application's memory the phase of reduced privilege
+                  should not have direct access to memory. It is also important that file access is
+                  properly separated, since the hat can restrict accesses to a file handle but does
+                  not close it. If an application does buffering and provides access to the open files
+                  with buffering, the accesses to these files might not be seen by the kernel and hence
+                  not restricted by the new profile.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Safety of domain transitions</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The <code class="literal">change_hat</code> and <code class="literal">change_profile</code> domain transitions are less secure than a domain transition done through an exec
+                              because they do not affect a process's memory mappings, nor do they close resources
+                              that have already been opened.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch04s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">34</span><span class="sep">.&nbsp;</span>Profile components and syntax</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">34<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Include statements</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

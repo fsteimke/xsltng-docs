@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>13.3.&nbsp;Sharing directories between host and guests (file system pass-through)</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich06s02.html" rel="prev">
+      <link href="bk10partiich06s04.html" rel="next">
+      <link href="bk10partiich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich06.html">Up</a> <a href="bk10partiich06s04.html">Next</a> <a href="bk10partiich06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich06s03.html" db-id="d616951e279313" id="sec-libvirt-storage-share">
+            <header>
+               <h2><span class="label">13<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Sharing directories between host and guests (file system pass-through)</h2>
+            </header>
+            
+            
+            <p>libvirt allows to share directories between host and guests using QEMU's file system
+               pass-through (also called VirtFS) feature. Such a directory can be also be accessed
+               by several VM Guests at once and therefore be used to exchange files between VM Guests.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Windows guests and file system pass-through</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Sharing directories between VM Host Server and Windows guests via File System Pass-Through
+                           does not work, because Windows lacks the drivers required to mount the shared directory.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>To make a shared directory available on a VM Guest, proceed as follows:</p>
+            
+            <div class="informalobject procedure" id="sec-libvirt-storage-share_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Open the guest's console in Virtual Machine Manager and either choose <span class="menuchoice"><span class="guimenu">View</span><span class="guimenu">Details</span></span> from the menu or click <span class="guimenu">Show virtual hardware details</span> in the toolbar. Choose <span class="menuchoice"><span class="guimenu">Add Hardware</span><span class="guimenu">Filesystem</span></span> to open the <span class="guimenu">Filesystem Passthrough</span> dialog.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p><span class="guimenu">Driver</span> allows you to choose between a <span class="guimenu">Handle</span> or <span class="guimenu">Path</span> base driver. The default setting is <span class="guimenu">Path</span>. <span class="guimenu">Mode</span> lets you choose the security model, which influences the way file permissions are
+                        set on the host. Three options are available:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <span class="guimenu">Passthrough</span> (default)</span></dt>
+                           <dd>
+                              
+                              <p>Files on the file system are directly created with the client-user's credentials.
+                                 This is similar to what NFSv3 is using.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <span class="guimenu">Squash</span>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Same as <span class="guimenu">Passthrough</span>, but failure of privileged operations like <code class="command">chown</code> are ignored. This is required when KVM is not run with <code class="systemitem username">root</code> privileges.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <span class="guimenu">Mapped</span>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Files are created with the file server's credentials (<code class="literal">qemu.qemu</code>). The user credentials and the client-user's credentials are saved in extended attributes.
+                                 This model is recommended when host and guest domains should be kept isolated.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Specify the path to the directory on the VM Host Server with <span class="guimenu">Source Path</span>. Enter a string at <span class="guimenu">Target Path</span> to be used as a tag to mount the shared directory. The string of this field is a
+                        tag only, not a path on the VM Guest.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p><span class="guimenu">Apply</span> the setting. If the VM Guest is currently running, you need to shut it down to apply
+                        the new setting (rebooting the guest is not sufficient).</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Boot the VM Guest. To mount the shared directory, enter the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount -t 9p -o trans=virtio,version=9p2000.L,rw <em class="replaceable">TAG</em> /<em class="replaceable">MOUNT_POINT</em></code></span></span></pre>
+                     </div>
+                     
+                     <p>To make the shared directory permanently available, add the following line to the
+                        <code class="filename">/etc/fstab</code> file:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><em class="replaceable">TAG</em>   /<em class="replaceable">MOUNT_POINT</em>    9p  trans=virtio,version=9p2000.L,rw    0   0</code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich06.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich06s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">13<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Online resizing of guest block devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">13<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using RADOS block devices with <code class="library systemitem">libvirt</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

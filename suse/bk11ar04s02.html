@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.&nbsp;Installing KubeVirt on Kubernetes</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar04.html" rel="prev">
+      <link href="bk11ar04s03.html" rel="next">
+      <link href="bk11ar04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar04.html">Up</a> <a href="bk11ar04s03.html">Next</a> <a href="bk11ar04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar04s02.html" db-id="d616951e321743" id="sec-virtualization-kubevirt-installation">
+            <header>
+               <h2><span class="label">2</span><span class="sep">.&nbsp;</span>Installing KubeVirt on Kubernetes</h2>
+            </header>
+            
+            
+            <p>KubeVirt can be installed on a Kubernetes cluster by installing the <code class="package">kubevirt-manifests</code> package on an admin node, applying the <code class="package">virt-operator</code> manifest, and creating the KubeVirt custom resource. For example, on a cluster admin
+               node execute the following:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper install kubevirt-manifests</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl apply -f /usr/share/kube-virt/manifests/release/kubevirt-operator.yaml</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl apply -f /usr/share/kube-virt/manifests/release/kubevirt-cr.yaml</code></span></span></pre>
+            </div>
+            
+            <p>After creating the KubeVirt custom resource, <code class="package">virt-operator</code> deploys the remaining KubeVirt components. Progress can be monitored by viewing the
+               status of the resources in the <code class="package">kubevirt</code> namespace:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl get all -n kubevirt</code></span></span></pre>
+            </div>
+            
+            <p>The cluster is ready to deploy virtual machines once <code class="package">virt-api</code>, <code class="package">virt-controller</code>, and <code class="package">virt-handler</code> are READY with STATUS <q>Running</q>.</p>
+            
+            <p>Alternatively it is possible to wait until KubeVirt custom resource becomes available:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl -n kubevirt wait kv kubevirt --for condition=Available</code></span></span></pre>
+            </div>
+            
+            <p>Some KubeVirt functionality is disabled by default and must be enabled via feature
+               gates. For example, live migration and the use of HostDisk for virtual machine disk
+               images are disabled. Enabling KubeVirt feature gates can be done by altering an existing
+               KubeVirt custom resource and specifying the list of features to enable. For example,
+               you can enable live migration and the use of HostDisks:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl edit kubevirt kubevirt -n kubevirt</code></span></span>
+<span class="line"><span class="ld"><code>    ...</code></span></span>
+<span class="line"><span class="ld"><code>    spec:</code></span></span>
+<span class="line"><span class="ld"><code>      configuration:</code></span></span>
+<span class="line"><span class="ld"><code>        developerConfiguration:</code></span></span>
+<span class="line"><span class="ld"><code>          featureGates:</code></span></span>
+<span class="line"><span class="ld"><code>            - HostDisk</code></span></span>
+<span class="line"><span class="ld"><code>            - LiveMigration</code></span></span></pre>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Note</div>
+                     </header>
+                     <div>
+                        
+                        <p>The names of feature gates are case-sensitive.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar04.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar04.html">Up</a></td>
+                  <td class="next"><a href="bk11ar04s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Using KubeVirt on SUSE Linux Enterprise</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">3</span><span class="sep">.&nbsp;</span>Updating the KubeVirt deployment</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;6.&nbsp;LVM volume snapshots</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiich01s10.html" rel="prev">
+      <link href="bk09partiich02s02.html" rel="next">
+      <link href="bk09partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partii.html">Up</a> <a href="bk09partiich02s02.html">Next</a> <a href="bk09partiich01s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk09partiich02.html" db-id="d616951e242029" id="cha-lvm-snapshots" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">6</span><span class="sep">.&nbsp;</span>LVM volume snapshots</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>A Logical Volume Manager (LVM) logical volume snapshot is a copy-on-write technology
+                  that monitors changes to an existing volume’s data blocks so that when a write is
+                  made to one of the blocks, the block’s value at the snapshot time is copied to a snapshot
+                  volume. In this way, a point-in-time copy of the data is preserved until the snapshot
+                  volume is deleted.</p>
+               </div>
+            <section class="sect1" id="sec-lvm-snapshots-intro">
+               <header>
+                  <h2><span class="label">6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Understanding volume snapshots</h2>
+               </header>
+               
+               
+               <p>A file system snapshot contains metadata about itself and data blocks from a source
+                  logical volume that has changed since the snapshot was taken. When you access data
+                  via the snapshot, you see a point-in-time copy of the source logical volume. There
+                  is no need to restore data from backup media or to overwrite the changed data.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Mounting volumes with snapshots</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>During the snapshot’s lifetime, the snapshot must be mounted before its source logical
+                              volume can be mounted.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>LVM volume snapshots allow you to create a backup from a point-in-time view of the
+                  file system. The snapshot is created instantly and persists until you delete it. You
+                  can back up the file system from the snapshot while the volume itself continues to
+                  be available for users. The snapshot initially contains some metadata about the snapshot,
+                  but no actual data from the source logical volume. Snapshot uses copy-on-write technology
+                  to detect when data changes in an original data block. It copies the value it held
+                  when the snapshot was taken to a block in the snapshot volume, then allows the new
+                  data to be stored in the source block. As more blocks change from their original value
+                  on the source logical volume, the snapshot size grows.</p>
+               
+               <p>When you are sizing the snapshot, consider how much data is expected to change on
+                  the source logical volume and how long you plan to keep the snapshot. The amount of
+                  space that you allocate for a snapshot volume can vary, depending on the size of the
+                  source logical volume, how long you plan to keep the snapshot, and the number of data
+                  blocks that are expected to change during the snapshot’s lifetime. The snapshot volume
+                  cannot be resized after it is created. As a guide, create a snapshot volume that is
+                  about 10% of the size of the original logical volume. If you anticipate that every
+                  block in the source logical volume will change at least one time before you delete
+                  the snapshot, then the snapshot volume should be at least as large as the source logical
+                  volume plus some additional space for metadata about the snapshot volume. Less space
+                  is required if the data changes infrequently or if the expected lifetime is sufficiently
+                  brief.</p>
+               
+               <p>In LVM2, snapshots are read/write by default. When you write data directly to the
+                  snapshot, that block is marked in the exception table as used, and never gets copied
+                  from the source logical volume. You can mount the snapshot volume, and test application
+                  changes by writing data directly to the snapshot volume. You can easily discard the
+                  changes by dismounting the snapshot, removing the snapshot, and then remounting the
+                  source logical volume.</p>
+               
+               <p>In a virtual guest environment, you can use the snapshot function for LVM logical
+                  volumes you create on the server’s disks, as you would on a physical server.</p>
+               
+               <p>In a virtual host environment, you can use the snapshot function to back up the virtual
+                  machine’s storage back-end, or to test changes to a virtual machine image, such as
+                  for patches or upgrades, without modifying the source logical volume. The virtual
+                  machine must be using an LVM logical volume as its storage back-end, as opposed to
+                  using a virtual disk file. You can mount the LVM logical volume and use it to store
+                  the virtual machine image as a file-backed disk, or you can assign the LVM logical
+                  volume as a physical disk to write to it as a block device.</p>
+               
+               <p>An LVM logical volume snapshot can be thinly provisioned. Thin provisioning is assumed
+                  if you create a snapshot without a specified size. The snapshot is created as a thin
+                  volume that uses space as needed from a thin pool. A thin snapshot volume has the
+                  same characteristics as any other thin volume. You can independently activate the
+                  volume, extend the volume, rename the volume, remove the volume, and even snapshot
+                  the volume.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Thinly provisioned volumes in a cluster</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>To use thinly provisioned snapshots in a cluster, the source logical volume and its
+                              snapshots must be managed in a single cluster resource. This allows the volume and
+                              its snapshots to always be mounted exclusively on the same node.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When you are done with the snapshot, it is important to remove it from the system.
+                  A snapshot eventually fills up completely as data blocks change on the source logical
+                  volume. When the snapshot is full, it is disabled, which prevents you from remounting
+                  the source logical volume.</p>
+               
+               <p>If you create multiple snapshots for a source logical volume, remove the snapshots
+                  in a last created, first deleted order.</p>
+               </section>
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiich01s10.html">Prev</a></td>
+                  <td class="up"><a href="bk09partii.html">Up</a></td>
+                  <td class="next"><a href="bk09partiich02s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Tagging LVM2 storage objects</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating Linux snapshots with LVM</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

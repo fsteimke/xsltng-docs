@@ -1,0 +1,1505 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>37.7.&nbsp;Two methods of profiling</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch07s06.html" rel="prev">
+      <link href="bk06partvch07s08.html" rel="next">
+      <link href="bk06partvch07.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch07.html">Up</a> <a href="bk06partvch07s08.html">Next</a> <a href="bk06partvch07s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch07s07.html" db-id="d616951e188251" id="sec-apparmor-commandline-profiling">
+            <header>
+               <h2><span class="label">37<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Two methods of profiling</h2>
+            </header>
+            
+            
+            <p>Given the syntax for AppArmor profiles in <a class="xref xref-chapter" href="bk06partvch04.html">Chapter&nbsp;<span class="label">34</span>, Profile components and syntax</a>, you could create profiles without using the tools. However, the effort involved
+               would be substantial. To avoid such a situation, use the AppArmor tools to automate
+               the creation and refinement of profiles.</p>
+            
+            <p>There are two ways to approach AppArmor profile creation. Tools are available for
+               both methods.</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Stand-alone profiling</span></dt>
+                  <dd>
+                     
+                     <p>A method suitable for profiling small applications that have a finite runtime, such
+                        as user client applications like mail clients. For more information, refer to <a class="xref xref-sect2" href="#sec-apparmor-commandline-profiling-stand-alone">the section called “Stand-alone profiling”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Systemic profiling</span></dt>
+                  <dd>
+                     
+                     <p>A method suitable for profiling many programs at once and for profiling applications
+                        that may run for days, weeks or continuously across reboots, such as network server
+                        applications like Web servers and mail servers. For more information, refer to <a class="xref xref-sect2" href="#sec-apparmor-commandline-profiling-systemic">the section called “Systemic profiling”</a>.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>Automated profile development becomes more manageable with the AppArmor tools:</p>
+            
+            <div class="informalobject procedure" id="sec-apparmor-commandline-profiling_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Decide which profiling method suits your needs.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Perform a static analysis. Run either <code class="command">aa-genprof</code> or <code class="command">aa-autodep</code>, depending on the profiling method chosen.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Enable dynamic learning. Activate learning mode for all profiled programs.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <section class="sect2" id="sec-apparmor-commandline-profiling-stand-alone">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Stand-alone profiling</h3>
+               </header>
+               
+               
+               <p>Stand-alone profile generation and improvement is managed by a program called <code class="command">aa-genprof</code>. This method is easy because <code class="command">aa-genprof</code> takes care of everything, but is limited because it requires <code class="command">aa-genprof</code> to run for the entire duration of the test run of your program (you cannot reboot
+                  the machine while you are still developing your profile).</p>
+               
+               <p>To use <code class="command">aa-genprof</code> for the stand-alone method of profiling, refer to <a class="xref xref-sect3" href="#sec-apparmor-commandline-profiling-summary-genprof">the section called “aa-genprof—generating profiles”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-commandline-profiling-systemic">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Systemic profiling</h3>
+               </header>
+               
+               
+               <p>This method is called <em>systemic profiling</em> because it updates all the profiles on the system at once, rather than focusing on
+                  the one or few targeted by <code class="command">aa-genprof</code> or stand-alone profiling. With systemic profiling, profile construction and improvement
+                  are less automated, but more flexible. This method is suitable for profiling long-running
+                  applications whose behavior continues after rebooting, or many programs at once.</p>
+               
+               <p>Build an AppArmor profile for a group of applications as follows:</p>
+               
+               <div class="informalobject procedure" id="sec-apparmor-commandline-profiling-systemic_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create profiles for the individual programs that make up your application.</p>
+                        
+                        <p>Although this approach is systemic, AppArmor monitors those programs with profiles
+                           and their children. To get AppArmor to consider a program, you must at least have
+                           <code class="command">aa-autodep</code> create an approximate profile for it. To create this approximate profile, refer to
+                           <a class="xref xref-sect3" href="#sec-apparmor-commandline-profiling-summary-autodep">the section called “aa-autodep—creating approximate profiles”</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Put relevant profiles into learning or complain mode.</p>
+                        
+                        <p>Activate learning or complain mode for all profiled programs by entering</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-complain /etc/apparmor.d/*</code></span></span></pre>
+                        </div>
+                        
+                        <p>in a terminal window while logged in as <code class="systemitem username">root</code>. This functionality is also available through the YaST Profile Mode module, described
+                           in <a class="xref xref-sect2" href="bk06partvch06s04.html#sec-apparmor-yast-manage-profmodes">the section called “Changing the mode of individual profiles”</a>.</p>
+                        
+                        <p>When in learning mode, access requests are not blocked, even if the profile dictates
+                           that they should be. This enables you to run through several tests (as shown in <a class="xref xref-step" href="#st-apparmor-commandline-profiling-systemic-exec">step <span class="label">3</span></a>) and learn the access needs of the program so it runs properly. With this information,
+                           you can decide how secure to make the profile.</p>
+                        
+                        <p>Refer to <a class="xref xref-sect3" href="#sec-apparmor-commandline-profiling-summary-complain">the section called “aa-complain—entering complain or learning mode”</a> for more detailed instructions for using learning or complain mode.</p>
+                        </li>
+                     <li class="step" id="st-apparmor-commandline-profiling-systemic-exec">
+                        
+                        <p>Exercise your application.</p>
+                        
+                        <p>Run your application and exercise its functionality. How much to exercise the program
+                           is up to you, but you need the program to access each file representing its access
+                           needs. Because the execution is not being supervised by <code class="command">aa-genprof</code>, this step can go on for days or weeks and can span complete system reboots.</p>
+                        </li>
+                     <li class="step" id="st-apparmor-commandline-profiling-systemic-log">
+                        
+                        <p>Analyze the log.</p>
+                        
+                        <p>In systemic profiling, run <code class="command">aa-logprof</code> directly instead of letting <code class="command">aa-genprof</code> run it (as in stand-alone profiling). The general form of <code class="command">aa-logprof</code> is:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-logprof [ -d <em class="replaceable">/path/to/profiles</em> ] [ -f <em class="replaceable">/path/to/logfile</em> ]</code></span></span></pre>
+                        </div>
+                        
+                        <p>Refer to <a class="xref xref-sect3" href="#sec-apparmor-commandline-profiling-summary-logprof">the section called “aa-logprof—scanning the system log”</a> for more information about using <code class="command">aa-logprof</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Repeat <a class="xref xref-step" href="#st-apparmor-commandline-profiling-systemic-exec">step <span class="label">3</span></a> and <a class="xref xref-step" href="#st-apparmor-commandline-profiling-systemic-log">step <span class="label">4</span></a>.</p>
+                        
+                        <p>This generates optimal profiles. An iterative approach captures smaller data sets
+                           that can be trained and reloaded into the policy engine. Subsequent iterations generate
+                           fewer messages and run faster.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit the profiles.</p>
+                        
+                        <p>You should review the profiles that have been generated. You can open and edit the
+                           profiles in <code class="filename">/etc/apparmor.d/</code> using a text editor.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Return to enforce mode.</p>
+                        
+                        <p>This is when the system goes back to enforcing the rules of the profiles, not only
+                           logging information. This can be done manually by removing the <code class="literal">flags=(complain)</code> text from the  profiles or automatically by using the <code class="command">aa-enforce</code> command, which works identically to the <code class="command">aa-complain</code> command, except it sets the profiles to enforce mode. This functionality is also
+                           available through the YaST Profile Mode module, described in <a class="xref xref-sect2" href="bk06partvch06s04.html#sec-apparmor-yast-manage-profmodes">the section called “Changing the mode of individual profiles”</a>.</p>
+                        
+                        <p>To ensure that all profiles are taken out of complain mode and put into enforce mode,
+                           enter <code class="command">aa-enforce /etc/apparmor.d/*</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Re-scan all profiles.</p>
+                        
+                        <p>To have AppArmor re-scan all the profiles and change the enforcement mode in the kernel,
+                           enter <code class="command">systemctl reload apparmor</code>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-commandline-profiling-summary">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Summary of profiling tools</h3>
+               </header>
+               
+               
+               <p>All of the AppArmor profiling utilities are provided by the <code class="systemitem">apparmor-utils</code> RPM package and are stored in <code class="filename">/usr/sbin</code>. Each tool has a different purpose.</p>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-autodep">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>aa-autodep—creating approximate profiles</h4>
+                  </header>
+                  
+                  
+                  <p>This creates an approximate profile for the program or application selected. You can
+                     generate approximate profiles for binary executables and interpreted script programs.
+                     The resulting profile is called <q>approximate</q> because it does not necessarily contain all of the profile entries that the program
+                     needs to be properly confined by AppArmor. The minimum <code class="command">aa-autodep</code> approximate profile has, at minimum, a base include directive, which contains basic
+                     profile entries needed by most programs. For certain types of programs, <code class="command">aa-autodep</code> generates a more expanded profile. The profile is generated by recursively calling
+                     <code class="command">ldd(1)</code> on the executables listed on the command line.</p>
+                  
+                  <p>To generate an approximate profile, use the <code class="command">aa-autodep</code> program. The program argument can be either the simple name of the program, which
+                     <code class="command">aa-autodep</code> finds by searching your shell's path variable, or it can be a fully qualified path.
+                     The program itself can be of any type (ELF binary, shell script, Perl script, etc.).
+                     <code class="command">aa-autodep</code> generates an approximate profile to improve through the dynamic profiling that follows.</p>
+                  
+                  <p>The resulting approximate profile is written to the <code class="filename">/etc/apparmor.d</code> directory using the AppArmor profile naming convention of naming the profile after
+                     the absolute path of the program, replacing the forward slash (<code class="literal">/</code>) characters in the path with period (<code class="literal">.</code>) characters. The general syntax of <code class="command">aa-autodep</code> is to enter the following in a terminal window:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-autodep [ -d <em class="replaceable">/PATH/TO/PROFILES</em> ] [<em class="replaceable">PROGRAM1</em><em class="replaceable">PROGRAM2</em>...]</code></span></span></pre>
+                  </div>
+                  
+                  <p>If you do not enter the program name or names, you are prompted for them. <em class="replaceable">/path/to/profiles</em> overrides the default location of <code class="filename">/etc/apparmor.d</code>, should you keep profiles in a location other than the default.</p>
+                  
+                  <p>To begin profiling, you must create profiles for each main executable service that
+                     is part of your application (anything that might start without being a child of another
+                     program that already has a profile). Finding all such programs depends on the application
+                     in question. Here are several strategies for finding such programs:</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Directories</span></dt>
+                        <dd>
+                           
+                           <p>If all the programs to profile are in one directory and there are no other programs
+                              in that directory, the simple command <code class="command">aa-autodep</code><em class="replaceable">/path/to/your/programs/*</em> creates basic profiles for all programs in that directory.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">pstree -p</span></dt>
+                        <dd>
+                           
+                           <p>You can run your application and use the standard Linux <code class="command">pstree</code> command to find all processes running. Then manually hunt down the location of these
+                              programs and run the <code class="command">aa-autodep</code> for each one. If the programs are in your path, <code class="command">aa-autodep</code> finds them for you. If they are not in your path, the standard Linux command <code class="command">find</code> might be helpful in finding your programs. Execute <code class="command">find / -name '</code><em class="replaceable">MY_APPLICATION</em>' -print to determine an application's path (<em class="replaceable">MY_APPLICATION</em> being an example application). You may use wild cards if appropriate.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-complain">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>aa-complain—entering complain or learning mode</h4>
+                  </header>
+                  
+                  
+                  <p>The complain or learning mode tool (<code class="command">aa-complain</code>) detects violations of AppArmor profile rules, such as the profiled program accessing
+                     files not permitted by the profile. The violations are permitted, but also logged.
+                     To improve the profile, turn complain mode on, run the program through a suite of
+                     tests to generate log events that characterize the program's access needs, then postprocess
+                     the log with the AppArmor tools to transform log events into improved profiles.</p>
+                  
+                  <p>Manually activating complain mode (using the command line) adds a flag to the top
+                     of the profile so that <code class="literal">/bin/foo</code> becomes <code class="literal">/bin/foo flags=(complain)</code>. To use complain mode,  open a terminal window and enter one of the following lines
+                     as <code class="systemitem username">root</code>:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>If the example program (<em class="replaceable">PROGRAM1</em>) is in your path, use:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-complain [<em class="replaceable">PROGRAM1</em><em class="replaceable">PROGRAM2</em> ...]</code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>If the program is not in your path, specify the entire path as follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-complain /sbin/<em class="replaceable">PROGRAM1</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>If the profiles are not in <code class="filename">/etc/apparmor.d</code>, use the following to override the default location:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-complain <em class="replaceable">/path/to/profiles/</em><em class="replaceable">PROGRAM1</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Specify the profile for <em class="replaceable">/sbin/program1</em> as follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-complain /etc/apparmor.d/sbin.<em class="replaceable">PROGRAM1</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     </ul>
+                  
+                  <p>Each of the above commands activates the complain mode for the profiles or programs
+                     listed. If the program name does not include its entire path, <code class="command">aa-complain</code> searches <code class="envar">$PATH</code> for the program. For example, <code class="command">aa-complain /usr/sbin/*</code> finds profiles associated with all the programs in <code class="filename">/usr/sbin</code> and puts them into complain mode. <code class="command">aa-complain /etc/apparmor.d/*</code> puts all the profiles in <code class="filename">/etc/apparmor.d</code> into complain mode.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Toggling profile mode with YaST</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>YaST offers a graphical front-end for toggling complain and enforce mode. See <a class="xref xref-sect2" href="bk06partvch06s04.html#sec-apparmor-yast-manage-profmodes">the section called “Changing the mode of individual profiles”</a> for information.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-decode">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>aa-decode—decoding hex-encoded strings in AppArmor log files</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">aa-decode</code> decodes hex-encoded strings in the AppArmor log output. It can also process the audit
+                     log on standard input, convert any hex-encoded AppArmor log entries, and display them
+                     on standard output.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-disable">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>aa-disable—disabling an AppArmor security profile</h4>
+                  </header>
+                  
+                  
+                  <p>Use <code class="command">aa-disable</code> to disable the enforcement mode for one or more AppArmor profiles. This command unloads
+                     the profile from the kernel and prevents the profile from being loaded on AppArmor
+                     start-up. Use <code class="command">aa-enforce</code> or <code class="command">aa-complain</code> utilities to change this behavior.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-easyprof">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>aa-easyprof—easy profile generation</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">aa-easyprof</code> provides an easy-to-use interface for AppArmor profile generation. <code class="command">aa-easyprof</code> supports the use of templates and profile groups to quickly profile an application.
+                     While <code class="command">aa-easyprof</code> can help with profile generation, its utility is dependent on the quality of the
+                     templates, profile groups and abstractions used. Also, this tool may create a profile
+                     that is less restricted than when creating a profile manually or with <code class="command">aa-genprof</code> and <code class="command">aa-logprof</code>.</p>
+                  
+                  <p>For more information, see the man page of <code class="command">aa-easyprof</code> (8).</p>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-enforce">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>aa-enforce—entering enforce mode</h4>
+                  </header>
+                  
+                  
+                  <p>The enforce mode detects violations of AppArmor profile rules, such as the profiled
+                     program accessing files not permitted by the profile. The violations are logged and
+                     not permitted. The default is for enforce mode to be enabled. To log the violations,
+                     but still permit them, use complain mode.</p>
+                  
+                  <p>Manually activating enforce mode (using the command line) removes the complain flag
+                     from the top of the profile so that <code class="literal">/bin/foo flags=(complain)</code> becomes <code class="literal">/bin/foo</code>. To use enforce mode, open a terminal window and enter one of the following lines.</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>If the example program (<em class="replaceable">PROGRAM1</em>) is in your path, use:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-enforce [<em class="replaceable">PROGRAM1</em><em class="replaceable">PROGRAM2</em> ...]</code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>If the program is not in your path, specify the entire path, as follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-enforce /sbin/<em class="replaceable">PROGRAM1</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>If the profiles are not in <em class="replaceable">/etc/apparmor.d</em>, use the following to override the default location:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-enforce -d <em class="replaceable">/path/to/profiles/ program1</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Specify the profile for <em class="replaceable">/sbin/program1</em> as follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-enforce /etc/apparmor.d/sbin.<em class="replaceable">PROGRAM1</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     </ul>
+                  
+                  <p>Each of the above commands activates the enforce mode for the profiles and programs
+                     listed.</p>
+                  
+                  <p>If you do not enter the program or profile names, you are prompted to enter one. <em class="replaceable">/path/to/profiles</em> overrides the default location of <code class="filename">/etc/apparmor.d</code>.</p>
+                  
+                  <p>The argument can be either a list of programs or a list of profiles. If the program
+                     name does not include its entire path, <code class="command">aa-enforce</code> searches <code class="envar">$PATH</code> for the program.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Toggling profile mode with YaST</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>YaST offers a graphical front-end for toggling complain and enforce mode. See <a class="xref xref-sect2" href="bk06partvch06s04.html#sec-apparmor-yast-manage-profmodes">the section called “Changing the mode of individual profiles”</a> for information.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-exec">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>aa-exec—confining a program with the specified profile</h4>
+                  </header>
+                  
+                  
+                  <p>Use <code class="command">aa-exec</code> to launch a program confined by a specified profile and/or profile namespace. If
+                     both a profile and namespace are specified, the program is confined by the profile
+                     in the new namespace. If a profile namespace is specified, the profile name of the
+                     current confinement is used. If neither a profile nor namespace is specified, the
+                     command runs using the standard profile attachment—as if you did not use the <code class="command">aa-exec</code> command.</p>
+                  
+                  <p>For more information on the command's options, see its manual page <code class="command">man 8 aa-exec</code>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-genprof">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>aa-genprof—generating profiles</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">aa-genprof</code> is AppArmor's profile generating utility. It runs <code class="command">aa-autodep</code> on the specified program, creating an approximate profile (if a profile does not
+                     already exist for it), sets it to complain mode, reloads it into AppArmor, marks the
+                     log, and prompts the user to execute the program and exercise its functionality. Its
+                     syntax is as follows:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-genprof [ -d <em class="replaceable">/path/to/profiles</em> ]  <em class="replaceable">PROGRAM</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>To create a profile for the Apache Web server program httpd2-prefork, do the following
+                     as <code class="systemitem username">root</code>:</p>
+                  
+                  <div class="informalobject procedure" id="sec-apparmor-commandline-profiling-summary-genprof_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Enter <code class="command">systemctl stop apache2</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Next, enter <code class="command">aa-genprof httpd2-prefork</code>.</p>
+                           
+                           <p>Now <code class="command">aa-genprof</code> does the following:</p>
+                           
+                           <ol class="orderedlist" type="1">
+                              
+                              <li>
+                                 
+                                 <p>Resolves the full path of httpd2-prefork using your shell's path variables. You can
+                                    also specify a full path. On <span class="phrase productname">SUSE Linux Enterprise Server</span>, the default full path is <code class="filename">/usr/sbin/httpd2-prefork</code>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Checks to see if there is an existing profile for httpd2-prefork. If there is one,
+                                    it updates it. If not, it creates one using the <code class="command">aa-autodep</code> as described in <a class="xref xref-sect2" href="#sec-apparmor-commandline-profiling-summary">the section called “Summary of profiling tools”</a>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Puts the profile for this program into learning or complain mode so that profile violations
+                                    are logged, but are permitted to proceed. A log event looks like this (see <code class="filename">/var/log/audit/audit.log</code>):</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>type=APPARMOR_ALLOWED msg=audit(1189682639.184:20816): \</code></span></span>
+<span class="line"><span class="ld"><code>apparmor="DENIED" operation="file_mmap" parent=2692 \</code></span></span>
+<span class="line"><span class="ld"><code>profile="/usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT" \</code></span></span>
+<span class="line"><span class="ld"><code>name="/var/log/apache2/access_log-20140116" pid=28730 comm="httpd2-prefork" \</code></span></span>
+<span class="line"><span class="ld"><code>requested_mask="::r" denied_mask="::r" fsuid=30 ouid=0</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>If you are not running the audit daemon, the AppArmor events are logged directly to
+                                    <code class="daemon systemitem">systemd</code> journal (see <a class="xref xref-chapter" href="bk01partiiich02.html">Chapter&nbsp;<span class="label">21</span>, 
+                                       <code class="command">journalctl</code>: query the <code class="daemon systemitem">systemd</code> journal</a>):</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Sep 13 13:20:30 K23 kernel: audit(1189682430.672:20810): \</code></span></span>
+<span class="line"><span class="ld"><code>apparmor="DENIED" operation="file_mmap" parent=2692 \</code></span></span>
+<span class="line"><span class="ld"><code>profile="/usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT" \</code></span></span>
+<span class="line"><span class="ld"><code>name="/var/log/apache2/access_log-20140116" pid=28730 comm="httpd2-prefork" \</code></span></span>
+<span class="line"><span class="ld"><code>requested_mask="::r" denied_mask="::r" fsuid=30 ouid=0</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>They also can be viewed using the <code class="command">dmesg</code> command:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>audit(1189682430.672:20810): apparmor="DENIED" \</code></span></span>
+<span class="line"><span class="ld"><code>operation="file_mmap" parent=2692 \</code></span></span>
+<span class="line"><span class="ld"><code>profile="/usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT" \</code></span></span>
+<span class="line"><span class="ld"><code>name="/var/log/apache2/access_log-20140116" pid=28730 comm="httpd2-prefork" \</code></span></span>
+<span class="line"><span class="ld"><code>requested_mask="::r" denied_mask="::r" fsuid=30 ouid=0</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Marks the log with a beginning marker of log events to consider. For example:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Sep 13 17:48:52 figwit root: GenProf: e2ff78636296f16d0b5301209a04430d</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ol>
+                           </li>
+                        <li class="step">
+                           
+                           <p>When prompted by the tool, run the application to profile in another terminal window
+                              and perform as many of the application functions as possible. Thus, the learning mode
+                              can log the files and directories to which the program requires access to function
+                              properly. For example, in a new terminal window, enter <code class="command">systemctl start apache2</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Select from the following options that are available in the <code class="command">aa-genprof</code> terminal window after you have executed the program function:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p><span class="keycap">S</span> runs <code class="command">aa-genprof</code> on the system log from where it was marked when <code class="command">aa-genprof</code> was started and reloads the profile. If system events exist in the log, AppArmor
+                                    parses the learning mode log files. This generates a series of questions that you
+                                    must answer to guide <code class="command">aa-genprof</code> in generating the security profile.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><span class="keycap">F</span> exits the tool.</p>
+                                 </li>
+                              </ul>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Note</div>
+                                    </header>
+                                    <div>
+                                       
+                                       <p>If requests to add hats appear, proceed to <a class="xref xref-chapter" href="bk06partvch08.html">Chapter&nbsp;<span class="label">38</span>, Profiling your Web applications using ChangeHat</a>.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Answer two types of questions:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p>A resource is requested by a profiled program that is not in the profile (see <a class="xref xref-example" href="#ex-apparmor-commandline-profiling-summary-genprof-learn">Example&nbsp;<span class="label">37<span class="sep">.</span>1</span>, “Learning mode exception: controlling access to specific resources”</a>).</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>A program is executed by the profiled program and the security domain transition has
+                                    not been defined (see <a class="xref xref-example" href="#ex-apparmor-commandline-profiling-summary-genprof-perms">Example&nbsp;<span class="label">37<span class="sep">.</span>2</span>, “Learning mode exception: defining permissions for an entry”</a>).</p>
+                                 </li>
+                              </ul>
+                           
+                           <p>Each of these categories results in a series of questions that you must answer to
+                              add the resource or program to the profile. <a class="xref xref-example" href="#ex-apparmor-commandline-profiling-summary-genprof-learn">Example&nbsp;<span class="label">37<span class="sep">.</span>1</span>, “Learning mode exception: controlling access to specific resources”</a> and <a class="xref xref-example" href="#ex-apparmor-commandline-profiling-summary-genprof-perms">Example&nbsp;<span class="label">37<span class="sep">.</span>2</span>, “Learning mode exception: defining permissions for an entry”</a> provide examples of each one. Subsequent steps describe your options in answering
+                              these questions.</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p>Dealing with execute accesses is complex. You must decide how to proceed with this
+                                    entry regarding which execute permission type to grant to this entry:</p>
+                                 
+                                 <div class="example formalobject" id="ex-apparmor-commandline-profiling-summary-genprof-learn">
+                                    
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Reading log entries from /var/log/audit/audit.log.</code></span></span>
+<span class="line"><span class="ld"><code>Updating AppArmor profiles in /etc/apparmor.d.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Profile:  /usr/sbin/cupsd</code></span></span>
+<span class="line"><span class="ld"><code>Program:  cupsd</code></span></span>
+<span class="line"><span class="ld"><code>Execute:  /usr/lib/cups/daemon/cups-lpd</code></span></span>
+<span class="line"><span class="ld"><code>Severity: unknown</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>(I)nherit / (P)rofile / (C)hild / (N)ame / (U)nconfined / (X)ix / (D)eny / Abo(r)t / (F)inish</code></span></span></pre>
+                                    </div>
+                                    
+                                    <header>
+                                       <div class="title">Example&nbsp;<span class="label">37<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Learning mode exception: controlling access to specific resources</div>
+                                    </header>
+                                 </div>
+                                 
+                                 <dl class="variablelist">
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Inherit (ix)</span></dt>
+                                       <dd>
+                                          
+                                          <p>The child inherits the parent's profile, running with the same access controls as
+                                             the parent. This mode is useful when a confined program needs to call another confined
+                                             program without gaining the permissions of the target's profile or losing the permissions
+                                             of the current profile. This mode is often used when the child program is a <em>helper application</em>, such as the <code class="command">/usr/bin/mail</code> client using <code class="command">less</code> as a pager.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Profile (px/px)</span></dt>
+                                       <dd>
+                                          
+                                          <p>The child runs using its own profile, which must be loaded into the kernel. If the
+                                             profile is not present, attempts to execute the child fail with permission denied.
+                                             This is most useful if the parent program is invoking a global service, such as DNS
+                                             lookups or sending mail with your system's MTA.</p>
+                                          
+                                          <p>Choose the <span class="guimenu">profile with clean exec</span> (Px) option to scrub the environment of environment variables that could modify execution
+                                             behavior when passed to the child process.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Child (cx/cx)</span></dt>
+                                       <dd>
+                                          
+                                          <p>Sets up a transition to a subprofile. It is like px/Px transition, except to a child
+                                             profile.</p>
+                                          
+                                          <p>Choose the <span class="guimenu">profile with clean exec</span> (Cx) option to scrub the environment of environment variables that could modify execution
+                                             behavior when passed to the child process.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Unconfined (ux/ux)</span></dt>
+                                       <dd>
+                                          
+                                          <p>The child runs unconfined without any AppArmor profile applied to the executed resource.</p>
+                                          
+                                          <p>Choose the <span class="guimenu">unconfined with clean exec</span> (Ux) option to scrub the environment of environment variables that could modify execution
+                                             behavior when passed to the child process. Running unconfined profiles introduces
+                                             a security vulnerability that could be used to evade AppArmor. Use it as a last resort.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">mmap (m)</span></dt>
+                                       <dd>
+                                          
+                                          <p>This permission denotes that the program running under the profile can access the
+                                             resource using the mmap system call with the flag <code class="envar">PROT_EXEC</code>. This means that the data mapped in it can be executed. You are prompted to include
+                                             this permission if it is requested during a profiling run.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Deny</span></dt>
+                                       <dd>
+                                          
+                                          <p>Adds a <code class="literal">deny</code> rule to the profile, and permanently prevents the program from accessing the specified
+                                             directory path entries. AppArmor then continues to the next event.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Abort</span></dt>
+                                       <dd>
+                                          
+                                          <p>Aborts <code class="command">aa-logprof</code>, losing all rule changes entered so far and leaving all profiles unmodified.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Finish</span></dt>
+                                       <dd>
+                                          
+                                          <p>Closes <code class="command">aa-logprof</code>, saving all rule changes entered so far and modifying all profiles.</p>
+                                          </dd>
+                                    </div>
+                                    </dl>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><a class="xref xref-example" href="#ex-apparmor-commandline-profiling-summary-genprof-perms">Example&nbsp;<span class="label">37<span class="sep">.</span>2</span>, “Learning mode exception: defining permissions for an entry”</a> shows AppArmor suggest allowing a globbing pattern <code class="filename">/var/run/nscd/*</code> for reading, then using an abstraction to cover common Apache-related access rules.</p>
+                                 
+                                 <div class="example formalobject" id="ex-apparmor-commandline-profiling-summary-genprof-perms">
+                                    
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Profile:  /usr/sbin/httpd2-prefork</code></span></span>
+<span class="line"><span class="ld"><code>Path:     /var/run/nscd/dbSz9CTr</code></span></span>
+<span class="line"><span class="ld"><code>Mode:     r</code></span></span>
+<span class="line"><span class="ld"><code>Severity: 3</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  1 - /var/run/nscd/dbSz9CTr</code></span></span>
+<span class="line"><span class="ld"><code> [2 - /var/run/nscd/*]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>(A)llow / [(D)eny] / (G)lob / Glob w/(E)xt / (N)ew / Abo(r)t / (F)inish / (O)pts</code></span></span>
+<span class="line"><span class="ld"><code>Adding /var/run/nscd/* r to profile.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Profile:  /usr/sbin/httpd2-prefork</code></span></span>
+<span class="line"><span class="ld"><code>Path:     /proc/11769/attr/current</code></span></span>
+<span class="line"><span class="ld"><code>Mode:     w</code></span></span>
+<span class="line"><span class="ld"><code>Severity: 9</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> [1 - #include &lt;abstractions/apache2-common&gt;]</code></span></span>
+<span class="line"><span class="ld"><code>  2 - /proc/11769/attr/current</code></span></span>
+<span class="line"><span class="ld"><code>  3 - /proc/*/attr/current</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>(A)llow / [(D)eny] / (G)lob / Glob w/(E)xt / (N)ew / Abo(r)t / (F)inish / (O)pts</code></span></span>
+<span class="line"><span class="ld"><code>Adding #include &lt;abstractions/apache2-common&gt; to profile.</code></span></span></pre>
+                                    </div>
+                                    
+                                    <header>
+                                       <div class="title">Example&nbsp;<span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Learning mode exception: defining permissions for an entry</div>
+                                    </header>
+                                 </div>
+                                 
+                                 <p>AppArmor provides one or more paths or includes. By entering the option number, select
+                                    the desired options then proceed to the next step.</p>
+                                 
+                                 <div class="admonition note">
+                                    <div>
+                                       <div class="icon">ⓘ</div>
+                                       <div class="body">
+                                          <header>
+                                             <div class="title">Note</div>
+                                          </header>
+                                          <div>
+                                             
+                                             <p>Not all these options are always presented in the AppArmor menu.</p>
+                                             </div>
+                                       </div>
+                                    </div>
+                                 </div>
+                                 
+                                 <dl class="long-terms variablelist">
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">
+                                             <code class="literal">#include</code>
+                                             </span></dt>
+                                       <dd>
+                                          
+                                          <p>This is the section of an AppArmor profile that refers to an include file, which procures
+                                             access permissions for programs. By using an include, you can give the program access
+                                             to directory paths or files that are also required by other programs. Using includes
+                                             can reduce the size of a profile. It is good practice to select includes when suggested.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Globbed version</span></dt>
+                                       <dd>
+                                          
+                                          <p>This is accessed by selecting <span class="guimenu">Glob</span> as described in the next step. For information about globbing syntax, refer to <a class="xref xref-sect1" href="bk06partvch04s06.html">the section called “Profile names, flags, paths, and globbing”</a>.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Actual path</span></dt>
+                                       <dd>
+                                          
+                                          <p>This is the literal path to which the program needs access so that it can run properly.</p>
+                                          </dd>
+                                    </div>
+                                    </dl>
+                                 
+                                 <p>After you select the path or include, process it as an entry into the AppArmor profile
+                                    by selecting <span class="guimenu">Allow</span> or <span class="guimenu">Deny</span>. If you are not satisfied with the directory path entry as it is displayed, you can
+                                    also <span class="guimenu">Glob</span> it.</p>
+                                 
+                                 <p>The following options are available to process the learning mode entries and build
+                                    the profile:</p>
+                                 
+                                 <dl class="long-terms variablelist">
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Select <span class="enter keycap">↵</span>
+                                             </span></dt>
+                                       <dd>
+                                          
+                                          <p>Allows access to the selected directory path.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Allow</span></dt>
+                                       <dd>
+                                          
+                                          <p>Allows access to the specified directory path entries. AppArmor suggests file permission
+                                             access. For more information, refer to <a class="xref xref-sect1" href="bk06partvch04s07.html">the section called “File permission access modes”</a>.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Deny</span></dt>
+                                       <dd>
+                                          
+                                          <p>Prevents the program from accessing the specified directory path entries. AppArmor
+                                             then continues to the next event.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">New</span></dt>
+                                       <dd>
+                                          
+                                          <p>Prompts you to enter your own rule for this event, allowing you to specify a regular
+                                             expression. If the expression does not actually satisfy the event that prompted the
+                                             question in the first place, AppArmor asks for confirmation and lets you reenter the
+                                             expression.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Glob</span></dt>
+                                       <dd>
+                                          
+                                          <p>Select a specific path or create a general rule using wild cards that match a broader
+                                             set of paths. To select any of the offered paths, enter the number that is printed
+                                             in front of the path then decide how to proceed with the selected item.</p>
+                                          
+                                          <p>For more information about globbing syntax, refer to <a class="xref xref-sect1" href="bk06partvch04s06.html">the section called “Profile names, flags, paths, and globbing”</a>.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Glob w/ext</span></dt>
+                                       <dd>
+                                          
+                                          <p>This modifies the original directory path while retaining the file name extension.
+                                             For example, <code class="filename">/etc/apache2/file.ext</code> becomes <code class="filename">/etc/apache2/*.ext</code>, adding the wild card (asterisk) in place of the file name. This allows the program
+                                             to access all files in the suggested directory that end with the <code class="literal">.ext</code> extension.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Abort</span></dt>
+                                       <dd>
+                                          
+                                          <p>Aborts <code class="command">aa-logprof</code>, losing all rule changes entered so far and leaving all profiles unmodified.</p>
+                                          </dd>
+                                    </div>
+                                    
+                                    <div class="varlistentry">
+                                       <dt><span class="term">Finish</span></dt>
+                                       <dd>
+                                          
+                                          <p>Closes <code class="command">aa-logprof</code>, saving all rule changes entered so far and modifying all profiles.</p>
+                                          </dd>
+                                    </div>
+                                    </dl>
+                                 </li>
+                              </ul>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To view and edit your profile using <code class="command">vi</code>, enter <code class="command">vi /etc/apparmor.d/</code><em class="replaceable">PROFILENAME</em> in a terminal window. To enable syntax highlighting when editing an AppArmor profile
+                              in vim, use the commands <code class="command">:syntax on</code> then <code class="command">:set syntax=apparmor</code>. For more information about vim and syntax highlighting, refer to <a class="xref xref-sect3" href="#sec-apparmor-commandline-profiling-summary-vim">the section called “apparmor.vim”</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Restart AppArmor and reload the profile set including the newly created one using
+                              the <code class="command">systemctl reload apparmor</code> command.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>Like the graphical front-end for building AppArmor profiles, the YaST Add Profile
+                     Wizard, <code class="command">aa-genprof</code> also supports the use of the local profile repository under <code class="filename">/usr/share/apparmor/extra-profiles</code>.</p>
+                  
+                  <p>To use a profile from the local repository, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="sec-apparmor-commandline-profiling-summary-genprof_proc2">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Start <code class="command">aa-genprof</code> as described above.</p>
+                           
+                           <p>If <code class="command">aa-genprof</code> finds an inactive local profile, the following lines appear on your terminal window:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Profile: /usr/bin/opera</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> [1 - Inactive local profile for /usr/bin/opera]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[(V)iew Profile] / (U)se Profile / (C)reate New Profile / Abo(r)t / (F)inish</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To use this profile, press <span class="keycap">U</span> (<span class="guimenu">Use Profile</span>) and follow the profile generation procedure outlined above.</p>
+                           
+                           <p>To examine the profile before activating it, press <span class="keycap">V</span> (<span class="guimenu">View Profile</span>).</p>
+                           
+                           <p>To ignore the existing profile, press <span class="keycap">C</span> (<span class="guimenu">Create New Profile</span>) and follow the profile generation procedure outlined above to create the profile
+                              from scratch.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Leave <code class="command">aa-genprof</code> by pressing <span class="keycap">F</span> (<span class="guimenu">Finish</span>) when you are done and save your changes.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-logprof">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>aa-logprof—scanning the system log</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">aa-logprof</code> is an interactive tool used to review the complain and enforce mode events found
+                     in the log entries in <code class="filename">/var/log/audit/audit.log</code>, or directly in the <code class="daemon systemitem">systemd</code> journal (see <a class="xref xref-chapter" href="bk01partiiich02.html">Chapter&nbsp;<span class="label">21</span>, 
+                        <code class="command">journalctl</code>: query the <code class="daemon systemitem">systemd</code> journal</a>), and generate new entries in AppArmor security profiles.</p>
+                  
+                  <p>When you run <code class="command">aa-logprof</code>, it begins to scan the log files produced in complain and enforce mode and, if there
+                     are new security events that are not covered by the existing profile set, it gives
+                     suggestions for modifying the profile. <code class="command">aa-logprof</code> uses this information to observe program behavior.</p>
+                  
+                  <p>If a confined program forks and executes another program, <code class="command">aa-logprof</code> sees this and asks the user which execution mode should be used when launching the
+                     child process. The execution modes <em>ix</em>, <em>px</em>, <em>Px</em>, <em>ux</em>, <em>Ux</em>, <em>cx</em>, <em>Cx</em>, and named profiles, are options for starting the child process. If a separate profile
+                     exists for the child process, the default selection is <em>Px</em>. If one does not exist, the profile defaults to <em>ix</em>. Child processes with separate profiles have <code class="command">aa-autodep</code> run on them and are loaded into AppArmor, if it is running.</p>
+                  
+                  <p>When <code class="command">aa-logprof</code> exits, profiles are updated with the changes. If AppArmor is active, the updated
+                     profiles are reloaded and, if any processes that generated security events are still
+                     running in the null-XXXX profiles (unique profiles temporarily created in complain
+                     mode), those processes are set to run under their proper profiles.</p>
+                  
+                  <p>To run <code class="command">aa-logprof</code>, enter <code class="command">aa-logprof</code> into a terminal window while logged in as <code class="systemitem username">root</code>. The following options can be used for <code class="command">aa-logprof</code>:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">aa-logprof -d</code>
+                              <em class="replaceable">/path/to/profile/directory/</em>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the full path to the location of the profiles if the profiles are not located
+                              in the standard directory, <code class="filename">/etc/apparmor.d/</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">aa-logprof -f</code>
+                              <em class="replaceable">/path/to/logfile/</em>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the full path to the location of the log file if the log file is not located
+                              in the default directory or <code class="filename">/var/log/audit/audit.log</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">aa-logprof -m "string marker in logfile"</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Marks the starting point for <code class="command">aa-logprof</code> to look in the system log. <code class="command">aa-logprof</code> ignores all events in the system log before the specified mark. If the mark contains
+                              spaces, it must be surrounded by quotes to work correctly. For example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>aa-logprof -m "17:04:21"</code></span></span></pre>
+                           </div>
+                           
+                           <p>or</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>aa-logprof -m e2ff78636296f16d0b5301209a04430d</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p><code class="command">aa-logprof</code> scans the log, asking you how to handle each logged event. Each question presents
+                     a numbered list of AppArmor rules that can be added by pressing the number of the
+                     item on the list.</p>
+                  
+                  <p>By default, <code class="command">aa-logprof</code> looks for profiles in <code class="filename">/etc/apparmor.d/</code>. Often running <code class="command">aa-logprof</code> as <code class="systemitem username">root</code> is enough to update the profile. However, there might be times when you need to search
+                     archived log files, such as if the program exercise period exceeds the log rotation
+                     window (when the log file is archived and a new log file is started). If this is the
+                     case, you can enter <code class="command">zcat -f `ls -1tr</code><em class="replaceable">/path/to/logfile*</em>` | aa-logprof -f -.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-logprof-ex1">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>aa-logprof example 1</h4>
+                  </header>
+                  
+                  
+                  <p>The following is an example of how <code class="command">aa-logprof</code> addresses httpd2-prefork accessing the file <code class="filename">/etc/group</code>. <code class="literal">[]</code> indicates the default option.</p>
+                  
+                  <p>In this example, the access to <code class="command">/etc/group</code> is part of httpd2-prefork accessing name services. The appropriate response is <code class="literal">1</code>, which includes a predefined set of AppArmor rules. Selecting <code class="literal">1</code> to <code class="literal">#include</code> the name service package resolves all of the future questions pertaining to DNS lookups
+                     and makes the profile less brittle in that any changes to DNS configuration and the
+                     associated name service profile package can be made once, rather than needing to revise
+                     many profiles.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Profile:  /usr/sbin/httpd2-prefork</code></span></span>
+<span class="line"><span class="ld"><code>Path:     /etc/group</code></span></span>
+<span class="line"><span class="ld"><code>New Mode: r</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[1 - #include &lt;abstractions/nameservice&gt;]</code></span></span>
+<span class="line"><span class="ld"><code> 2 - /etc/group</code></span></span>
+<span class="line"><span class="ld"><code>[(A)llow] / (D)eny / (N)ew / (G)lob / Glob w/(E)xt / Abo(r)t / (F)inish</code></span></span></pre>
+                  </div>
+                  
+                  <p>Select one of the following responses:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Select <span class="enter keycap">↵</span>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Triggers the default action, which is, in this example, allowing access to the specified
+                              directory path entry.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Allow</span></dt>
+                        <dd>
+                           
+                           <p>Allows access to the specified directory path entries. AppArmor suggests file permission
+                              access. For more information about this, refer to <a class="xref xref-sect1" href="bk06partvch04s07.html">the section called “File permission access modes”</a>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Deny</span></dt>
+                        <dd>
+                           
+                           <p>Permanently prevents the program from accessing the specified directory path entries.
+                              AppArmor then continues to the next event.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">New</span></dt>
+                        <dd>
+                           
+                           <p>Prompts you to enter your own rule for this event, allowing you to specify whatever
+                              form of regular expression you want. If the expression entered does not satisfy the
+                              event that prompted the question in the first place, AppArmor asks for confirmation
+                              and lets you reenter the expression.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Glob</span></dt>
+                        <dd>
+                           
+                           <p>Select either a specific path or create a general rule using wild cards that matches
+                              on a broader set of paths. To select any of the offered paths, enter the number that
+                              is printed in front of the paths then decide how to proceed with the selected item.</p>
+                           
+                           <p>For more information about globbing syntax, refer to <a class="xref xref-sect1" href="bk06partvch04s06.html">the section called “Profile names, flags, paths, and globbing”</a>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Glob w/ext</span></dt>
+                        <dd>
+                           
+                           <p>This modifies the original directory path while retaining the file name extension.
+                              For example, <code class="filename">/etc/apache2/file.ext</code> becomes <code class="filename">/etc/apache2/*.ext</code>, adding the wild card (asterisk) in place of the file name. This allows the program
+                              to access all files in the suggested directory that end with the <code class="literal">.ext</code> extension.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Abort</span></dt>
+                        <dd>
+                           
+                           <p>Aborts <code class="command">aa-logprof</code>, losing all rule changes entered so far and leaving all profiles unmodified.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Finish</span></dt>
+                        <dd>
+                           
+                           <p>Closes <code class="command">aa-logprof</code>, saving all rule changes entered so far and modifying all profiles.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-logprof-ex2">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>aa-logprof example 2</h4>
+                  </header>
+                  
+                  
+                  <p>For example, when profiling vsftpd, see this question:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Profile:  /usr/sbin/vsftpd</code></span></span>
+<span class="line"><span class="ld"><code>Path:     /y2k.jpg</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>New Mode: r</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[1 - /y2k.jpg]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>(A)llow / [(D)eny] / (N)ew / (G)lob / Glob w/(E)xt / Abo(r)t / (F)inish</code></span></span></pre>
+                  </div>
+                  
+                  <p>Several items of interest appear in this question. First, vsftpd is asking for a path
+                     entry at the top of the tree, even though vsftpd on <span class="phrase productname">SUSE Linux Enterprise Server</span> serves FTP files from <code class="filename">/srv/ftp</code> by default. This is because vsftpd uses chroot and, for the portion of the code inside
+                     the chroot jail, AppArmor sees file accesses regarding the chroot environment rather
+                     than the global absolute path.</p>
+                  
+                  <p>The second item of interest is that you should grant FTP read access to all JPEG files
+                     in the directory, so you could use <span class="guimenu">Glob w/Ext</span> and use the suggested path of <code class="literal">/*.jpg</code>. Doing so collapses all previous rules granting access to individual <code class="literal">.jpg</code> files and forestalls any future questions pertaining to access to <code class="filename">.jpg</code> files.</p>
+                  
+                  <p>Finally, you should grant more general access to FTP files. If you select <span class="guimenu">Glob</span> in the last entry, <code class="command">aa-logprof</code> replaces the suggested path of <code class="filename">/y2k.jpg</code> with <code class="filename">/*</code>. Alternatively, you should grant even more access to the entire directory tree, in
+                     which case you could use the <span class="guimenu">New</span> path option and enter <code class="literal">/**.jpg</code> (which would grant access to all <code class="literal">.jpg</code> files in the entire directory tree) or <code class="filename">/**</code> (which would grant access to all files in the directory tree).</p>
+                  
+                  <p>These items deal with read accesses. Write accesses are similar, except that it is
+                     good policy to be more conservative in your use of regular expressions for write accesses.
+                     Dealing with execute accesses is more complex. Find an example in <a class="xref xref-example" href="#ex-apparmor-commandline-profiling-summary-genprof-learn">Example&nbsp;<span class="label">37<span class="sep">.</span>1</span>, “Learning mode exception: controlling access to specific resources”</a>.</p>
+                  
+                  <p>In the following example, the <code class="filename">/usr/bin/mail</code> mail client is being profiled and <code class="command">aa-logprof</code> has discovered that <code class="command">/usr/bin/mail</code> executes <code class="command">/usr/bin/less</code> as a helper application to <q>page</q> long mail messages. Consequently, it presents this prompt:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/nail -&gt; /usr/bin/less</code></span></span>
+<span class="line"><span class="ld"><code>(I)nherit / (P)rofile / (C)hild / (N)ame / (U)nconfined / (X)ix / (D)eny</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Note</div>
+                           </header>
+                           <div>
+                              
+                              <p>The actual executable file for <code class="filename">/usr/bin/mail</code> turns out to be <code class="filename">/usr/bin/nail</code>, which is not a typographical error.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>The program <code class="filename">/usr/bin/less</code> appears to be a simple one for scrolling through text that is more than one screen
+                     long and that is in fact what <code class="filename">/usr/bin/mail</code> is using it for. However, <code class="command">less</code> is actually a large and powerful program that uses many other helper applications,
+                     such as <code class="command">tar</code> and <code class="command">rpm</code>.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Tip</div>
+                           </header>
+                           <div>
+                              
+                              <p>Run <code class="command">less</code> on a tar file or an RPM file and it shows you the inventory of these containers.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>You do not want to run <code class="command">rpm</code> automatically when reading mail messages (that leads directly to a Microsoft* Outlook–style
+                     virus attack, because RPM has the power to install and modify system programs), so,
+                     in this case, the best choice is to use <span class="guimenu">Inherit</span>. This results in the less program executed from this context running under the profile
+                     for <code class="filename">/usr/bin/mail</code>. This has two consequences:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>You need to add all the basic file accesses for <code class="filename">/usr/bin/less</code> to the profile for <code class="filename">/usr/bin/mail</code>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>You can avoid adding the helper applications, such as <code class="command">tar</code> and <code class="command">rpm</code>, to the <code class="filename">/usr/bin/mail</code> profile so that when <code class="filename">/usr/bin/mail</code> runs <code class="filename">/usr/bin/less</code> in this context, the less program is far less dangerous than it would be without
+                           AppArmor protection. Another option is to use the Cx execute modes. For more information
+                           on execute modes, see <a class="xref xref-sect1" href="bk06partvch04s12.html">the section called “Execute modes”</a>.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>In other circumstances, you might instead want to use the <span class="guimenu">Profile</span> option. This has the following effects on <code class="command">aa-logprof</code>:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>The rule written into the profile uses px/Px, which forces the transition to the child's
+                           own profile.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="command">aa-logprof</code> constructs a profile for the child and starts building it, in the same way that it
+                           built the parent profile, by assigning events for the child process to the child's
+                           profile and asking the <code class="command">aa-logprof</code> user questions. The profile is applied if you run the child as a stand-alone program.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>If a confined program forks and executes another program, <code class="command">aa-logprof</code> sees this and asks the user which execution mode should be used when launching the
+                     child process. The execution modes of inherit, profile, unconfined, child, named profile,
+                     or an option to deny the execution are presented.</p>
+                  
+                  <p>If a separate profile exists for the child process, the default selection is profile.
+                     If a profile does not exist, the default is inherit. The inherit option, or <code class="literal">ix</code>, is described in <a class="xref xref-sect1" href="bk06partvch04s07.html">the section called “File permission access modes”</a>.</p>
+                  
+                  <p>The profile option indicates that the child program should run in its own profile.
+                     A secondary question asks whether to sanitize the environment that the child program
+                     inherits from the parent. If you choose to sanitize the environment, this places the
+                     execution modifier <code class="literal">Px</code> in your AppArmor profile. If you select not to sanitize, <code class="literal">px</code> is placed in the profile and no environment sanitizing occurs. The default for the
+                     execution mode is <code class="literal">Px</code> if you select profile execution mode.</p>
+                  
+                  <p>The unconfined execution mode is not recommended and should be used in cases where
+                     there is no other option to generate a profile for a program reliably. Selecting unconfined
+                     opens a warning dialog asking for confirmation of the choice. If you are sure and
+                     choose <span class="guimenu">Yes</span>, a second dialog ask whether to sanitize the environment. To use the execution mode
+                     <code class="literal">Ux</code> in your profile, select <span class="guimenu">Yes</span>. To use the execution mode <code class="literal">ux</code> in your profile instead, select <span class="guimenu">No</span>. The default value selected is <code class="literal">Ux</code> for unconfined execution mode.</p>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Running unconfined</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Selecting <code class="literal">ux or Ux</code> is dangerous and provides no enforcement of policy (from a security perspective)
+                                 of the resulting execution behavior of the child program.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-unconfined">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>aa-unconfined—identifying unprotected processes</h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="command">aa-unconfined</code> command examines open network ports on your system, compares that to the set of profiles
+                     loaded on your system, and reports network services that do not have AppArmor profiles.
+                     It requires <code class="systemitem username">root</code> privileges and that it not be confined by an AppArmor profile.</p>
+                  
+                  <p><code class="command">aa-unconfined</code> must be run as <code class="systemitem username">root</code> to retrieve the process executable link from the <code class="filename">/proc</code> file system. This program is susceptible to the following race conditions:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>An unlinked executable is mishandled</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>A process that dies between <code class="command">netstat(8)</code> and further checks is mishandled</p>
+                        </li>
+                     </ul>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Note</div>
+                           </header>
+                           <div>
+                              
+                              <p>This program lists processes using TCP and UDP. In short, this program is unsuitable
+                                 for forensics use and is provided as an aid to profiling all network-accessible processes
+                                 in the lab.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="commandline-profiling-summary-aa-notify">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>aa-notify</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">aa-notify</code> is a handy utility that displays AppArmor notifications in your desktop environment.
+                     This is convenient if you do not want to inspect the AppArmor log file, but rather
+                     let the desktop inform you about events that violate the policy. To enable AppArmor
+                     desktop notifications, run <code class="command">aa-notify</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-notify -p -u <em class="replaceable">USERNAME</em> --display <em class="replaceable">DISPLAY_NUMBER</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>where <em class="replaceable">USERNAME</em> is your user name under which you are logged in, and <em class="replaceable">DISPLAY_NUMBER</em> is the X Window display number you are currently using, such as <code class="literal">:0</code>. The process is run in the background, and shows a notification each time a deny
+                     event happens.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Tip</div>
+                           </header>
+                           <div>
+                              
+                              <p>The active X Window display number is saved in the <code class="literal">$DISPLAY</code> variable, so you can use <code class="literal">--display $DISPLAY</code> to avoid finding out the current display number.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="figure formalobject" id="commandline-profiling-summary-aa-notify_fig1">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><span class="viewport-table" style="width:218px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/aa-notify.png" style="width:218px;"></picture></span></span></span></span></span></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">37<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                           <code class="command">aa-notify Message in GNOME</code>
+                           </div>
+                     </header>
+                  </div>
+                  
+                  <p>With the <code class="option">-s <em class="replaceable">DAYS</em></code> option, you can also configure <code class="command">aa-notify</code> to display a summary of notifications for the specified number of past days. For
+                     more information on <code class="command">aa-notify</code>, see its man page <code class="command">man 8 aa-notify</code>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-apparmor-commandline-profiling-summary-vim">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>7<span class="sep">.</span>3<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>apparmor.vim</h4>
+                  </header>
+                  
+                  
+                  <p>A syntax highlighting file for the vim text editor highlights various features of
+                     an AppArmor profile with colors. Using vim and the AppArmor syntax mode for vim, you
+                     can see the semantic implications of your profiles with color highlighting. Use vim
+                     to view and edit your profile by typing vim at a terminal window.</p>
+                  
+                  <p>To enable the syntax coloring when you edit an AppArmor profile in vim, use the commands
+                     <code class="literal">:syntax on</code> then <code class="literal">:set syntax=apparmor</code>. To make sure vim recognizes the edited file type correctly as an AppArmor profile,
+                     add</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># vim:ft=apparmor</code></span></span></pre>
+                  </div>
+                  
+                  <p>at the end of the profile.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Tip</div>
+                           </header>
+                           <div>
+                              
+                              <p><code class="command">vim</code> comes with AppArmor highlighting automatically enabled for files in <code class="filename">/etc/apparmor.d/</code>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>When you enable this feature, vim colors the lines of the profile for you:</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Blue</span></dt>
+                        <dd>
+                           
+                           <p>Comments</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">White</span></dt>
+                        <dd>
+                           
+                           <p>Ordinary read access lines</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Brown</span></dt>
+                        <dd>
+                           
+                           <p>Capability statements and complain flags</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Yellow</span></dt>
+                        <dd>
+                           
+                           <p>Lines that grant write access</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Green</span></dt>
+                        <dd>
+                           
+                           <p>Lines that grant execute permission (either ix or px)</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Red</span></dt>
+                        <dd>
+                           
+                           <p>Lines that grant unconfined access (ux)</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Red background</span></dt>
+                        <dd>
+                           
+                           <p>Syntax errors that do not load properly into the AppArmor modules</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>Use the <code class="systemitem">apparmor.vim</code> and <code class="systemitem">vim</code> man pages and the <code class="option">:help syntax</code> from within the vim editor for further vim help about syntax highlighting. The AppArmor
+                     syntax is stored in <code class="filename">/usr/share/vim/current/syntax/apparmor.vim.</code></p>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch07s06.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch07.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch07s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">37<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Deleting an AppArmor profile</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Important file names and directories</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

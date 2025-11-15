@@ -1,0 +1,704 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.3.&nbsp;Completely Fair Scheduler</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvch02s02.html" rel="prev">
+      <link href="bk07partvch02s04.html" rel="next">
+      <link href="bk07partvch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvch02.html">Up</a> <a href="bk07partvch02s04.html">Next</a> <a href="bk07partvch02s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvch02s03.html" db-id="d616951e218562" id="sec-tuning-taskscheduler-cfs">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Completely Fair Scheduler</h2>
+            </header>
+            
+            
+            <p>Since the Linux kernel version 2.6.23, a new approach has been taken to the scheduling
+               of runnable processes. Completely Fair Scheduler (CFS) became the default Linux kernel
+               scheduler. Since then, important changes and improvements have been made. The information
+               in this chapter applies to <span class="phrase productname">SUSE Linux Enterprise Server</span> with kernel version 2.6.32 and higher (including 3.x kernels). The scheduler environment
+               was divided into several parts, and three main new features were introduced:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Modular scheduler core</span></dt>
+                  <dd>
+                     
+                     <p>The core of the scheduler was enhanced with <em>scheduling classes</em>. These classes are modular and represent scheduling policies.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Completely Fair Scheduler</span></dt>
+                  <dd>
+                     
+                     <p>Introduced in kernel 2.6.23 and extended in 2.6.24, CFS tries to assure that each
+                        process obtains its <q>fair</q> share of the processor time.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Group scheduling</span></dt>
+                  <dd>
+                     
+                     <p>For example, if you split processes into groups according to which user is running
+                        them, CFS tries to provide each of these groups with the same amount of processor
+                        time.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>As a result, CFS brings optimized scheduling for both servers and desktops.</p>
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-howitworks">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>How CFS works</h3>
+               </header>
+               
+               
+               <p>CFS tries to guarantee a fair approach to each runnable task. To find the most balanced
+                  way of task scheduling, it uses the concept of <em>red-black tree</em>. A red-black tree is a type of self-balancing data search tree which provides inserting
+                  and removing entries in a reasonable way so that it remains well balanced.</p>
+               
+               <p>When CFS schedules a task it accumulates <q>virtual runtime</q> or <em>vruntime</em>. The next task picked to run is always the task with the minimum accumulated vruntime
+                  so far. By balancing the red-black tree when tasks are inserted into the <em>run queue</em> (a planned time line of processes to be executed next), the task with the minimum
+                  vruntime is always the first entry in the red-black tree.</p>
+               
+               <p>The amount of vruntime a task accrues is related to its priority. High priority tasks
+                  gain vruntime at a slower rate than low priority tasks, which results in high priority
+                  tasks being picked to run on the processor more often.</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-grouping">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Grouping processes</h3>
+               </header>
+               
+               
+               <p>Since the Linux kernel version 2.6.24, CFS can be tuned to be fair to groups rather
+                  than to tasks only. Runnable tasks are then grouped to form entities, and CFS tries
+                  to be fair to these entities instead of individual runnable tasks. The scheduler also
+                  tries to be fair to individual tasks within these entities.</p>
+               
+               <p>The kernel scheduler lets you group runnable tasks using control groups. For more
+                  information, see <a class="xref xref-chapter" href="bk07partivch02.html">Chapter&nbsp;<span class="label">10</span>, Kernel control groups</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-kernelconfig">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Kernel configuration options</h3>
+               </header>
+               
+               
+               <p>Basic aspects of the task scheduler behavior can be set through the kernel configuration
+                  options. Setting these options is part of the kernel compilation process. Because
+                  kernel compilation process is a complex task and out of this document's scope, refer
+                  to relevant source of information.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Kernel compilation</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you run <span class="phrase productname">SUSE Linux Enterprise Server</span> on a kernel that was not shipped with it, for example on a self-compiled kernel,
+                              you lose the entire support entitlement.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-terms">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Terminology</h3>
+               </header>
+               
+               
+               <p>Documents regarding task scheduling policy often use several technical terms which
+                  you need to know to understand the information correctly. A few of them are as follows:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Latency</span></dt>
+                     <dd>
+                        
+                        <p>Delay between the time a process is scheduled to run and the actual process execution.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Granularity</span></dt>
+                     <dd>
+                        
+                        <p>The relation between granularity and latency can be expressed by the following equation:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>gran = ( lat / rtasks ) - ( lat / rtasks / rtasks )</code></span></span></pre>
+                        </div>
+                        
+                        <p>where <em>gran</em> stands for granularity, <em>lat</em> stand for latency, and <em>rtasks</em> is the number of running tasks.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <section class="sect3" id="kernel-tasksched-policies">
+                  <header>
+                     <h4><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Scheduling policies</h4>
+                  </header>
+                  
+                  
+                  <p>The Linux kernel supports the following scheduling policies:</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">SCHED_FIFO</span></dt>
+                        <dd>
+                           
+                           <p>Scheduling policy designed for special time-critical applications. It uses the First
+                              In-First Out scheduling algorithm.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">SCHED_BATCH</span></dt>
+                        <dd>
+                           
+                           <p>Scheduling policy designed for CPU-intensive tasks.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">SCHED_IDLE</span></dt>
+                        <dd>
+                           
+                           <p>Scheduling policy intended for <em>very</em> low-priority tasks.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">SCHED_OTHER</span></dt>
+                        <dd>
+                           
+                           <p>Default Linux time-sharing scheduling policy used by most of the processes.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">SCHED_RR</span></dt>
+                        <dd>
+                           
+                           <p>Similar to <code class="systemitem">SCHED_FIFO</code>, but uses the Round Robin scheduling algorithm.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-chrt">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Changing real-time attributes of&nbsp;processes with <code class="command">chrt</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The <code class="command">chrt</code> command sets or retrieves the real-time scheduling attributes of a running process,
+                  or runs a command with the specified attributes. You can get or retrieve both the
+                  scheduling policy and priority of a process.</p>
+               
+               <p>In the following examples, a process whose PID is 16244 is used.</p>
+               
+               <p>To <em>retrieve</em> the real-time attributes of an existing task:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>chrt -p 16244</code></span></span>
+<span class="line"><span class="ld"><code>pid 16244's current scheduling policy: SCHED_OTHER</code></span></span>
+<span class="line"><span class="ld"><code>pid 16244's current scheduling priority: 0</code></span></span></pre>
+               </div>
+               
+               <p>Before setting a new scheduling policy on the process, you need to find out the minimum
+                  and maximum valid priorities for each scheduling algorithm:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>chrt -m</code></span></span>
+<span class="line"><span class="ld"><code>SCHED_SCHED_OTHER min/max priority : 0/0</code></span></span>
+<span class="line"><span class="ld"><code>SCHED_SCHED_FIFO min/max priority : 1/99</code></span></span>
+<span class="line"><span class="ld"><code>SCHED_SCHED_RR min/max priority : 1/99</code></span></span>
+<span class="line"><span class="ld"><code>SCHED_SCHED_BATCH min/max priority : 0/0</code></span></span>
+<span class="line"><span class="ld"><code>SCHED_SCHED_IDLE min/max priority : 0/0</code></span></span></pre>
+               </div>
+               
+               <p>In the above example, SCHED_OTHER, SCHED_BATCH, SCHED_IDLE polices only allow for
+                  priority 0, while that of SCHED_FIFO and SCHED_RR can range from 1 to 99.</p>
+               
+               <p>To set SCHED_BATCH scheduling policy:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>chrt -b -p 0 16244</code></span></span>
+<span class="line"><span class="ld"><code>pid 16244's current scheduling policy: SCHED_BATCH</code></span></span>
+<span class="line"><span class="ld"><code>pid 16244's current scheduling priority: 0</code></span></span></pre>
+               </div>
+               
+               <p>For more information on <code class="command">chrt</code>, see its man page (<code class="command">man 1 chrt</code>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-tuning">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Runtime tuning with <code class="command">sysctl</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The <code class="command">sysctl</code> interface for examining and changing kernel parameters at runtime introduces important
+                  variables, using which you can change the default behavior of the task scheduler.
+                  The syntax of the <code class="command">sysctl</code> is simple, and all the following commands must be entered on the command line as
+                  <code class="systemitem username">root</code>.</p>
+               
+               <p>To read a value from a kernel variable, enter</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">sysctl <em class="replaceable">VARIABLE</em></code></code></span></span></pre>
+               </div>
+               
+               <p>To assign a value, enter</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">sysctl <em class="replaceable">VARIABLE</em>=<em class="replaceable">VALUE</em></code></code></span></span></pre>
+               </div>
+               
+               <p>To get a list of all scheduler-related variables, run the <code class="command">sysctl</code> command, and use <code class="command">grep</code> to filter the output:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">sysctl -A | grep "sched" | grep -v "domain"</code></code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_cfs_bandwidth_slice_us = 5000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_child_runs_first = 0</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_compat_yield = 0</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_latency_ns = 24000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_migration_cost_ns = 500000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_min_granularity_ns = 8000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_nr_migrate = 32</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_rr_timeslice_ms = 25</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_rt_period_us = 1000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_rt_runtime_us = 950000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_schedstats = 0</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_shares_window_ns = 10000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_time_avg_ms = 1000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_tunable_scaling = 1</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_wakeup_granularity_ns = 10000000</code></span></span></pre>
+               </div>
+               
+               <p>Variables ending with <q>_ns</q> and <q>_us</q> accept values in nanoseconds and microseconds, respectively.</p>
+               
+               
+               <p>A list of the most important task scheduler <code class="command">sysctl</code> tuning variables (located at <code class="filename">/proc/sys/kernel/</code>) with a short description follows:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_cfs_bandwidth_slice_us</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>When CFS bandwidth control is in use, this parameter controls the amount of runtime
+                           (bandwidth) transferred to a run queue from the task's control group bandwidth pool.
+                           Small values allow the global bandwidth to be shared in a fine-grained manner among
+                           tasks, larger values reduce transfer overhead. See <a class="link" href="https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt">https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_child_runs_first</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>A freshly forked child runs before the parent continues execution. Setting this parameter
+                           to <code class="literal">1</code> is beneficial for an application in which the child performs an execution after fork.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_compat_yield</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Enables the aggressive CPU yielding behavior of the old <em>O(1)</em> scheduler by moving the relinquishing task to the end of the runnable queue (right-most
+                           position in the red-black tree). Applications that depend on the <code class="option">sched_yield(2)</code> syscall behavior may see performance improvements by giving other processes a chance
+                           to run when there are highly contended resources (such as locks). Given that this
+                           call occurs in context switching, misusing the call can hurt the workload. Use it
+                           only when you see a drop in performance. The default value is <code class="literal">0</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_migration_cost_ns</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Amount of time after the last execution that a task is considered to be <q>cache hot</q> in migration decisions. A <q>hot</q> task has fewer chances of migration to another CPU, so increasing this variable reduces
+                           task migrations. The default value is <code class="literal">500000</code> (ns).</p>
+                        
+                        <p>If the CPU idle time is higher than expected when there are runnable processes, try
+                           reducing this value. If tasks bounce between CPUs or nodes too often, try increasing
+                           it.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_latency_ns</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Targeted preemption latency for CPU bound tasks. Increasing this variable increases
+                           a CPU bound task's timeslice. A task's timeslice is its weighted fair share of the
+                           scheduling period:</p>
+                        
+                        <p>timeslice = scheduling period * (task's weight/total weight of tasks in the run queue)</p>
+                        
+                        <p>The task's weight depends on the task's nice level and the scheduling policy. Minimum
+                           task weight for a SCHED_OTHER task is 15, corresponding to nice 19. The maximum task
+                           weight is 88761, corresponding to nice -20.</p>
+                        
+                        <p>Timeslices become smaller as the load increases. When the number of runnable tasks
+                           exceeds <code class="systemitem">sched_latency_ns</code>/<code class="systemitem">sched_min_granularity_ns</code>, the slice becomes number_of_running_tasks * <code class="systemitem">sched_min_granularity_ns</code>. Before that, the slice is equal to <code class="systemitem">sched_latency_ns</code>.</p>
+                        
+                        <p>This value also specifies the maximum amount of time during which a sleeping task
+                           is considered to be running for entitlement calculations. Increasing this variable
+                           increases the amount of time a waking task may consume before being preempted, thus
+                           increasing scheduler latency for CPU bound tasks. The default value is <code class="literal">6000000</code> (ns).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_min_granularity_ns</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Minimal preemption granularity for CPU bound tasks. See <code class="systemitem">sched_latency_ns</code> for details. The default value is <code class="literal">4000000</code> (ns).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_wakeup_granularity_ns</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The wake-up preemption granularity. Increasing this variable reduces wake-up preemption,
+                           reducing disturbance of compute bound tasks. Lowering it improves wake-up latency
+                           and throughput for latency critical tasks, particularly when a short duty cycle load
+                           component must compete with CPU bound components. The default value is <code class="literal">2500000</code> (ns).</p>
+                        
+                        <div class="admonition warning">
+                           <div>
+                              <div class="icon">🛑</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Setting the right wake-up granularity value</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>Settings larger than half of <code class="systemitem">sched_latency_ns</code> result in no wake-up preemption. Short duty cycle tasks cannot compete with CPU hogs
+                                       effectively.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_rr_timeslice_ms</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Quantum that SCHED_RR tasks are allowed to run before they are preempted and put to
+                           the end of the task list.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_rt_period_us</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Period over which real-time task bandwidth enforcement is measured. The default value
+                           is <code class="literal">1000000</code> (µs).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_rt_runtime_us</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Quantum allocated to real-time tasks during sched_rt_period_us. Setting to -1 disables
+                           RT bandwidth enforcement. By default, RT tasks may consume 95%CPU/sec, thus leaving
+                           5%CPU/sec or 0.05 s to be used by SCHED_OTHER tasks. The default value is <code class="literal">950000</code> (µs).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_nr_migrate</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Controls how many tasks can be migrated across processors for load-balancing purposes.
+                           Because balancing iterates the runqueue with interrupts disabled (softirq), it can
+                           incur in irq-latency penalties for real-time tasks. Therefore, increasing this value
+                           may give a performance boost to large SCHED_OTHER threads at the expense of increased
+                           irq-latencies for real-time tasks. The default value is <code class="literal">32</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">sched_time_avg_ms</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This parameter sets the period over which the time spent running real-time tasks is
+                           averaged. That average assists CFS in making load-balancing decisions and gives an
+                           indication of how busy a CPU is with high-priority real-time tasks.</p>
+                        
+                        <p>The optimal setting for this parameter is highly workload dependent and depends, among
+                           other things, on how frequently real-time tasks are running and for how long.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">A few scheduler parameters have been moved to <code class="systemitem">debugfs</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If the default Linux kernel version of your operating system is 5.13 or later (which
+                              can be checked using the command <code>rpm -q kernel-default</code>), you might notice messages in the kernel logs that are similar to the following
+                              example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[ 20.485624] The sched.sched_min_granularity_ns sysctl was moved to debugfs in kernel 5.13 for CPU scheduler debugging only. This sysctl will be removed in a future SLE release.</code></span></span>
+<span class="line"><span class="ld"><code>[ 20.485632] The sched.sched_wakeup_granularity_ns sysctl was moved to debugfs in kernel 5.13 for CPU scheduler debugging only. This sysctl will be removed in a future SLE release.</code></span></span></pre>
+                           </div>
+                           
+                           <p>This happens because six scheduler parameters have been moved from <code class="filename">/proc/sys/kernel/sched_*</code> to <code class="filename">/sys/kernel/debug/sched/*</code>. The affected scheduler parameters are as follows:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p><code class="systemitem">sched_latency_ns</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="systemitem">sched_migration_cost_ns</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="systemitem">sched_min_granularity_ns</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="systemitem">sched_nr_migrate</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="systemitem">sched_tunable_scaling</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="systemitem">sched_wakeup_granularity_n</code></p>
+                                 </li>
+                              </ul>
+                           
+                           <p>For temporary convenience, the <code class="systemitem">sysctl</code> for these scheduler parameters still exists in <span class="phrase productname">SUSE Linux Enterprise Server</span>. However, due to planned changes in the CPU scheduler implementation, there is no
+                              guarantee that either the <code class="systemitem">sysctl</code> or the <code class="systemitem">debugfs</code> options will exist in a future release of <span class="phrase productname">SUSE Linux Enterprise Server</span>.</p>
+                           
+                           <p>If any of your current system tuning configurations depend on these six scheduler
+                              parameters, we strongly recommend that you find an alternate method of achieving your
+                              objective and stop depending on them for production workloads.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            <section class="sect2" id="sec-tuning-taskscheduler-cfs-debug">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Debugging interface and scheduler statistics</h3>
+               </header>
+               
+               
+               <p>CFS comes with a new improved debugging interface, and provides runtime statistics
+                  information. Relevant files were added to the <code class="filename">/proc</code> file system, which can be examined simply with the <code class="command">cat</code> or <code class="command">less</code> command. A list of the related <code class="filename">/proc</code> files follows with their short description:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sched_debug</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Contains the current values of all tunable variables (see <a class="xref xref-sect2" href="#sec-tuning-taskscheduler-cfs-tuning">the section called “Runtime tuning with <code class="command">sysctl</code>
+                              ”</a>) that affect the task scheduler behavior, CFS statistics, and information about the
+                           run queues (CFS, RT and deadline) on all available processors. A summary of the task
+                           running on each processor is also shown, with the task name and PID, along with scheduler
+                           specific statistics. The first being the <code class="option">tree-key</code> column, it indicates the task's virtual runtime, and its name comes from the kernel
+                           sorting all runnable tasks by this key in a red-black tree. The <code class="option">switches</code> column indicates the total number of switches (involuntary or not), and the <code class="option">prio</code> refers to the process priority. The <code class="option">wait-time</code> value indicates the amount of time the task waited to be scheduled. Finally both
+                           <code class="option">sum-exec</code> and <code class="option">sum-sleep</code> account for the total amount of time (in nanoseconds) the task was running on the
+                           processor or asleep, respectively.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /proc/sched_debug</code></span></span>
+<span class="line"><span class="ld"><code>Sched Debug Version: v0.11, 6.4.0-150700.38-default #1</code></span></span>
+<span class="line"><span class="ld"><code>ktime                                   : 23533900.395978</code></span></span>
+<span class="line"><span class="ld"><code>sched_clk                               : 23543587.726648</code></span></span>
+<span class="line"><span class="ld"><code>cpu_clk                                 : 23533900.396165</code></span></span>
+<span class="line"><span class="ld"><code>jiffies                                 : 4300775771</code></span></span>
+<span class="line"><span class="ld"><code>sched_clock_stable                      : 0</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>sysctl_sched</code></span></span>
+<span class="line"><span class="ld"><code>  .sysctl_sched_latency                    : 6.000000</code></span></span>
+<span class="line"><span class="ld"><code>  .sysctl_sched_min_granularity            : 2.000000</code></span></span>
+<span class="line"><span class="ld"><code>  .sysctl_sched_wakeup_granularity         : 2.500000</code></span></span>
+<span class="line"><span class="ld"><code>  .sysctl_sched_child_runs_first           : 0</code></span></span>
+<span class="line"><span class="ld"><code>  .sysctl_sched_features                   : 154871</code></span></span>
+<span class="line"><span class="ld"><code>  .sysctl_sched_tunable_scaling            : 1 (logarithmic)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>cpu#0, 2666.762 MHz</code></span></span>
+<span class="line"><span class="ld"><code>  .nr_running                    : 1</code></span></span>
+<span class="line"><span class="ld"><code>  .load                          : 1024</code></span></span>
+<span class="line"><span class="ld"><code>  .nr_switches                   : 1918946</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>cfs_rq[0]:/</code></span></span>
+<span class="line"><span class="ld"><code>  .exec_clock                    : 170176.383770</code></span></span>
+<span class="line"><span class="ld"><code>  .MIN_vruntime                  : 0.000001</code></span></span>
+<span class="line"><span class="ld"><code>  .min_vruntime                  : 347375.854324</code></span></span>
+<span class="line"><span class="ld"><code>  .max_vruntime                  : 0.000001</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>rt_rq[0]:/</code></span></span>
+<span class="line"><span class="ld"><code>  .rt_nr_running                 : 0</code></span></span>
+<span class="line"><span class="ld"><code>  .rt_throttled                  : 0</code></span></span>
+<span class="line"><span class="ld"><code>  .rt_time                       : 0.000000</code></span></span>
+<span class="line"><span class="ld"><code>  .rt_runtime                    : 950.000000</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>dl_rq[0]:</code></span></span>
+<span class="line"><span class="ld"><code>  .dl_nr_running                 : 0</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  task   PID         tree-key  switches  prio     wait-time        [...]</code></span></span>
+<span class="line"><span class="ld"><code>------------------------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>R  cc1 63477     98876.717832       197   120      0.000000         ...</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/schedstat</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Displays statistics relevant to the current run queue. Also domain-specific statistics
+                           for SMP systems are displayed for all connected processors. Because the output format
+                           is not user-friendly, read the contents of <code class="filename">/usr/src/linux/Documentation/scheduler/sched-stats.txt</code> for more information.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/<em class="replaceable">PID</em>/sched</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Displays scheduling information on the process with id <em class="replaceable">PID</em>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /proc/$(pidof gdm)/sched</code></span></span>
+<span class="line"><span class="ld"><code>gdm (744, #threads: 3)</code></span></span>
+<span class="line"><span class="ld"><code>-------------------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>se.exec_start                                :          8888.758381</code></span></span>
+<span class="line"><span class="ld"><code>se.vruntime                                  :          6062.853815</code></span></span>
+<span class="line"><span class="ld"><code>se.sum_exec_runtime                          :             7.836043</code></span></span>
+<span class="line"><span class="ld"><code>se.statistics.wait_start                     :             0.000000</code></span></span>
+<span class="line"><span class="ld"><code>se.statistics.sleep_start                    :          8888.758381</code></span></span>
+<span class="line"><span class="ld"><code>se.statistics.block_start                    :             0.000000</code></span></span>
+<span class="line"><span class="ld"><code>se.statistics.sleep_max                      :          1965.987638</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>se.avg.decay_count                           :                 8477</code></span></span>
+<span class="line"><span class="ld"><code>policy                                       :                    0</code></span></span>
+<span class="line"><span class="ld"><code>prio                                         :                  120</code></span></span>
+<span class="line"><span class="ld"><code>clock-delta                                  :                  128</code></span></span>
+<span class="line"><span class="ld"><code>mm-&gt;numa_scan_seq                            :                    0</code></span></span>
+<span class="line"><span class="ld"><code>numa_migrations, 0</code></span></span>
+<span class="line"><span class="ld"><code>numa_faults_memory, 0, 0, 1, 0, -1</code></span></span>
+<span class="line"><span class="ld"><code>numa_faults_memory, 1, 0, 0, 0, -1</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvch02s02.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvch02.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch02s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Process classification</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

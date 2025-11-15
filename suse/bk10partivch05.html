@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;29.&nbsp;Virtualization: configuration options and settings</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch04s05.html" rel="prev">
+      <link href="bk10partivch05s02.html" rel="next">
+      <link href="bk10partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiv.html">Up</a> <a href="bk10partivch05s02.html">Next</a> <a href="bk10partivch04s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partivch05.html" db-id="d616951e292780" id="cha-xen-config" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">29</span><span class="sep">.&nbsp;</span>Virtualization: configuration options and settings</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>The documentation in this section, describes advanced management tasks and configuration
+                  options that may help technology innovators implement leading-edge virtualization
+                  solutions. It is provided as a courtesy and does not imply that all documented options
+                  and tasks are supported by Novell, Inc.</p>
+               </div>
+            <section class="sect1" id="sec-xen-config-vcd">
+               <header>
+                  <h2><span class="label">29<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Virtual CD readers</h2>
+               </header>
+               
+               
+               <p>Virtual CD readers can be set up when a virtual machine is created or added to an
+                  existing virtual machine. A virtual CD reader can be based on a physical CD/DVD, or
+                  based on an ISO image. Virtual CD readers work differently depending on whether they
+                  are paravirtual or fully virtual.</p>
+               
+               <section class="sect2" id="sec-xen-config-vcd-para">
+                  <header>
+                     <h3><span class="label">29<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Virtual CD readers on paravirtual machines</h3>
+                  </header>
+                  
+                  
+                  <p>A paravirtual machine can have up to 100 block devices composed of virtual CD readers
+                     and virtual disks. On paravirtual machines, virtual CD readers present the CD as a
+                     virtual disk with read-only access. Virtual CD readers cannot be used to write data
+                     to a CD.</p>
+                  
+                  <p>After you have finished accessing a CD on a paravirtual machine, it is recommended
+                     that you remove the virtual CD reader from the virtual machine.</p>
+                  
+                  <p>Paravirtualized guests can use the device type <code class="literal">devtype=cdrom</code>. This partly emulates the behavior of a real CD reader, and allows CDs to be changed.
+                     It is even possible to use the eject command to open the tray of the CD reader.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-xen-config-vcd-full">
+                  <header>
+                     <h3><span class="label">29<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Virtual CD readers on fully virtual machines</h3>
+                  </header>
+                  
+                  
+                  <p>A fully virtual machine can have up to four block devices composed of virtual CD readers
+                     and virtual disks. A virtual CD reader on a fully virtual machine interacts with an
+                     inserted CD in the way you would expect a physical CD reader to interact.</p>
+                  
+                  <p>When a CD is inserted in the physical CD reader on the host computer, all virtual
+                     machines with virtual CD readers based on the physical CD reader, such as <code class="filename">/dev/cdrom/</code>, can read the inserted CD. Assuming the operating system has automount functionality,
+                     the CD should automatically appear in the file system. Virtual CD readers cannot be
+                     used to write data to a CD. They are configured as read-only devices.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-xen-config-vcd-add">
+                  <header>
+                     <h3><span class="label">29<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Adding virtual CD readers</h3>
+                  </header>
+                  
+                  
+                  <p>Virtual CD readers can be based on a CD inserted into the CD reader or on an ISO image
+                     file.</p>
+                  
+                  <div class="informalobject procedure" id="sec-xen-config-vcd-add_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Make sure that the virtual machine is running and the operating system has finished
+                              booting.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Insert the desired CD into the physical CD reader or copy the desired ISO image to
+                              a location available to Dom0.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Select a new, unused block device in your VM Guest, such as <code class="filename">/dev/xvdb</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Choose the CD reader or ISO image that you want to assign to the guest.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>When using a real CD reader, use the following command to assign the CD reader to
+                              your VM Guest. In this example, the name of the guest is alice:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl block-attach alice target=/dev/sr0,vdev=xvdb,access=ro</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>When assigning an image file, use the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl block-attach alice target=/path/to/file.iso,vdev=xvdb,access=ro</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>A new block device, such as <code class="filename">/dev/xvdb</code>, is added to the virtual machine.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If the virtual machine is running Linux, complete the following:</p>
+                           
+                           <div class="substeps">
+                              <ol class="procedure substeps" type="a">
+                                 
+                                 <li class="step">
+                                    
+                                    <p>Open a terminal in the virtual machine and enter <code class="command">fdisk -l</code> to verify that the device was properly added. You can also enter <code class="command">ls /sys/block</code> to see all disks available to the virtual machine.</p>
+                                    
+                                    <p>The CD is recognized by the virtual machine as a virtual disk with a drive designation,
+                                       for example:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/xvdb</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li class="step">
+                                    
+                                    <p>Enter the command to mount the CD or ISO image using its drive designation. For example,</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount -o ro /dev/xvdb /mnt</code></span></span></pre>
+                                    </div>
+                                    
+                                    <p>mounts the CD to a mount point named <code class="command">/mnt</code>.</p>
+                                    
+                                    <p>The CD or ISO image file should be available to the virtual machine at the specified
+                                       mount point.</p>
+                                    </li>
+                                 </ol>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If the virtual machine is running Windows, reboot the virtual machine.</p>
+                           
+                           <p>Verify that the virtual CD reader appears in its <code class="literal">My Computer</code> section.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-xen-config-vcd-remove">
+                  <header>
+                     <h3><span class="label">29<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Removing virtual CD readers</h3>
+                  </header>
+                  
+                  
+                  <div class="informalobject procedure" id="sec-xen-config-vcd-remove_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Make sure that the virtual machine is running and the operating system has finished
+                              booting.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If the virtual CD reader is mounted, unmount it from within the virtual machine.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Enter <code class="command">xl block-list alice</code> on the host view of the guest block devices.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Enter <code class="command">xl block-detach alice</code><em class="replaceable">BLOCK_DEV_ID</em> to remove the virtual device from the guest. If that fails, try to add <code class="option">-f</code> to force the removal.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Press the hardware eject button to eject the CD.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch04s05.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiv.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch05s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">28<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Scripts for managing advanced storage scenarios</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">29<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Remote access methods</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

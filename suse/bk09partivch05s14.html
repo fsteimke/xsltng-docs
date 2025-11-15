@@ -1,0 +1,402 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.14.&nbsp;Best practice</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s13.html" rel="prev">
+      <link href="bk09partivch05s15.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s15.html">Next</a> <a href="bk09partivch05s13.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s14.html" db-id="d616951e257323" id="sec-multipath-best-practice">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>Best practice</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-multipath-best-practice-config">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>14<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Best practices for configuration</h3>
+               </header>
+               
+               
+               <p>The large number of configuration directives is daunting at first. Usually, you can
+                  get good results with an empty configuration, unless you are in a clustering environment.</p>
+               
+               <p>Here are some general recommendations for stand-alone servers. They are <em>not mandatory</em>. See the documentation of the respective parameters in the previous sections for
+                  background information.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>defaults {</code></span></span>
+<span class="line"><span class="ld"><code>    deferred_remove      yes</code></span></span>
+<span class="line"><span class="ld"><code>    find_multipaths      smart</code></span></span>
+<span class="line"><span class="ld"><code>    enable_foreign       nvme</code></span></span>
+<span class="line"><span class="ld"><code>    marginal_pathgroups  fpin    # 15.4 only, if supported by fabric</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span>
+<span class="line"><span class="ld"><code>devices {</code></span></span>
+<span class="line"><span class="ld"><code>    # A catch-all device entry.</code></span></span>
+<span class="line"><span class="ld"><code>    device {</code></span></span>
+<span class="line"><span class="ld"><code>        vendor                .*</code></span></span>
+<span class="line"><span class="ld"><code>        product               .*</code></span></span>
+<span class="line"><span class="ld"><code>        dev_loss_tmo          infinity</code></span></span>
+<span class="line"><span class="ld"><code>        no_path_retry         60            # 5 minutes</code></span></span>
+<span class="line"><span class="ld"><code>        path_grouping_policy  group_by_prio</code></span></span>
+<span class="line"><span class="ld"><code>        path_selector         "historical-service-time 0"</code></span></span>
+<span class="line"><span class="ld"><code>        reservation_key       file          # if using SCSI persistent reservations</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>    # Follow up with specific device entries below, they will take precedence.</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>After modifying the <code class="filename">/etc/multipath.conf</code> file, apply your settings as described in <a class="xref xref-sect2" href="bk09partivch05s08.html#sec-multipath-conf-file-apply">the section called “Applying <code class="filename">multipath.conf</code> modifications”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-best-practice-status">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>14<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Interpreting multipath I/O status</h3>
+               </header>
+               
+               
+               <p>For a quick overview of the multipath subsystem, use <code class="command">multipath -ll</code> or <code class="command">multipathd show topology</code>. The output of these commands has the same format. The former command reads the kernel
+                  state, while the latter prints the status of the multipath daemon. Normally both states
+                  are equal. Here is an example of the output:</p>
+               
+               <div class="informalexample informalobject" id="sec-multipath-best-practice-status_informalexample1">
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd show topology</code></span></span>
+<span class="line"><span class="ld"><code>mpatha<span class="co" id="mp-co-top-name">⣔</span> (3600a098000aad1e300000b4b5a275d45<span class="co" id="mp-co-top-wwid">⣕</span>) dm-0<span class="co" id="mp-co-top-dev">⣖</span> NETAPP,INF-01-00<span class="co" id="mp-co-top-prod">⣗</span></code></span></span>
+<span class="line"><span class="ld"><code>size=64G features='3 queue_if_no_path pg_init_retries 50'<span class="co" id="mp-co-top-feat">⣘</span> hwhandler='1 alua'<span class="co" id="mp-co-top-hwh">⣙</span> wp=rw<span class="co" id="mp-co-top-wp">⣚</span></code></span></span>
+<span class="line"><span class="ld"><code>|-+- <span class="co" id="mp-co-top-pg">⣛</span>policy='historical-service-time 2'<span class="co" id="mp-co-top-ps">⣜</span> prio=50<span class="co" id="mp-co-top-prio">⣝</span> status=active<span class="co" id="mp-co-top-pgst">⣞</span></code></span></span>
+<span class="line"><span class="ld"><code>| |-<span class="co" id="mp-co-top-pp">⣟</span> 3:0:0:1<span class="co" id="mp-co-top-hbtl">⣠</span> sdb 8:16<span class="co" id="mp-co-top-sd">⣡</span> active<span class="co" id="mp-co-top-dmst">⣢</span> ready<span class="co" id="mp-co-top-st">⣣</span> running<span class="co" id="mp-co-top-devst">⣤</span></code></span></span>
+<span class="line"><span class="ld"><code>| `- 4:0:0:1 sdf 8:80  active ready running</code></span></span>
+<span class="line"><span class="ld"><code>`-+- policy='historical-service-time 2' prio=10 status=enabled</code></span></span>
+<span class="line"><span class="ld"><code>  `- 4:0:1:1 sdj 8:144 active ready running</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-name">⣔</a></dt>
+                        <dd>
+                           
+                           <p>The map name.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-wwid">⣕</a></dt>
+                        <dd>
+                           
+                           <p>The map WWID (if different from the map name).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-dev">⣖</a></dt>
+                        <dd>
+                           
+                           <p>The device node name of the map device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-prod">⣗</a></dt>
+                        <dd>
+                           
+                           <p>The vendor and product name.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-pg">⣛</a></dt>
+                        <dd>
+                           
+                           <p>A path group. The indented lines below the path group list the path devices that belong
+                              to it.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-ps">⣜</a></dt>
+                        <dd>
+                           
+                           <p>The path selector algorithm used by the path group. The "2" can be ignored.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-prio">⣝</a></dt>
+                        <dd>
+                           
+                           <p>The priority of the path group.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-pgst">⣞</a></dt>
+                        <dd>
+                           
+                           <p>The status of the path group (<code class="literal">active</code>, <code class="literal">enabled</code> or <code class="literal">disabled</code>). The active path group is the one that I/O is currently sent to.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-pp">⣟</a></dt>
+                        <dd>
+                           
+                           <p>A path device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-hbtl">⣠</a></dt>
+                        <dd>
+                           
+                           <p>The bus ID of the device (here, a SCSI Host:Bus:Target:Lun ID).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-sd">⣡</a></dt>
+                        <dd>
+                           
+                           <p>The device node name and major/minor number of the path device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-dmst">⣢</a></dt>
+                        <dd>
+                           
+                           <p>The kernel device mapper state of the path (<code class="literal">active</code> or <code class="literal">failed</code>).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-st">⣣</a></dt>
+                        <dd>
+                           
+                           <p>The multipath path device state (see below).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-top-devst">⣤</a></dt>
+                        <dd>
+                           
+                           <p>The state of the path device in the kernel. This is a device-type specific value.
+                              For SCSI, it is either <code class="literal">running</code> or <code class="literal">offline</code>.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  </div>
+               
+               <p>The multipath path device states are:</p>
+               
+               <div class="informalobject informaltable" id="sec-multipath-best-practice-status_informaltable1">
+                  <table>
+                     <colgroup>
+                        <col style="width: 50%">
+                        <col style="width: 50%">
+                     </colgroup>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="literal">ready</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>The path is healthy and up</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">ghost</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>A passive path in an active/passive array</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">faulty</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>The path is down or unreachable</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">i/o timeout</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>A checker command timed out</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">i/o pending</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Waiting for the completion of a path checker command</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">delayed</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Path reinstantiation is delayed to avoid "flapping"</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">shaky</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>An unreliable path (emc path checker only)</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-lvm">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>14<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using LVM2 on multipath devices</h3>
+               </header>
+               
+               
+               <p>LVM2 has built-in support for detecting multipath devices. It is activated by default
+                  in <code class="filename">/etc/lvm/lvm.conf</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>    multipath_component_detection=1</code></span></span></pre>
+               </div>
+               
+               <p>This works reliably only if LVM2 is also configured to obtain information about device
+                  properties from udev:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>    external_device_info_source="udev"</code></span></span></pre>
+               </div>
+               
+               <p>This is the default in SUSE Linux Enterprise&nbsp;15 SP4, but not in earlier releases.
+                  It is also possible (although normally not necessary) to create a filter expression
+                  for LVM2 to ignore all devices except multipath devices. See <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-referring">the section called “Referring to multipath maps”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-best-practice-io-stalled">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>14<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Resolving stalled I/O</h3>
+               </header>
+               
+               
+               <p>If all paths fail concurrently and I/O is queued, applications may stall for a long
+                  time. To resolve this, you can use the following procedure:</p>
+               
+               <div class="informalobject procedure" id="sec-multipath-best-practice-io-stalled_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Enter the following command at a terminal prompt:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd disablequeueing map <em class="replaceable">MAPNAME</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>Replace <code class="literal"><em class="replaceable">MAPNAME</em></code> with the correct WWID or mapped alias name for the device.</p>
+                        
+                        <p>This command immediately causes all queued I/O to fail and propagates the error to
+                           the calling application. File systems will observe I/O errors and switch to read-only
+                           mode.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reactivate queuing by entering the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd restorequeueing <em class="replaceable">MAPNAME</em></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-mpiotools-mdadm">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>14<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>MD RAID on multipath devices</h3>
+               </header>
+               
+               
+               <p>MD RAID arrays on top of multipathing are set up automatically by the system's udev
+                  rules. No special configuration in <code class="filename">/etc/mdadm.conf</code> is necessary.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-best-practice-scandev">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>14<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Scanning for new devices without rebooting</h3>
+               </header>
+               
+               
+               <p>If your system has already been configured for multipathing and you need to add storage
+                  to the SAN, you can use the <code class="command">rescan-scsi-bus.sh</code> script to scan for the new devices. The general syntax for the command follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> rescan-scsi-bus.sh [-a] [-r] --hosts=2-3,5</code></span></span></pre>
+               </div>
+               
+               <p>Where the options have the following meaning:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">-a</span></dt>
+                     <dd>
+                        
+                        <p>the option ensures that all SCSI targets are scanned, otherwise only already existing
+                           targets will be scanned for new LUNs.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">-r</span></dt>
+                     <dd>
+                        
+                        <p>the option enables the removal of devices which have been removed on the storage side.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">--hosts</span></dt>
+                     <dd>
+                        
+                        <p>the option specifies the list of host bus adapters to scan (the default is to scan
+                           all).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Run <code class="command">rescan-scsi-bus.sh --help</code> for help on additional options.</p>
+               
+               <p>If <code class="command">multipathd</code> is running and new SAN devices are discovered, they should be automatically set up
+                  as multipath maps according to the configuration described in <a class="xref xref-sect1" href="bk09partivch05s11.html">the section called “Selecting devices for multipathing”</a>.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Dell/EMC PowerPath environments</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>In EMC PowerPath environments, do not use the <code class="filename">rescan-scsi-bus.sh</code> utility provided with the operating system or the HBA vendor scripts for scanning
+                              the SCSI buses. To avoid potential file system corruption, EMC requires that you follow
+                              the procedure provided in the vendor documentation for EMC PowerPath for Linux.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s13.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s15.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>Miscellaneous options</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>Troubleshooting MPIO</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

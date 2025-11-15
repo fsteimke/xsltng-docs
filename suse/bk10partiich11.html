@@ -1,0 +1,610 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;18.&nbsp;Xen to KVM migration guide</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich10s05.html" rel="prev">
+      <link href="bk10partiich11s02.html" rel="next">
+      <link href="bk10partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partii.html">Up</a> <a href="bk10partiich11s02.html">Next</a> <a href="bk10partiich10s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partiich11.html" db-id="d616951e285858" id="xen2kvm-migration" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">18</span><span class="sep">.&nbsp;</span>Xen to KVM migration guide</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               <p>As the KVM virtualization solution is becoming more and more popular among server
+                  administrators, many of them need a path to migrate their existing Xen based environments
+                  to KVM. As of now, there are no mature tools to automatically convert Xen VMs to KVM.
+                  There is, however, a technical solution that helps convert Xen virtual machines to
+                  KVM. The following information and procedures help you to perform such a migration.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Migration procedure not supported</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The migration procedure described in this document is not fully supported by SUSE.
+                              We provide it as a guidance only.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="x2k-v2v">
+               <header>
+                  <h2><span class="label">18<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Migration to KVM using <code class="command">virt-v2v</code>
+                     </h2>
+               </header>
+               
+               
+               <p>This section contains information to help you import virtual machines from foreign
+                  hypervisors (such as Xen) to KVM managed by <code class="library systemitem">libvirt</code>.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Microsoft Windows guests</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>This section is focused on converting Linux guests. Converting Microsoft Windows guests
+                              using <code class="command">virt-v2v</code> is the same as converting Linux guests, except with regard to handling the Virtual
+                              Machine Driver Pack (VMDP). Additional details on converting Windows guests with the
+                              VMDP can be found separately at <a class="link" href="https://documentation.suse.com/sle-vmdp/">Virtual Machine Driver Pack documentation</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect2" id="x2k-v2v-intro">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Introduction to <code class="command">virt-v2v</code>
+                        </h3>
+                  </header>
+                  
+                  
+                  <p><code class="command">virt-v2v</code> is a command-line tool to convert VM Guests from a foreign hypervisor to run on KVM
+                     managed by <code class="library systemitem">libvirt</code>. It enables paravirtualized virtio drivers in the converted virtual machine if possible.
+                     A list of supported operating systems and hypervisors follows:</p>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Supported guest operating systems</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p>SUSE Linux Enterprise Server</p>
+                           </li>
+                        <li>
+                           
+                           <p>openSUSE</p>
+                           </li>
+                        <li>
+                           
+                           <p>Red Hat Enterprise Linux</p>
+                           </li>
+                        <li>
+                           
+                           <p>Fedora</p>
+                           </li>
+                        <li>
+                           
+                           <p>Microsoft Windows Server 2003 and 2008</p>
+                           </li>
+                     </ul>
+                  </div>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Supported source hypervisor</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p>Xen</p>
+                           </li>
+                     </ul>
+                  </div>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Supported target hypervisor</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p>KVM (managed by <code class="library systemitem">libvirt</code>)</p>
+                           </li>
+                     </ul>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="x2k-v2v-install">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing <code class="command">virt-v2v</code>
+                        </h3>
+                  </header>
+                  
+                  
+                  <p>The installation of <code class="command">virt-v2v</code> is simple:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper install virt-v2v</code></span></span></pre>
+                  </div>
+                  
+                  <p>Remember that <code class="command">virt-v2v</code> requires <code class="systemitem username">root</code> privileges, so you need to run it either as <code class="systemitem username">root</code>, or via <code class="command">sudo</code>.</p>
+                  </section>
+               
+               <section class="sect2" id="x2k-v2v-convert">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Converting virtual machines to run under KVM managed by <code class="library systemitem">libvirt</code>
+                        </h3>
+                  </header>
+                  
+                  
+                  <p><code class="command">virt-v2v</code> converts virtual machines from the Xen hypervisor to run under KVM managed by <code class="library systemitem">libvirt</code>. To learn more about <code class="library systemitem">libvirt</code> and <code class="command">virsh</code>, see <a class="xref xref-part" href="bk10partii.html">Part&nbsp;<span class="label">II</span>, “Managing virtual machines with <code class="library systemitem">libvirt</code>
+                        ”</a>. Additionally, all <code class="command">virt-v2v</code> command line options are explained in the <code class="command">virt-v2v</code> man page (<code class="command">man 1 virt-v2v</code>).</p>
+                  
+                  <p>Before converting a virtual machine, make sure to complete the following steps:</p>
+                  
+                  <div class="formalobject procedure" id="x2k-v2v-convert_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">18<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Preparing the environment for the conversion</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create a new local storage pool.</p>
+                           
+                           <p><code class="command">virt-v2v</code> copies the storage of the source virtual machine to a local storage pool managed
+                              by <code class="library systemitem">libvirt</code> (the original disk image remains unchanged). You can create the pool either with
+                              Virtual Machine Manager or <code class="command">virsh</code>. For more information, see <a class="xref xref-sect2" href="bk10partiich02s02.html#sec-libvirt-storage-vmm">the section called “Managing storage with Virtual Machine Manager”</a> and <a class="xref xref-sect2" href="bk10partiich02s02.html#sec-libvirt-storage-virsh">the section called “Managing storage with <code class="command">virsh</code>
+                                 ”</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Prepare the local network interface.</p>
+                           
+                           <p>Check that the converted virtual machine can use a local network interface on the
+                              VM Host Server. It is normally a network bridge and if it is not yet defined, create
+                              it with <span class="menuchoice"><span class="guimenu">YaST</span><span class="guimenu">System</span><span class="guimenu">Network Settings</span><span class="guimenu">Add</span><span class="guimenu">Bridge</span></span>.</p>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Mappings of network devices</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>Network devices on the source Xen host can be mapped during the conversion process
+                                          to corresponding network devices on the KVM target host. For example, the Xen bridge
+                                          <code class="literal">br0</code> can be mapped to the default KVM network device. Sample mappings can be found in
+                                          <code class="filename">/etc/virt-v2v.conf</code>. To enable these mappings, modify the XML rule and ensure the section is not commented
+                                          out with <code class="literal">&lt;!--</code> and <code class="literal">--&gt;</code> markers. For example:</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> &lt;network type='bridge' name='br0'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;network type='network' name='default'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/network&gt;</code></span></span></pre>
+                                       </div>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <div class="admonition tip">
+                              <div>
+                                 <div class="icon">☞</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">No network bridge</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>If there is no network bridge available, Virtual Machine Manager can optionally create
+                                          it.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p><code class="command">virt-v2v</code> has the following basic command syntax:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>virt-v2v -i <em class="replaceable">INPUT_METHOD</em> -os <em class="replaceable">STORAGE_POOL</em><em class="replaceable">SOURCE_VM</em></code></span></span></pre>
+                  </div>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">input_method</span></dt>
+                        <dd>
+                           
+                           <p>There are two input methods: <code class="literal">libvirt</code> or <code class="literal">libvirtxml</code>. See the <em class="replaceable">SOURCE_VM</em> parameter for more information.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">storage_pool</span></dt>
+                        <dd>
+                           
+                           <p>The storage pool you already prepared for the target virtual machine.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">source_vm</span></dt>
+                        <dd>
+                           
+                           <p>The source virtual machine to convert. It depends on the <em class="replaceable">INPUT_METHOD</em> parameter: for <code class="literal">libvirt</code>, specify the name of a libvirt domain. For <code class="literal">libvirtxml</code>, specify the path to an XML file containing a libvirt domain specification.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Conversion time</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Conversion of a virtual machine takes a lot of system resources, mainly for copying
+                                 the whole disk image for a virtual machine. Converting a single virtual machine typically
+                                 takes up to 10 minutes.Virtual machines using large disk images can take much longer.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <section class="sect3" id="x2k-v2v-convert-xml">
+                     <header>
+                        <h4><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Conversion based on the <code class="library systemitem">libvirt</code> XML description file</h4>
+                     </header>
+                     
+                     
+                     <p>This section describes how to convert a local Xen virtual machine using the <code class="library systemitem">libvirt</code> XML configuration file. This method is suitable if the host is already running the
+                        KVM hypervisor. Make sure that the <code class="library systemitem">libvirt</code> XML file of the source virtual machine, and the <code class="library systemitem">libvirt</code> storage pool referenced from it are available on the local host.</p>
+                     
+                     <div class="informalobject procedure" id="x2k-v2v-convert-xml_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Obtain the <code class="library systemitem">libvirt</code> XML description of the source virtual machine.</p>
+                              
+                              <div class="admonition tip">
+                                 <div>
+                                    <div class="icon">☞</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Obtaining the XML files</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>To obtain the <code class="library systemitem">libvirt</code> XML files of the source virtual machine, you must run the host OS under the Xen kernel.
+                                             If you already rebooted the host to the KVM-enabled environment, reboot back to the
+                                             Xen kernel, dump the <code class="library systemitem">libvirt</code> XML file, and then reboot back to the KVM environment.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              
+                              <p>First identify the source virtual machine under virsh:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh list</code></span></span>
+<span class="line"><span class="ld"><code> Id    Name                           State</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>  2     sles12_xen                     running</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                              </div>
+                              
+                              <p><code class="literal">sles12_xen</code> is the source virtual machine to convert. Now export its XML and save it to <code class="filename">sles12_xen.xml</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh dumpxml sles12_xen &gt; sles12_xen.xml</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Verify that all disk image paths are correct from the KVM host's perspective. This
+                                 is not a problem when converting on one machine, but may require manual changes when
+                                 converting using an XML dump from another host.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;source file='/var/lib/libvirt/images/XenPool/SLES.qcow2'/&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <div class="admonition tip">
+                                 <div>
+                                    <div class="icon">☞</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Copying images</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>To avoid copying an image twice, manually copy the disk image or images directly to
+                                             the <code class="library systemitem">libvirt</code> storage pool. Update the source file entries in the XML description file. The <code class="command">virt-v2v</code> process detects the existing disks and converts them in place.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Run <code class="command">virt-v2v</code> to convert to KVM virtual machine:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virt-v2v sles12_xen.xml<span class="co" id="v2v-xml">⤈</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-i <em class="replaceable">LIBVIRTXML</em><span class="co" id="v2v-method">⤉</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-os <em class="replaceable">remote_host.example.com:/exported_dir</em><span class="co" id="v2v-pool">⤊</span> \</code></span></span>
+<span class="line"><span class="ld"><code>--bridge <em class="replaceable">br0</em><span class="co" id="v2v-bridge">⤋</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-on <em class="replaceable">sles12_kvm</em><span class="co" id="v2v-name">⤌</span></code></span></span></pre>
+                              </div>
+                              
+                              <div class="calloutlist">
+                                 <dl>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-xml">⤈</a></dt>
+                                    <dd>
+                                       
+                                       <p>The XML description of the source Xen-based virtual machine.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-method">⤉</a></dt>
+                                    <dd>
+                                       
+                                       <p><code class="command">virt-v2v</code> reads the information about the source virtual machine from a <code class="library systemitem">libvirt</code> XML file.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-pool">⤊</a></dt>
+                                    <dd>
+                                       
+                                       <p>Storage pool where the target virtual machine disk image is placed. In this example,
+                                          the image is placed on an NFS share <code class="filename">/exported_dir</code> on the <code class="literal">remote_host.example.com</code> server.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-bridge">⤋</a></dt>
+                                    <dd>
+                                       
+                                       <p>The target KVM-based virtual machine uses the network bridge <code class="literal">br0</code> on the host.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-name">⤌</a></dt>
+                                    <dd>
+                                       
+                                       <p>The target virtual machine is renamed to <code class="literal">sles12_kvm</code> to prevent name collision with the existing virtual machine of the same name.</p>
+                                       </dd>
+                                 </dl>
+                              </div>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="x2k-v2v-convert-domain">
+                     <header>
+                        <h4><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Conversion based on the <code class="library systemitem">libvirt</code> domain name</h4>
+                     </header>
+                     
+                     
+                     <p>This method is useful if you are still running <code class="library systemitem">libvirt</code> under Xen, and plan to reboot to the KVM hypervisor later.</p>
+                     
+                     <div class="informalobject procedure" id="x2k-v2v-convert-domain_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Find the <code class="library systemitem">libvirt</code> domain name of the virtual machine you want to convert.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh list</code></span></span>
+<span class="line"><span class="ld"><code> Id    Name                           State</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>  2     sles12_xen                     running</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                              </div>
+                              
+                              <p><code class="literal">sles12_xen</code> is the source virtual machine to convert.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Run <code class="command">virt-v2v</code> to convert to KVM virtual machine:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virt-v2v sles12_xen<span class="co" id="v2v-domain">⤍</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-i <em class="replaceable">libvirt</em><span class="co" id="v2v-method1">⤎</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-os <em class="replaceable">storage_pool</em><span class="co" id="v2v-pool1">⤏</span> \</code></span></span>
+<span class="line"><span class="ld"><code>--network <em class="replaceable">eth0</em><span class="co" id="v2v-net">⤐</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-of qcow2<span class="co" id="v2v-qcow">⤑</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-oa sparse<span class="co" id="v2v-sparse">⤒</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-on <em class="replaceable">sles12_kvm</em></code></span></span></pre>
+                              </div>
+                              
+                              <div class="calloutlist">
+                                 <dl>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-domain">⤍</a></dt>
+                                    <dd>
+                                       
+                                       <p>The domain name of the Xen-based virtual machine.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-method1">⤎</a></dt>
+                                    <dd>
+                                       
+                                       <p><code class="command">virt-v2v</code> reads the information about the source virtual machine directly from the active <code class="library systemitem">libvirt</code> connection.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-pool1">⤏</a></dt>
+                                    <dd>
+                                       
+                                       <p>The target disk image is placed in a local <code class="library systemitem">libvirt</code> storage pool.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-net">⤐</a></dt>
+                                    <dd>
+                                       
+                                       <p>All guest bridges (or networks) are connected to a locally managed network.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-qcow">⤑</a></dt>
+                                    <dd>
+                                       
+                                       <p>Format for the disk image of the target virtual machine. Supported options are <code class="option">raw</code> or <code class="option">qcow2</code>.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#v2v-sparse">⤒</a></dt>
+                                    <dd>
+                                       
+                                       <p>Whether the converted guest disk space is <code class="option">sparse</code> or <code class="option">preallocated</code>.</p>
+                                       </dd>
+                                 </dl>
+                              </div>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="x2k-v2v-convert-remote">
+                     <header>
+                        <h4><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Converting a remote Xen virtual machine</h4>
+                     </header>
+                     
+                     
+                     <p>This method is useful if you need to convert a Xen virtual machine running on a remote
+                        host. As <code class="command">virt-v2v</code> connects to the remote host via <code class="command">ssh</code>, ensure the SSH service is running on the host.</p>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Passwordless SSH access</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p><code class="command">virt-v2v</code> requires a passwordless SSH connection to the remote host. This means a connection
+                                    using an SSH key added to the ssh-agent. See <code class="command">man ssh-keygen</code> and <code class="command">man ssh-add</code> for more details on this. More information is also available at <a class="xref xref-chapter" href="bk06partiiich02.html">Chapter&nbsp;<span class="label">22</span>, Securing network operations with OpenSSH</a>.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <p>To connect to a remote <code class="library systemitem">libvirt</code> connection, construct a valid connection URI relevant for your remote host. In the
+                        following example, the remote host name is <code class="literal">remote_host.example.com</code>, and the user name for the connection is <code class="systemitem username">root</code>. The connection URI then looks as follows:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>xen+ssh://root@remote_host.example.com/</code></span></span></pre>
+                     </div>
+                     
+                     <p>For more information on <code class="library systemitem">libvirt</code> connection URIs, see <a class="link" href="https://libvirt.org/uri.html">https://libvirt.org/uri.html</a>.</p>
+                     
+                     <div class="informalobject procedure" id="x2k-v2v-convert-remote_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Find the <code class="library systemitem">libvirt</code> domain name of the remote virtual machine you want to convert.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh -c xen+ssh://root@remote_host.example.com/ list</code></span></span>
+<span class="line"><span class="ld"><code> Id    Name                           State</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>  1     sles12_xen                     running</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                              </div>
+                              
+                              <p><code class="literal">sles12_xen</code> is the source virtual machine to convert.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>The <code class="command">virt-v2v</code> command for the remote connection looks like this:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virt-v2v sles12_xen \</code></span></span>
+<span class="line"><span class="ld"><code>-i <em class="replaceable">libvirt</em> \</code></span></span>
+<span class="line"><span class="ld"><code>-ic <em class="replaceable">xen+ssh://root@remote_host.example.com/</em> \</code></span></span>
+<span class="line"><span class="ld"><code>-os <em class="replaceable">local_storage_pool</em> \</code></span></span>
+<span class="line"><span class="ld"><code>--bridge <em class="replaceable">br0</em></code></span></span></pre>
+                              </div>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  </section>
+               
+               <section class="sect2" id="x2k-v2v-run">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Running converted virtual machines</h3>
+                  </header>
+                  
+                  
+                  <p>After <code class="command">virt-v2v</code> completes successfully, a new <code class="library systemitem">libvirt</code> domain is created with the name specified with the <code class="option">-on</code> option. If you did not specify <code class="option">-on</code>, the same name as the source virtual machine is used. The new guest can be managed
+                     with standard <code class="library systemitem">libvirt</code> tools, such as <code class="command">virsh</code> or Virtual Machine Manager.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Rebooting the machine</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>If you completed the conversion under Xen as described in <a class="xref xref-sect3" href="#x2k-v2v-convert-domain">the section called “Conversion based on the <code class="library systemitem">libvirt</code> domain name”</a>, you may need to reboot the host machine and boot with the non-Xen kernel.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich10s05.html">Prev</a></td>
+                  <td class="up"><a href="bk10partii.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich11s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">17<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Step-by-step example</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Xen to KVM manual migration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

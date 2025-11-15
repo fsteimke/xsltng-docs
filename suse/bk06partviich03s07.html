@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>46.7.&nbsp;Managing audit event records using keys</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partviich03s06.html" rel="prev">
+      <link href="bk06partviich04.html" rel="next">
+      <link href="bk06partviich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partviich03.html">Up</a> <a href="bk06partviich04.html">Next</a> <a href="bk06partviich03s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partviich03s07.html" db-id="d616951e199604" id="sec-audit-scenkeys">
+            <header>
+               <h2><span class="label">46<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Managing audit event records using keys</h2>
+            </header>
+            
+            
+            <p>After configuring a few rules generating events and populating the logs, you need
+               to find a way to tell one event from the other. Using the <code class="command">ausearch</code> command, you can filter the logs for various criteria. Using <code class="command">ausearch</code><code class="option">-m <em class="replaceable">MESSAGE_TYPE</em></code>, you can at least filter for events of a certain type. To be able to filter for events
+               related to a particular rule, you need to add a key to this rule in the <code class="filename">/etc/audit/audit.rules</code> file. This key is then added to the event record every time the rule logs an event.
+               To retrieve these log entries, simply run <code class="command">ausearch</code><code class="option">-k <em class="replaceable">YOUR_KEY</em></code> to get a list of records related to the rule carrying this particular key.</p>
+            
+            <p>As an example, assume you have added the following rule to your rule file:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-w /etc/audit/audit.rules -p wa</code></span></span></pre>
+            </div>
+            
+            <p>Without a key assigned to it, you would need to filter for <code class="literal">SYSCALL</code> or <code class="literal">PATH</code> events then use grep or similar tools to isolate any events related to the above
+               rule. Now, add a key to the above rule, using the <code class="option">-k</code> option:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-w /etc/audit/audit.rules -p wa -k CFG_audit.rules</code></span></span></pre>
+            </div>
+            
+            <p>You can specify any text string as key. Distinguish watches related to different types
+               of files (configuration files or log files) from one another using different key prefixes
+               (<code class="literal">CFG</code>, <code class="literal">LOG</code>, etc.) followed by the file name. Finding any records related to the above rule now
+               comes down to the following:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><code class="command">ausearch -k CFG_audit.rules</code></code></span></span>
+<span class="line"><span class="ld"><code>----</code></span></span>
+<span class="line"><span class="ld"><code>time-&gt;Thu Feb 19 09:09:54 2009</code></span></span>
+<span class="line"><span class="ld"><code>type=PATH msg=audit(1235030994.032:8649): item=3 name="audit.rules~" inode=370603 dev=08:06 mode=0100640 ouid=0 ogid=0 rdev=00:00</code></span></span>
+<span class="line"><span class="ld"><code>type=PATH msg=audit(1235030994.032:8649): item=2 name="audit.rules" inode=370603 dev=08:06 mode=0100640 ouid=0 ogid=0 rdev=00:00</code></span></span>
+<span class="line"><span class="ld"><code>type=PATH msg=audit(1235030994.032:8649): item=1  name="/etc/audit" inode=368599 dev=08:06 mode=040750 ouid=0 ogid=0 rdev=00:00</code></span></span>
+<span class="line"><span class="ld"><code>type=PATH msg=audit(1235030994.032:8649): item=0  name="/etc/audit" inode=368599 dev=08:06 mode=040750 ouid=0 ogid=0 rdev=00:00</code></span></span>
+<span class="line"><span class="ld"><code>type=CWD msg=audit(1235030994.032:8649):  cwd="/etc/audit"</code></span></span>
+<span class="line"><span class="ld"><code>type=SYSCALL msg=audit(1235030994.032:8649): arch=c000003e syscall=82 success=yes exit=0 a0=7deeb0 a1=883b30 a2=2 a3=ffffffffffffffff items=4 ppid=25400 pid=32619 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=1164 comm="vim" exe="/bin/vim-normal" key="CFG_audit.rules"</code></span></span></pre>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partviich03s06.html">Prev</a></td>
+                  <td class="up"><a href="bk06partviich03.html">Up</a></td>
+                  <td class="next"><a href="bk06partviich04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">46<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Filtering system call arguments</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">47</span><span class="sep">.&nbsp;</span>Useful resources</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

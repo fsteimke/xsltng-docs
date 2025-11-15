@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;5.&nbsp;LVM configuration</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partii.html" rel="prev">
+      <link href="bk09partiich01s02.html" rel="next">
+      <link href="bk09partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partii.html">Up</a> <a href="bk09partiich01s02.html">Next</a> <a href="bk09partii.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk09partiich01.html" db-id="d616951e238837" id="cha-lvm" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">5</span><span class="sep">.&nbsp;</span>LVM configuration</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Risks</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Using LVM might be associated with increased risk, such as data loss. Risks also include
+                              application crashes, power failures, and faulty commands. Save your data before implementing
+                              LVM or reconfiguring volumes. Never work without a backup.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="sec-lvm-explained">
+               <header>
+                  <h2><span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Understanding the logical volume manager</h2>
+               </header>
+               
+               
+               <p>LVM enables flexible distribution of hard disk space over several physical volumes
+                  (hard disks, partitions, LUNs). It was developed because the need to change the segmentation
+                  of hard disk space might arise only after the initial partitioning has already been
+                  done during installation. Because it is difficult to modify partitions on a running
+                  system, LVM provides a virtual pool (volume group or VG) of storage space from which
+                  logical volumes (LVs) can be created as needed. The operating system accesses these
+                  LVs instead of the physical partitions. Volume groups can span more than one disk,
+                  so that several disks or parts of them can constitute one single VG. In this way,
+                  LVM provides a kind of abstraction from the physical disk space that allows its segmentation
+                  to be changed in a much easier and safer way than through physical repartitioning.</p>
+               
+               <p><a class="xref xref-figure" href="#fig-lvm-explain">Figure&nbsp;<span class="label">5<span class="sep">.</span>1</span>, “Physical partitioning versus LVM”</a> compares physical partitioning (left) with LVM segmentation (right). On the left
+                  side, one single disk has been divided into three physical partitions (PART), each
+                  with a mount point (MP) assigned so that the operating system can access them. On
+                  the right side, two disks have been divided into two and three physical partitions
+                  each. Two LVM volume groups (VG&nbsp;1 and VG&nbsp;2) have been defined. VG&nbsp;1 contains two partitions
+                  from DISK&nbsp;1 and one from DISK&nbsp;2. VG&nbsp;2 contains the remaining two partitions from DISK&nbsp;2.</p>
+               
+               <div class="figure formalobject" id="fig-lvm-explain">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:556px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/lvm.png" style="width:556px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Physical partitioning versus LVM</div>
+                  </header>
+               </div>
+               
+               <p>In LVM, the physical disk partitions that are incorporated in a volume group are called
+                  physical volumes (PVs). Within the volume groups in <a class="xref xref-figure" href="#fig-lvm-explain">Figure&nbsp;<span class="label">5<span class="sep">.</span>1</span>, “Physical partitioning versus LVM”</a>, four logical volumes (LV&nbsp;1 through LV&nbsp;4) have been defined, which can be used by
+                  the operating system via the associated mount points (MP). The border between different
+                  logical volumes need not be aligned with any partition border. See the border between
+                  LV&nbsp;1 and LV&nbsp;2 in this example.</p>
+               
+               <p>LVM features:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Several hard disks or partitions can be combined in a large logical volume.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Provided the configuration is suitable, an LV (such as <code class="filename">/usr</code>) can be enlarged when the free space is exhausted.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Using LVM, it is possible to add hard disks or LVs in a running system. However, this
+                        requires hotpluggable hardware that is capable of such actions.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>It is possible to activate a <em>striping mode</em> that distributes the data stream of a logical volume over several physical volumes.
+                        If these physical volumes reside on different disks, this can improve the reading
+                        and writing performance like RAID&nbsp;0.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The snapshot feature enables consistent backups (especially for servers) in the running
+                        system.</p>
+                     </li>
+                  </ul>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">LVM and RAID</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Even though LVM also supports RAID levels 0, 1, 4, 5 and 6, we recommend using <code class="literal">mdraid</code> (see <a class="xref xref-chapter" href="bk09partiiich01.html">Chapter&nbsp;<span class="label">7</span>, Software RAID configuration</a>). However, LVM works fine with RAID&nbsp;0 and 1, as RAID&nbsp;0 is similar to common logical
+                              volume management (individual logical blocks are mapped onto blocks on the physical
+                              devices). LVM used on top of RAID&nbsp;1 can keep track of mirror synchronization and is
+                              fully able to manage the synchronization process. With higher RAID levels you need
+                              a management daemon that monitors the states of attached disks and can inform administrators
+                              if there is a problem in the disk array. LVM includes such a daemon, but in exceptional
+                              situations such as a device failure, the daemon does not work properly.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">IBM&nbsp;Z: LVM root file system</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you configure the system with a root file system on LVM or software RAID array,
+                              you must place <code class="filename">/boot/zipl</code> on a separate, non-LVM or non-RAID partition, otherwise the system will fail to boot.
+                              The recommended size for such a partition is 500&nbsp;MB and the recommended file system
+                              is Ext4.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>With these features, using LVM already makes sense for heavily-used home PCs or small
+                  servers. If you have a growing data stock, as in the case of databases, music archives,
+                  or user directories, LVM is especially useful. It allows file systems that are larger
+                  than the physical hard disk. However, keep in mind that working with LVM is different
+                  from working with conventional partitions.</p>
+               
+               
+               <p>You can manage new or existing LVM storage objects by using the YaST Partitioner.
+                  Instructions and further information about configuring LVM are available in the official
+                  <a class="link" href="https://tldp.org/HOWTO/LVM-HOWTO/"><cite class="citetitle">LVM HOWTO</cite></a>.</p>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partii.html">Prev</a></td>
+                  <td class="up"><a href="bk09partii.html">Up</a></td>
+                  <td class="next"><a href="bk09partiich01s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Part&nbsp;<span class="label">II</span><span class="sep">.&nbsp;</span>Logical volumes (LVM)</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating volume groups</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

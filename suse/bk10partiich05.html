@@ -1,0 +1,802 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;12.&nbsp;Connecting and authorizing</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich04s07.html" rel="prev">
+      <link href="bk10partiich05s02.html" rel="next">
+      <link href="bk10partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partii.html">Up</a> <a href="bk10partiich05s02.html">Next</a> <a href="bk10partiich04s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partiich05.html" db-id="d616951e276621" id="cha-libvirt-connect" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">12</span><span class="sep">.&nbsp;</span>Connecting and authorizing</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Managing several VM Host Servers, each hosting multiple VM Guests, quickly becomes
+                  difficult. One benefit of <code class="library systemitem">libvirt</code> is the ability to connect to several VM Host Servers at once, providing a single
+                  interface to manage all VM Guests and to connect to their graphical console.</p>
+               
+               <p>To ensure only authorized users can connect, <code class="library systemitem">libvirt</code> offers several connection types (via TLS, SSH, Unix sockets, and TCP) that can be
+                  combined with different authorization mechanisms (socket, Polkit, SASL and Kerberos).</p>
+               </div>
+            <section class="sect1" id="sec-libvirt-connect-auth">
+               <header>
+                  <h2><span class="label">12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Authentication</h2>
+               </header>
+               
+               
+               <p>The power to manage VM Guests and to access their graphical console is something that
+                  should be restricted to a well-defined circle of persons. To achieve this goal, you
+                  can use the following authentication techniques on the VM Host Server:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Access control for Unix sockets with permissions and group ownership. This method
+                        is available for <code class="daemon systemitem">libvirtd</code> connections only.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Access control for Unix sockets with Polkit. This method is available for local <code class="daemon systemitem">libvirtd</code> connections only.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>User name and password authentication with SASL (Simple Authentication and Security
+                        Layer). This method is available for both <code class="daemon systemitem">libvirtd</code> and VNC connections. Using SASL does not require real user accounts on the server,
+                        since it uses its own database to store user names and passwords. Connections authenticated
+                        with SASL are encrypted.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Kerberos authentication. This method, available for <code class="daemon systemitem">libvirtd</code> connections only, is not covered in this manual. Refer to <a class="link" href="https://libvirt.org/auth.html#ACL_server_kerberos">https://libvirt.org/auth.html#ACL_server_kerberos</a> for details.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Single password authentication. This method is available for VNC connections only.</p>
+                     </li>
+                  </ul>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Authentication for <code class="daemon systemitem">libvirtd</code> and VNC needs to be configured separately</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Access to the VM Guest's management functions (via <code class="daemon systemitem">libvirtd</code>) and to its graphical console always needs to be configured separately. When restricting
+                              access to the management tools, these restrictions do <em>not</em> automatically apply to VNC connections.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When accessing VM Guests from remote via TLS/SSL connections, access can be indirectly
+                  controlled on each client by restricting read permissions to the certificate's key
+                  file to a certain group. See <a class="xref xref-sect3" href="bk10partiich05s03.html#sec-libvirt-connect-remote-tls-security">the section called “Restricting access (security considerations)”</a> for details.</p>
+               
+               <section class="sect2" id="sec-libvirt-connect-auth-libvirt">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                        <code class="daemon systemitem">libvirtd</code> authentication</h3>
+                  </header>
+                  
+                  
+                  <p><code class="daemon systemitem">libvirtd</code> authentication is configured in <code class="filename">/etc/libvirt/libvirtd.conf</code>. The configuration made here applies to all <code class="library systemitem">libvirt</code> tools such as the Virtual Machine Manager or <code class="command">virsh</code>.</p>
+                  
+                  <p><code class="library systemitem">libvirt</code> offers two sockets: a read-only socket for monitoring purposes and a read-write socket
+                     to be used for management operations. Access to both sockets can be configured independently.
+                     By default, both sockets are owned by <code class="literal">root.root</code>. Default access permissions on the read-write socket are restricted to the user <code class="systemitem username">root</code> (<code class="literal">0700</code>) and fully open on the read-only socket (<code class="literal">0777</code>).</p>
+                  
+                  <p>The following instructions describe how to configure access permissions for the read-write
+                     socket. The same instructions also apply to the read-only socket. All configuration
+                     steps need to be carried out on the VM Host Server.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Default authentication settings on <span class="phrase productname">SUSE Linux Enterprise Server</span>
+                                 </div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The default authentication method on <span class="phrase productname">SUSE Linux Enterprise Server</span> is access control for Unix sockets. Only the user <code class="systemitem username">root</code> may authenticate. When accessing the <code class="library systemitem">libvirt</code> tools as a non-root user directly on the VM Host Server, you need to provide the
+                                 <code class="systemitem username">root</code> password through Polkit once. You are then granted access for the current and for
+                                 future sessions.</p>
+                              
+                              <p>Alternatively, you can configure <code class="library systemitem">libvirt</code> to allow <q>system</q> access to non-privileged users. See <a class="xref xref-sect2" href="bk10partiich05s02.html#sec-libvirt-connect-connecting-dac">the section called “
+                                    <q>system</q> access for non-privileged users”</a> for details.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="long-terms variablelist">
+                     <header>
+                        <div class="title">Recommended authorization methods</div>
+                     </header>
+                     <dl class="long-terms variablelist">
+                        <div class="varlistentry">
+                           <dt><span class="term">Local connections</span></dt>
+                           <dd>
+                              
+                              <div class="simplelist simplelistvert">
+                                 <div class="row"><span>
+                                       <a class="xref xref-sect3" href="#sec-libvirt-connect-auth-libvirt-pk">the section called “Local access control for Unix sockets with Polkit”</a>
+                                       </span></div>
+                                 <div class="row"><span>
+                                       <a class="xref xref-sect3" href="#sec-libvirt-connect-auth-libvirt-traditional">the section called “Access control for Unix sockets with permissions and group ownership”</a>
+                                       </span></div>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">Remote tunnel over SSH</span></dt>
+                           <dd>
+                              
+                              <div class="simplelist simplelistvert">
+                                 <div class="row"><span>
+                                       <a class="xref xref-sect3" href="#sec-libvirt-connect-auth-libvirt-traditional">the section called “Access control for Unix sockets with permissions and group ownership”</a>
+                                       </span></div>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">Remote TLS/SSL connection</span></dt>
+                           <dd>
+                              
+                              <div class="simplelist simplelistvert">
+                                 <div class="row"><span>
+                                       <a class="xref xref-sect3" href="#sec-libvirt-connect-auth-libvirt-sasl">the section called “User name and password authentication with SASL”</a>
+                                       </span></div>
+                                 <div class="row"><span>none (access controlled on the client side by restricting access to the certificates)</span></div>
+                              </div>
+                              </dd>
+                        </div>
+                     </dl>
+                  </div>
+                  
+                  <section class="sect3" id="sec-libvirt-connect-auth-libvirt-traditional">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Access control for Unix sockets with permissions and group ownership</h4>
+                     </header>
+                     
+                     
+                     <p>To grant access for non-<code class="systemitem username">root</code> accounts, configure the sockets to be owned and accessible by a certain group (<code class="groupname systemitem">libvirt</code> in the following example). This authentication method can be used for local and remote
+                        SSH connections.</p>
+                     
+                     <div class="informalobject procedure" id="sec-libvirt-connect-auth-libvirt-traditional_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>In case it does not exist, create the group that should own the socket:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> groupadd libvirt</code></span></span></pre>
+                              </div>
+                              
+                              <div class="admonition important">
+                                 <div>
+                                    <div class="icon">☝</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Group needs to exist</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>The group must exist before restarting <code class="daemon systemitem">libvirtd</code>. If not, the restart fails.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Add the desired users to the group:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> usermod --append --groups libvirt tux</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Change the configuration in <code class="filename">/etc/libvirt/libvirtd.conf</code> as follows:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>unix_sock_group = "libvirt"<span class="co" id="co-libvirt-connect-ssh-group">⣿</span></code></span></span>
+<span class="line"><span class="ld"><code>unix_sock_rw_perms = "0770"<span class="co" id="co-libvirt-connect-ssh-perms">⤀</span></code></span></span>
+<span class="line"><span class="ld"><code>auth_unix_rw = "none"<span class="co" id="co-libvirt-connect-ssh-enable">⤁</span></code></span></span></pre>
+                              </div>
+                              
+                              <div class="calloutlist">
+                                 <dl>
+                                    <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-ssh-group">⣿</a></dt>
+                                    <dd>
+                                       
+                                       <p>Group ownership is set to the group <code class="literal">libvirt</code>.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-ssh-perms">⤀</a></dt>
+                                    <dd>
+                                       
+                                       <p>Sets the access permissions for the socket (<code class="literal">srwxrwx---</code>).</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-ssh-enable">⤁</a></dt>
+                                    <dd>
+                                       
+                                       <p>Disables other authentication methods (Polkit or SASL). Access is solely controlled
+                                          by the socket permissions.</p>
+                                       </dd>
+                                 </dl>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart <code class="daemon systemitem">libvirtd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start libvirtd</code></span></span></pre>
+                              </div>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-libvirt-connect-auth-libvirt-pk">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Local access control for Unix sockets with Polkit</h4>
+                     </header>
+                     
+                     
+                     <p>Access control for Unix sockets with Polkit is the default authentication method on
+                        <span class="phrase productname">SUSE Linux Enterprise Server</span> for non-remote connections. Therefore, no <code class="library systemitem">libvirt</code> configuration changes are needed. With Polkit authorization enabled, permissions
+                        on both sockets default to <code class="literal">0777</code> and each application trying to access a socket needs to authenticate via Polkit.</p>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Polkit authentication for local connections only</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Authentication with Polkit can only be used for local connections on the VM Host Server
+                                    itself, since Polkit does not handle remote authentication. </p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <p>Two policies for accessing <code class="library systemitem">libvirt</code>'s sockets exist:</p>
+                     
+                     <ul class="itemizedlist" db-mark="bullet">
+                        
+                        <li>
+                           
+                           <p><em>org.libvirt.unix.monitor</em>: accessing the read-only socket</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p><em>org.libvirt.unix.manage</em>: accessing the read-write socket</p>
+                           </li>
+                        </ul>
+                     
+                     <p>By default, the policy for accessing the read-write socket is to authenticate with
+                        the <code class="systemitem username">root</code> password once and grant the privilege for the current and for future sessions.</p>
+                     
+                     <p>To grant users access to a socket without having to provide the <code class="systemitem username">root</code> password, you need to create a rule in <code class="filename">/etc/polkit-1/rules.d</code>. Create the file <code class="filename">/etc/polkit-1/rules.d/10-grant-libvirt</code> with the following content to grant access to the read-write socket to all members
+                        of the group <code class="groupname systemitem">libvirt</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>polkit.addRule(function(action, subject) {</code></span></span>
+<span class="line"><span class="ld"><code>  if (action.id == "org.libvirt.unix.manage" &amp;&amp; subject.isInGroup("libvirt")) {</code></span></span>
+<span class="line"><span class="ld"><code>    return polkit.Result.YES;</code></span></span>
+<span class="line"><span class="ld"><code>  }</code></span></span>
+<span class="line"><span class="ld"><code>});</code></span></span></pre>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-libvirt-connect-auth-libvirt-sasl">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>User name and password authentication with SASL</h4>
+                     </header>
+                     
+                     
+                     <p>SASL provides user name and password authentication and data encryption (digest-md5,
+                        by default). Since SASL maintains its own user database, the users do not need to
+                        exist on the VM Host Server. SASL is required by TCP connections and on top of TLS/SSL
+                        connections.</p>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Plain TCP and SASL with digest-md5 encryption</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Using digest-md5 encryption on an otherwise not encrypted TCP connection does not
+                                    provide enough security for production environments. It is recommended to only use
+                                    it in testing environments.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">SASL authentication on top of TLS/SSL</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Access from remote TLS/SSL connections can be indirectly controlled on the <em>client side</em> by restricting access to the certificate's key file. However, this may prove error-prone
+                                    when dealing with many clients. Using SASL with TLS adds security by additionally
+                                    controlling access on the server side.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <p>To configure SASL authentication, proceed as follows:</p>
+                     
+                     <div class="informalobject procedure" id="sec-libvirt-connect-auth-libvirt-sasl_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Change the configuration in <code class="filename">/etc/libvirt/libvirtd.conf</code> as follows:</p>
+                              
+                              <div class="substeps">
+                                 <ol class="procedure substeps" type="a">
+                                    
+                                    <li class="step">
+                                       
+                                       <p>To enable SASL for TCP connections:</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>auth_tcp = "sasl"</code></span></span></pre>
+                                       </div>
+                                       </li>
+                                    
+                                    <li class="step">
+                                       
+                                       <p>To enable SASL for TLS/SSL connections:</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>auth_tls = "sasl"</code></span></span></pre>
+                                       </div>
+                                       </li>
+                                    </ol>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart <code class="daemon systemitem">libvirtd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>The libvirt SASL configuration file is located at <code class="filename">/etc/sasl2/libvirtd.conf</code>. Normally, there is no need to change the defaults. However, if using SASL on top
+                                 of TLS, you may turn off session encryption to avoid additional overhead (TLS connections
+                                 are already encrypted) by commenting the line setting the <code class="literal">mech_list</code> parameter. Only do this for TLS/SASL. For TCP connections, this parameter must be
+                                 set to digest-md5.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#mech_list: digest-md5</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>By default, no SASL users are configured, so no logins are possible. Use the following
+                                 commands to manage users:</p>
+                              
+                              <dl class="long-terms variablelist">
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">Add the user <code class="systemitem username">tux</code>
+                                          </span></dt>
+                                    <dd>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>saslpasswd2 -a libvirt tux</code></span></span></pre>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">Delete the user <code class="systemitem username">tux</code>
+                                          </span></dt>
+                                    <dd>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>saslpasswd2 -a libvirt -d tux</code></span></span></pre>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">List existing users</span></dt>
+                                    <dd>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sasldblistusers2 -f /etc/libvirt/passwd.db</code></span></span></pre>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 </dl>
+                              </li>
+                        </ol>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">
+                                    <code class="command">virsh</code> and SASL authentication</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>When using SASL authentication, you are prompted for a user name and password every
+                                    time you issue a <code class="command">virsh</code> command. Avoid this by using <code class="command">virsh</code> in shell mode.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  </section>
+               
+               <section class="sect2" id="sec-libvirt-connect-auth-vnc">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VNC authentication</h3>
+                  </header>
+                  
+                  
+                  <p>Since access to the graphical console of a VM Guest is not controlled by <code class="library systemitem">libvirt</code>, but by the specific hypervisor, it is always necessary to additionally configure
+                     VNC authentication. The main configuration file is <code class="filename">/etc/libvirt/&lt;hypervisor&gt;.conf</code>. This section describes the QEMU/KVM hypervisor, so the target configuration file
+                     is <code class="filename">/etc/libvirt/qemu.conf</code>.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">VNC authentication for Xen</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>In contrast with KVM, Xen does not yet offer VNC authentication more sophisticated
+                                 than setting a password on a per-VM basis. See the <code class="literal">&lt;graphics type='vnc'...</code><code class="library systemitem">libvirt</code> configuration option below.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>Two authentication types are available: SASL and single-password authentication. If
+                     you are using SASL for <code class="library systemitem">libvirt</code> authentication, it is strongly recommended to use it for VNC authentication as well—it
+                     is possible to share the same database.</p>
+                  
+                  <p>A third method to restrict access to the VM Guest is to enable the use of TLS encryption
+                     on the VNC server. This requires the VNC clients to have access to x509 client certificates.
+                     By restricting access to these certificates, access can indirectly be controlled on
+                     the client side. Refer to <a class="xref xref-sect4" href="bk10partiich05s03.html#sec-libvirt-connect-remote-tls-vnc-client">the section called “VNC over TLS/SSL: client configuration”</a> for details.</p>
+                  
+                  <section class="sect3" id="sec-libvirt-connect-auth-vnc-tls">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>User name and password authentication with SASL</h4>
+                     </header>
+                     
+                     
+                     <p>SASL provides user name and password authentication and data encryption. Since SASL
+                        maintains its own user database, the users do not need to exist on the VM Host Server.
+                        As with SASL authentication for <code class="library systemitem">libvirt</code>, you may use SASL on top of TLS/SSL connections. Refer to <a class="xref xref-sect4" href="bk10partiich05s03.html#sec-libvirt-connect-remote-tls-vnc-client">the section called “VNC over TLS/SSL: client configuration”</a> for details on configuring these connections.</p>
+                     
+                     <p>To configure SASL authentication for VNC, proceed as follows:</p>
+                     
+                     <div class="informalobject procedure" id="sec-libvirt-connect-auth-vnc-tls_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Create a SASL configuration file. It is recommended to use the existing <code class="library systemitem">libvirt</code> file. If you have already configured SASL for <code class="library systemitem">libvirt</code> and are planning to use the same settings, including the same user name and password
+                                 database, a simple link is suitable:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ln -s /etc/sasl2/libvirt.conf /etc/sasl2/qemu.conf</code></span></span></pre>
+                              </div>
+                              
+                              <p>If are setting up SASL for VNC only or you are planning to use a different configuration
+                                 than for <code class="library systemitem">libvirt</code>, copy the existing file to use as a template:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cp /etc/sasl2/libvirt.conf /etc/sasl2/qemu.conf</code></span></span></pre>
+                              </div>
+                              
+                              <p>Then edit it according to your needs.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Change the configuration in <code class="filename">/etc/libvirt/qemu.conf</code> as follows:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vnc_listen = "0.0.0.0"</code></span></span>
+<span class="line"><span class="ld"><code>vnc_sasl = 1</code></span></span>
+<span class="line"><span class="ld"><code>sasldb_path: /etc/libvirt/qemu_passwd.db</code></span></span></pre>
+                              </div>
+                              
+                              <p>The first parameter enables VNC to listen on all public interfaces (rather than to
+                                 the local host only), and the second parameter enables SASL authentication.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>By default, no SASL users are configured, so no logins are possible. Use the following
+                                 commands to manage users:</p>
+                              
+                              <dl class="long-terms variablelist">
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">Add the user <code class="systemitem username">tux</code>
+                                          </span></dt>
+                                    <dd>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>saslpasswd2 -f /etc/libvirt/qemu_passwd.db -a qemu tux</code></span></span></pre>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">Delete the user <code class="systemitem username">tux</code>
+                                          </span></dt>
+                                    <dd>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>saslpasswd2 -f /etc/libvirt/qemu_passwd.db -a qemu -d tux</code></span></span></pre>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">List existing users</span></dt>
+                                    <dd>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>sasldblistusers2 -f /etc/libvirt/qemu_passwd.db</code></span></span></pre>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 </dl>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart <code class="daemon systemitem">libvirtd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart all VM Guests that have been running before changing the configuration. VM
+                                 Guests that have not been restarted cannot use SASL authentication for VNC connects.</p>
+                              </li>
+                        </ol>
+                     </div>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Supported VNC viewers</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>SASL authentication is currently supported by Virtual Machine Manager and <code class="command">virt-viewer</code>. Both viewers also support TLS/SSL connections.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-libvirt-connect-auth-vnc-pw">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Single password authentication</h4>
+                     </header>
+                     
+                     
+                     <p>Access to the VNC server may also be controlled by setting a VNC password. You can
+                        either set a global password for all VM Guests or set individual passwords for each
+                        guest. The latter requires editing the VM Guest's configuration files.</p>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Always set a global password</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>If you are using single password authentication, it is good practice to set a global
+                                    password even if setting passwords for each VM Guest. This protects your virtual machines
+                                    with a <q>fallback</q> password if you forget to set a per-machine password. The global password is only
+                                    used if no other password is set for the machine.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div class="formalobject procedure" id="sec-libvirt-connect-auth-vnc-pw_proc1">
+                        <header>
+                           <div class="title">Procedure&nbsp;<span class="label">12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting a global VNC password</div>
+                        </header>
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Change the configuration in <code class="filename">/etc/libvirt/qemu.conf</code> as follows:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vnc_listen = "0.0.0.0"</code></span></span>
+<span class="line"><span class="ld"><code>vnc_password = "<em class="replaceable">PASSWORD</em>"</code></span></span></pre>
+                              </div>
+                              
+                              <p>The first parameter enables VNC to listen on all public interfaces (rather than to
+                                 the local host only), and the second parameter sets the password. The maximum length
+                                 of the password is eight characters.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart <code class="daemon systemitem">libvirtd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart all VM Guests that have been running before changing the configuration. VM
+                                 Guests that have not been restarted cannot use password authentication for VNC connects.</p>
+                              </li>
+                        </ol>
+                     </div>
+                     
+                     <div class="formalobject procedure" id="sec-libvirt-connect-auth-vnc-pw_proc2">
+                        <header>
+                           <div class="title">Procedure&nbsp;<span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting a VM Guest specific VNC password</div>
+                        </header>
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Change the configuration in <code class="filename">/etc/libvirt/qemu.conf</code> as follows to enable VNC to listen on all public interfaces (rather than to the local
+                                 host only).</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vnc_listen = "0.0.0.0"</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Open the VM Guest's XML configuration file in an editor. Replace <em class="replaceable">VM_NAME</em> in the following example with the name of the VM Guest. The editor that is used defaults
+                                 to <code class="envar">$EDITOR</code>. If that variable is not set, <code class="command">vi</code> is used.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh edit <em class="replaceable">VM_NAME</em></code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Search for the element <code class="literal">&lt;graphics&gt;</code> with the attribute <code class="literal">type='vnc'</code>, for example:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;graphics type='vnc' port='-1' autoport='yes'/&gt;</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Add the <code class="literal">passwd=<em class="replaceable">PASSWORD</em></code> attribute, save the file and exit the editor. The maximum length of the password
+                                 is eight characters.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;graphics type='vnc' port='-1' autoport='yes' passwd='PASSWORD'/&gt;</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart <code class="daemon systemitem">libvirtd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart all VM Guests that have been running before changing the configuration. VM
+                                 Guests that have not been restarted cannot use password authentication for VNC connects.</p>
+                              </li>
+                        </ol>
+                     </div>
+                     
+                     <div class="admonition warning">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Security of the VNC protocol</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>The VNC protocol is not considered to be safe. Although the password is sent encrypted,
+                                    it may be vulnerable when an attacker can sniff both the encrypted password and the
+                                    encryption key. Therefore, it is recommended to use VNC with TLS/SSL or tunneled over
+                                    SSH. <code class="command">virt-viewer</code>, Virtual Machine Manager and Remmina (refer to <a class="xref xref-sect1" href="bk01partich14s02.html">the section called “Remmina: the remote desktop client”</a>) support both methods.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich04s07.html">Prev</a></td>
+                  <td class="up"><a href="bk10partii.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich05s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Monitoring</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Connecting to a VM Host Server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

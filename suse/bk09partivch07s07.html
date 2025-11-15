@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>20.7.&nbsp;Samba server in the network with Active Directory</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch07s06.html" rel="prev">
+      <link href="bk09partivch07s08.html" rel="next">
+      <link href="bk09partivch07.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch07.html">Up</a> <a href="bk09partivch07s08.html">Next</a> <a href="bk09partivch07s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch07s07.html" db-id="d616951e262099" id="sec-samba-adnet">
+            <header>
+               <h2><span class="label">20<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Samba server in the network with Active Directory</h2>
+            </header>
+            
+            
+            <p>If you run Linux servers and Windows servers together, you can build two independent
+               authentication systems and networks or connect servers to one network with one central
+               authentication system. Because Samba can cooperate with an Active Directory domain,
+               you can join your <span class="phrase productname">SUSE Linux Enterprise Server</span> server with an Active Directory (AD) domain.</p>
+            
+            <p>To join an AD domain, proceed as follows:</p>
+            
+            <div class="informalobject procedure" id="sec-samba-adnet_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Log in as <code class="systemitem username">root</code> and start YaST.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start <span class="menuchoice"><span class="guimenu">Network Services</span><span class="guimenu">Windows Domain Membership</span></span>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Enter the domain to join in the <span class="guimenu">Domain or Workgroup</span> field in the <span class="guimenu">Windows Domain Membership</span> screen.</p>
+                     
+                     <div class="figure formalobject" id="sec-samba-adnet_proc1_step3_fig1">
+                        
+                        
+                        <div class="mediaobject">
+                           <div class="media image"><picture class="imageobject"><img src="media/ad_sambaclient.png"></picture></div>
+                        </div>
+                        
+                        <header>
+                           <div class="title">Figure&nbsp;<span class="label">20<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Determining Windows domain membership</div>
+                        </header>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Check <span class="guimenu">Also Use SMB Information for Linux Authentication</span> to use the SMB source for Linux authentication on your server.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Click <span class="guimenu">OK</span> and confirm the domain join when prompted for it.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Provide the password for the Windows Administrator on the AD server and click <span class="guimenu">OK</span>.</p>
+                     
+                     <p>Your server is now set up to pull in all authentication data from the Active Directory
+                        domain controller.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Alternatively, you can use the <code class="command">realmd</code> tool to connect to Active Directory. For details, refer to <a class="xref xref-sect2" href="#sec-realmd-ad">the section called “Using <code class="command">realmd</code> to manage Active Directory”</a>.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Identity mapping</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>In an environment with more than one Samba server, UIDs and GIDs will not be created
+                           consistently. The UIDs that get assigned to users will be dependent on the order in
+                           which they first log in, which results in UID conflicts across servers. To fix this,
+                           you need to use identity mapping. See <a class="link" href="https://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/idmapper.html">https://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/idmapper.html</a> for more details.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-realmd-ad">
+               <header>
+                  <h3><span class="label">20<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Using <code class="command">realmd</code> to manage Active Directory</h3>
+               </header>
+               
+               
+               <p><code class="command">realmd</code> is a DBus service that allows you to configure network authentication and domain
+                  membership.</p>
+               
+               <section class="sect3" id="sec-realmd-discovery">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>7<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Discovering Active Directory domains</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">realmd</code> discovers which domains or realms can be used or configured by checking the DNS SRV
+                     records. Ensure that a DNS SRV record is available for the Active Directory domain
+                     to be discovered; <em>domain.example.com</em> in the following example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>_ldap._tcp.dc._msdcs.domain.example.com.</code></span></span></pre>
+                  </div>
+                  
+                  <p>The DNS records should be created automatically by the DNS server that comes with
+                     the Active Directory.</p>
+                  
+                  <p>To discover a particular domain name, run the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">realm discover --verbose domain.example.com</code></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>* Resolving: _ldap._tcp.dc._msdcs.domain.example.com</code></span></span>
+<span class="line"><span class="ld"><code> * Sending MS-CLDAP ping to: 192.168.20.10</code></span></span>
+<span class="line"><span class="ld"><code> * Sending MS-CLDAP ping to: 192.168.12.12</code></span></span>
+<span class="line"><span class="ld"><code> * Successfully discovered: domain.example.com</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+                  </div>
+                  
+                  <p>To join a particular Active Directory domain, run the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">realm join --verbose domain.example.com</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Once you joined the Active Directory domain, you can configure the machine to enable
+                     logging in using the domain accounts. To do so, run:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">realm permit --realm domain.example.com --all</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>To permit only specific accounts by specifying them in the command as follows:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">realm permit --realm domain.example.com DOMAIN\\<em class="replaceable">USERNAME</em> DOMAIN\\<em class="replaceable">USERNAME</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>To deny logins from any domain account, use the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">realm deny --realm domain.example.com --all</code></code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch07s06.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch07.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch07s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">20<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Samba as login server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">20<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Advanced topics</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

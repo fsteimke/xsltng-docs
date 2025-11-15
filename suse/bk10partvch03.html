@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;36.&nbsp;Guest installation</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvch02s03.html" rel="prev">
+      <link href="bk10partvch03s02.html" rel="next">
+      <link href="bk10partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partv.html">Up</a> <a href="bk10partvch03s02.html">Next</a> <a href="bk10partvch02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partvch03.html" db-id="d616951e296946" id="cha-qemu-guest-inst" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">36</span><span class="sep">.&nbsp;</span>Guest installation</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>The <code class="library systemitem">libvirt</code>-based tools such as <code class="command">virt-manager</code> and <code class="command">virt-install</code> offer convenient interfaces to set up and manage virtual machines. They act as a
+                  kind of wrapper for the <code class="command">qemu-system-ARCH</code>command. However, it is also possible to use <code class="command">qemu-system-ARCH</code> directly without using <code class="library systemitem">libvirt</code>-based tools.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">
+                              <code class="command">qemu-system-ARCH</code> and libvirt</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-vm"><span class="label">Virtual Machine</span></a>s created with <code class="command">qemu-system-ARCH</code> are not visible for the <code class="library systemitem">libvirt</code>-based tools.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="cha-qemu-guest-inst-qemu-kvm">
+               <header>
+                  <h2><span class="label">36<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Basic installation with <code class="command">qemu-system-ARCH</code>
+                     </h2>
+               </header>
+               
+               
+               <p>In the following example, a virtual machine for a SUSE Linux Enterprise Server 11
+                  installation is created. For detailed information on the commands, refer to the respective
+                  man pages.</p>
+               
+               <p>If you do not already have an image of a system that you want to run in a virtualized
+                  environment, you need to create one from the installation media. In such case, you
+                  need to prepare a hard disk image, and obtain an image of the installation media or
+                  the media itself.</p>
+               
+               <p>Create a hard disk with <code class="command">qemu-img</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>qemu-img create<span class="co" id="co-qemu-img-create">⤛</span> -f raw<span class="co" id="co-qemu-img-format">⤜</span> /images/sles/hda<span class="co" id="co-qemu-img-path">⤝</span> 8G<span class="co" id="co-qemu-img-size">⤞</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-img-create">⤛</a></dt>
+                     <dd>
+                        
+                        <p>The subcommand <code class="option">create</code> tells <code class="command">qemu-img</code> to create a new image.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-img-format">⤜</a></dt>
+                     <dd>
+                        
+                        <p>Specify the disk's format with the <code class="option">-f</code> parameter.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-img-path">⤝</a></dt>
+                     <dd>
+                        
+                        <p>The full path to the image file.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-img-size">⤞</a></dt>
+                     <dd>
+                        
+                        <p>The size of the image, 8&nbsp;GB in this case. The image is created as a <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-storage-sparse"><span class="label">Sparse image file</span></a> that grows when the disk is filled with data. The specified size defines the maximum
+                           size to which the image file can grow.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <p>After at least one hard disk image is created, you can set up a virtual machine with
+                  <code class="command">qemu-system-ARCH</code> that boots into the installation system:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-system-x86_64 -name "sles"<span class="co" id="co-qemu-kvn-name">⤟</span>-machine accel=kvm -M pc<span class="co" id="co-qemu-kvm-type">⤠</span> -m 768<span class="co" id="co-qemu-kvm-memory">⤡</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-smp 2<span class="co" id="co-qemu-kvm-cpu">⤢</span> -boot d<span class="co" id="co-qemu-kvm-boot">⤣</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-drive file=/images/sles/hda,if=virtio,index=0,media=disk,format=raw<span class="co" id="co-qemu-kvm-hdd">⤤</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-drive file=/isos/SLE-15-SP7-Online-<em class="replaceable">ARCH</em>-GM-media1.iso,index=1,media=cdrom<span class="co" id="co-qemu-kvm-cdrom">⤥</span> \</code></span></span>
+<span class="line"><span class="ld"><code>-net nic,model=virtio,macaddr=52:54:00:05:11:11<span class="co" id="co-qemu-kvm-nic">⤦</span> -net user \</code></span></span>
+<span class="line"><span class="ld"><code>-vga cirrus<span class="co" id="co-qemu-kvm-gfx">⤧</span> -balloon virtio<span class="co" id="co-qemu-kvm-balloon">⤨</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvn-name">⤟</a></dt>
+                     <dd>
+                        
+                        <p>Name of the virtual machine that is displayed in the window caption and be used for
+                           the VNC server. This name must be unique.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-type">⤠</a></dt>
+                     <dd>
+                        
+                        <p>Specifies the machine type. Use <code class="command">qemu-system-ARCH</code><code class="option">-M ?</code> to display a list of valid parameters. <code class="literal">pc</code> is the default <span class="guimenu">Standard PC</span>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-memory">⤡</a></dt>
+                     <dd>
+                        
+                        <p>Maximum amount of memory for the virtual machine.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-cpu">⤢</a></dt>
+                     <dd>
+                        
+                        <p>Defines an SMP system with two processors.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-boot">⤣</a></dt>
+                     <dd>
+                        
+                        <p>Specifies the boot order. Valid values are <code class="literal">a</code>, <code class="literal">b</code> (floppy 1 and 2), <code class="literal">c</code> (first hard disk), <code class="literal">d</code> (first CD-ROM), or <code class="literal">n</code> to <code class="literal">p</code> (Ether-boot from network adapter 1-3). Defaults to <code class="literal">c</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-hdd">⤤</a></dt>
+                     <dd>
+                        
+                        <p>Defines the first (<code class="literal">index=0</code>) hard disk. It is accessed as a paravirtualized (<code class="literal">if=virtio</code>) drive in <code class="literal">raw</code> format.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-cdrom">⤥</a></dt>
+                     <dd>
+                        
+                        <p>The second (<code class="literal">index=1</code>) image drive acts as a CD-ROM.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-nic">⤦</a></dt>
+                     <dd>
+                        
+                        <p>Defines a paravirtualized (<code class="literal">model=virtio</code>) network adapter with the MAC address <code class="literal">52:54:00:05:11:11</code>. Be sure to specify a unique MAC address, otherwise a network conflict may occur.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-gfx">⤧</a></dt>
+                     <dd>
+                        
+                        <p>Specifies the graphic card. If you specify <code class="literal">none</code>, the graphic card is disabled.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-kvm-balloon">⤨</a></dt>
+                     <dd>
+                        
+                        <p>Defines the paravirtualized balloon device that allows to dynamically change the amount
+                           of memory (up to the maximum value specified with the parameter <code class="option">-m</code>).</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <p>After the installation of the guest operating system finishes, you can start the related
+                  virtual machine without the need to specify the CD-ROM device:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-system-x86_64 -name "sles" -machine type=pc,accel=kvm -m 768 \</code></span></span>
+<span class="line"><span class="ld"><code>-smp 2 -boot c \</code></span></span>
+<span class="line"><span class="ld"><code>-drive file=/images/sles/hda,if=virtio,index=0,media=disk,format=raw \</code></span></span>
+<span class="line"><span class="ld"><code>-net nic,model=virtio,macaddr=52:54:00:05:11:11 \</code></span></span>
+<span class="line"><span class="ld"><code>-vga cirrus -balloon virtio</code></span></span></pre>
+               </div>
+               </section>
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvch02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partv.html">Up</a></td>
+                  <td class="next"><a href="bk10partvch03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">35<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>KVM host-specific features</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">36<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing disk images with <code class="command">qemu-img</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

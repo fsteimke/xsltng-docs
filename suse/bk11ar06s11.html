@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.&nbsp;NVIDIA virtual GPU background</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar06s10.html" rel="prev">
+      <link href="bk11ar06s12.html" rel="next">
+      <link href="bk11ar06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar06.html">Up</a> <a href="bk11ar06s12.html">Next</a> <a href="bk11ar06s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar06s11.html" db-id="d616951e325372" id="configure-nvidia-vgpu-background">
+            <header>
+               <h2><span class="label">11</span><span class="sep">.&nbsp;</span>NVIDIA virtual GPU background</h2>
+            </header>
+            
+            
+            <section class="sect2" id="configure-nvidia-vgpu-architecture">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NVIDIA GPU architectures</h3>
+               </header>
+               
+               
+               <p>There are two types of GPU architectures:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Time-sliced vGPU architecture</span></dt>
+                     <dd>
+                        
+                        <p>Introduced on GPUs that are based on the NVIDIA Ampere GPU architecture. Only Ampere
+                           GPU cards can support MIG-backed vGPU.</p>
+                        
+                        <div class="figure formalobject" id="configure-nvidia-vgpu-architecture_vl1_vle1_li1_fig1">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/nvidia-vgpu-time-sliced.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">1</span><span class="sep">.&nbsp;</span>Time-sliced architecture (source: <a class="link" href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html">https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html</a>)</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Multi-Instance GPU (MIG) vGPU architecture</span></dt>
+                     <dd>
+                        
+                        <p>All GPU cards support time-sliced vGPU. To do so, Ampere GPU cards use the Single
+                           Root I/O Virtualization (SR-IOV) mechanism, while Volta and the earlier GPU cards
+                           use the mediated device mechanism. Volta and the earlier architecture are based on
+                           mediated device mechanism. These two mechanisms are transparent to a VM. However,
+                           they need different configurations from the host side.</p>
+                        
+                        <div class="figure formalobject" id="configure-nvidia-vgpu-architecture_vl1_vle2_li1_fig1">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/nvidia-vgpu-mig-backed.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">2</span><span class="sep">.&nbsp;</span>MIG-backed architecture (source: <a class="link" href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html">https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html</a>)</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="configure-nvidia-vgpu-vgpu-types">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>vGPU types</h3>
+               </header>
+               
+               
+               <p>Each physical GPU can support several different types of vGPUs. vGPU types have a
+                  fixed amount of framebuffer, the number of supported display heads, and maximum resolutions.
+                  NVIDIA has four types of vGPUs: A, B, C and Q-series. SUSE currently supports Q and
+                  C-series.</p>
+               
+               <div class="formalobject table" id="configure-nvidia-vgpu-vgpu-types_tab1">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">1</span><span class="sep">.&nbsp;</span>vGPU types</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 20%">
+                        <col style="width: 80%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep left rowsep">
+                              <p>vGPU series</p>
+                           </th>
+                           <th class="btop colsep left rowsep">
+                              <p>Optimal workload</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep left rowsep">
+                              <p>Q-series</p>
+                           </td>
+                           <td class="btop colsep left rowsep">
+                              <p>Virtual workstations for creative and technical professionals who require the performance
+                                 and features of the NVIDIA Quadro technology.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep left rowsep">
+                              <p>C-series</p>
+                           </td>
+                           <td class="colsep left rowsep">
+                              <p>Compute-intensive server workloads, for example, artificial intelligence (AI), deep
+                                 learning, or high-performance computing (HPC).</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep left rowsep">
+                              <p>B-series</p>
+                           </td>
+                           <td class="colsep left rowsep">
+                              <p>Virtual desktops for business professionals and knowledge workers.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep left rowsep">
+                              <p>A-series</p>
+                           </td>
+                           <td class="colsep left rowsep">
+                              <p>Application streaming or session-based solutions for virtual applications users.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="configure-nvidia-vgpu-valid-configurations">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Valid vGPU configurations on a single GPU</h3>
+               </header>
+               
+               
+               <section class="sect3" id="configure-nvidia-vgpu-valid-configurations-time-sliced">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Time-sliced vGPU configurations</h4>
+                  </header>
+                  
+                  
+                  <p>For time-sliced vGPUs, all vGPUs types must be the same:</p>
+                  
+                  <div class="figure formalobject" id="configure-nvidia-vgpu-valid-configurations-time-sliced_fig1">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/nvidia-vgpus-supported.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">3</span><span class="sep">.&nbsp;</span>Example time-sliced vGPU configurations on NVIDIA Tesla M60 (source: <a class="link" href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html">https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html</a>)</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="configure-nvidia-vgpu-valid-configurations-mig-backed">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>MIG-backed vGPU configurations</h4>
+                  </header>
+                  
+                  
+                  <p>For MIG-backed vGPUs, vGPUs can be both homogeneous and mixed-type:</p>
+                  
+                  <div class="figure formalobject" id="configure-nvidia-vgpu-valid-configurations-mig-backed_fig1">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/nvidia-vgpus-supported2.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">4</span><span class="sep">.&nbsp;</span>Example MIG-backed vGPU configurations on NVIDIA A100 PCIe 40&nbsp;GB (source: <a class="link" href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html">https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html</a>)</div>
+                     </header>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar06s10.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar06.html">Up</a></td>
+                  <td class="next"><a href="bk11ar06s12.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10</span><span class="sep">.&nbsp;</span>For more information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">12</span><span class="sep">.&nbsp;</span>GNU Free Documentation License</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

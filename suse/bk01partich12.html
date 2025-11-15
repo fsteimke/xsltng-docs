@@ -1,0 +1,330 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;12.&nbsp;User space live patching</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich11s06.html" rel="prev">
+      <link href="bk01partich12s02.html" rel="next">
+      <link href="bk01parti.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01parti.html">Up</a> <a href="bk01partich12s02.html">Next</a> <a href="bk01partich11s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partich12.html" db-id="d616951e22068" id="cha-ulp" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">12</span><span class="sep">.&nbsp;</span>User space live patching</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-ulp">
+               <header>
+                  <h2><span class="label">12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>About user space live patching</h2>
+               </header>
+               
+               
+               <p>User space live patching (ULP) refers to the process of applying patches to the libraries
+                  used by a running process without interrupting them. Every time a security fix is
+                  available as a live patch, customer services will be secured after applying the live
+                  patch without restarting the processes.</p>
+               
+               <p>ULP is supported on the following architectures:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>AMD64/Intel&nbsp;64</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>ppc64le (starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 SP7)</p>
+                     </li>
+                  </ul>
+               
+               <p>Live patching operations are performed using the <code class="systemitem">ulp</code> tool that is part of <code class="systemitem">libpulp</code>. <code class="systemitem">libpulp</code> is a framework that consists of the <code class="systemitem">libpulp.so</code> library and the <code class="command">ulp</code> binary that makes libraries live patchable and applies live patches.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>You can run the <code class="command">ulp</code> command either as a normal user or a privileged user via the <code class="command">sudo</code> mechanism. The difference is that running <code class="command">ulp</code> via <code class="command">sudo</code> lets you view information of processes or patch processes that are running by <code class="systemitem username">root</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Install <code class="package">libpulp-load-default</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The <code class="package">libpulp-load-default</code> automates the requirements and manual steps mentioned in <a class="xref xref-sect2" href="#sec-ulp-prereqs">the section called “Prerequisites”</a> and <a class="xref xref-sect2" href="#sec-ulp-libpulp">the section called “Using <code class="systemitem">libpulp</code>
+                                 ”</a>. If you install the package, you can skip those sections.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect2" id="sec-ulp-prereqs">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prerequisites</h3>
+                  </header>
+                  
+                  
+                  <p>For ULP to work, two requirements must be met.</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p>Install the ULP on your system by running:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in libpulp0 libpulp-tools</code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Applications with desired live patch support must be launched preloading the <code class="systemitem">libpulp.so.0</code> library. See <a class="xref xref-sect2" href="#sec-ulp-libpulp">the section called “Using <code class="systemitem">libpulp</code>
+                              ”</a> for more details.</p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect2" id="sec-ulp-supported-libs">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Supported libraries</h3>
+                  </header>
+                  
+                  
+                  <p>Currently, only <code class="systemitem">glibc</code> and <code class="systemitem">openssl</code> (<code class="systemitem">openssl1_1</code> and <code class="systemitem">openssl-3</code>) are supported. Additional packages will be available after they are prepared for
+                     live patching. To receive <code class="systemitem">glibc</code> and <code class="systemitem">openssl-1_1-</code> live patches, install the following packages:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>zypper install glibc-livepatches openssl-1_1-livepatches openssl-3-livepatches</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-ulp-libpulp">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using <code class="systemitem">libpulp</code>
+                        </h3>
+                  </header>
+                  
+                  
+                  <p>To enable live patching on an application, you need to preload the <code class="systemitem">libpulp.so.0</code> library when starting the application:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>LD_PRELOAD=/usr/lib64/libpulp.so.0 <em class="replaceable">APPLICATION_CMD</em></code></span></span></pre>
+                  </div>
+                  
+                  <section class="sect3" id="sec-ulp-livepatch-check">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Checking if a library is live patchable</h4>
+                     </header>
+                     
+                     
+                     <p>To check whether a library is live patchable, use the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp livepatchable <em class="replaceable">PATH_TO_LIBRARY</em></code></span></span></pre>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-ulp-livepatch-container-check">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Checking if a <code class="filename">.so</code> file is a live patch container</h4>
+                     </header>
+                     
+                     
+                     <p>A shared object (<code class="filename">.so</code>) is a live patch container if it contains the ULP patch description embedded into
+                        it. You can verify it with the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>readelf -S <em class="replaceable">SHARED_OBJECT</em> | grep .ulp</code></span></span></pre>
+                     </div>
+                     
+                     <p>If the output shows that there are both <code class="literal">.ulp</code> and <code class="literal">.ulp.rev</code> sections in the shared object, then it is a live patch container.</p>
+                     </section>
+                  
+                  <section class="sect3" id="sec-ulp-apply-livepatch">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Applying live patches</h4>
+                     </header>
+                     
+                     
+                     <p>Live patches provided by SUSE are shipped through usual updates if the following packages
+                        are installed: <code class="package">glibc-livepatches</code><code class="package">openssl-livepatches</code><code class="package">openssl-3-livepatches</code>.</p>
+                     
+                     <p>Custom live patches are applied using the <code class="command">ulp trigger</code> command, for example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp trigger -p <em class="replaceable">PID</em><em class="replaceable">LIVEPATCH</em>.so</code></span></span></pre>
+                     </div>
+                     
+                     <p>Replace <code class="literal">PID</code> with the process ID of the running process that uses the library to be patched and
+                        <code class="literal">LIVEPATCH.so</code> with the actual live patch file. The command returns one of the following status
+                        messages:</p>
+                     
+                     <dl class="variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">SUCCESS</span></dt>
+                           <dd>
+                              
+                              <p>The live patching operation was successful.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">SKIPPED</span></dt>
+                           <dd>
+                              
+                              <p>The patch was skipped because it was not designed for any library that is loaded in
+                                 the process.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">ERROR</span></dt>
+                           <dd>
+                              
+                              <p>An error occurred, and you can retrieve more information by inspecting the <code class="systemitem">libpulp</code> internal message buffer. See <a class="xref xref-sect3" href="#sec-ulp-internal-messages">the section called “View internal message queue”</a> for more information.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <p>It is also possible to apply multiple live patches by using wildcards, for example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp trigger '*.so'</code></span></span></pre>
+                     </div>
+                     
+                     <p>The command tries to apply every patch in the current folder to every process that
+                        have the <code class="systemitem">libpulp</code> library loaded. If the patch is not suitable for the process, it is automatically
+                        skipped. In the end, the tool shows how many patches it successfully applied to how
+                        many processes.</p>
+                     </section>
+                  
+                  <section class="sect3" id="sec-ulp-revert-livepatch">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Reverting live patches</h4>
+                     </header>
+                     
+                     
+                     <p>You can use the <code class="command">ulp trigger</code> command to revert live patches. There are two ways to revert live patches. You can
+                        revert a live patch by using the <code class="option">--revert</code> switch and passing the live patch container:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp trigger -p <em class="replaceable">PID</em> --revert <em class="replaceable">LIVEPATCH</em>.so</code></span></span></pre>
+                     </div>
+                     
+                     <p>Alternatively, it is possible to remove all patches associated with a particular library,
+                        for example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp trigger -p <em class="replaceable">PID</em> --revert-all=<em class="replaceable">LIBRARY</em></code></span></span></pre>
+                     </div>
+                     
+                     <p>In the example, <em class="replaceable">LIBRARY</em> refers to the actual library, such as <code class="systemitem">libcrypto.so.1.1</code>.</p>
+                     
+                     <p>The latter approach can be useful when the source code of the original live patch
+                        is not available. Or you want to remove a specific old patch and apply a new one while
+                        the target application is still running a secure code, for example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp trigger -p <em class="replaceable">PID</em>  --revert-all=libcrypto.so.1.1 new_livepatch2.so</code></span></span></pre>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-ulp-verify-patches">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>View applied patches</h4>
+                     </header>
+                     
+                     
+                     <p>It is possible to verify which applications have live patches applied by running:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp patches</code></span></span></pre>
+                     </div>
+                     
+                     <p>The output shows which libraries are live patchable and patches loaded in programs,
+                        as well which bugs the patch addresses:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>PID: 10636, name: test</code></span></span>
+<span class="line"><span class="ld"><code>  Livepatchable libraries:</code></span></span>
+<span class="line"><span class="ld"><code>    in /lib64/libc.so.6:</code></span></span>
+<span class="line"><span class="ld"><code>      livepatch: libc_livepatch1.so</code></span></span>
+<span class="line"><span class="ld"><code>        bug labels: jsc#SLE-0000</code></span></span>
+<span class="line"><span class="ld"><code>    in /usr/lib64/libpulp.so.0:</code></span></span></pre>
+                     </div>
+                     
+                     <p>It is also possible to see which functions are patched by the live patch:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp dump <em class="replaceable">LIVEPATCH.so</em></code></span></span></pre>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-ulp-internal-messages">
+                     <header>
+                        <h4><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>View internal message queue</h4>
+                     </header>
+                     
+                     
+                     <p>Log messages from <code class="systemitem">libpulp.so</code> are stored in a buffer inside the library and are not displayed unless requested
+                        by the user. To show these messages, run:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulp messages -p <em class="replaceable">PID</em></code></span></span></pre>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich11s06.html">Prev</a></td>
+                  <td class="up"><a href="bk01parti.html">Up</a></td>
+                  <td class="next"><a href="bk01partich12s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Troubleshooting Kernel Live Patching issues</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

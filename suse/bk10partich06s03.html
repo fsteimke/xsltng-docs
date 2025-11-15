@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.3.&nbsp;Enable nested virtualization in KVM</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partich06s02.html" rel="prev">
+      <link href="bk10partich07.html" rel="next">
+      <link href="bk10partich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partich06.html">Up</a> <a href="bk10partich07.html">Next</a> <a href="bk10partich06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partich06s03.html" db-id="d616951e266709" id="sec-vt-installation-nested-vms">
+            <header>
+               <h2><span class="label">6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Enable nested virtualization in KVM</h2>
+            </header>
+            
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Technology preview</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>KVM's nested virtualization is still a technology preview. It is provided for testing
+                           purposes and is not supported.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>Nested guests are KVM guests run in a KVM guest. When describing nested guests, we
+               use the following virtualization layers:</p>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">L0</span></dt>
+                  <dd>
+                     
+                     <p>A bare metal host running KVM.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">L1</span></dt>
+                  <dd>
+                     
+                     <p>A virtual machine running on L0. Because it can run another KVM, it is called a <em>guest hypervisor</em>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">L2</span></dt>
+                  <dd>
+                     
+                     <p>A virtual machine running on L1. It is called a <em>nested guest</em>.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>Nested virtualization has many advantages. You can benefit from it in the following
+               scenarios:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Manage your own virtual machines directly with your hypervisor of choice in cloud
+                     environments.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Enable the live migration of hypervisors and their guest virtual machines as a single
+                     entity.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Note</div>
+                           </header>
+                           <div>
+                              
+                              <p>Live migration of a nested VM Guest is not supported.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </li>
+               
+               <li>
+                  
+                  <p>Use it for software development and testing.</p>
+                  </li>
+               </ul>
+            
+            <p>To enable nesting temporarily, remove the module and reload it with the <code class="option">nested</code> KVM module parameter:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>For Intel CPUs, run:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> modprobe -r kvm_intel &amp;&amp; modprobe kvm_intel nested=1</code></span></span></pre>
+                  </div>
+                  </li>
+               
+               <li>
+                  
+                  <p>For AMD CPUs, run:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> modprobe -r kvm_amd &amp;&amp; modprobe kvm_amd nested=1</code></span></span></pre>
+                  </div>
+                  </li>
+               </ul>
+            
+            <p>To enable nesting permanently, enable the <code class="option">nested</code> KVM module parameter in the <code class="filename">/etc/modprobe.d/kvm_*.conf</code> file, depending on your CPU:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>For Intel CPUs, edit <code class="filename">/etc/modprobe.d/kvm_intel.conf</code> and add the following line:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options kvm_intel nested=1</code></span></span></pre>
+                  </div>
+                  </li>
+               
+               <li>
+                  
+                  <p>For AMD CPUs, edit <code class="filename">/etc/modprobe.d/kvm_amd.conf</code> and add the following line:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options kvm_amd nested=1</code></span></span></pre>
+                  </div>
+                  </li>
+               </ul>
+            
+            <p>When your L0 host is capable of nesting, you can start an L1 guest in one of the following
+               ways:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Use the <code class="option">-cpu host</code> QEMU command line option.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Add the <code class="literal">vmx</code> (for Intel CPUs) or the <code class="literal">svm</code> (for AMD CPUs) CPU feature to the <code class="option">-cpu</code> QEMU command line option, which enables virtualization for the virtual CPU.</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="sec-vt-installation-nested-vms-esxi">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VMware ESX as a guest hypervisor</h3>
+               </header>
+               
+               
+               <p>If you use VMware ESX as a guest hypervisor on top of a KVM bare metal hypervisor,
+                  you may experience unstable network communication. This problem occurs especially
+                  between nested KVM guests and the KVM bare metal hypervisor or external network. The
+                  following default CPU configuration of the nested KVM guest is causing the problem:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cpu mode='host-model' check='partial'/&gt;</code></span></span></pre>
+               </div>
+               
+               <p>To fix it, modify the CPU configuration as follow:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>&lt;cpu mode='host-passthrough' check='none'&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;cache mode='passthrough'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/cpu&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partich06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partich06.html">Up</a></td>
+                  <td class="next"><a href="bk10partich07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing virtualization components</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">7</span><span class="sep">.&nbsp;</span>Virtualization limits and support</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

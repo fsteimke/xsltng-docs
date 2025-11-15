@@ -1,0 +1,1116 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.2.&nbsp;Configuring a storage pool</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich02.html" rel="prev">
+      <link href="bk10partiich03.html" rel="next">
+      <link href="bk10partiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich02.html">Up</a> <a href="bk10partiich03.html">Next</a> <a href="bk10partiich02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich02s02.html" db-id="d616951e272008" id="libvirt-host-storage">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring a storage pool</h2>
+            </header>
+            
+            
+            <p>When managing a VM Guest on the VM Host Server itself, you can access the complete
+               file system of the VM Host Server to attach or create virtual hard disks or to attach
+               existing images to the VM Guest. However, this is not possible when managing VM Guests
+               from a remote host. For this reason, <code class="library systemitem">libvirt</code> supports so called <q>Storage Pools</q>, which can be accessed from remote machines.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">CD/DVD ISO images</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>To be able to access CD/DVD ISO images on the VM Host Server from remote clients,
+                           they also need to be placed in a storage pool.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p><code class="library systemitem">libvirt</code> knows two different types of storage: volumes and pools.</p>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Storage volume</span></dt>
+                  <dd>
+                     
+                     <p>A storage volume is a storage device that can be assigned to a guest—a virtual disk
+                        or a CD/DVD/floppy image. Physically, it can be a block device, for example, a partition
+                        or a logical volume, or a file on the VM Host Server.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Storage pool</span></dt>
+                  <dd>
+                     
+                     <p>A storage pool is a storage resource on the VM Host Server that can be used for storing
+                        volumes, similar to network storage for a desktop machine. Physically it can be one
+                        of the following types:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">File system directory (<span class="guimenu">dir</span>)</span></dt>
+                           <dd>
+                              
+                              <p>A directory for hosting image files. The files can be either one of the supported
+                                 disk formats (raw or qcow2), or ISO images.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Physical disk device (<span class="guimenu">disk</span>)</span></dt>
+                           <dd>
+                              
+                              <p>Use a complete physical disk as storage. A partition is created for each volume that
+                                 is added to the pool.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Pre-formatted block device (<span class="guimenu">fs</span>)</span></dt>
+                           <dd>
+                              
+                              <p>Specify a partition to be used in the same way as a file system directory pool (a
+                                 directory for hosting image files). The only difference to using a file system directory
+                                 is that <code class="library systemitem">libvirt</code> takes care of mounting the device.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">iSCSI target (iscsi)</span></dt>
+                           <dd>
+                              
+                              <p>Set up a pool on an iSCSI target. You need to have been logged in to the volume once
+                                 before to use it with <code class="library systemitem">libvirt</code>. Use the YaST <span class="guimenu">iSCSI Initiator</span> to detect and log in to a volume, see <a class="xref xref-book" href="bk09.html">Storage Administration Guide</a> for details. Volume creation on iSCSI pools is not supported; instead, each existing
+                                 Logical Unit Number (LUN) represents a volume. Each volume/LUN also needs a valid
+                                 (empty) partition table or disk label before you can use it. If missing, use <code class="command">fdisk</code> to add it:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> fdisk -cu /dev/disk/by-path/ip-192.168.2.100:3260-iscsi-iqn.2010-10.com.example:[...]-lun-2</code></span></span>
+<span class="line"><span class="ld"><code>Device contains neither a valid DOS partition table, nor Sun, SGI</code></span></span>
+<span class="line"><span class="ld"><code>or OSF disklabel</code></span></span>
+<span class="line"><span class="ld"><code>Building a new DOS disklabel with disk identifier 0xc15cdc4e.</code></span></span>
+<span class="line"><span class="ld"><code>Changes will remain in memory only, until you decide to write them.</code></span></span>
+<span class="line"><span class="ld"><code>After that, of course, the previous content won't be recoverable.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Command (m for help): w</code></span></span>
+<span class="line"><span class="ld"><code>The partition table has been altered!</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Calling ioctl() to re-read partition table.</code></span></span>
+<span class="line"><span class="ld"><code>Syncing disks.</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">LVM volume group (logical)</span></dt>
+                           <dd>
+                              
+                              <p>Use an LVM volume group as a pool. You can either use a predefined volume group, or
+                                 create a group by specifying the devices to use. Storage volumes are created as partitions
+                                 on the volume.</p>
+                              
+                              <div class="admonition warning">
+                                 <div>
+                                    <div class="icon">🛑</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Deleting the LVM-based pool</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>When the LVM-based pool is deleted in the Storage Manager, the volume group is deleted
+                                             as well. This results in a non-recoverable loss of all data stored on the pool.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Multipath devices (<span class="guimenu">mpath</span>)</span></dt>
+                           <dd>
+                              
+                              <p>At the moment, multipathing support is limited to assigning existing devices to the
+                                 guests. Volume creation or configuring multipathing from within <code class="library systemitem">libvirt</code> is not supported.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Network exported directory (<span class="guimenu">netfs</span>)</span></dt>
+                           <dd>
+                              
+                              <p>Specify a network directory to be used in the same way as a file system directory
+                                 pool (a directory for hosting image files). The only difference to using a file system
+                                 directory is that <code class="library systemitem">libvirt</code> takes care of mounting the directory. The supported protocol is NFS.</p>
+                              </dd>
+                        </div>
+                        
+                        
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">SCSI host adapter (<span class="guimenu">scsi</span>)</span></dt>
+                           <dd>
+                              
+                              <p>Use an SCSI host adapter in almost the same way as an iSCSI target. We recommend to
+                                 use a device name from <code class="filename">/dev/disk/by-*</code> rather than <code class="filename">/dev/sd<em class="replaceable">X</em></code>. The latter can change, for example, when adding or removing hard disks. Volume creation
+                                 on iSCSI pools is not supported. Instead, each existing LUN (Logical Unit Number)
+                                 represents a volume.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               </dl>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Security considerations</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>To avoid data loss or data corruption, do not attempt to use resources such as LVM
+                           volume groups, iSCSI targets, etc., that are also used to build storage pools on the
+                           VM Host Server. There is no need to connect to these resources from the VM Host Server
+                           or to mount them on the VM Host Server—<code class="library systemitem">libvirt</code> takes care of this.</p>
+                        
+                        <p>Do not mount partitions on the VM Host Server by label. Under certain circumstances
+                           it is possible that a partition is labeled from within a VM Guest with a name existing
+                           on the VM Host Server.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-libvirt-storage-virsh">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Managing storage with <code class="command">virsh</code>
+                     </h3>
+               </header>
+               
+               
+               <p>Managing storage from the command line is also possible by using <code class="command">virsh</code>. However, creating storage pools is currently not supported by SUSE. Therefore, this
+                  section is restricted to documenting functions such as starting, stopping and deleting
+                  pools, and volume management.</p>
+               
+               <p>A list of all <code class="command">virsh</code> subcommands for managing pools and volumes is available by running <code class="command">virsh help pool</code> and <code class="command">virsh help volume</code>, respectively.</p>
+               
+               <section class="sect3" id="sec-libvirt-storage-virsh-list-pools">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Listing pools and volumes</h4>
+                  </header>
+                  
+                  
+                  <p>List all pools currently active by executing the following command. To also list inactive
+                     pools, add the option <code class="option">--all</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-list --details</code></span></span></pre>
+                  </div>
+                  
+                  <p>Details about a specific pool can be obtained with the <code class="literal">pool-info</code> subcommand:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-info <em class="replaceable">POOL</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>By default, volumes can only be listed per pool. To list all volumes from a pool,
+                     enter the following command.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh vol-list --details <em class="replaceable">POOL</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>At the moment <code class="command">virsh</code> offers no tools to show whether a volume is used by a guest or not. The following
+                     procedure describes a way to list volumes from all pools that are currently used by
+                     a VM Guest.</p>
+                  
+                  <div class="formalobject procedure" id="pro-libvirt-storage-virsh-list-vols">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Listing all storage volumes currently used on a VM Host Server</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create an XSLT stylesheet by saving the following content to a file, for example,
+                              ~/libvirt/guest_storage_list.xsl:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;xsl:stylesheet version="1.0"</code></span></span>
+<span class="line"><span class="ld"><code>  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;xsl:output method="text"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;xsl:template match="text()"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;xsl:strip-space elements="*"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;xsl:template match="disk"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;xsl:text&gt;  &lt;/xsl:text&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;xsl:value-of select="(source/@file|source/@dev|source/@dir)[1]"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;xsl:text&gt;&amp;#10;&lt;/xsl:text&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/xsl:template&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/xsl:stylesheet&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Run the following commands in a shell. It is assumed that the guest's XML definitions
+                              are all stored in the default location (<code class="filename">/etc/libvirt/qemu</code>). <code class="command">xsltproc</code> is provided by the package <code class="resource systemitem">libxslt</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SSHEET="$HOME/libvirt/guest_storage_list.xsl"</code></span></span>
+<span class="line"><span class="ld"><code>cd /etc/libvirt/qemu</code></span></span>
+<span class="line"><span class="ld"><code>for FILE in *.xml; do</code></span></span>
+<span class="line"><span class="ld"><code>  basename $FILE .xml</code></span></span>
+<span class="line"><span class="ld"><code>  xsltproc $SSHEET $FILE</code></span></span>
+<span class="line"><span class="ld"><code>done</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-storage-virsh-start-pools">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Starting, stopping, and deleting pools</h4>
+                  </header>
+                  
+                  
+                  <p>Use the <code class="command">virsh</code> pool subcommands to start, stop or delete a pool. Replace <em class="replaceable">POOL</em> with the pool's name or its UUID in the following examples:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Stopping a pool</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-destroy <em class="replaceable">POOL</em></code></span></span></pre>
+                           </div>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">A pool's state does not affect attached volumes</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>Volumes from a pool attached to VM Guests are always available, regardless of the
+                                          pool's state (<span class="guimenu">Active</span> (stopped) or <span class="guimenu">Inactive</span> (started)). The state of the pool solely affects the ability to attach volumes to
+                                          a VM Guest via remote management.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Deleting a pool</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-delete <em class="replaceable">POOL</em></code></span></span></pre>
+                           </div>
+                           
+                           <div class="admonition warning">
+                              <div>
+                                 <div class="icon">🛑</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Deleting storage pools</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>See <a class="xref xref-warning" href="#deleting-storage-pools">Deleting storage pools</a></p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Starting a pool</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-start <em class="replaceable">POOL</em></code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Enable autostarting a pool</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-autostart <em class="replaceable">POOL</em></code></span></span></pre>
+                           </div>
+                           
+                           <p>Only pools that are marked to autostart are automatically started if the VM Host Server
+                              reboots.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Disable autostarting a pool</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh pool-autostart <em class="replaceable">POOL</em> --disable</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-storage-virsh-add-volumes">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Adding volumes to a storage pool</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">virsh</code> offers two ways to add volumes to storage pools: either from an XML definition with
+                     <code class="literal">vol-create</code> and <code class="literal">vol-create-from</code> or via command line arguments with <code class="literal">vol-create-as</code>. The first two methods are currently not supported by SUSE, therefore this section
+                     focuses on the subcommand <code class="literal">vol-create-as</code>.</p>
+                  
+                  <p>To add a volume to an existing pool, enter the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh vol-create-as <em class="replaceable">POOL</em><span class="co" id="co-vol-create-as-pool">⣴</span><em class="replaceable">NAME</em><span class="co" id="co-vol-create-as-name">⣵</span> 12G --format<span class="co" id="co-vol-create-as-capacity">⣶</span><em class="replaceable">raw|qcow2</em><span class="co" id="co-vol-create-as-format">⣷</span> --allocation 4G<span class="co" id="co-vol-create-as-alloc">⣸</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-vol-create-as-pool">⣴</a></dt>
+                        <dd>
+                           
+                           <p>Name of the pool to which the volume should be added</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vol-create-as-name">⣵</a></dt>
+                        <dd>
+                           
+                           <p>Name of the volume</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vol-create-as-capacity">⣶</a></dt>
+                        <dd>
+                           
+                           <p>Size of the image, in this example 12 gigabytes. Use the suffixes k, M, G, T for kilobyte,
+                              megabyte, gigabyte, and terabyte, respectively.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vol-create-as-format">⣷</a></dt>
+                        <dd>
+                           
+                           <p>Format of the volume. SUSE currently supports <code class="literal">raw</code> and <code class="literal">qcow2</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vol-create-as-alloc">⣸</a></dt>
+                        <dd>
+                           
+                           <p>Optional parameter. By default, <code class="command">virsh</code> creates a sparse image file that grows on demand. Specify the amount of space that
+                              should be allocated with this parameter (4 gigabytes in this example). Use the suffixes
+                              k, M, G, T for kilobyte, megabyte, gigabyte, and terabyte, respectively.</p>
+                           
+                           <p>When not specifying this parameter, a sparse image file with no allocation is generated.
+                              To create a non-sparse volume, specify the whole image size with this parameter (would
+                              be <code class="literal">12G</code> in this example).</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <section class="sect4" id="sec-libvirt-storage-virsh-add-volumes-clone">
+                     <header>
+                        <h5><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Cloning existing volumes</h5>
+                     </header>
+                     
+                     
+                     <p>Another way to add volumes to a pool is to clone an existing volume. The new instance
+                        is always created in the same pool as the original.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh vol-clone <em class="replaceable">NAME_EXISTING_VOLUME</em><span class="co" id="co-vol-clone-existing">⣹</span><em class="replaceable">NAME_NEW_VOLUME</em><span class="co" id="co-vol-clone-new">⣺</span> --pool <em class="replaceable">POOL</em><span class="co" id="co-vol-clone-pool">⣻</span></code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#co-vol-clone-existing">⣹</a></dt>
+                           <dd>
+                              
+                              <p>Name of the existing volume that should be cloned</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-vol-clone-new">⣺</a></dt>
+                           <dd>
+                              
+                              <p>Name of the new volume</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-vol-clone-pool">⣻</a></dt>
+                           <dd>
+                              
+                              <p>Optional parameter. <code class="library systemitem">libvirt</code> tries to locate the existing volume automatically. If that fails, specify this parameter.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     </section>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-storage-virsh-del-volumes">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Deleting volumes from a storage pool</h4>
+                  </header>
+                  
+                  
+                  <p>To permanently delete a volume from a pool, use the subcommand <code class="literal">vol-delete</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh vol-delete <em class="replaceable">NAME</em> --pool <em class="replaceable">POOL</em></code></span></span></pre>
+                  </div>
+                  
+                  <p><code class="option">--pool</code> is optional. <code class="library systemitem">libvirt</code> tries to locate the volume automatically. If that fails, specify this parameter.</p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">No checks upon volume deletion</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>A volume is deleted in any case, regardless of whether it is currently used in an
+                                 active or inactive VM Guest. There is no way to recover a deleted volume.</p>
+                              
+                              <p>Whether a volume is used by a VM Guest can only be detected by using by the method
+                                 described in <a class="xref xref-procedure" href="#pro-libvirt-storage-virsh-list-vols">Procedure&nbsp;<span class="label">9<span class="sep">.</span>2</span>, “Listing all storage volumes currently used on a VM Host Server”</a>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="libvirt-storage-virsh-attach-volumes">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Attaching volumes to a VM Guest</h4>
+                  </header>
+                  
+                  
+                  <p>After you create a volume as described in <a class="xref xref-sect3" href="#sec-libvirt-storage-virsh-add-volumes">the section called “Adding volumes to a storage pool”</a>, you can attach it to a virtual machine and use it as a hard disk:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh attach-disk <em class="replaceable">DOMAIN</em><em class="replaceable">SOURCE_IMAGE_FILE</em><em class="replaceable">TARGET_DISK_DEVICE</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>For example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh attach-disk sles12sp3 /virt/images/example_disk.qcow2 sda2</code></span></span></pre>
+                  </div>
+                  
+                  <p>To check if the new disk is attached, inspect the result of the <code class="command">virsh dumpxml</code> command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh dumpxml sles12sp3</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>&lt;disk type='file' device='disk'&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;driver name='qemu' type='raw'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;source file='/virt/images/example_disk.qcow2'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;backingStore/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;target dev='sda2' bus='scsi'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;alias name='scsi0-0-0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;address type='drive' controller='0' bus='0' target='0' unit='0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/disk&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                  </div>
+                  
+                  <section class="sect4" id="libvirt-storage-virsh-attach-volumes_s4_1">
+                     <header>
+                        <h5><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Hotplug or persistent change</h5>
+                     </header>
+                     
+                     
+                     <p>You can attach disks to both active and inactive domains. The attachment is controlled
+                        by the <code class="option">--live</code> and <code class="option">--config</code> options:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">--live</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Hotplugs the disk to an active domain. The attachment is not saved in the domain configuration.
+                                 Using <code class="option">--live</code> on an inactive domain is an error.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">--config</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Changes the domain configuration persistently. The attached disk is then available
+                                 after the next domain start.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">--live</code>
+                                 <code class="option">--config</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Hotplugs the disk and adds it to the persistent domain configuration.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">
+                                    <code class="command">virsh attach-device</code>
+                                    </div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p><code class="command">virsh attach-device</code> is the more generic form of <code class="command">virsh attach-disk</code>. You can use it to attach other types of devices to a domain.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  </section>
+               
+               <section class="sect3" id="libvirt-storage-virsh-detach-volumes">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Detaching volumes from a VM Guest</h4>
+                  </header>
+                  
+                  
+                  <p>To detach a disk from a domain, use <code class="command">virsh detach-disk</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh detach-disk <em class="replaceable">DOMAIN</em><em class="replaceable">TARGET_DISK_DEVICE</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>For example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh detach-disk sles12sp3 sda2</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can control the attachment with the <code class="option">--live</code> and <code class="option">--config</code> options as described in <a class="xref xref-sect3" href="#libvirt-storage-virsh-attach-volumes">the section called “Attaching volumes to a VM Guest”</a>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-storage-vmm">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing storage with Virtual Machine Manager</h3>
+               </header>
+               
+               
+               <p>The Virtual Machine Manager provides a graphical interface—the Storage Manager—to
+                  manage storage volumes and pools. To access it, either right-click a connection and
+                  choose <span class="guimenu">Details</span>, or highlight a connection and choose <span class="menuchoice"><span class="guimenu">Edit</span><span class="guimenu">Connection Details</span></span>. Select the <span class="guimenu">Storage</span> tab.</p>
+               
+               <div class="informalfigure informalobject" id="sec-libvirt-storage-vmm_informalfigure1">
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:333px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/virt_virt-manager_storage.png" style="width:333px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  </div>
+               
+               <section class="sect3" id="sec-libvirt-storage-vmm-addpool">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Adding a storage pool</h4>
+                  </header>
+                  
+                  
+                  <p>To add a storage pool, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-storage-vmm-addpool_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Click <span class="guimenu">Add</span> in the bottom left corner. The dialog <span class="guimenu">Add a New Storage Pool</span> appears.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Provide a <span class="guimenu">Name</span> for the pool (consisting of only alphanumeric characters and <code class="literal">_</code>, <code class="literal">-</code> or <code class="literal">.</code>) and select a <span class="guimenu">Type</span>.</p>
+                           
+                           <div class="informalfigure informalobject" id="sec-libvirt-storage-vmm-addpool_proc1_step2_informalfigure1">
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:333px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/virt_virt-manager_storage_add.png" style="width:333px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Specify the required details below. They depend on the type of pool you are creating.</p>
+                           
+                           <div class="admonition important">
+                              <div>
+                                 <div class="icon">☝</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Important</div>
+                                    </header>
+                                    <div>
+                                       
+                                       <p>ZFS pools are not supported.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <dl class="long-terms variablelist">
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">dir</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Target Path</span>: specify an existing directory.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">disk</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Format</span>: format of the device's partition table. Using <span class="guimenu">auto</span> should normally work. If not, get the required format by running the command <code class="command">parted</code><code class="option">-l</code> on the VM Host Server.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Source Path</span>: path to the device. It is recommended to use a device name from <code class="filename">/dev/disk/by-*</code> rather than the simple <code class="filename">/dev/sd<em class="replaceable">X</em></code>, since the latter can change, for example, when adding or removing hard disks. You
+                                             need to specify the path that resembles the whole disk, not a partition on the disk
+                                             (if existing).</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">fs</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Target Path</span>: mount point on the VM Host Server file system.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Format:</span> file system format of the device. The default value <code class="literal">auto</code> should work.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Source Path</span>: path to the device file. It is recommended to use a device name from <code class="filename">/dev/disk/by-*</code> rather than <code class="filename">/dev/sd<em class="replaceable">X</em></code>, because the latter can change, for example, when adding or removing hard disks.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">iscsi</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <p>Get the necessary data by running the following command on the VM Host Server:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> iscsiadm --mode node</code></span></span></pre>
+                                    </div>
+                                    
+                                    <p>It returns a list of iSCSI volumes with the following format. The elements in bold
+                                       text are required:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><strong class="bold">IP_ADDRESS</strong>:PORT,TPGT <strong class="bold">TARGET_NAME_(IQN)</strong></code></span></span></pre>
+                                    </div>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Target Path</span>: the directory containing the device file. Use <code class="literal">/dev/disk/by-path</code> (default) or <code class="literal">/dev/disk/by-id</code>.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Host Name</span>: host name or IP address of the iSCSI server.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Source IQN</span>: the iSCSI target name (iSCSI Qualified Name).</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Initiator IQN</span>: the iSCSI initiator name.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">logical</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Volgroup Name</span>: specify the device path of an existing volume group.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">mpath</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Target Path</span>: support for multipathing is currently limited to making all multipath devices available.
+                                             Therefore, specify an arbitrary string here. The path is required, otherwise the XML
+                                             parser fails.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">netfs</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Target Path</span>: mount point on the VM Host Server file system.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Host Name</span>: IP address or host name of the server exporting the network file system.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Source Path</span>: directory on the server that is being exported.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">rbd</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Host Name</span>: host name of the server with an exported RADOS block device.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Source Name</span>: name of the RADOS block device on the server.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <strong class="bold">Type</strong>
+                                       <span class="guimenu">scsi</span>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <ul class="itemizedlist" db-mark="bullet">
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Target Path</span>: directory containing the device file. Use <code class="literal">/dev/disk/by-path</code> (default) or <code class="literal">/dev/disk/by-id</code>.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><span class="guimenu">Source Path</span>: name of the SCSI adapter.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                              </div>
+                              </dl>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">File browsing</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>Using the file browser by clicking <span class="guimenu">Browse</span> is not possible when operating remotely.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Click <span class="guimenu">Finish</span> to add the storage pool.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-storage-vmm-manage">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing storage pools</h4>
+                  </header>
+                  
+                  
+                  <p>Virtual Machine Manager's Storage Manager lets you create or delete volumes in a pool.
+                     You may also temporarily deactivate or permanently delete existing storage pools.
+                     Changing the basic configuration of a pool is currently not supported by SUSE.</p>
+                  
+                  <section class="sect4" id="sec-libvirt-storage-vmm-manage-pool">
+                     <header>
+                        <h5><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Starting, stopping, and deleting pools</h5>
+                     </header>
+                     
+                     
+                     <p>The purpose of storage pools is to provide block devices located on the VM Host Server
+                        that can be added to a VM Guest when managing it from remote. To make a pool temporarily
+                        inaccessible from remote, click <span class="guimenu">Stop</span> in the bottom left corner of the Storage Manager. Stopped pools are marked with <span class="guimenu">State: Inactive</span> and are grayed out in the list pane. By default, a newly created pool is automatically
+                        started <span class="guimenu">On Boot</span> of the VM Host Server.</p>
+                     
+                     <p>To start an inactive pool and make it available from remote again, click <span class="guimenu">Start</span> in the bottom left corner of the Storage Manager.</p>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">A pool's state does not affect attached volumes</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Volumes from a pool attached to VM Guests are always available, regardless of the
+                                    pool's state (<span class="guimenu">Active</span> (stopped) or <span class="guimenu">Inactive</span> (started)). The state of the pool solely affects the ability to attach volumes to
+                                    a VM Guest via remote management.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <p>To permanently make a pool inaccessible, click <span class="guimenu">Delete</span> in the bottom left corner of the Storage Manager. You can only delete inactive pools.
+                        Deleting a pool does not physically erase its contents on VM Host Server—it only deletes
+                        the pool configuration. However, you need to be extra careful when deleting pools,
+                        especially when deleting LVM volume group-based tools:</p>
+                     
+                     <div class="admonition warning" id="deleting-storage-pools">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Deleting storage pools</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Deleting storage pools based on <em>local</em> file system directories, local partitions or disks has no effect on the availability
+                                    of volumes from these pools currently attached to VM Guests.</p>
+                                 
+                                 <p>Volumes located in pools of type iSCSI, SCSI, LVM group or Network Exported Directory
+                                    become inaccessible from the VM Guest if the pool is deleted. Although the volumes
+                                    themselves are not deleted, the VM Host Server can no longer access the resources.</p>
+                                 
+                                 <p>Volumes on iSCSI/SCSI targets or Network Exported Directory become accessible again
+                                    when creating an adequate new pool or when mounting/accessing these resources directly
+                                    from the host system.</p>
+                                 
+                                 <p>When deleting an LVM group-based storage pool, the LVM group definition is erased
+                                    and the LVM group no longer exists on the host system. The configuration is not recoverable
+                                    and all volumes from this pool are lost.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-libvirt-storage-vmm-manage-volume-add">
+                     <header>
+                        <h5><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Adding volumes to a storage pool</h5>
+                     </header>
+                     
+                     
+                     <p>Virtual Machine Manager lets you create volumes in all storage pools, except in pools
+                        of types Multipath, iSCSI or SCSI. A volume in these pools is equivalent to a LUN
+                        and cannot be changed from within <code class="library systemitem">libvirt</code>.</p>
+                     
+                     <div class="informalobject procedure" id="sec-libvirt-storage-vmm-manage-volume-add_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>A new volume can either be created using the Storage Manager or while adding a new
+                                 storage device to a VM Guest. In either case, select a storage pool from the left
+                                 panel, then click <span class="guimenu">Create new volume</span>.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Specify a <span class="guimenu">Name</span> for the image and choose an image format.</p>
+                              
+                              <p>SUSE currently only supports <code class="literal">raw</code> or <code class="literal">qcow2</code> images. The latter option is not available on LVM group-based pools.</p>
+                              
+                              <p>Next to <span class="guimenu">Max Capacity</span>, specify the maximum size that the disk image is allowed to reach. Unless you are
+                                 working with a <code class="literal">qcow2</code> image, you can also set an amount for <span class="guimenu">Allocation</span> that should be allocated initially. If the two values differ, a sparse image file
+                                 is created, which grows on demand.</p>
+                              
+                              <p>For <code class="literal">qcow2</code> images, you can use a <span class="guimenu">Backing Store</span> (also called <q>backing file</q>), which constitutes a base image. The newly created <code class="literal">qcow2</code> image then only records the changes that are made to the base image.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Start the volume creation by clicking <span class="guimenu">Finish</span>.</p>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-libvirt-storage-vmm-manage-volume-delete">
+                     <header>
+                        <h5><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Deleting volumes from a storage pool</h5>
+                     </header>
+                     
+                     
+                     <p>Deleting a volume can only be done from the Storage Manager, by selecting a volume
+                        and clicking <span class="guimenu">Delete Volume</span>. Confirm with <span class="guimenu">Yes</span>.</p>
+                     
+                     <div class="admonition warning">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Volumes can be deleted even while in use</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Volumes can be deleted even if they are currently used in an active or inactive VM
+                                    Guest. There is no way to recover a deleted volume.</p>
+                                 
+                                 <p>Whether a volume is used by a VM Guest is indicated in the <span class="guimenu">Used By</span> column in the Storage Manager.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich02.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">9</span><span class="sep">.&nbsp;</span>Preparing the VM Host Server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>Guest installation</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

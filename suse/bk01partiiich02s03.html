@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>21.3.&nbsp;Filtering the journal output</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich02s02.html" rel="prev">
+      <link href="bk01partiiich02s04.html" rel="next">
+      <link href="bk01partiiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich02.html">Up</a> <a href="bk01partiiich02s04.html">Next</a> <a href="bk01partiiich02s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich02s03.html" db-id="d616951e33957" id="sec-journalctl-filter">
+            <header>
+               <h2><span class="label">21<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Filtering the journal output</h2>
+            </header>
+            
+            
+            <p>When called without switches, <code class="command">journalctl</code> shows the full content of the journal, the oldest entries listed first. The output
+               can be filtered by specific switches and fields.</p>
+            
+            <section class="sect2" id="sec-journalctl-filter-boot">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Filtering based on a boot number</h3>
+               </header>
+               
+               
+               <p><code class="command">journalctl</code> can filter messages based on a specific system boot. To list all available boots,
+                  run</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl --list-boots</code></span></span>
+<span class="line"><span class="ld"><code>-1 097ed2cd99124a2391d2cffab1b566f0 Mon 2014-05-26 08:36:56 EDT—Fri 2014-05-30 05:33:44 EDT</code></span></span>
+<span class="line"><span class="ld"><code> 0 156019a44a774a0bb0148a92df4af81b Fri 2014-05-30 05:34:09 EDT—Fri 2014-05-30 06:15:01 EDT</code></span></span></pre>
+               </div>
+               
+               <p>The first column lists the boot offset: <code class="literal">0</code> for the current boot, <code class="literal">-1</code> for the previous one, <code class="literal">-2</code> for the one before that, etc. The second column contains the boot ID followed by
+                  the limiting time stamps of the specific boot.</p>
+               
+               <p>Show all messages from the current boot:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl -b</code></span></span></pre>
+               </div>
+               
+               <p>If you need to see journal messages from the previous boot, add an offset parameter.
+                  The following example outputs the previous boot messages:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl -b -1</code></span></span></pre>
+               </div>
+               
+               <p>Another way is to list boot messages based on the boot ID. For this purpose, use the
+                  _BOOT_ID field:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _BOOT_ID=156019a44a774a0bb0148a92df4af81b</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-journalctl-filter-time">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Filtering based on time interval</h3>
+               </header>
+               
+               
+               <p>You can filter the output of <code class="command">journalctl</code> by specifying the starting and/or ending date. The date specification should be of
+                  the format <code class="literal">2014-06-30 9:17:16</code>. If the time part is omitted, midnight is assumed. If seconds are omitted, <code class="literal">:00</code> is assumed. If the date part is omitted, the current day is assumed. Instead of numeric
+                  expression, you can specify the keywords <code class="literal">yesterday</code>, <code class="literal">today</code> or <code class="literal">tomorrow</code>. They refer to midnight of the day before the current day, of the current day, or
+                  of the day after the current day. If you specify <code class="literal">now</code>, it refers to the current time. You can also specify relative times prefixed with
+                  <code class="literal">-</code> or <code class="literal">+</code>, referring to times before or after the current time.</p>
+               
+               <p>Show only new messages since now, and update the output continuously:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl --since "now" -f</code></span></span></pre>
+               </div>
+               
+               <p>Show all messages since last midnight till 3:20am:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl --since "today" --until "3:20"</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-journalctl-filter-fields">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Filtering based on fields</h3>
+               </header>
+               
+               
+               <p>You can filter the output of the journal by specific fields. The syntax of a field
+                  to be matched is <code class="literal">FIELD_NAME=MATCHED_VALUE</code>, such as <code class="literal">_SYSTEMD_UNIT=httpd.service</code>. You can specify multiple matches in a single query to filter the output messages
+                  even more. See <code class="command">man 7 systemd.journal-fields</code> for a list of default fields.</p>
+               
+               <p>Show messages produced by a specific process ID:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _PID=1039</code></span></span></pre>
+               </div>
+               
+               <p>Show messages belonging to a specific user ID:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># journalctl _UID=1000</code></span></span></pre>
+               </div>
+               
+               <p>Show messages from the kernel ring buffer (the same as <code class="command">dmesg</code> produces):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _TRANSPORT=kernel</code></span></span></pre>
+               </div>
+               
+               <p>Show messages from the service's standard or error output:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _TRANSPORT=stdout</code></span></span></pre>
+               </div>
+               
+               <p>Show messages produced by a specified service only:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _SYSTEMD_UNIT=avahi-daemon.service</code></span></span></pre>
+               </div>
+               
+               <p>If two different fields are specified, only entries that match both expressions at
+                  the same time are shown:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _SYSTEMD_UNIT=avahi-daemon.service _PID=1488</code></span></span></pre>
+               </div>
+               
+               <p>If two matches refer to the same field, all entries matching either expression are
+                  shown:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _SYSTEMD_UNIT=avahi-daemon.service _SYSTEMD_UNIT=dbus.service</code></span></span></pre>
+               </div>
+               
+               <p>You can use the <code class="literal">+</code> separator to combine two expressions in a logical <code class="literal">OR</code>. The following example shows all messages from the Avahi service process with the
+                  process ID 1480 together with all messages from the D-Bus service:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl _SYSTEMD_UNIT=avahi-daemon.service _PID=1480 + _SYSTEMD_UNIT=dbus.service</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich02s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich02.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich02s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">21<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                     <code class="command">journalctl</code>: useful switches</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">21<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Investigating <code class="daemon systemitem">systemd</code> errors</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

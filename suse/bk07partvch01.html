@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;14.&nbsp;Tuning I/O performance</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partv.html" rel="prev">
+      <link href="bk07partvch01s02.html" rel="next">
+      <link href="bk07partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partv.html">Up</a> <a href="bk07partvch01s02.html">Next</a> <a href="bk07partv.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk07partvch01.html" db-id="d616951e217634" id="cha-tuning-io" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">14</span><span class="sep">.&nbsp;</span>Tuning I/O performance</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>I/O scheduling controls how input/output operations are submitted to storage. <span class="phrase productname">SUSE Linux Enterprise Server</span> offers several I/O algorithms—called <code class="literal">elevators</code>—suiting different workloads. Elevators can help to reduce seek operations and can
+                  prioritize I/O requests.</p>
+               
+               <p>Choosing the best suited I/O elevator not only depends on the workload but on the
+                  hardware too. For example, single ATA disk systems, SSDs, RAID arrays, or network
+                  storage systems each require different tuning strategies.</p>
+               </div>
+            <section class="sect1" id="cha-tuning-io-switch">
+               <header>
+                  <h2><span class="label">14<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Switching I/O scheduling</h2>
+               </header>
+               
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> picks a default I/O scheduler at boot-time, which can be changed on the fly per block
+                  device. This makes it possible to set different algorithms, for example, for the device
+                  hosting the system partition and the device hosting a database.</p>
+               
+               <p>The default I/O scheduler is chosen for each device based on whether the device reports
+                  to be rotational disk or not. For rotational disks, the <code class="resource systemitem">BFQ</code> I/O scheduler is picked. Other devices default to <code class="resource systemitem">MQ-DEADLINE</code> or <code class="resource systemitem">NONE</code>.</p>
+               
+               <p>To change the elevator for a specific device in the running system, run the following
+                  command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> echo <em class="replaceable">SCHEDULER</em> &gt; /sys/block/<em class="replaceable">DEVICE</em>/queue/scheduler</code></span></span></pre>
+               </div>
+               
+               <p>Here, <em class="replaceable">SCHEDULER</em> is one of <code class="option">bfq</code>, <code class="option">none</code>, <code class="option">kyber</code>, or <code class="option">mq-deadline</code>. <em class="replaceable">DEVICE</em> is the block device (<code class="systemitem">sda</code> for example). This change does not persist during reboot. For permanent I/O scheduler
+                  change for a particular device, copy <code class="filename">/usr/lib/udev/rules.d/60-io-scheduler.rules</code> to <code class="filename">/etc/udev/rules.d/60-io-scheduler.rules</code>, and edit the latter file to suit your needs.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Default scheduler on IBM&nbsp;Z</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>On IBM&nbsp;Z, the default I/O scheduler for a storage device is set by the device driver.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">
+                              <code class="literal">elevator</code> boot parameter removed</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The <code class="literal">elevator</code> boot parameter has been removed. The blk-mq I/O path replaces cfq and does not include
+                              the <code class="literal">elevator</code> boot parameter.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partv.html">Prev</a></td>
+                  <td class="up"><a href="bk07partv.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch01s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Part&nbsp;<span class="label">V</span><span class="sep">.&nbsp;</span>Kernel tuning</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">14<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Available I/O elevators with blk-mq I/O path</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

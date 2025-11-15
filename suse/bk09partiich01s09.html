@@ -1,0 +1,608 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.9.&nbsp;Using LVM commands</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiich01s08.html" rel="prev">
+      <link href="bk09partiich01s10.html" rel="next">
+      <link href="bk09partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiich01.html">Up</a> <a href="bk09partiich01s10.html">Next</a> <a href="bk09partiich01s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partiich01s09.html" db-id="d616951e240125" id="sec-lvm-cli">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Using LVM commands</h2>
+            </header>
+            
+            
+            <p>For information about using LVM commands, see the <code class="command">man</code> pages for the commands described in the following table. All commands need to be
+               executed with <code class="systemitem username">root</code> privileges. Either use <code class="command">sudo</code><em class="replaceable">COMMAND</em> (recommended), or execute them directly as <code class="systemitem username">root</code>.</p>
+            
+            <div class="long-terms variablelist">
+               <header>
+                  <div class="title">LVM commands</div>
+               </header>
+               <dl class="long-terms variablelist">
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">pvcreate <em class="replaceable">DEVICE</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Initializes a device (such as <code class="filename">/dev/sdb1</code>) for use by LVM as a physical volume. If there is any file system on the specified
+                           device, a warning appears. Bear in mind that <code class="command">pvcreate</code> checks for existing file systems only if <code class="command">blkid</code> is installed (which is done by default). If <code class="command">blkid</code> is not available, <code class="command">pvcreate</code> will not produce any warning and you may lose your file system without any warning.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">pvdisplay <em class="replaceable">DEVICE</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Displays information about the LVM physical volume, such as whether it is currently
+                           being used in a logical volume.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgcreate -c y <em class="replaceable">VG_NAME</em>
+                              <em class="replaceable">DEV1</em> [<em class="replaceable">DEV2</em>...]</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a clustered volume group with one or more specified devices.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgcreate --activationmode <em class="replaceable">ACTIVATION_MODE</em>
+                              <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Configures the mode of volume group activation. You can specify one of the following
+                           values:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="literal">complete</code> - only the logical volumes that are not affected by missing physical volumes can
+                                 be activated, even though the particular logical volume can tolerate such a failure.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">degraded</code> - is the default activation mode. If there is a sufficient level of redundancy to
+                                 activate a logical volume, the logical volume can be activated even though some physical
+                                 volumes are missing.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">partial</code> - the LVM tries to activate the volume group even though some physical volumes are
+                                 missing. If a non-redundant logical volume is missing important physical volumes,
+                                 then the logical volume usually cannot be activated and is handled as an error target.</p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgchange -a [ey|n] <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Activates (<code class="literal">-a ey</code>) or deactivates (<code class="literal">-a n</code>) a volume group and its logical volumes for input/output.</p>
+                        
+                        <p>When activating a volume in a cluster, ensure that you use the <code class="literal">ey</code> option. This option is used by default in the load script.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgremove <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Removes a volume group. Before using this command, remove the logical volumes, then
+                           deactivate the volume group.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgdisplay <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Displays information about a specified volume group.</p>
+                        
+                        <p>To find the total physical extent of a volume group, enter</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>vgdisplay <em class="replaceable">VG_NAME</em> | grep "Total PE"</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvcreate -L <em class="replaceable">SIZE</em> -n <em class="replaceable">LV_NAME</em>
+                              <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a logical volume of the specified size.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvcreate -L <em class="replaceable">SIZE</em> --thinpool <em class="replaceable">POOL_NAME</em>
+                              <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a thin pool named <code class="literal">myPool</code> of the specified size from the volume group <em class="replaceable">VG_NAME</em>.</p>
+                        
+                        <p>The following example creates a thin pool with a size of 5 GB from the volume group
+                           <code class="literal">LOCAL</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -L 5G --thinpool myPool LOCAL</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvcreate -T <em class="replaceable">VG_NAME</em>/<em class="replaceable">POOL_NAME</em> -V <em class="replaceable">SIZE</em> -n <em class="replaceable">LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a thin logical volume within the pool <em class="replaceable">POOL_NAME</em>. The following example creates a 1GB thin volume named <code class="literal">myThin1</code> from the pool <code class="literal">myPool</code> on the volume group <code class="literal">LOCAL</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -T LOCAL/myPool -V 1G -n myThin1</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvcreate -T <em class="replaceable">VG_NAME</em>/<em class="replaceable">POOL_NAME</em> -V <em class="replaceable">SIZE</em> -L <em class="replaceable">SIZE</em> -n <em class="replaceable">LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>It is also possible to combine thin pool and thin logical volume creation in one command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -T LOCAL/myPool -V 1G -L 5G -n myThin1</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvcreate --activationmode <em class="replaceable">ACTIVATION_MODE</em>
+                              <em class="replaceable">LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Configures the mode of logical volume activation. You can specify one of the following
+                           values:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="literal">complete</code> - the logical volume can be activated only if all its physical volumes are active.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">degraded</code> - is the default activation mode. If there is a sufficient level of redundancy to
+                                 activate a logical volume, the logical volume can be activated even though some physical
+                                 volumes are missing.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">partial</code> - the LVM tries to activate the volume even though some physical volumes are missing.
+                                 In this case part of the logical volume may be unavailable and it might cause data
+                                 loss. This option is typically not used, but might be useful when restoring data.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>You can specify the activation mode also in <code class="filename">/etc/lvm/lvm.conf</code> by specifying one of the above described values of the <code class="literal">activation_mode</code> configuration option.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvcreate -s [-L <em class="replaceable">SIZE</em>] -n <em class="replaceable">SNAP_VOLUME</em>
+                              <em class="replaceable">SOURCE_VOLUME_PATH</em>
+                              <em class="replaceable">VG_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a snapshot volume for the specified logical volume. If the size option (<code class="option">-L</code> or <code class="option">--size</code>) is not included, the snapshot is created as a thin snapshot.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvremove /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Removes a logical volume.</p>
+                        
+                        <p>Before using this command, close the logical volume by unmounting it with the <code class="command">umount</code> command.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvremove <em class="replaceable">SNAP_VOLUME_PATH</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Removes a snapshot volume.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvconvert --merge <em class="replaceable">SNAP_VOLUME_PATH</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Reverts the logical volume to the version of the snapshot.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgextend <em class="replaceable">VG_NAME</em>
+                              <em class="replaceable">DEVICE</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Adds the specified device (physical volume) to an existing volume group.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">vgreduce <em class="replaceable">VG_NAME</em>
+                              <em class="replaceable">DEVICE</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Removes a specified physical volume from an existing volume group.</p>
+                        
+                        <p>Ensure that the physical volume is not currently being used by a logical volume. If
+                           it is, you must move the data to another physical volume by using the <code class="command">pvmove</code> command.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvextend -L <em class="replaceable">SIZE</em> /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Extends the size of a specified logical volume. Afterward, you must also expand the
+                           file system to take advantage of the newly available space. See <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a> for details.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvreduce -L <em class="replaceable">SIZE</em> /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Reduces the size of a specified logical volume.</p>
+                        
+                        <p>Ensure that you reduce the size of the file system first before shrinking the volume,
+                           otherwise you risk losing data. See <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a> for details.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">lvrename /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em> /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">NEW_LV_NAME</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Renames an existing LVM logical volume. It does not change the volume group name.</p>
+                        </dd>
+                  </div>
+               </dl>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Bypassing udev on volume creation</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>In case you want to manage LV device nodes and symbolic links by using LVM instead
+                           of by using udev rules, you can achieve this by disabling notifications from udev
+                           with one of the following methods:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>Configure <code class="literal">activation/udev_rules = 0</code> and <code class="literal">activation/udev_sync = 0</code> in <code class="filename">/etc/lvm/lvm.conf</code>.</p>
+                              
+                              <p>Note that specifying <code class="option">--nodevsync</code> with the <code class="command">lvcreate</code> command has the same effect as <code class="literal">activation/udev_sync = 0</code>; setting <code class="literal">activation/udev_rules = 0</code> is still required.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Setting the environment variable <code class="envar">DM_DISABLE_UDEV</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>export DM_DISABLE_UDEV=1</code></span></span></pre>
+                              </div>
+                              
+                              <p>This will also disable notifications from udev. In addition, all udev related settings
+                                 from <code class="filename">/etc/lvm/lvm.conf</code> will be ignored.</p>
+                              </li>
+                           </ul>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-lvm-cli-resize">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Resizing a logical volume with commands</h3>
+               </header>
+               
+               
+               <p>The <code class="command">lvresize</code>, <code class="command">lvextend</code>, and <code class="command">lvreduce</code> commands are used to resize logical volumes. See the man pages for each of these
+                  commands for syntax and options information. To extend an LV there must be enough
+                  unallocated space available on the VG.</p>
+               
+               <p>The recommended way to grow or shrink a logical volume is to use the YaST Partitioner.
+                  When using YaST, the size of the file system in the volume will automatically be adjusted,
+                  too.</p>
+               
+               <p>LVs can be extended or shrunk manually while they are being used, but this may not
+                  be true for a file system on them. Extending or shrinking the LV does not automatically
+                  modify the size of file systems in the volume. You must use a different command to
+                  grow the file system afterward. For information about resizing file systems, see <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a>.</p>
+               
+               <p>Ensure that you use the right sequence when manually resizing an LV:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>If you extend an LV, you must extend the LV before you attempt to grow the file system.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>If you shrink an LV, you must shrink the file system before you attempt to shrink
+                        the LV.</p>
+                     </li>
+                  </ul>
+               
+               <p>To extend the size of a logical volume:</p>
+               
+               <div class="informalobject procedure" id="sec-lvm-cli-resize_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open a terminal.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the logical volume contains an Ext2 or Ext4 file system, which do not support online
+                           growing, dismount it. In case it contains file systems that are hosted for a virtual
+                           machine (such as a Xen VM), shut down the VM first.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>At the terminal prompt, enter the following command to grow the size of the logical
+                           volume:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvextend -L +<em class="replaceable">SIZE</em> /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>For <em class="replaceable">SIZE</em>, specify the amount of space you want to add to the logical volume, such as 10 GB.
+                           Replace <code class="filename">/dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em></code> with the Linux path to the logical volume, such as <code class="filename">/dev/LOCAL/DATA</code>. For example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvextend -L +10GB /dev/vg1/v1</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Adjust the size of the file system. See <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In case you have dismounted the file system, mount it again.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>For example, to extend an LV with a (mounted and active) Btrfs on it by 10 GB:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvextend −L +10G /dev/LOCAL/DATA</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs filesystem resize +10G /dev/LOCAL/DATA</code></span></span></pre>
+               </div>
+               
+               <p>To shrink the size of a logical volume:</p>
+               
+               <div class="informalobject procedure" id="sec-lvm-cli-resize_proc2">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open a terminal.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the logical volume does not contain a Btrfs file system, dismount it. In case it
+                           contains file systems that are hosted for a virtual machine (such as a Xen VM), shut
+                           down the VM first. Note that volumes with the XFS file system cannot be reduced in
+                           size.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Adjust the size of the file system. See <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>At the terminal prompt, enter the following command to shrink the size of the logical
+                           volume to the size of the file system:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvreduce /dev/<em class="replaceable">VG_NAME</em>/<em class="replaceable">LV_NAME</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In case you have unmounted the file system, mount it again.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>For example, to shrink an LV with a Btrfs on it by 5 GB:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs filesystem resize -size 5G /dev/LOCAL/DATA</code></span></span>
+<span class="line"><span class="ld"><code>sudo lvreduce /dev/LOCAL/DATA</code></span></span></pre>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Resizing the Volume and the File System with a Single Command</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 12 SP1, <code class="command">lvextend</code>, <code class="command">lvresize</code>, and <code class="command">lvreduce</code> support the option <code class="option">--resizefs</code> which will not only change the size of the volume, but will also resize the file
+                              system. Therefore the examples for <code class="command">lvextend</code> and <code class="command">lvreduce</code> shown above can alternatively be run as follows:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvextend --resizefs −L +10G /dev/LOCAL/DATA</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvreduce  --resizefs -L -5G /dev/LOCAL/DATA</code></span></span></pre>
+                           </div>
+                           
+                           <p>Note that the <code class="option">--resizefs</code> is supported for the following file systems: ext2/3/4, Btrfs, XFS. Resizing Btrfs
+                              with this option is currently only available on <span class="phrase productname">SUSE Linux Enterprise Server</span>, since it is not yet accepted upstream.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            <section class="sect2" id="sec-lvm-cli-lvmcache">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using LVM cache volumes</h3>
+               </header>
+               
+               
+               <p>LVM supports the use of fast block devices (such as an SSD device) as write-back or
+                  write-through caches for large slower block devices. The cache logical volume type
+                  uses a small and fast LV to improve the performance of a large and slow LV.</p>
+               
+               <p>To set up LVM caching, you need to create two logical volumes on the caching device.
+                  A large one is used for the caching itself, a smaller volume is used to store the
+                  caching metadata. These two volumes need to be part of the same volume group as the
+                  original volume. When these volumes are created, they need to be converted into a
+                  cache pool which needs to be attached to the original volume:</p>
+               
+               <div class="formalobject procedure" id="sec-lvm-cli-lvmcache_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a cached logical volume</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create the original volume (on a slow device) if not already existing.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Add the physical volume (from a fast device) to the same volume group the original
+                           volume is part of and create the cache data volume on the physical volume.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create the cache metadata volume. The size should be 1/1000 of the size of the cache
+                           data volume, with a minimum size of 8 MB.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Combine the cache data volume and metadata volume into a cache pool volume:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --type cache-pool --poolmetadata <em class="replaceable">VOLUME_GROUP/METADATA_VOLUME</em><em class="replaceable">VOLUME_GROUP/CACHING_VOLUME</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Attach the cache pool to the original volume:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --type cache --cachepool <em class="replaceable">VOLUME_GROUP/CACHING_VOLUME</em><em class="replaceable">VOLUME_GROUP/ORIGINAL_VOLUME</em></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>For more information on LVM caching, see the lvmcache(7) man page.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiich01s08.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partiich01s10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Disabling LVM on boot</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Tagging LVM2 storage objects</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

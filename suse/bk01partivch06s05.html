@@ -1,0 +1,339 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>37.5.&nbsp;Setting up persistent memory</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partivch06s04.html" rel="prev">
+      <link href="bk01partivch06s06.html" rel="next">
+      <link href="bk01partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partivch06.html">Up</a> <a href="bk01partivch06s06.html">Next</a> <a href="bk01partivch06s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partivch06s05.html" db-id="d616951e55274" id="sec-nvdimm-setup">
+            <header>
+               <h2><span class="label">37<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Setting up persistent memory</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-nvdimm-setup-view">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Viewing available NVDIMM storage</h3>
+               </header>
+               
+               
+               <p>The <code class="command">ndctl</code><code class="literal">list</code> command can be used to list all available NVDIMMs in a system.</p>
+               
+               <p>In the following example, the system has three NVDIMMs, which are in a single, triple-channel
+                  interleaved set.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ndctl list --dimms</code></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[</code></span></span>
+<span class="line"><span class="ld"><code> {</code></span></span>
+<span class="line"><span class="ld"><code>  "dev":"nmem2",</code></span></span>
+<span class="line"><span class="ld"><code>  "id":"8089-00-0000-12325476"</code></span></span>
+<span class="line"><span class="ld"><code> },</code></span></span>
+<span class="line"><span class="ld"><code> {</code></span></span>
+<span class="line"><span class="ld"><code>  "dev":"nmem1",</code></span></span>
+<span class="line"><span class="ld"><code>  "id":"8089-00-0000-11325476"</code></span></span>
+<span class="line"><span class="ld"><code> },</code></span></span>
+<span class="line"><span class="ld"><code> {</code></span></span>
+<span class="line"><span class="ld"><code>  "dev":"nmem0",</code></span></span>
+<span class="line"><span class="ld"><code>  "id":"8089-00-0000-10325476"</code></span></span>
+<span class="line"><span class="ld"><code> }</code></span></span>
+<span class="line"><span class="ld"><code>]</code></span></span></pre>
+               </div>
+               
+               <p>With a different parameter, <code class="command">ndctl</code><code class="literal">list</code> will also list the available regions.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>Regions may not appear in numerical order.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Note that although there are only three NVDIMMs, they appear as four regions.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ndctl list --regions</code></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[</code></span></span>
+<span class="line"><span class="ld"><code> {</code></span></span>
+<span class="line"><span class="ld"><code>  "dev":"region1",</code></span></span>
+<span class="line"><span class="ld"><code>  "size":68182605824,</code></span></span>
+<span class="line"><span class="ld"><code>  "available_size":68182605824,</code></span></span>
+<span class="line"><span class="ld"><code>  "type":"blk"</code></span></span>
+<span class="line"><span class="ld"><code> },</code></span></span>
+<span class="line"><span class="ld"><code> {</code></span></span>
+<span class="line"><span class="ld"><code>  "dev":"region3",</code></span></span>
+<span class="line"><span class="ld"><code>  "size":202937204736,</code></span></span>
+<span class="line"><span class="ld"><code>  "available_size":202937204736,</code></span></span>
+<span class="line"><span class="ld"><code>  "type":"pmem",</code></span></span>
+<span class="line"><span class="ld"><code>  "iset_id":5903239628671731251</code></span></span>
+<span class="line"><span class="ld"><code>  },</code></span></span>
+<span class="line"><span class="ld"><code>  {</code></span></span>
+<span class="line"><span class="ld"><code>   "dev":"region0",</code></span></span>
+<span class="line"><span class="ld"><code>   "size":68182605824,</code></span></span>
+<span class="line"><span class="ld"><code>   "available_size":68182605824,</code></span></span>
+<span class="line"><span class="ld"><code>   "type":"blk"</code></span></span>
+<span class="line"><span class="ld"><code>  },</code></span></span>
+<span class="line"><span class="ld"><code>  {</code></span></span>
+<span class="line"><span class="ld"><code>   "dev":"region2",</code></span></span>
+<span class="line"><span class="ld"><code>   "size":68182605824,</code></span></span>
+<span class="line"><span class="ld"><code>   "available_size":68182605824,</code></span></span>
+<span class="line"><span class="ld"><code>   "type":"blk"</code></span></span>
+<span class="line"><span class="ld"><code>  }</code></span></span>
+<span class="line"><span class="ld"><code>]</code></span></span></pre>
+               </div>
+               
+               <p>The space is available in two different forms: either as three separate 64 regions
+                  of type BLK, or as one combined 189&nbsp;GB region of type PMEM which presents all the
+                  space on the three interleaved NVDIMMs as a single volume.</p>
+               
+               <p>Note that the displayed value for <code class="literal">available_size</code> is the same as that for <code class="literal">size</code>. This means that none of the space has been allocated yet.</p>
+               </section>
+            
+            <section class="sect2" id="sec-nvdimm-setup-dax">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the storage as a single PMEM namespace with DAX</h3>
+               </header>
+               
+               
+               <p>For the first example, we will configure our three NVDIMMs into a single PMEM namespace
+                  with Direct Access (DAX).</p>
+               
+               <p>The first step is to create a new namespace.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ndctl create-namespace --type=<em class="replaceable">pmem</em> --mode=<em class="replaceable">fsdax</em> --map=<em class="replaceable">memory</em></code></code></span></span>
+<span class="line"><span class="ld"><code>{</code></span></span>
+<span class="line"><span class="ld"><code> "dev":"namespace3.0",</code></span></span>
+<span class="line"><span class="ld"><code> "mode":"memory",</code></span></span>
+<span class="line"><span class="ld"><code> "size":199764213760,</code></span></span>
+<span class="line"><span class="ld"><code> "uuid":"dc8ebb84-c564-4248-9e8d-e18543c39b69",</code></span></span>
+<span class="line"><span class="ld"><code> "blockdev":"pmem3"</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>This creates a block device <code class="filename">/dev/pmem3</code>, which supports DAX. The <code class="literal">3</code> in the device name is inherited from the parent region number, in this case <code class="filename">region3</code>.</p>
+               
+               <p>The <code class="option">--map=memory</code> option sets aside part of the PMEM storage space on the NVDIMMs so that it can be
+                  used to allocate internal kernel data structures called <code class="literal">struct pages</code>. This allows the new PMEM namespace to be used with features such as <code class="literal">O_DIRECT I/O</code> and <code class="literal">RDMA</code>.</p>
+               
+               <p>The reservation of some persistent memory for kernel data structures is why the resulting
+                  PMEM namespace has a smaller capacity than the parent PMEM region.</p>
+               
+               <p>Next, we verify that the new block device is available to the operating system:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">fdisk -l /dev/<em class="replaceable">pmem3</em></code></code></span></span>
+<span class="line"><span class="ld"><code>Disk /dev/pmem3: 186 GiB, 199764213760 bytes, 390164480 sectors</code></span></span>
+<span class="line"><span class="ld"><code>Units: sectors of 1 * 512 = 512 bytes</code></span></span>
+<span class="line"><span class="ld"><code>Sector size (logical/physical): 512 bytes / 4096 bytes</code></span></span>
+<span class="line"><span class="ld"><code>I/O size (minimum/optimal): 4096 bytes / 4096 bytes</code></span></span></pre>
+               </div>
+               
+               <p>Before it can be used, like any other drive, it must be formatted. In this example,
+                  we format it with XFS:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mkfs.xfs /dev/<em class="replaceable">pmem3</em></code></code></span></span>
+<span class="line"><span class="ld"><code>meta-data=/dev/pmem3      isize=256    agcount=4, agsize=12192640 blks</code></span></span>
+<span class="line"><span class="ld"><code>         =                sectsz=4096  attr=2, projid32bit=1</code></span></span>
+<span class="line"><span class="ld"><code>         =                crc=0        finobt=0, sparse=0</code></span></span>
+<span class="line"><span class="ld"><code>data     =                bsize=4096   blocks=48770560, imaxpct=25</code></span></span>
+<span class="line"><span class="ld"><code>         =                sunit=0      swidth=0 blks</code></span></span>
+<span class="line"><span class="ld"><code>naming   =version 2       bsize=4096   ascii-ci=0 ftype=1</code></span></span>
+<span class="line"><span class="ld"><code>log      =internal log    bsize=4096   blocks=23813, version=2</code></span></span>
+<span class="line"><span class="ld"><code>         =                sectsz=4096  sunit=1 blks, lazy-count=1</code></span></span>
+<span class="line"><span class="ld"><code>realtime =none            extsz=4096   blocks=0, rtextents=0</code></span></span></pre>
+               </div>
+               
+               <p>Next, we can mount the new drive onto a directory:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mount -o dax /dev/<em class="replaceable">pmem3</em> /mnt/<em class="replaceable">pmem3</em></code></code></span></span></pre>
+               </div>
+               
+               <p>Then we can verify that we now have a DAX-capable device:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mount | grep dax</code></code></span></span>
+<span class="line"><span class="ld"><code>/dev/pmem3 on /mnt/pmem3 type xfs (rw,relatime,attr2,dax,inode64,noquota)</code></span></span></pre>
+               </div>
+               
+               <p>The result is that we now have a PMEM namespace formatted with the XFS file system
+                  and mounted with DAX.</p>
+               
+               <p>Any <code class="literal">mmap()</code> calls to files in that file system will return virtual addresses that directly map
+                  to the persistent memory on our NVDIMMs, bypassing the page cache.</p>
+               
+               <p>Any <code class="literal">fsync</code> or <code class="literal">msync</code> calls on files in that file system will still ensure that modified data has been
+                  fully written to the NVDIMMs. These calls flush the processor cache lines associated
+                  with any pages that have been modified in user space via <code class="literal">mmap</code> mappings.</p>
+               
+               <section class="sect3" id="sec-nvdimm-setup-deldax">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Removing a namespace</h4>
+                  </header>
+                  
+                  
+                  <p>Before creating any other type of volume that uses the same storage, we must unmount
+                     and then remove this PMEM volume.</p>
+                  
+                  <p>First, unmount it:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">umount /mnt/<em class="replaceable">pmem3</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Then disable the namespace:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ndctl disable-namespace <em class="replaceable">namespace3.0</em></code></code></span></span>
+<span class="line"><span class="ld"><code>disabled 1 namespace</code></span></span></pre>
+                  </div>
+                  
+                  <p>Then delete it:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ndctl destroy-namespace <em class="replaceable">namespace3.0</em></code></code></span></span>
+<span class="line"><span class="ld"><code>destroyed 1 namespace</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-nvdimm-setup-btt">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a PMEM namespace with BTT</h3>
+               </header>
+               
+               
+               <p>BTT provides sector write atomicity, which makes it a good choice when you need data
+                  protection, , for Ext4 and XFS journals. If there is a power failure, the journals
+                  are protected and should be recoverable. The following examples show how to create
+                  a PMEM namespace with BTT in sector mode, and how to place the file system journal
+                  in this namespace.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ndctl create-namespace --type=pmem --mode=sector</code></code></span></span>
+<span class="line"><span class="ld"><code>{</code></span></span>
+<span class="line"><span class="ld"><code> "dev":"namespace3.0",</code></span></span>
+<span class="line"><span class="ld"><code> "mode":"sector",</code></span></span>
+<span class="line"><span class="ld"><code> "uuid":"51ab652d-7f20-44ea-b51d-5670454f8b9b",</code></span></span>
+<span class="line"><span class="ld"><code> "sector_size":4096,</code></span></span>
+<span class="line"><span class="ld"><code> "blockdev":"pmem3s"</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>Next, verify that the new device is present:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">fdisk -l /dev/<em class="replaceable">pmem3s</em></code></code></span></span>
+<span class="line"><span class="ld"><code>Disk /dev/pmem3s: 188.8 GiB, 202738135040 bytes, 49496615 sectors</code></span></span>
+<span class="line"><span class="ld"><code>Units: sectors of 1 * 4096 = 4096 bytes</code></span></span>
+<span class="line"><span class="ld"><code>Sector size (logical/physical): 4096 bytes / 4096 bytes</code></span></span>
+<span class="line"><span class="ld"><code>I/O size (minimum/optimal): 4096 bytes / 4096 bytes</code></span></span></pre>
+               </div>
+               
+               <p>Like the DAX-capable PMEM namespace we previously configured, this BTT-capable PMEM
+                  namespace consumes all the available storage on the NVDIMMs.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>The trailing <code class="literal">s</code> in the device name (<code class="filename">/dev/<em class="replaceable">pmem3s</em></code>) stands for <code class="literal">sector</code> and can be used to easily distinguish namespaces that are configured to use the BTT.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The volume can be formatted and mounted as in the previous example.</p>
+               
+               <p>The PMEM namespace shown here cannot use DAX. Instead it uses the BTT to provide <em>sector write atomicity</em>. On each sector write through the PMEM block driver, the BTT will allocate a new
+                  sector to receive the new data. The BTT atomically updates its internal mapping structures
+                  after the new data is fully written so the newly written data will be available to
+                  applications. If the power fails at any point during this process, the write will
+                  be lost and the application will have access to its old data, still intact. This prevents
+                  the condition known as <q>torn sectors</q>.</p>
+               
+               <p>This BTT-enabled PMEM namespace can be formatted and used with a file system same
+                  as any other standard block device. It cannot be used with DAX. However, <code class="literal">mmap</code> mappings for files on this block device will use the page cache.</p>
+               </section>
+            
+            <section class="sect2" id="sec-nvdimm-fs-journal">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Placing the file system journal on PMEM/BTT</h3>
+               </header>
+               
+               
+               <p>When you place the file system journal on a separate device, it must use the same
+                  file system block size as the file system. Most likely this is 4096, and you can find
+                  the block size with this command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">blockdev --getbsz /dev/<em class="replaceable">sda3</em></code></code></span></span></pre>
+               </div>
+               
+               <p>The following example creates a new Ext4 journal on a separate NVDIMM device, creates
+                  the file system on a SATA device, then attaches the new file system to the journal:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mke2fs -b 4096 -O journal_dev /dev/<em class="replaceable">pmem3s</em></code><span class="prompt root">#</span><code class="command">mkfs.ext4 -J device=/dev/<em class="replaceable">pmem3s</em> /dev/<em class="replaceable">sda3</em></code></code></span></span></pre>
+               </div>
+               
+               <p>The following example creates a new XFS file system on a SATA drive, and creates the
+                  journal on a separate NVDIMM device:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mkfs.xfs -l logdev=/dev/<em class="replaceable">pmem3s</em> /dev/<em class="replaceable">sda3</em></code></code></span></span></pre>
+               </div>
+               
+               <p>See <code class="command">man 8 mkfs.ext4</code> and <code class="command">man 8 mkfs.ext4</code> for detailed information about options.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partivch06s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk01partivch06s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">37<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Tools for managing persistent memory</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

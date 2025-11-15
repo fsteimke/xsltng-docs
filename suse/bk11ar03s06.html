@@ -1,0 +1,464 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.&nbsp;VM Guest configuration</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar03s05.html" rel="prev">
+      <link href="bk11ar03s07.html" rel="next">
+      <link href="bk11ar03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar03.html">Up</a> <a href="bk11ar03s07.html">Next</a> <a href="bk11ar03s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar03s06.html" db-id="d616951e319956" id="sec-vt-best-vmguests">
+            <header>
+               <h2><span class="label">6</span><span class="sep">.&nbsp;</span>VM Guest configuration</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-vt-best-vmguests-virtio">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Virtio driver</h3>
+               </header>
+               
+               
+               <p>To increase VM Guest performance, we recommend using paravirtualized drivers within
+                  the VM Guests. The virtualization standard for such drivers for KVM are the <code class="literal">virtio</code> drivers, which are designed for running in a virtual environment. Xen uses similar
+                  paravirtualized device drivers (like <a class="link" href="https://www.suse.com/products/vmdriverpack/">VMDP</a> in a Windows* guest).</p>
+               
+               <section class="sect3" id="sec-vt-best-vmguests-virtio-virtio-blk">
+                  <header>
+                     <h4><span class="label">6<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                        <code class="literal">virtio blk</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p><code class="literal">virtio_blk</code> is the virtio block device for disk. To use the <code class="literal">virtio blk</code> driver for a block device, specify the <code class="tag tag-attribute">bus='virtio'</code> attribute in the <code class="tag tag-element">disk</code> definition:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;disk type='....' device='disk'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    ....</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;target dev='vda' bus='virtio'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/disk&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Disk device names</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p><code class="literal">virtio</code> disk devices are named <code class="literal">/dev/vd[a-z][1-9]</code>. If you migrate a Linux guest from a non-virtio disk, you need to adjust the <code class="literal">root=</code> parameter in the GRUB configuration, and regenerate the <code class="filename">initrd</code> file. Otherwise the system cannot boot. On VM Guests with other operating systems,
+                                 the boot loader may need to be adjusted or reinstalled accordingly, too.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Using <code class="literal">virtio</code> disks with <code class="command">qemu-system-ARCH</code>
+                                 </div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>When running <code class="command">qemu-system-ARCH</code>, use the <code class="option">-drive</code> option to add a disk to the VM Guest. See <a class="xref xref-sect1" href="bk10partvch03.html#cha-qemu-guest-inst-qemu-kvm">the section called “Basic installation with <code class="command">qemu-system-ARCH</code>
+                                    ”</a> for an example. The <code class="option">-hd[abcd]</code> option will not work for virtio disks.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-vmguests-virtio-virtio-net">
+                  <header>
+                     <h4><span class="label">6<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>virtio net</h4>
+                  </header>
+                  
+                  
+                  <p><code class="literal">virtio_net</code> is the virtio network device. The kernel modules should be loaded automatically in
+                     the guest at boot time. You need to start the service to make the network available.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;interface type='network'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;model type='virtio' /&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/interface&gt;</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-vmguests-virtio-balloon">
+                  <header>
+                     <h4><span class="label">6<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>virtio balloon</h4>
+                  </header>
+                  
+                  
+                  <p>The virtio balloon is used for host memory over-commits for guests. For Linux guests,
+                     the balloon driver runs in the guest kernel, whereas for Windows guests, the balloon
+                     driver is in the VMDP package. <code class="literal">virtio_balloon</code> is a PV driver to give or take memory from a VM Guest.</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p><em>Inflate balloon</em>: return memory from guest to host kernel (for KVM) or to hypervisor (for Xen)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><em>Deflate balloon</em>: Guest will have more available memory</p>
+                        </li>
+                     </ul>
+                  
+                  <p>It is controlled by the <code class="literal">currentMemory</code> and <code class="literal">memory</code> options.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;memory unit='KiB'&gt;16777216&lt;/memory&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;currentMemory unit='KiB'&gt;1048576&lt;/currentMemory&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    [...]</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;devices&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;memballoon model='virtio'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/devices&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can also use <code class="command">virsh</code> to change it:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh setmem <em class="replaceable">DOMAIN_ID</em><em class="replaceable">MEMORY in KB</em></code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-vmguests-virtio-check">
+                  <header>
+                     <h4><span class="label">6<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Checking virtio presence</h4>
+                  </header>
+                  
+                  
+                  <p>You can check the virtio block PCI with:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>find /sys/devices/ -name virtio*</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:06.0/virtio0</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:07.0/virtio1</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:08.0/virtio2</code></span></span></pre>
+                  </div>
+                  
+                  <p>To find the block device associated with <code class="filename">vdX</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>find /sys/devices/ -name virtio* -print  -exec ls {}/block 2&gt;/dev/null \;</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:06.0/virtio0</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:07.0/virtio1</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:08.0/virtio2</code></span></span>
+<span class="line"><span class="ld"><code>vda</code></span></span></pre>
+                  </div>
+                  
+                  <p>To get more information on the virtio block:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>udevadm info -p /sys/devices/pci0000:00/0000:00:08.0/virtio2</code></span></span>
+<span class="line"><span class="ld"><code>P: /devices/pci0000:00/0000:00:08.0/virtio2</code></span></span>
+<span class="line"><span class="ld"><code>E: DEVPATH=/devices/pci0000:00/0000:00:08.0/virtio2</code></span></span>
+<span class="line"><span class="ld"><code>E: DRIVER=virtio_blk</code></span></span>
+<span class="line"><span class="ld"><code>E: MODALIAS=virtio:d00000002v00001AF4</code></span></span>
+<span class="line"><span class="ld"><code>E: SUBSYSTEM=virtio</code></span></span></pre>
+                  </div>
+                  
+                  <p>To check all virtio drivers being used:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>find /sys/devices/ -name virtio* -print  -exec ls -l {}/driver 2&gt;/dev/null \;</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:06.0/virtio0</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Jun 17 15:48 /sys/devices/pci0000:00/0000:00:06.0/virtio0/driver -&gt; ../../../../bus/virtio/drivers/virtio_console</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:07.0/virtio1</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Jun 17 15:47 /sys/devices/pci0000:00/0000:00:07.0/virtio1/driver -&gt; ../../../../bus/virtio/drivers/virtio_balloon</code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/pci0000:00/0000:00:08.0/virtio2</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Jun 17 14:35 /sys/devices/pci0000:00/0000:00:08.0/virtio2/driver -&gt; ../../../../bus/virtio/drivers/virtio_blk</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-vt-best-vmguests-virtio-drv-opt">
+                  <header>
+                     <h4><span class="label">6<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Find device driver options</h4>
+                  </header>
+                  
+                  
+                  <p>Virtio devices and other drivers have multiple options. To list them all, use the
+                     <code class="option">help</code> parameter of the<code class="command">qemu-system-ARCH</code> command.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>qemu-system-x86_64 -device virtio-net,help</code></span></span>
+<span class="line"><span class="ld"><code>virtio-net-pci.ioeventfd=on/off</code></span></span>
+<span class="line"><span class="ld"><code>virtio-net-pci.vectors=uint32</code></span></span>
+<span class="line"><span class="ld"><code>virtio-net-pci.indirect_desc=on/off</code></span></span>
+<span class="line"><span class="ld"><code>virtio-net-pci.event_idx=on/off</code></span></span>
+<span class="line"><span class="ld"><code>virtio-net-pci.any_layout=on/off</code></span></span>
+<span class="line"><span class="ld"><code>.....</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-perf-cirrus">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Cirrus video driver</h3>
+               </header>
+               
+               
+               <p>To get 16-bit color, high compatibility and better performance, we recommend using
+                  the <code class="literal">cirrus</code> video driver.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">
+                              <code class="library systemitem">libvirt</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><code class="library systemitem">libvirt</code> ignores the <code class="literal">vram</code> value because video size has been hardcoded in QEMU.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;video&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;model type='cirrus' vram='9216' heads='1'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/video&gt;</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-entropy">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Better entropy</h3>
+               </header>
+               
+               
+               <p>Virtio RNG (random number generator) is a paravirtualized device that is exposed as
+                  a hardware RNG device to the guest. On the host side, it can be wired up to one of
+                  several sources of entropy (including a real hardware RNG device and the host's <code class="filename">/dev/random</code>) if hardware support does not exist. The Linux kernel contains the guest driver for
+                  the device from version 2.6.26 and higher.</p>
+               
+               <p>The system entropy is collected from several non-deterministic hardware events and
+                  is mainly used by cryptographic applications. The virtual random number generator
+                  device (paravirtualized device) allows the host to pass through entropy to VM Guest
+                  operating systems. This results in a better entropy in the VM Guest.</p>
+               
+               <p>To use Virtio RNG, add an <code class="literal">RNG</code> device in <code class="command">virt-manager</code> or directly in the VM Guest's XML configuration:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;devices&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;rng model='virtio'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>       &lt;backend model='random'&gt;/dev/random&lt;/backend&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;/rng&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/devices&gt;</code></span></span></pre>
+               </div>
+               
+               <p>The host now should used <code class="filename">/dev/random</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lsof /dev/random</code></span></span>
+<span class="line"><span class="ld"><code>qemu-syst 4926 qemu    6r   CHR    1,8      0t0 8199 /dev/random</code></span></span></pre>
+               </div>
+               
+               <p>On the VM Guest, the source of entropy can be checked with:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /sys/devices/virtual/misc/hw_random/rng_available</code></span></span></pre>
+               </div>
+               
+               <p>The current device used for entropy can be checked with:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /sys/devices/virtual/misc/hw_random/rng_current</code></span></span>
+<span class="line"><span class="ld"><code>virtio_rng.0</code></span></span></pre>
+               </div>
+               
+               <p>You should install the <code class="package">rng-tools</code> package on the VM Guest, enable the service, and start it. Under <span class="phrase productname">SUSE Linux Enterprise Server</span> 15, do the following:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>zypper in rng-tools</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl enable rng-tools</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl start rng-tools</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-perf-disable">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Disable unused tools and devices</h3>
+               </header>
+               
+               
+               <p>Per host, use one virtualization technology only. For example, do not use KVM and
+                  Xen on the same host. Otherwise, you may find yourself with a reduced amount of available
+                  resources, increased security risk and a longer software update queue. Even when the
+                  amount of resources allocated to each of the technologies is configured carefully,
+                  the host may suffer from reduced overall availability and degraded performance.</p>
+               
+               <p>Minimize the amount of software and services available on hosts. Most default installations
+                  of operating systems are not optimized for VM usage. Install what you really need
+                  and remove all other components in the VM Guest.</p>
+               
+               <p>Windows* Guest:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Disable the screen saver</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Remove all graphical effects</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Disable indexing of hard disks if not necessary</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Check the list of started services and disable the ones you do not need</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Check and remove all unneeded devices</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Disable system update if not needed, or configure it to avoid any delay while rebooting
+                        or shutting down the host</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Check the Firewall rules</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Schedule backups and anti-virus updates appropriately</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Install the <a class="link" href="https://www.suse.com/products/vmdriverpack/">VMDP</a> paravirtualized driver for best performance</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Check the operating system recommendations, such as on the <a class="link" href="https://windows.microsoft.com/en-us/windows/optimize-windows-better-performance#optimize-windows-better-performance=windows-7">Microsoft Windows* 7 better performance</a> Web page.</p>
+                     </li>
+                  </ul>
+               
+               <p>Linux Guest:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Remove or do not start the X Window System if not necessary</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Check the list of started services and disable the ones you do not need</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Check the OS recommendations for kernel parameters that enable better performance</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Only install software that you really need</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Optimize the scheduling of predictable tasks (system updates, hard disk checks, etc.)</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-perf-mtype">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Updating the guest machine type</h3>
+               </header>
+               
+               
+               <p>QEMU machine types define details of the architecture that are particularly relevant
+                  for migration and session management. As changes or improvements to QEMU are made,
+                  new machine types are added. Old machine types are still supported for compatibility
+                  reasons, but to use improvements, we recommend to always migrate to the latest machine
+                  type when upgrading.</p>
+               
+               <p>Changing the guest's machine type for a Linux guest is transparent. For Windows* guests,
+                  we recommend creating a snapshot or backup of the guest—in case Windows* has issues
+                  with the changes it detects, and subsequently the user reverts to the original machine
+                  type the guest was created with.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Changing the machine type</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Refer to <a class="xref xref-sect1" href="bk10partiich08s02.html">the section called “Changing the machine type”</a> for documentation.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar03s05.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar03.html">Up</a></td>
+                  <td class="next"><a href="bk11ar03s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5</span><span class="sep">.&nbsp;</span>VM Guest images</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">7</span><span class="sep">.&nbsp;</span>VM Guest-specific configurations and settings</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

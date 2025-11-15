@@ -1,0 +1,627 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.3.&nbsp;System start and target management</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiich04s02.html" rel="prev">
+      <link href="bk01partiich04s04.html" rel="next">
+      <link href="bk01partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiich04.html">Up</a> <a href="bk01partiich04s04.html">Next</a> <a href="bk01partiich04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiich04s03.html" db-id="d616951e30857" id="sec-boot-systemd-boot">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System start and target management</h2>
+            </header>
+            
+            
+            <p>The entire process of starting the system and shutting it down is maintained by <code class="daemon systemitem">systemd</code>. From this point of view, the kernel can be considered a background process to maintain
+               all other processes and adjust CPU time and hardware access according to requests
+               from other programs.</p>
+            
+            <section class="sect2" id="sec-boot-systemd-targets">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Targets compared to runlevels</h3>
+               </header>
+               
+               
+               <p>With System V init the system was booted into a so-called <q>Runlevel</q>. A runlevel defines how the system is started and what services are available in
+                  the running system. Runlevels are numbered; the most commonly known ones are <code class="literal">0</code> (shutting down the system), <code class="literal">3</code> (multiuser with network) and <code class="literal">5</code> (multiuser with network and display manager).</p>
+               
+               <p><code class="daemon systemitem">systemd</code> introduces a new concept by using so-called <q>target units</q>. However, it remains fully compatible with the runlevel concept. Target units are
+                  named rather than numbered and serve specific purposes. For example, the targets <code class="systemitem">local-fs.target</code> and <code class="systemitem">swap.target</code> mount local file systems and swap spaces.</p>
+               
+               <p>The target <code class="systemitem">graphical.target</code> provides a multiuser system with network and display manager capabilities and is
+                  equivalent to runlevel 5. Complex targets, such as <code class="systemitem">graphical.target</code> act as <q>meta</q> targets by combining a subset of other targets. Since <code class="daemon systemitem">systemd</code> makes it easy to create custom targets by combining existing targets, it offers great
+                  flexibility.</p>
+               
+               <p>The following list shows the most important <code class="daemon systemitem">systemd</code> target units. For a full list refer to <code class="command">man 7 systemd.special</code>.</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Selected <code class="daemon systemitem">systemd</code> target units</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">default.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The target that is booted by default. Not a <q>real</q> target, but rather a symbolic link to another target like <code class="systemitem">graphic.target</code>. Can be permanently changed via YaST (see <a class="xref xref-sect1" href="bk01partiich04s04.html">the section called “Managing services with YaST”</a>). To change it for a session, use the kernel parameter <code class="literal">systemd.unit=<em class="replaceable">MY_TARGET.target</em></code> at the boot prompt.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">emergency.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts a minimal emergency <code class="systemitem username">root</code> shell on the console. Only use it at the boot prompt as <code class="literal">systemd.unit=emergency.target</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">graphical.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts a system with network, multiuser support and a display manager.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">halt.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Shuts down the system.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">mail-transfer-agent.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts all services necessary for sending and receiving mails.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">multi-user.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts a multiuser system with network.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">reboot.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Reboots the system.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">rescue.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts a single-user <code class="systemitem username">root</code> session without network. Basic tools for system administration are available. The
+                              <code class="literal">rescue</code> target is suitable for solving multiple system problems, for example, failing logins
+                              or fixing issues with a display driver.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <p>To remain compatible with the System V init runlevel system, <code class="daemon systemitem">systemd</code> provides special targets named <code class="literal">runlevel<em class="replaceable">X</em>.target</code> mapping the corresponding runlevels numbered <em class="replaceable">X</em>.</p>
+               
+               <p>To inspect the current target, use the command: <code class="command">systemctl get-default</code></p>
+               
+               <div class="formalobject table" id="sec-boot-systemd-targets_tab1">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System V runlevels and <code class="daemon systemitem">systemd</code> target units</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 20%">
+                        <col style="width: 40%">
+                        <col style="width: 40%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>System V runlevel</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p><code class="daemon systemitem">systemd</code> target</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Purpose</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p>0</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p><code class="systemitem">runlevel0.target</code>, <code class="systemitem">halt.target</code>, <code class="systemitem">poweroff.target</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>System shutdown</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>1, S</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="systemitem">runlevel1.target</code>, <code class="systemitem">rescue.target</code>,</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Single-user mode</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>2</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="systemitem">runlevel2.target</code>, <code class="systemitem">multi-user.target</code>,</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Local multiuser without remote network</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>3</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="systemitem">runlevel3.target</code>, <code class="systemitem">multi-user.target</code>,</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Full multiuser with network</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>4</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="systemitem">runlevel4.target</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Unused/User-defined</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>5</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="systemitem">runlevel5.target</code>, <code class="systemitem">graphical.target</code>,</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Full multiuser with network and display manager</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>6</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="systemitem">runlevel6.target</code>, <code class="systemitem">reboot.target</code>,</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>System reboot</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">
+                              <code class="daemon systemitem">systemd</code> ignores <code class="filename">/etc/inittab</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The runlevels in a System V init system are configured in <code class="filename">/etc/inittab</code>. <code class="daemon systemitem">systemd</code> does <em>not</em> use this configuration. Refer to <a class="xref xref-sect2" href="bk01partiich04s05.html#sec-boot-systemd-custom-targets">the section called “Creating custom targets”</a> for instructions on how to create your own bootable target.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-boot-systemd-targets-commands">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Commands to change targets</h4>
+                  </header>
+                  
+                  
+                  <p>Use the following commands to operate with target units:</p>
+                  
+                  <div class="informalobject informaltable" id="sec-boot-systemd-targets-commands_informaltable1">
+                     <table>
+                        <colgroup>
+                           <col style="width: 20%">
+                           <col style="width: 50%">
+                           <col style="width: 30%">
+                        </colgroup>
+                        <thead>
+                           
+                           <tr>
+                              <th class="bleft btop colsep rowsep">
+                                 <p>Task</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p><code class="daemon systemitem">systemd</code> Command</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>System V init Command</p>
+                              </th>
+                           </tr>
+                           </thead>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep rowsep">
+                                 <p>Change the current target/runlevel</p>
+                              </td>
+                              <td class="btop colsep rowsep">
+                                 <p><code class="command">systemctl isolate</code><em class="replaceable">MY_TARGET</em>.target</p>
+                              </td>
+                              <td class="btop colsep rowsep">
+                                 <p><code class="command">telinit</code><em class="replaceable">X</em></p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>Change to the default target/runlevel</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p><code class="command">systemctl default</code></p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>n/a</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>Get the current target/runlevel</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p><code class="command">systemctl list-units --type=target</code></p>
+                                 <p>With <code class="daemon systemitem">systemd</code>, there is usually more than one active target. The command lists all currently active
+                                    targets.</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p><code class="command">who -r</code></p>
+                                 <p>or</p>
+                                 <p><code class="command">runlevel</code></p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>persistently change the default runlevel</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Use the Services Manager or run the following command:</p>
+                                 <p><code class="command">ln -sf /usr/lib/systemd/system/</code><em class="replaceable">MY_TARGET</em>.target /etc/systemd/system/default.target</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Use the Services Manager or change the line</p>
+                                 <p><code class="command">id:</code><em class="replaceable">X</em>:initdefault:</p>
+                                 <p>in <code class="filename">/etc/inittab</code></p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>Change the default runlevel for the current boot process</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Enter the following option at the boot prompt</p>
+                                 <p><code class="command">systemd.unit=</code><em class="replaceable">MY_TARGET</em>.target</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Enter the desired runlevel number at the boot prompt.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>Show a target's/runlevel's dependencies</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p><code class="command">systemctl show -p "Requires"</code><em class="replaceable">MY_TARGET</em>.target</p>
+                                 <p><code class="command">systemctl show -p "Wants"</code><em class="replaceable">MY_TARGET</em>.target</p>
+                                 <p><q>Requires</q> lists the hard dependencies (the ones that must be resolved), whereas <q>Wants</q> lists the soft dependencies (the ones that get resolved if possible).</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>n/a</p>
+                              </td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-debug">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Debugging system start-up</h3>
+               </header>
+               
+               
+               <p><code class="daemon systemitem">systemd</code> offers the means to analyze the system start-up process. You can review the list
+                  of all services and their status (rather than having to parse <code class="filename">/var/log/</code>). <code class="daemon systemitem">systemd</code> also allows you to scan the start-up procedure to find out how much time each service
+                  start-up consumes.</p>
+               
+               <section class="sect3" id="sec-boot-systemd-debug-review">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Review start-up of services</h4>
+                  </header>
+                  
+                  
+                  <p>To review the complete list of services that have been started since booting the system,
+                     enter the command <code class="command">systemctl</code>. It lists all active services like shown below (shortened). To get more information
+                     on a specific service, use <code class="command">systemctl status <em class="replaceable">MY_SERVICE</em></code>.</p>
+                  
+                  <div class="example formalobject" id="sec-boot-systemd-debug-review_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl</code></span></span>
+<span class="line"><span class="ld"><code>UNIT                        LOAD   ACTIVE SUB       JOB DESCRIPTION</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>iscsi.service               loaded active exited    Login and scanning of iSC+</code></span></span>
+<span class="line"><span class="ld"><code>kmod-static-nodes.service   loaded active exited    Create list of required s+</code></span></span>
+<span class="line"><span class="ld"><code>libvirtd.service            loaded active running   Virtualization daemon</code></span></span>
+<span class="line"><span class="ld"><code>nscd.service                loaded active running   Name Service Cache Daemon</code></span></span>
+<span class="line"><span class="ld"><code>chronyd.service             loaded active running   NTP Server Daemon</code></span></span>
+<span class="line"><span class="ld"><code>polkit.service              loaded active running   Authorization Manager</code></span></span>
+<span class="line"><span class="ld"><code>postfix.service             loaded active running   Postfix Mail Transport Ag+</code></span></span>
+<span class="line"><span class="ld"><code>rc-local.service            loaded active exited    /etc/init.d/boot.local Co+</code></span></span>
+<span class="line"><span class="ld"><code>rsyslog.service             loaded active running   System Logging Service</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>LOAD   = Reflects whether the unit definition was properly loaded.</code></span></span>
+<span class="line"><span class="ld"><code>ACTIVE = The high-level unit activation state, i.e. generalization of SUB.</code></span></span>
+<span class="line"><span class="ld"><code>SUB    = The low-level unit activation state, values depend on unit type.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>161 loaded units listed. Pass --all to see loaded but inactive units, too.</code></span></span>
+<span class="line"><span class="ld"><code>To show all installed unit files use 'systemctl list-unit-files'.</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>List active services</div>
+                     </header>
+                  </div>
+                  
+                  <p>To restrict the output to services that failed to start, use the <code class="option">--failed</code> option:</p>
+                  
+                  <div class="example formalobject" id="sec-boot-systemd-debug-review_ex2">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl --failed</code></span></span>
+<span class="line"><span class="ld"><code>UNIT                   LOAD   ACTIVE SUB    JOB DESCRIPTION</code></span></span>
+<span class="line"><span class="ld"><code>apache2.service        loaded failed failed     apache</code></span></span>
+<span class="line"><span class="ld"><code>NetworkManager.service loaded failed failed     Network Manager</code></span></span>
+<span class="line"><span class="ld"><code>plymouth-start.service loaded failed failed     Show Plymouth Boot Screen</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>List failed services</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-boot-systemd-debug-time">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Debug start-up time</h4>
+                  </header>
+                  
+                  
+                  <p>To debug system start-up time, <code class="daemon systemitem">systemd</code> offers the <code class="command">systemd-analyze</code> command. It shows the total start-up time, a list of services ordered by start-up
+                     time and can also generate an SVG graphic showing the time services took to start
+                     in relation to the other services.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Listing the system start-up time</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemd-analyze</code></span></span>
+<span class="line"><span class="ld"><code>Startup finished in 2666ms (kernel) + 21961ms (userspace) = 24628ms</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Listing the services start-up time</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemd-analyze blame</code></span></span>
+<span class="line"><span class="ld"><code>    15.000s backup-rpmdb.service</code></span></span>
+<span class="line"><span class="ld"><code>    14.879s mandb.service</code></span></span>
+<span class="line"><span class="ld"><code>     7.646s backup-sysconfig.service</code></span></span>
+<span class="line"><span class="ld"><code>     4.940s postfix.service</code></span></span>
+<span class="line"><span class="ld"><code>     4.921s logrotate.service</code></span></span>
+<span class="line"><span class="ld"><code>     4.640s libvirtd.service</code></span></span>
+<span class="line"><span class="ld"><code>     4.519s display-manager.service</code></span></span>
+<span class="line"><span class="ld"><code>     3.921s btrfsmaintenance-refresh.service</code></span></span>
+<span class="line"><span class="ld"><code>     3.466s lvm2-monitor.service</code></span></span>
+<span class="line"><span class="ld"><code>     2.774s plymouth-quit-wait.service</code></span></span>
+<span class="line"><span class="ld"><code>     2.591s firewalld.service</code></span></span>
+<span class="line"><span class="ld"><code>     2.137s initrd-switch-root.service</code></span></span>
+<span class="line"><span class="ld"><code>     1.954s ModemManager.service</code></span></span>
+<span class="line"><span class="ld"><code>     1.528s rsyslog.service</code></span></span>
+<span class="line"><span class="ld"><code>     1.378s apparmor.service</code></span></span>
+<span class="line"><span class="ld"><code>    [...]</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Services start-up time graphics</span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemd-analyze plot &gt; jupiter.example.com-startup.svg</code></span></span></pre>
+                           </div>
+                           
+                           <div class="informalfigure informalobject" id="sec-boot-systemd-debug-time_vl1_vle3_li1_informalfigure1">
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/systemd_startup.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-boot-systemd-debug-complete">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Review the complete start-up process</h4>
+                  </header>
+                  
+                  
+                  <p>The commands above list the services that are started and their start-up times. For
+                     a more detailed overview, specify the following parameters at the boot prompt to instruct
+                     <code class="daemon systemitem">systemd</code> to create a verbose log of the complete start-up procedure.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemd.log_level=debug systemd.log_target=kmsg</code></span></span></pre>
+                  </div>
+                  
+                  <p>Now <code class="daemon systemitem">systemd</code> writes its log messages into the kernel ring buffer. View that buffer with <code class="command">dmesg</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>dmesg -T | less</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-sysv-compatibility">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System V compatibility</h3>
+               </header>
+               
+               
+               <p><code class="daemon systemitem">systemd</code> is compatible with System V, allowing you to still use existing System V init scripts.
+                  However, there is at least one known issue where a System V init script does not work
+                  with <code class="daemon systemitem">systemd</code> out of the box: starting a service as a different user via <code class="command">su</code> or <code class="command">sudo</code> in init scripts results in a failure of the script, producing an <q>Access denied</q> error.</p>
+               
+               <p>When changing the user with <code class="command">su</code> or <code class="command">sudo</code>, a PAM session is started. This session will be terminated after the init script
+                  is finished. As a consequence, the service that has been started by the init script
+                  is also terminated. To work around this error, proceed as follows:</p>
+               
+               <div class="informalobject procedure" id="sec-boot-systemd-sysv-compatibility_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create a service file wrapper with the same name as the init script plus the file
+                           name extension <code class="filename">.service</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Description=<em class="replaceable">DESCRIPTION</em></code></span></span>
+<span class="line"><span class="ld"><code>After=network.target</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>User=<em class="replaceable">USER</em></code></span></span>
+<span class="line"><span class="ld"><code>Type=forking<span class="co" id="co-service-wrapper-type">➖</span></code></span></span>
+<span class="line"><span class="ld"><code>PIDFile=<em class="replaceable">PATH TO PID FILE</em><span class="co">➖</span></code></span></span>
+<span class="line"><span class="ld"><code>ExecStart=<em class="replaceable">PATH TO INIT SCRIPT</em> start</code></span></span>
+<span class="line"><span class="ld"><code>ExecStop=<em class="replaceable">PATH TO INIT SCRIPT</em> stop</code></span></span>
+<span class="line"><span class="ld"><code>ExecStopPost=/usr/bin/rm -f <em class="replaceable">PATH TO PID FILE</em><span class="co">➖</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=multi-user.target<span class="co" id="co-service-wrapper-target">➗</span></code></span></span></pre>
+                        </div>
+                        
+                        <p>Replace all values written in <em class="replaceable">UPPERCASE LETTERS</em> with appropriate values.</p>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#co-service-wrapper-type">➖</a></dt>
+                              <dd>
+                                 
+                                 <p>Optional—only use if the init script starts a daemon.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#co-service-wrapper-target">➗</a></dt>
+                              <dd>
+                                 
+                                 <p><code class="literal">multi-user.target</code> also starts the init script when booting into <code class="literal">graphical.target</code>. If it should only be started when booting into the display manager, use <code class="literal">graphical.target</code>.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the daemon with <code class="command">systemctl start <em class="replaceable">APPLICATION</em></code>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiich04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk01partiich04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Basic usage</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing services with YaST</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

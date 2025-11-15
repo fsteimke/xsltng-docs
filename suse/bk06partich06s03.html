@@ -1,0 +1,613 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>7.3.&nbsp;Configuring a Linux client for Active Directory</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich06s02.html" rel="prev">
+      <link href="bk06partich06s04.html" rel="next">
+      <link href="bk06partich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich06.html">Up</a> <a href="bk06partich06s04.html">Next</a> <a href="bk06partich06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich06s03.html" db-id="d616951e164483" id="sec-security-ad-config">
+            <header>
+               <h2><span class="label">7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring a Linux client for Active Directory</h2>
+            </header>
+            
+            
+            <p>Before your client can join an Active Directory domain, adjustments must be made to
+               your network setup to ensure the flawless interaction of client and server.</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">DNS</span></dt>
+                  <dd>
+                     
+                     <p>Configure your client machine to use a DNS server that can forward DNS requests to
+                        the Active Directory DNS server. Alternatively, configure your machine to use the
+                        Active Directory DNS server as the name service data source.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">NTP</span></dt>
+                  <dd>
+                     
+                     <p>To succeed with Kerberos authentication, the client must have its time set accurately.
+                        It is recommended to use a central NTP time server for this purpose (this can be also
+                        the NTP server running on your Active Directory domain controller). If the clock skew
+                        between your Linux host and the domain controller exceeds a certain limit, Kerberos
+                        authentication fails and the client is logged in using the weaker NTLM (NT LAN Manager)
+                        authentication. For more details about using Active Directory for time synchronization,
+                        see <a class="xref xref-procedure" href="#proc-ad-join">Procedure&nbsp;<span class="label">7<span class="sep">.</span>2</span>, “Joining an Active Directory domain using <span class="guimenu">Windows domain membership</span>
+                           ”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Firewall</span></dt>
+                  <dd>
+                     
+                     <p>To browse your network neighborhood, either disable the firewall entirely or mark
+                        the interface used for browsing as part of the internal zone.</p>
+                     
+                     <p> To change the firewall settings on your client, log in as <code class="systemitem username">root</code> and start the YaST firewall module. Select <span class="guimenu">Interfaces</span>. Select your network interface from the list of interfaces and click <span class="guimenu">Change</span>. Select <span class="guimenu">Internal Zone</span> and apply your settings with <span class="guimenu">OK</span>. Leave the firewall settings with <span class="menuchoice"><span class="guimenu">Next</span><span class="guimenu">Finish</span></span>. To disable the firewall, check the <span class="guimenu">Disable Firewall Automatic Starting</span> option, and leave the firewall module with <span class="menuchoice"><span class="guimenu">Next</span><span class="guimenu">Finish</span></span>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Active Directory account</span></dt>
+                  <dd>
+                     
+                     <p>You cannot log in to an Active Directory domain unless the Active Directory administrator
+                        has provided you with a valid user account for that domain. Use the Active Directory
+                        user name and password to log in to the Active Directory domain from your Linux client.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <section class="sect2" id="sec-security-ad-configure-choose">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Choosing which YaST module to use for connecting to Active Directory</h3>
+               </header>
+               
+               
+               <p>YaST contains multiple modules that allow connecting to an Active Directory:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title">
+                           <span class="guimenu">User logon management</span>
+                           </span><span class="para">Use both an identity service (usually LDAP) and a user authentication service (usually
+                           Kerberos). This option is based on SSSD and in the majority of cases is best suited
+                           for joining Active Directory domains.</span></p>
+                     
+                     <p>This module is described in <a class="xref xref-sect2" href="#sec-security-ad-sssd">the section called “Joining Active Directory using <span class="guimenu">User logon management</span>
+                           ”</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title">
+                           <span class="guimenu">Windows domain membership</span>
+                           </span><span class="para">Join an Active Directory (which entails use of Kerberos and LDAP). This option is
+                           based on <code class="command">winbind</code> and is best suited for joining an Active Directory domain if support for NTLM or
+                           cross-forest trusts is necessary.</span></p>
+                     
+                     <p>This module is described in <a class="xref xref-sect2" href="#sec-security-ad-winbind">the section called “Joining Active Directory using <span class="guimenu">Windows domain membership</span>
+                           ”</a>.</p>
+                     </li>
+                  
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-security-ad-sssd">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Joining Active Directory using <span class="guimenu">User logon management</span>
+                     </h3>
+               </header>
+               
+               
+               <p>The YaST module <span class="guimenu">User Logon Management</span> supports authentication at an Active Directory. Additionally, it also supports the
+                  following related authentication and identification providers:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Identification providers</span></dt>
+                     <dd>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">Delegate to third-party software library</span>
+                                    </span><span class="para">Support for legacy NSS providers via a proxy.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">FreeIPA</span>
+                                    </span><span class="para">FreeIPA and Red Hat Enterprise Identity Management provider.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title titlepunct">
+                                    <span class="guimenu">Generic directory service (LDAP)</span>
+                                    </span><span class="para">An LDAP provider. For more information about configuring LDAP, see <code class="command">man 5 sssd-ldap</code>.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">Local SSSD file database</span>
+                                    </span><span class="para">An SSSD-internal provider for local users.</span></p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Authentication providers</span></dt>
+                     <dd>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">Delegate to third-party software library</span>
+                                    </span><span class="para">Relay authentication to another PAM target via a proxy.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">FreeIPA</span>
+                                    </span><span class="para">FreeIPA and Red Hat Enterprise Identity Management provider.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">Generic Kerberos service</span>
+                                    </span><span class="para">An LDAP provider.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title titlepunct">
+                                    <span class="guimenu">Generic directory service (LDAP)</span>
+                                    </span><span class="para">Kerberos authentication.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">Local SSSD file database</span>
+                                    </span><span class="para">An SSSD-internal provider for local users.</span></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p class="formalpara"><span class="title">
+                                    <span class="guimenu">This domain does not provide authentication service</span>
+                                    </span><span class="para">Disables authentication explicitly.</span></p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>To join an Active Directory domain using SSSD and the <span class="guimenu">User Logon Management</span> module of YaST, proceed as follows:</p>
+               
+               <div class="formalobject procedure" id="pro-security-ad-join-sssd">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Joining an Active Directory domain using <span class="guimenu">User logon management</span>
+                        </div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open YaST.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To be able to use DNS auto-discovery later, set up the Active Directory Domain Controller
+                           (the Active Directory server) as the name server for your client.</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>In YaST, click <span class="guimenu">Network Settings</span>.</p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>Select <span class="guimenu">Hostname/DNS</span>, then enter the IP address of the Active Directory Domain Controller into the text
+                                    box <span class="guimenu">Name Server 1</span>.</p>
+                                 
+                                 <p>Save the setting with <span class="guimenu">OK</span>.</p>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>From the YaST main window, start the module <span class="guimenu">User Logon Management</span>.</p>
+                        
+                        <p>The module opens with an overview showing different network properties of your computer
+                           and the authentication method currently in use.</p>
+                        
+                        <div class="figure formalobject" id="fig-security-logonmanagement">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><picture class="imageobject"><img src="media/ad-overview.png"></picture></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Main window of <span class="guimenu">User logon management</span>
+                                 </div>
+                           </header>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To start editing, click <span class="guimenu">Change Settings</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Now join the domain.</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>Click <span class="guimenu">Add Domain</span>.</p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>In the appearing dialog, specify the correct <span class="guimenu">Domain name</span>. Then specify the services to use for identity data and authentication: Select <span class="guimenu">Microsoft Active Directory</span> for both.</p>
+                                 
+                                 <p>Ensure that <span class="guimenu">Enable the domain</span> is activated.</p>
+                                 
+                                 <p>Click <span class="guimenu">OK</span>.</p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>You can keep the default settings in the following dialog. However, there are reasons
+                                    to make changes:</p>
+                                 
+                                 <ul class="itemizedlist">
+                                    
+                                    <li>
+                                       
+                                       <p class="formalpara"><span class="title">If the local host name does not match the host name set on the domain controller</span><span class="para">Find out if the host name of your computer matches the name under which your computer
+                                             is known to the Active Directory Domain Controller. In a terminal, run the command
+                                             <code class="command">hostname</code>, then compare its output to the configuration of the Active Directory Domain Controller.</span></p>
+                                       
+                                       <p>If the values differ, specify the host name from the Active Directory configuration
+                                          under <span class="guimenu">AD hostname</span>. Otherwise, leave the appropriate text box empty.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p class="formalpara"><span class="title">If you do not want to use DNS auto-discovery</span><span class="para">Specify the <span class="guimenu">Host names of Active Directory servers</span> that you want to use. If there are multiple Domain Controllers, separate their host
+                                             names with commas.</span></p>
+                                       </li>
+                                    </ul>
+                                 
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>To continue, click <span class="guimenu">OK</span>.</p>
+                                 
+                                 <p>If not all software is installed already, the computer now installs missing software.
+                                    It then checks whether the configured Active Directory Domain Controller is available.</p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>If everything is correct, the following dialog should now show that it has discovered
+                                    an <span class="guimenu">Active Directory Server</span> but that you are <span class="guimenu">Not yet enrolled</span>.</p>
+                                 
+                                 <p>In the dialog, specify the <span class="guimenu">Username</span> and <span class="guimenu">Password</span> of the Active Directory administrator account (<code class="literal">Administrator</code>).</p>
+                                 
+                                 <p>To make sure that the current domain is enabled for Samba, activate <span class="guimenu">Overwrite Samba configuration to work with this AD</span>.</p>
+                                 
+                                 <p>To enroll, click <span class="guimenu">OK</span>.</p>
+                                 
+                                 <div class="figure formalobject" id="fig-security-logonmanagement-enroll">
+                                    
+                                    
+                                    <div class="mediaobject">
+                                       <div class="media image"><picture class="imageobject"><img src="media/ad-enroll.png"></picture></div>
+                                    </div>
+                                    
+                                    <header>
+                                       <div class="title">Figure&nbsp;<span class="label">7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Enrolling into a domain</div>
+                                    </header>
+                                 </div>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>You should now see a message confirming that you have enrolled successfully. Finish
+                                    with <span class="guimenu">OK</span>.</p>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>After enrolling, configure the client using the window <span class="guimenu">Manage Domain User Logon</span>.</p>
+                        
+                        <div class="figure formalobject" id="fig-security-logonmanagement-configure">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><picture class="imageobject"><img src="media/ad-config.png"></picture></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">7<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuration window of <span class="guimenu">User logon management</span>
+                                 </div>
+                           </header>
+                        </div>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>To allow logging in to the computer using login data provided by Active Directory,
+                                    activate <span class="guimenu">Allow Domain User Logon</span>.</p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>Optionally, under <span class="guimenu">Enable domain data source</span>, activate additional data sources such as information on which users are allowed
+                                    to use <code class="command">sudo</code> or which network drives are available.</p>
+                                 </li>
+                              
+                              <li class="step" id="st-security-sssd-home-dir">
+                                 
+                                 <p>To allow Active Directory users to have home directories, activate <span class="guimenu">Create Home Directories</span>. The path for home directories can be set in multiple ways—on the client, on the
+                                    server, or both ways:</p>
+                                 
+                                 <ul class="itemizedlist">
+                                    
+                                    <li>
+                                       
+                                       <p>To configure the home directory paths on the Domain Controller, set an appropriate
+                                          value for the attribute <code class="literal">UnixHomeDirectory</code> for each user. Additionally, make sure that this attribute replicated to the global
+                                          catalog. For information on achieving that under Windows, see <a class="link" href="https://support.microsoft.com/en-us/kb/248717">https://support.microsoft.com/en-us/kb/248717</a>.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p>To configure home directory paths on the client in such a way that precedence is given
+                                          to the path set on the domain controller, use the option <code class="literal">fallback_homedir</code>.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p>To configure home directory paths on the client in such a way that the client setting
+                                          overrides the server setting, use <code class="literal">override_homedir</code>.</p>
+                                       </li>
+                                    </ul>
+                                 
+                                 <p>As settings on the Domain Controller are outside of the scope of this documentation,
+                                    only the configuration of the client-side options is described in the following.</p>
+                                 
+                                 <p>From the side bar, select <span class="menuchoice"><span class="guimenu">Service Options</span><span class="guimenu">Name switch</span></span>, then click <span class="guimenu">Extended Options</span>. From that window, select either <code class="literal">fallback_homedir</code> or <code class="literal">override_homedir</code>, then click <span class="guimenu">Add</span>.</p>
+                                 
+                                 <p>Specify a value. To have home directories follow the format <code class="filename">/home/<em class="replaceable">USER_NAME</em></code>, use <code class="literal">/home/%u</code>. For more information about possible variables, see the man page <code class="literal">sssd.conf</code> (<code class="command">man 5 sssd.conf</code>), section <cite class="citetitle">override_homedir</cite>.</p>
+                                 
+                                 <p>Click <span class="guimenu">OK</span>.</p>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Save the changes by clicking <span class="guimenu">OK</span>. Then make sure that the values displayed now are correct. To leave the dialog, click
+                           <span class="guimenu">Cancel</span>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ad-winbind">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Joining Active Directory using <span class="guimenu">Windows domain membership</span>
+                     </h3>
+               </header>
+               
+               
+               <p>To join an Active Directory domain using <code class="command">winbind</code> and the <span class="guimenu">Windows Domain Membership</span> module of YaST, proceed as follows:</p>
+               
+               <div class="formalobject procedure" id="proc-ad-join">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Joining an Active Directory domain using <span class="guimenu">Windows domain membership</span>
+                        </div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Log in as <code class="systemitem username">root</code> and start YaST.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start <span class="menuchoice"><span class="guimenu">Network Services</span><span class="guimenu">Windows Domain Membership</span></span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enter the domain to join at <span class="guimenu">Domain or Workgroup</span> in the <span class="guimenu">Windows Domain Membership</span> screen (see <a class="xref xref-figure" href="#fig-ad-smbclient">Figure&nbsp;<span class="label">7<span class="sep">.</span>5</span>, “Determining Windows domain membership”</a>). If the DNS settings on your host are properly integrated with the Windows DNS server,
+                           enter the Active Directory domain name in its DNS format (<code class="literal">mydomain.mycompany.com</code>). If you enter the short name of your domain (also known as the pre–Windows 2000
+                           domain name), YaST must rely on NetBIOS name resolution instead of DNS to find the
+                           correct domain controller. </p>
+                        
+                        <div class="figure formalobject" id="fig-ad-smbclient">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/ad_sambaclient.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">7<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Determining Windows domain membership</div>
+                           </header>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To use the SMB source for Linux authentication, activate <span class="guimenu">Also Use SMB Information for Linux Authentication</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To automatically create a local home directory for Active Directory users on the Linux
+                           machine, activate <span class="guimenu">Create Home Directory on Login</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check <span class="guimenu">Offline Authentication</span> to allow your domain users to log in even if the Active Directory server is temporarily
+                           unavailable, or if you do not have a network connection.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To change the UID and GID ranges for the Samba users and groups, select <span class="guimenu">Expert Settings</span>. Let DHCP retrieve the WINS server only if you need it. This is the case when certain
+                           machines are resolved only by the WINS system.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Configure NTP time synchronization for your Active Directory environment by selecting
+                           <span class="guimenu">NTP Configuration</span> and entering an appropriate server name or IP address. This step is obsolete if you
+                           have already entered the appropriate settings in the stand-alone YaST NTP configuration
+                           module.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">OK</span> and confirm the domain join when prompted for it.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Provide the password for the Windows administrator on the Active Directory server
+                           and click <span class="guimenu">OK</span> (see <a class="xref xref-figure" href="#fig-ad-join1">Figure&nbsp;<span class="label">7<span class="sep">.</span>6</span>, “Providing administrator credentials”</a>).</p>
+                        
+                        <div class="figure formalobject" id="fig-ad-join1">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:163px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/ad_join1.png" style="width:163px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">7<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Providing administrator credentials</div>
+                           </header>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>After you have joined the Active Directory domain, you can log in to it from your
+                  workstation using the display manager of your desktop or the console.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Domain name</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Joining a domain may not succeed if the domain name ends with <code class="literal">.local</code>. Names ending in <code class="literal">.local</code> cause conflicts with Multicast DNS (MDNS) where <code class="literal">.local</code> is reserved for link-local host names.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Only administrators can enroll a computer</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Only a domain administrator account, such as <code class="literal">Administrator</code>, can join <span class="phrase productname">SUSE Linux Enterprise Server</span> into Active Directory.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ad-connection">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Checking Active Directory connection status</h3>
+               </header>
+               
+               
+               <p>To check whether you are successfully enrolled in an Active Directory domain, use
+                  the following commands:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><code class="command">klist</code> shows whether the current user has a valid Kerberos ticket.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="command">getent passwd</code> shows published LDAP data for all users.</p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich06.html">Up</a></td>
+                  <td class="next"><a href="bk06partich06s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Background information for Linux Active Directory support</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">7<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Logging in to an Active Directory domain</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

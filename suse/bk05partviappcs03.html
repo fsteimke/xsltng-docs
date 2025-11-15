@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>C.3.&nbsp;Advanced network setup</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partviappcs02.html" rel="prev">
+      <link href="bk05partviappd.html" rel="next">
+      <link href="bk05partviappc.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partviappc.html">Up</a> <a href="bk05partviappd.html">Next</a> <a href="bk05partviappcs02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partviappcs03.html" db-id="d616951e150899" id="ay-adv-network">
+            <header>
+               <h2><span class="label">C<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Advanced network setup</h2>
+            </header>
+            
+            
+            <p>Even if parameters like <code class="literal">hostip</code>, <code class="literal">nameserver</code>, and <code class="literal">gateway</code> are passed to <code class="command">linuxrc</code>, the network is only started when it is needed (for example, when installing via
+               SSH or VNC). Because <code class="literal">autoyast</code> is not a <code class="command">linuxrc</code> parameter (this parameter is ignored by <code class="command">linuxrc</code> and is only passed to YaST), the network will <em>not</em> be started automatically when specifying a remote location for the AutoYaST profile.</p>
+            
+            <p>Therefore, the network needs to be started explicitly. This is done by using the parameter
+               <code class="literal">ifcfg</code>. <code class="literal">ifcfg</code> directly controls the content of the <code class="filename">/etc/sysconfig/network/ifcfg-*</code> files.</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">DHCP network configuration</span></dt>
+                  <dd>
+                     
+                     <p>The general syntax to configure DHCP is</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> ifcfg=<em class="replaceable">INTERFACE</em>=<em class="replaceable">DHCP*</em>,<em class="replaceable">OPTION1</em>=<em class="replaceable">VALUE1</em>,<em class="replaceable">OPTION2</em>=<em class="replaceable">VALUE2</em></code></span></span></pre>
+                     </div>
+                     
+                     <p>where <em class="replaceable">INTERFACE</em> is the interface name, for example <code class="literal">eth0</code>, or <code class="literal">eth*</code> for all interfaces. <em class="replaceable">DHCP*</em> can either be <code class="literal">dhcp</code> (IPv4 and IPv6), <code class="literal">dhcp4</code>, or <code class="literal">dhcp6</code>.</p>
+                     
+                     <p>To set up DHCP for <code class="literal">eth0</code> use:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg=eth0=dhcp</code></span></span></pre>
+                     </div>
+                     
+                     <p>To set up DHCP on all interfaces use:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg=eth*=dhcp</code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Static network configuration</span></dt>
+                  <dd>
+                     
+                     <p>The general syntax to configure a static network is</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg=<em class="replaceable">INTERFACE</em>=<em class="replaceable">IP_LIST</em>,<em class="replaceable">GATEWAY_LIST</em>,<em class="replaceable">NAMESERVER_LIST</em>,<em class="replaceable">DOMAINSEARCH_LIST</em>,\</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">OPTION1=value1</em>,...</code></span></span></pre>
+                     </div>
+                     
+                     <p>where <em class="replaceable">INTERFACE</em> is the interface name, for example <code class="literal">eth0</code>. If using <code class="literal">eth*</code>, the first device available will be used. The other parameters need to be replaced
+                        with the respective values in the given order. Example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg=eth0=192.168.2.100/24,192.168.5.1,192.168.1.116,example.com</code></span></span></pre>
+                     </div>
+                     
+                     <p>When specifying multiple addresses for a parameter, use spaces to separate them and
+                        quote the complete string. The following example uses two name servers and a search
+                        list containing two domains.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg="eth0=192.168.2.100/24,192.168.5.1,192.168.1.116 192.168.1.117,example.com example.net"</code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>For more information refer to <a class="link" href="https://en.opensuse.org/SDB:Linuxrc#Network_Configuration">https://en.opensuse.org/SDB:Linuxrc#Network_Configuration</a>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partviappcs02.html">Prev</a></td>
+                  <td class="up"><a href="bk05partviappc.html">Up</a></td>
+                  <td class="next"><a href="bk05partviappd.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">C<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                     <code class="filename">info</code> file format</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Appendix&nbsp;<span class="label">D</span><span class="sep">.&nbsp;</span>Differences between AutoYaST profiles in SLE 12 and 15</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

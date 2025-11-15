@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>1.4.&nbsp;I/O virtualization</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partich01s03.html" rel="prev">
+      <link href="bk10partich02.html" rel="next">
+      <link href="bk10partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partich01.html">Up</a> <a href="bk10partich02.html">Next</a> <a href="bk10partich01s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partich01s04.html" db-id="d616951e265264" id="sec-vt-io" lang="">
+            <header>
+               <h2><span class="label">1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>I/O virtualization</h2>
+            </header>
+            
+            
+            
+            <p>VM Guests not only share CPU and memory resources of the host system, but also the
+               I/O subsystem. Because software I/O virtualization techniques deliver less performance
+               than bare metal, hardware solutions that deliver almost <q>native</q> performance have been developed recently. <span class="phrase productname">SUSE Linux Enterprise Server</span> supports the following I/O virtualization techniques:</p>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry" id="vt-io-fullv">
+                  <dt><span class="term">Full virtualization</span></dt>
+                  <dd>
+                     
+                     <p>Fully Virtualized (FV) drivers emulate widely supported real devices, which can be
+                        used with an existing driver in the VM Guest. The guest is also called <em>Hardware Virtual Machine</em> (HVM). Since the physical device on the VM Host Server may differ from the emulated
+                        one, the hypervisor needs to process all I/O operations before handing them over to
+                        the physical device. Therefore all I/O operations need to traverse two software layers,
+                        a process that not only significantly impacts I/O performance, but also consumes CPU
+                        time.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry" id="vt-io-parav">
+                  <dt><span class="term">Paravirtualization</span></dt>
+                  <dd>
+                     
+                     <p>Paravirtualization (PV) allows direct communication between the hypervisor and the
+                        VM Guest. With less overhead involved, performance is much better than with full virtualization.
+                        However, paravirtualization requires either the guest operating system to be modified
+                        to support the paravirtualization API or paravirtualized drivers. See <a class="xref xref-sect2" href="bk10partich07s04.html#sec-kvm-requires-guests-virt-drivers">the section called “Availability of paravirtualized drivers”</a> for a list of guest operating systems supporting paravirtualization.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry" id="vt-io-pvhvm">
+                  <dt><span class="term">PVHVM</span></dt>
+                  <dd>
+                     
+                     <p>This type of virtualization enhances HVM (see <a class="xref xref-varlistentry" href="#vt-io-fullv"><span class="label"><span class="term">Full virtualization</span></span></a>) with paravirtualized (PV) drivers, and PV interrupt and timer handling.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry" id="vt-io-vfio">
+                  <dt><span class="term">VFIO</span></dt>
+                  <dd>
+                     
+                     <p>VFIO stands for <em>Virtual Function I/O</em> and is a new user-level driver framework for Linux. It replaces the traditional KVM
+                        PCI Pass-Through device assignment. The VFIO driver exposes direct device access to
+                        user space in a secure memory (<a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-iommu"><span class="label">IOMMU</span></a>) protected environment. With VFIO, a VM Guest can directly access hardware devices
+                        on the VM Host Server (pass-through), avoiding performance issues caused by emulation
+                        in performance critical paths. This method does not allow to share devices—each device
+                        can only be assigned to a single VM Guest. VFIO needs to be supported by the VM Host
+                        Server CPU, chipset and the BIOS/EFI.</p>
+                     
+                     <p>Compared to the legacy KVM PCI device assignment, VFIO has the following advantages:</p>
+                     
+                     <ul class="itemizedlist" db-mark="bullet">
+                        
+                        <li>
+                           
+                           <p>Resource access is compatible with UEFI Secure Boot.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Device is isolated and its memory access protected.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Offers a user space device driver with more flexible device ownership model.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Is independent of KVM technology, and not bound to x86 architecture only.</p>
+                           </li>
+                        </ul>
+                     
+                     <p>In <span class="phrase productname">SUSE Linux Enterprise Server</span> the USB and PCI pass-through methods of device assignment are considered deprecated
+                        and are superseded by the VFIO model.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry" id="vt-io-sriov">
+                  <dt><span class="term">SR-IOV</span></dt>
+                  <dd>
+                     
+                     <p>The latest I/O virtualization technique, Single Root I/O Virtualization SR-IOV combines
+                        the benefits of the aforementioned techniques—performance and the ability to share
+                        a device with several VM Guests. SR-IOV requires special I/O devices, that are capable
+                        of replicating resources so they appear as multiple separate devices. Each such <q>pseudo</q> device can be directly used by a single guest. However, for network cards for example
+                        the number of concurrent queues that can be used is limited, potentially reducing
+                        performance for the VM Guest compared to paravirtualized drivers. On the VM Host Server,
+                        SR-IOV must be supported by the I/O device, the CPU and chipset, the BIOS/EFI and
+                        the hypervisor—for setup instructions see <a class="xref xref-sect1" href="bk10partiich07s12.html">the section called “Assigning a host PCI device to a VM Guest”</a>. </p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <div class="admonition important" id="ann-vt-io-require">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Requirements for VFIO and SR-IOV</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>To be able to use the VFIO and SR-IOV features, the VM Host Server needs to fulfill
+                           the following requirements:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>IOMMU needs to be enabled in the BIOS/EFI.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>For Intel CPUs, the kernel parameter <code class="literal">intel_iommu=on</code> needs to be provided on the kernel command line. For more information, see <a class="link" href="https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.txt#L1951">https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.txt#L1951</a>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>The VFIO infrastructure needs to be available. This can be achieved by loading the
+                                 kernel module <code class="resource systemitem">vfio_pci</code>. For more information, see <a class="xref xref-sect2" href="bk01partiich04s06.html#sec-boot-systemd-advanced-kernel-modules">the section called “Loading kernel modules”</a>.</p>
+                              </li>
+                           </ul>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partich01s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partich01.html">Up</a></td>
+                  <td class="next"><a href="bk10partich02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Virtualization modes</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">2</span><span class="sep">.&nbsp;</span>Virtualization scenarios</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

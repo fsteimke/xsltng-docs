@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.7.&nbsp;
+         systemd timer units</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiich04s06.html" rel="prev">
+      <link href="bk01partiich04s08.html" rel="next">
+      <link href="bk01partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiich04.html">Up</a> <a href="bk01partiich04s08.html">Next</a> <a href="bk01partiich04s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiich04s07.html" db-id="d616951e33262" id="sec-boot-systemd-timer-units">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>
+                  <code class="daemon systemitem">systemd</code> timer units</h2>
+            </header>
+            
+            
+            <p>Similar to cron, <code class="daemon systemitem">systemd</code> timer units provide a mechanism for scheduling jobs on Linux. Although <code class="daemon systemitem">systemd</code> timer units serve the same purpose as cron, they offer several advantages.</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Jobs scheduled using a timer unit can depend on other <code class="daemon systemitem">systemd</code> services.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Timer units are treated as regular <code class="daemon systemitem">systemd</code> services, so can be managed with <code class="command">systemctl</code>.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Timers can be realtime and monotonic.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Time units are logged to the <code class="daemon systemitem">systemd</code> journal, which makes it easier to monitor and troubleshoot them.</p>
+                  </li>
+               </ul>
+            
+            <p><code class="daemon systemitem">systemd</code> timer units are identified by the <code class="literal">.timer</code> file name extension.</p>
+            
+            <section class="sect2" id="sec-boot-systemd-timer-types">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                     <code class="daemon systemitem">systemd</code> timer types</h3>
+               </header>
+               
+               
+               <p>Timer units can use monotonic and realtime timers.</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Similar to cronjobs, realtime timers are triggered on calendar events. Realtime timers
+                        are defined using the option <code class="option">OnCalendar</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Monotonic timers are triggered at a specified time elapsed from a certain starting
+                        point. The latter could be a system boot or system unit activation event. There are
+                        several options for defining monotonic timers including <code class="option">OnBootSec</code>, <code class="option">OnUnitActiveSec</code>, and <code class="option">OnTypeSec</code>. Monotonic timers are not persistent, and they are reset after each reboot.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-timer-service-units">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                     <code class="daemon systemitem">systemd</code> timers and service units</h3>
+               </header>
+               
+               
+               <p>Every timer unit must have a corresponding <code class="daemon systemitem">systemd</code> unit file it controls. In other words, a <code class="filename">.timer</code> file activates and manages the corresponding <code class="filename">.service</code> file. When used with a timer, the <code class="filename">.service</code> file does not require an <code class="literal">[Install]</code> section, as the service is managed by the timer.</p>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-timer-example">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Practical example</h3>
+               </header>
+               
+               
+               <p>To understand the basics of <code class="daemon systemitem">systemd</code> timer units, we set up a timer that triggers the <code class="filename">foo.sh</code> shell script.</p>
+               
+               <p>First step is to create a <code class="daemon systemitem">systemd</code> service unit that controls the shell script. To do this, open a new text file for
+                  editing and add the following service unit definition:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Description="Foo shell script"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>ExecStart=/usr/local/bin/foo.sh</code></span></span></pre>
+               </div>
+               
+               <p>Save the file under the name <code class="filename">foo.service</code> in the directory <code class="filename">/etc/systemd/system/</code>.</p>
+               
+               <p>Next, open a new text file for editing and add the following timer definition:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Description="Run foo shell script"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Timer]</code></span></span>
+<span class="line"><span class="ld"><code>OnBootSec=5min</code></span></span>
+<span class="line"><span class="ld"><code>OnUnitActiveSec=24h</code></span></span>
+<span class="line"><span class="ld"><code>Unit=foo.service</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=multi-user.target</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="literal">[Timer]</code> section in the example above specifies what service to trigger (<code class="literal">foo.service</code>) and when to trigger it. In this case, the option <code class="option">OnBootSec</code> specifies a monotonic timer that triggers the service five minutes after the system
+                  boot, while the option <code class="option">OnUnitActiveSec</code> triggers the service 24 hours after the service has been activated (that is, the
+                  timer triggers the service once a day). Finally, the option <code class="option">WantedBy</code> specifies that the timer should start when the system has reached the multiuser target.</p>
+               
+               <p>Instead of a monotonic timer, you can specify a real-time one using the option <code class="option">OnCalendar</code>. The following realtime timer definition triggers the related service unit once a
+                  week, starting on Monday at 12:00.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Timer]</code></span></span>
+<span class="line"><span class="ld"><code>OnCalendar=weekly</code></span></span>
+<span class="line"><span class="ld"><code>Persistent=true</code></span></span></pre>
+               </div>
+               
+               <p>The option <code class="option">Persistent=true</code> indicates that the service is triggered immediately after the timer activation if
+                  the timer missed the last start time (for example, because of the system being powered
+                  off).</p>
+               
+               <p>The option <code class="option">OnCalendar</code> can also be used to define specific dates times for triggering a service using the
+                  following format: <code class="literal">DayOfWeek Year-Month-Day Hour:Minute:Second</code>. The example below triggers a service at 5am every day:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>OnCalendar=*-*-* 5:00:00</code></span></span></pre>
+               </div>
+               
+               <p>You can use an asterisk to specify any value, and commas to list possible values.
+                  Use two values separated by .. to indicate a contiguous range. The following example
+                  triggers a service at 6pm on Friday of every month:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>OnCalendar=Fri *-*-1..7 18:00:00</code></span></span></pre>
+               </div>
+               
+               <p>To trigger a service at different times, you can specify several <code class="option">OnCalendar</code> entries:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>OnCalendar=Mon..Fri 10:00</code></span></span>
+<span class="line"><span class="ld"><code>OnCalendar=Sat,Sun 22:00</code></span></span></pre>
+               </div>
+               
+               <p>In the example above, a service is triggered at 10am on week days and at 10pm on weekends.</p>
+               
+               <p>When you are done editing the timer unit file, save it under the name <code class="filename">foo.timer</code> in the <code class="filename">/etc/systemd/system/</code> directory. To check the correctness of the created unit files, run the following
+                  command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  systemd-analyze verify /etc/systemd/system/foo.*</code></span></span></pre>
+               </div>
+               
+               <p>If the command returns no output, the files have passed the verification successfully.</p>
+               
+               <p>To start the timer, use the command <code class="command">sudo systemctl start foo.timer</code>. To enable the timer on boot, run the command <code class="command">sudo systemctl enable foo.timer</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-timer-manage">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>7<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing <code class="daemon systemitem">systemd</code> timers</h3>
+               </header>
+               
+               
+               <p>Since timers are treated as regular <code class="daemon systemitem">systemd</code> units, you can manage them using <code class="command">systemctl</code>. You can start a timer with <code class="command">systemctl start</code>, enable a timer with <code class="command">systemctl enable</code>, and so on. Additionally, you can list all active timers using the command <code class="command">systemctl list-timers</code>. To list all timers, including inactive ones, run the command <code class="command">systemctl list-timers --all</code>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiich04s06.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk01partiich04s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Advanced usage</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

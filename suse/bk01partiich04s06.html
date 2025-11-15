@@ -1,0 +1,482 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.6.&nbsp;Advanced usage</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiich04s05.html" rel="prev">
+      <link href="bk01partiich04s07.html" rel="next">
+      <link href="bk01partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiich04.html">Up</a> <a href="bk01partiich04s07.html">Next</a> <a href="bk01partiich04s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiich04s06.html" db-id="d616951e32514" id="sec-boot-systemd-advanced">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Advanced usage</h2>
+            </header>
+            
+            
+            <p>The following sections cover advanced topics for system administrators. For even more
+               advanced <code class="daemon systemitem">systemd</code> documentation, refer to Lennart Pöttering's series about <code class="daemon systemitem">systemd</code> for administrators at <a class="link" href="https://0pointer.de/blog/projects/">https://0pointer.de/blog/projects/</a>.</p>
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-tmp">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Cleaning temporary directories</h3>
+               </header>
+               
+               
+               <p><code class="daemon systemitem">systemd</code> supports cleaning temporary directories regularly. The configuration from the previous
+                  system version is automatically migrated and active. <code class="literal">tmpfiles.d</code>—which is responsible for managing temporary files—reads its configuration from <code class="filename">/etc/tmpfiles.d/*.conf</code>, <code class="filename">/run/tmpfiles.d/*.conf</code>, and <code class="filename">/usr/lib/tmpfiles.d/*.conf</code> files. Configuration placed in <code class="filename">/etc/tmpfiles.d/*.conf</code> overrides related configurations from the other two directories (<code class="filename">/usr/lib/tmpfiles.d/*.conf</code> is where packages store their configuration files).</p>
+               
+               <p>The configuration format is one line per path containing action and path, and optionally
+                  mode, ownership, age and argument fields, depending on the action. The following example
+                  unlinks the X11 lock files:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Type Path               Mode UID  GID  Age Argument</code></span></span>
+<span class="line"><span class="ld"><code>r    /tmp/.X[0-9]*-lock</code></span></span></pre>
+               </div>
+               
+               <p>To get the status the tmpfile timer:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl status systemd-tmpfiles-clean.timer</code></span></span>
+<span class="line"><span class="ld"><code>systemd-tmpfiles-clean.timer - Daily Cleanup of Temporary Directories</code></span></span>
+<span class="line"><span class="ld"><code> Loaded: loaded (/usr/lib/systemd/system/systemd-tmpfiles-clean.timer; static)</code></span></span>
+<span class="line"><span class="ld"><code> Active: active (waiting) since Tue 2018-04-09 15:30:36 CEST; 1 weeks 6 days ago</code></span></span>
+<span class="line"><span class="ld"><code>   Docs: man:tmpfiles.d(5)</code></span></span>
+<span class="line"><span class="ld"><code>         man:systemd-tmpfiles(8)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Apr 09 15:30:36 jupiter systemd[1]: Starting Daily Cleanup of Temporary Directories.</code></span></span>
+<span class="line"><span class="ld"><code>Apr 09 15:30:36 jupiter systemd[1]: Started Daily Cleanup of Temporary Directories.</code></span></span></pre>
+               </div>
+               
+               <p>For more information on temporary files handling, see <code class="command">man 5 tmpfiles.d</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-logging">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>System log</h3>
+               </header>
+               
+               
+               <p><a class="xref xref-sect2" href="#sec-boot-systemd-basics-services-debugging">the section called “Debugging services”</a> explains how to view log messages for a given service. However, displaying log messages
+                  is not restricted to service logs. You can also access and query the complete log
+                  messages written by <code class="daemon systemitem">systemd</code>—the so-called <q>Journal</q>. Use the command <code class="command">journalctl</code> to display the complete log messages starting with the oldest entries. Refer to <code class="command">man 1 journalctl</code> for options such as applying filters or changing the output format.</p>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-snapshots">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Snapshots</h3>
+               </header>
+               
+               
+               <p>You can save the current state of <code class="daemon systemitem">systemd</code> to a named snapshot and later revert to it with the <code class="command">isolate</code> subcommand. This is useful when testing services or custom targets, because it allows
+                  you to return to a defined state at any time. A snapshot is only available in the
+                  current session and will automatically be deleted on reboot. A snapshot name must
+                  end in <code class="filename">.snapshot</code>.</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Create a snapshot</span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl snapshot <em class="replaceable">MY_SNAPSHOT</em>.snapshot</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Delete a snapshot</span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl delete <em class="replaceable">MY_SNAPSHOT</em>.snapshot</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">View a snapshot</span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl show <em class="replaceable">MY_SNAPSHOT</em>.snapshot</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Activate a snapshot</span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl isolate <em class="replaceable">MY_SNAPSHOT</em>.snapshot</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-kernel-modules">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Loading kernel modules</h3>
+               </header>
+               
+               
+               <p>With <code class="daemon systemitem">systemd</code>, kernel modules can automatically be loaded at boot time via a configuration file
+                  in <code class="filename">/etc/modules-load.d</code>. The file should be named <em class="replaceable">MODULE</em>.conf and have the following content:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># load module <em class="replaceable">MODULE</em> at boot time</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">MODULE</em></code></span></span></pre>
+               </div>
+               
+               <p>In case a package installs a configuration file for loading a kernel module, the file
+                  gets installed to <code class="filename">/usr/lib/modules-load.d</code>. If two configuration files with the same name exist, the one in <code class="filename">/etc/modules-load.d</code> tales precedence.</p>
+               
+               <p>For more information, see the <code class="systemitem">modules-load.d(5)</code> man page.</p>
+               </section>
+            
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-before-local">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Performing actions before loading a service</h3>
+               </header>
+               
+               
+               <p>With System V init actions that need to be performed before loading a service, needed
+                  to be specified in <code class="filename">/etc/init.d/before.local</code>. This procedure is no longer supported with <code class="daemon systemitem">systemd</code>. If you need to do actions before starting services, do the following:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Loading kernel modules</span></dt>
+                     <dd>
+                        
+                        <p>Create a drop-in file in <code class="filename">/etc/modules-load.d</code> directory (see <code class="command">man modules-load.d</code> for the syntax)</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Creating Files or Directories, Cleaning-up Directories, Changing Ownership</span></dt>
+                     <dd>
+                        
+                        <p>Create a drop-in file in <code class="filename">/etc/tmpfiles.d</code> (see <code class="command">man tmpfiles.d</code> for the syntax)</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Other tasks</span></dt>
+                     <dd>
+                        
+                        <p>Create a system service file, for example, <code class="filename">/etc/systemd/system/before.service</code>, from the following template:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Before=<em class="replaceable">NAME OF THE SERVICE YOU WANT THIS SERVICE TO BE STARTED BEFORE</em></code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>Type=oneshot</code></span></span>
+<span class="line"><span class="ld"><code>RemainAfterExit=true</code></span></span>
+<span class="line"><span class="ld"><code>ExecStart=<em class="replaceable">YOUR_COMMAND</em></code></span></span>
+<span class="line"><span class="ld"><code># beware, executable is run directly, not through a shell, check the man pages</code></span></span>
+<span class="line"><span class="ld"><code># systemd.service and systemd.unit for full syntax</code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code># target in which to start the service</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=multi-user.target</code></span></span>
+<span class="line"><span class="ld"><code>#WantedBy=graphical.target</code></span></span></pre>
+                        </div>
+                        
+                        <p>When the service file is created, you should run the following commands (as <code class="systemitem username">root</code>):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl daemon-reload</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable before</code></span></span></pre>
+                        </div>
+                        
+                        <p>Every time you modify the service file, you need to run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl daemon-reload</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-cgroups">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Kernel control groups (cgroups)</h3>
+               </header>
+               
+               
+               <p>On a traditional System V init system, it is not always possible to match a process
+                  to the service that spawned it. Certain services, such as Apache, spawn a lot of third-party
+                  processes (for example, CGI or Java processes), which themselves spawn more processes.
+                  This makes a clear assignment difficult or even impossible. Additionally, a service
+                  may not finish correctly, leaving certain children alive.</p>
+               
+               <p><code class="daemon systemitem">systemd</code> solves this problem by placing each service into its own cgroup. cgroups are a kernel
+                  feature that allows aggregating processes and all their children into hierarchical
+                  organized groups. <code class="daemon systemitem">systemd</code> names each cgroup after its service. Since a non-privileged process is not allowed
+                  to <q>leave</q> its cgroup, this provides an effective way to label all processes spawned by a service
+                  with the name of the service.</p>
+               
+               <p>To list all processes belonging to a service, use the command <code class="command">systemd-cgls</code>, for example:</p>
+               
+               <div class="example formalobject" id="sec-boot-systemd-advanced-cgroups_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemd-cgls --no-pager</code></span></span>
+<span class="line"><span class="ld"><code>├─1 /usr/lib/systemd/systemd --switched-root --system --deserialize 20</code></span></span>
+<span class="line"><span class="ld"><code>├─user.slice</code></span></span>
+<span class="line"><span class="ld"><code>│ └─user-1000.slice</code></span></span>
+<span class="line"><span class="ld"><code>│   ├─session-102.scope</code></span></span>
+<span class="line"><span class="ld"><code>│   │ ├─12426 gdm-session-worker [pam/gdm-password]</code></span></span>
+<span class="line"><span class="ld"><code>│   │ ├─15831 gdm-session-worker [pam/gdm-password]</code></span></span>
+<span class="line"><span class="ld"><code>│   │ ├─15839 gdm-session-worker [pam/gdm-password]</code></span></span>
+<span class="line"><span class="ld"><code>│   │ ├─15858 /usr/lib/gnome-terminal-server</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>└─system.slice</code></span></span>
+<span class="line"><span class="ld"><code>  ├─systemd-hostnamed.service</code></span></span>
+<span class="line"><span class="ld"><code>  │ └─17616 /usr/lib/systemd/systemd-hostnamed</code></span></span>
+<span class="line"><span class="ld"><code>  ├─cron.service</code></span></span>
+<span class="line"><span class="ld"><code>  │ └─1689 /usr/sbin/cron -n</code></span></span>
+<span class="line"><span class="ld"><code>  ├─postfix.service</code></span></span>
+<span class="line"><span class="ld"><code>  │ ├─ 1676 /usr/lib/postfix/master -w</code></span></span>
+<span class="line"><span class="ld"><code>  │ ├─ 1679 qmgr -l -t fifo -u</code></span></span>
+<span class="line"><span class="ld"><code>  │ └─15590 pickup -l -t fifo -u</code></span></span>
+<span class="line"><span class="ld"><code>  ├─sshd.service</code></span></span>
+<span class="line"><span class="ld"><code>  │ └─1436 /usr/sbin/sshd -D</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>List all processes belonging to a service</div>
+                  </header>
+               </div>
+               
+               <p>See <a class="xref xref-chapter" href="bk07partivch02.html">Chapter&nbsp;<span class="label">10</span>, Kernel control groups</a> for more information about cgroups.</p>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-advanced-kill">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Terminating services (sending signals)</h3>
+               </header>
+               
+               
+               <p>As explained in <a class="xref xref-sect2" href="#sec-boot-systemd-advanced-cgroups">the section called “Kernel control groups (cgroups)”</a>, it is not always possible to assign a process to its parent service process in a
+                  System V init system. This makes it difficult to stop a service and its children.
+                  Child processes that have not been terminated remain as zombie processes.</p>
+               
+               <p><code class="daemon systemitem">systemd</code>'s concept of confining each service into a cgroup makes it possible to identify all
+                  child processes of a service and therefore allows you to send a signal to each of
+                  these processes. Use <code class="command">systemctl kill</code> to send signals to services. For a list of available signals refer to <code class="command">man 7 signals</code>.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Sending <code class="systemitem">SIGTERM</code> to a service</span></dt>
+                     <dd>
+                        
+                        <p><code class="systemitem">SIGTERM</code> is the default signal that is sent.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl kill <em class="replaceable">MY_SERVICE</em></code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Sending <em class="replaceable">SIGNAL</em> to a service</span></dt>
+                     <dd>
+                        
+                        <p>Use the <code class="option">-s</code> option to specify the signal that should be sent.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl kill -s <em class="replaceable">SIGNAL</em><em class="replaceable">MY_SERVICE</em></code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Selecting processes</span></dt>
+                     <dd>
+                        
+                        <p>By default the <code class="command">kill</code> command sends the signal to <code class="option">all</code> processes of the specified cgroup. You can restrict it to the <code class="option">control</code> or the <code class="option">main</code> process. The latter is, for example, useful to force a service to reload its configuration
+                           by sending <code class="systemitem">SIGHUP</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl kill -s SIGHUP --kill-who=main <em class="replaceable">MY_SERVICE</em></code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-dbus">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Important notes on the D-Bus service</h3>
+               </header>
+               
+               
+               <p>The D-Bus service is the message bus for communication between <code class="daemon systemitem">systemd</code> clients and the systemd manager that is running as pid 1. Even though <code class="daemon systemitem">dbus</code> is a stand-alone daemon, it is an integral part of the init infrastructure.</p>
+               
+               <p>Stopping <code class="daemon systemitem">dbus</code> or restarting it in the running system is similar to an attempt to stop or restart
+                  PID 1. It breaks the <code class="daemon systemitem">systemd</code> client/server communication and makes most <code class="daemon systemitem">systemd</code> functions unusable.</p>
+               
+               <p>Therefore, terminating or restarting <code class="daemon systemitem">dbus</code> is neither recommended nor supported.</p>
+               
+               <p>Updating the <code class="systemitem">dbus</code> or <code class="systemitem">dbus</code>-related packages requires a reboot. When in doubt whether a reboot is necessary,
+                  run the <code class="command">sudo zypper ps -s</code>. If <code class="literal">dbus</code> appears among the listed services, you need to reboot the system.</p>
+               
+               <p>Keep in mind that <code class="systemitem">dbus</code> is updated even when automatic updates are configured to skip the packages that require
+                  reboot.</p>
+               </section>
+            
+            
+            <section class="sect2" id="sec-boot-systemd-basics-services-debugging">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>6<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Debugging services</h3>
+               </header>
+               
+               
+               <p>By default, <code class="daemon systemitem">systemd</code> is not overly verbose. If a service was started successfully, no output is produced.
+                  In case of a failure, a short error message is displayed. However, <code class="command">systemctl status</code> provides a means to debug the start-up and operation of a service.</p>
+               
+               <p><code class="daemon systemitem">systemd</code> comes with its own logging mechanism (<q>The Journal</q>) that logs system messages. This allows you to display the service messages together
+                  with status messages. The <code class="command">status</code> command works similar to <code class="command">tail</code> and can also display the log messages in different formats, making it a powerful
+                  debugging tool.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Show service start-up failure</span></dt>
+                     <dd>
+                        
+                        <p>Whenever a service fails to start, use <code class="command">systemctl status <em class="replaceable">MY_SERVICE</em></code> to get a detailed error message:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl start apache2</code></span></span>
+<span class="line"><span class="ld"><code>Job failed. See system journal and 'systemctl status' for details.</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl status apache2</code></span></span>
+<span class="line"><span class="ld"><code>   Loaded: loaded (/usr/lib/systemd/system/apache2.service; disabled)</code></span></span>
+<span class="line"><span class="ld"><code>   Active: failed (Result: exit-code) since Mon, 04 Apr 2018 16:52:26 +0200; 29s ago</code></span></span>
+<span class="line"><span class="ld"><code>   Process: 3088 ExecStart=/usr/sbin/start_apache2 -D SYSTEMD -k start (code=exited, status=1/FAILURE)</code></span></span>
+<span class="line"><span class="ld"><code>   CGroup: name=systemd:/system/apache2.service</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Apr 04 16:52:26 g144 start_apache2[3088]: httpd2-prefork: Syntax error on line</code></span></span>
+<span class="line"><span class="ld"><code>205 of /etc/apache2/httpd.conf: Syntax error on li...alHost&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Show last <em class="replaceable">N</em> service messages</span></dt>
+                     <dd>
+                        
+                        <p>The default behavior of the <code class="command">status</code> subcommand is to display the last ten messages a service issued. To change the number
+                           of messages to show, use the <code class="option">--lines=<em class="replaceable">N</em></code> parameter:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl status chronyd</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl --lines=20 status chronyd</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Show service messages in append mode</span></dt>
+                     <dd>
+                        
+                        <p>To display a <q>live stream</q> of service messages, use the <code class="option">--follow</code> option, which works like <code class="command">tail</code><code class="option">-f</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl --follow status chronyd</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Messages output format</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="option">--output=<em class="replaceable">MODE</em></code> parameter allows you to change the output format of service messages. The most important
+                           modes available are:</p>
+                        
+                        <dl class="long-terms variablelist">
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">short</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>The default format. Shows the log messages with a human readable time stamp.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">verbose</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>Full output with all fields.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">cat</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>Terse output without time stamps.</p>
+                                 </dd>
+                           </div>
+                           </dl>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiich04s05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk01partiich04s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Customizing <code class="systemitem">systemd</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>
+                     <code class="daemon systemitem">systemd</code> timer units</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

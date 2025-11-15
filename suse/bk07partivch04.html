@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;12.&nbsp;Power management</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partivch03s04.html" rel="prev">
+      <link href="bk07partivch04s02.html" rel="next">
+      <link href="bk07partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiv.html">Up</a> <a href="bk07partivch04s02.html">Next</a> <a href="bk07partivch03s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk07partivch04.html" db-id="d616951e212631" id="cha-tuning-power" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">12</span><span class="sep">.&nbsp;</span>Power management</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-tuning-power-cpu">
+               <header>
+                  <h2><span class="label">12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Power management at CPU Level</h2>
+               </header>
+               
+               
+               <p>At the CPU level, you can control power usage in several ways. For example, by using
+                  idling power states (C-states), changing CPU frequency (P-states), and throttling
+                  the CPU (T-states). The following sections give a short introduction to each approach
+                  and its significance for power savings. Detailed specifications can be found at <a class="link" href="https://uefi.org/sites/default/files/resources/ACPI_Spec_6_4_Jan22.pdf">https://uefi.org/sites/default/files/resources/ACPI_Spec_6_4_Jan22.pdf</a>.</p>
+               
+               <section class="sect2" id="sec-tuning-power-cpu-cstates">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>C-states (processor operating states)</h3>
+                  </header>
+                  
+                  
+                  <p>Modern processors have several power saving modes called <code class="literal">C-states</code>. They reflect the capability of an idle processor to turn off unused components to
+                     save power.</p>
+                  
+                  <p>When a processor is in the <code class="literal">C0</code> state, it is executing instructions. A processor running in any other C-state is
+                     idle. The higher the C number, the deeper the CPU sleep mode: more components are
+                     shut down to save power. Deeper sleep states can save large amounts of energy. Their
+                     downside is that they introduce latency. This means, it takes more time for the CPU
+                     to go back to <code class="literal">C0</code>. Depending on workload (threads waking up, triggering CPU usage and then going back
+                     to sleep again for a short period of time) and hardware (for example, interrupt activity
+                     of a network device), disabling the deepest sleep states can increase overall performance.
+                     For details on how to do so, refer to <a class="xref xref-sect2" href="bk07partivch04s03.html#sec-tuning-power-tools-cpupower-idle-info">the section called “Viewing kernel idle statistics with <code class="command">cpupower</code>
+                        ”</a>.</p>
+                  
+                  <p>Some states also have submodes with different power saving latency levels. Which C-states
+                     and submodes are supported depends on the respective processor. However, <code class="literal">C1</code> is always available.</p>
+                  
+                  <p><a class="xref xref-table" href="#tab-tuning-power-cstates">Table&nbsp;<span class="label">12<span class="sep">.</span>1</span>, “C-states”</a> gives an overview of the most common C-states.</p>
+                  
+                  <div class="formalobject table" id="tab-tuning-power-cstates">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>C-states</div>
+                     </header>
+                     <table>
+                        <thead>
+                           
+                           <tr>
+                              <th class="bleft btop colsep rowsep">
+                                 <p>Mode</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>Definition</p>
+                              </th>
+                           </tr>
+                           </thead>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep rowsep">
+                                 <p>C0</p>
+                              </td>
+                              <td class="btop colsep rowsep">
+                                 <p>Operational state. CPU fully turned on.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>C1</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>First idle state. Stops CPU main internal clocks via software. Bus interface unit
+                                    and APIC are kept running at full speed.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>C2</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Stops CPU main internal clocks via hardware. State in which the processor maintains
+                                    all software-visible states, but may take longer to wake up through interrupts.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>C3</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Stops all CPU internal clocks. The processor does not need to keep its cache coherent,
+                                    but maintains other states. Some processors have variations of the C3 state that differ
+                                    in how long it takes to wake the processor through interrupts.</p>
+                              </td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  
+                  <p>To avoid needless power consumption, it is recommended to test your workloads with
+                     deep sleep states enabled versus deep sleep states disabled. For more information,
+                     refer to <a class="xref xref-sect2" href="bk07partivch04s03.html#sec-tuning-power-tools-cpupower-idle-info">the section called “Viewing kernel idle statistics with <code class="command">cpupower</code>
+                        ”</a> or the <code class="command">cpupower-idle-set(1)</code> man page.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-tuning-power-cpu-pstates">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>P-states (processor performance states)</h3>
+                  </header>
+                  
+                  
+                  <p>While a processor operates (in C0 state), it can be in one of several CPU performance
+                     states <code class="literal">(P-states)</code>. Whereas C-states are idle states (all but C0), <code class="literal">P-states</code> are operational states that relate to CPU frequency and voltage.</p>
+                  
+                  <p>The higher the P-state, the lower the frequency and voltage at which the processor
+                     runs. The number of P-states is processor-specific and the implementation differs
+                     across the different types. However, <code class="literal">P0</code> is always the highest-performance state (except for <a class="xref xref-sect2" href="#sec-tuning-cpu-power-turbo">the section called “Turbo features”</a>). Higher P-state numbers represent slower processor speeds and lower power consumption.
+                     For example, a processor in <code class="literal">P3</code> state runs more slowly and uses less power than a processor running in the <code class="literal">P1</code> state. To operate at any P-state, the processor must be in the <code class="literal">C0</code> state, which means that it is working and not idling. The CPU P-states are also defined
+                     in the ACPI specification, see <a class="link" href="https://uefi.org/sites/default/files/resources/ACPI_Spec_6_5_Aug29.pdf">https://uefi.org/sites/default/files/resources/ACPI_Spec_6_5_Aug29.pdf</a>.</p>
+                  
+                  <p>C-states and P-states can vary independently of one another.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-tuning-cpu-power-turbo">
+                  <header>
+                     <h3><span class="label">12<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Turbo features</h3>
+                  </header>
+                  
+                  
+                  
+                  <p>Turbo features allow to dynamically <code class="literal">overtick</code> active CPU cores while other cores are in deep sleep states. This increases the performance
+                     of active threads while still complying with Thermal Design Power (TDP) limits.</p>
+                  
+                  <p>However, the conditions under which a CPU core can use turbo frequencies are architecture-specific.
+                     Learn how to evaluate the efficiency of those new features in <a class="xref xref-sect1" href="bk07partivch04s03.html">the section called “The <code class="resource systemitem">cpupower</code> tools”</a>.</p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partivch03s04.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiv.html">Up</a></td>
+                  <td class="next"><a href="bk07partivch04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Impact</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>In-kernel governors</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

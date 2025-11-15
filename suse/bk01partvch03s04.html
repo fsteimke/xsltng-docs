@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>40.4.&nbsp;Starting the BIND name server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch03s03.html" rel="prev">
+      <link href="bk01partvch03s05.html" rel="next">
+      <link href="bk01partvch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch03.html">Up</a> <a href="bk01partvch03s05.html">Next</a> <a href="bk01partvch03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch03s04.html" db-id="d616951e57831" id="sec-dns-bind">
+            <header>
+               <h2><span class="label">40<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Starting the BIND name server</h2>
+            </header>
+            
+            
+            <p>On a <span class="phrase productname">SUSE® Linux Enterprise Server</span> system, the name server BIND (<em>Berkeley Internet Name Domain</em>) comes preconfigured, so it can be started right after installation without any problems.
+               Normally, if you already have an Internet connection and entered <code class="ipaddress systemitem">127.0.0.1</code> as the name server address for <code class="domainname systemitem">localhost</code> in <code class="filename">/var/run/netconfig/resolv.conf</code>, you already have a working name resolution without needing to know the DNS of the
+               provider. BIND carries out name resolution via the root name server, a notably slower
+               process. Normally, the DNS of the provider should be entered with its IP address in
+               the configuration file <code class="filename">/etc/named.conf</code> under <code class="systemitem">forwarders</code> to ensure effective and secure name resolution. If this works so far, the name server
+               runs as a pure <em>caching-only</em> name server. Only when you configure its own zones it becomes a proper DNS. Find
+               a simple example documented in <code class="filename">/usr/share/doc/packages/bind/config</code>.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Automatic adaptation of the name server information</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Depending on the type of Internet connection or the network connection, the name server
+                           information can automatically be adapted to the current conditions. To do this, set
+                           the <code class="systemitem">NETCONFIG_DNS_POLICY</code> variable in the <code class="filename">/etc/sysconfig/network/config</code> file to <code class="literal">auto</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>However, do not set up an official domain until one is assigned to you by the responsible
+               institution. Even if you have your own domain and it is managed by the provider, you
+               are better off not using it, because BIND would otherwise not forward requests for
+               this domain. The Web server at the provider, for example, would not be accessible
+               for this domain.</p>
+            
+            <p>To start the name server, enter the command <code class="command">systemctl start named</code> as <code class="systemitem username">root</code>. Check with <code class="command">systemctl status named</code> whether named (as the name server process is called) has been started successfully.
+               Test the name server immediately on the local system with the <code class="command">host</code> or <code class="command">dig</code> programs, which should return <code class="domainname systemitem">localhost</code> as the default server with the address <code class="ipaddress systemitem">127.0.0.1</code>. If this is not the case, <code class="filename">/var/run/netconfig/resolv.conf</code> may contain an incorrect name server entry or the file does not exist. For the first
+               test, enter <code class="command">host</code>&nbsp;<code class="option">127.0.0.1</code>, which should always work. If you get an error message, use <code class="command">systemctl status named</code> to see whether the server is running. If the name server does not start or behaves
+               unexpectedly, check the output of <code class="command">journalctl -e</code>.</p>
+            
+            <p>To use the name server of the provider (or one already running on your network) as
+               the forwarder, enter the corresponding IP address or addresses in the <code class="systemitem">options</code> section under <code class="systemitem">forwarders</code>. The addresses included in <a class="xref xref-example" href="#ex-forward">Example&nbsp;<span class="label">40<span class="sep">.</span>1</span>, “Forwarding options in named.conf”</a> are examples only. Adjust these entries to your own setup.</p>
+            
+            <div class="example formalobject" id="ex-forward">
+               
+               
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options {</code></span></span>
+<span class="line"><span class="ld"><code>        directory "/var/lib/named";</code></span></span>
+<span class="line"><span class="ld"><code>        forwarders { 10.11.12.13; 10.11.12.14; };</code></span></span>
+<span class="line"><span class="ld"><code>        listen-on { 127.0.0.1; 192.168.1.116; };</code></span></span>
+<span class="line"><span class="ld"><code>        allow-query { 127/8; 192.168/16 };</code></span></span>
+<span class="line"><span class="ld"><code>        notify no;</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">40<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Forwarding options in named.conf</div>
+               </header>
+            </div>
+            
+            <p>The <code class="systemitem">options</code> entry is followed by entries for the zone, <code class="domainname systemitem">localhost</code>, and <code class="systemitem">0.0.127.in-addr.arpa</code>. The <code class="literal">type hint</code> entry under <q>.</q> should always be present. The corresponding files do not need to be modified and
+               should work as they are. Also make sure that each entry is closed with a <q>;</q> and that the curly braces are in the correct places. After changing the configuration
+               file <code class="filename">/etc/named.conf</code> or the zone files, tell BIND to reread them with <code class="command">systemctl reload named</code>. Achieve the same by stopping and restarting the name server with <code class="command">systemctl restart named</code>. Stop the server at any time by entering <code class="command">systemctl stop named</code>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch03.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch03s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">40<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuration with YaST</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">40<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>The /etc/named.conf configuration file</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

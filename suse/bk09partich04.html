@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;4.&nbsp;Multi-tier caching for block device operations</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich03s03.html" rel="prev">
+      <link href="bk09partich04s02.html" rel="next">
+      <link href="bk09parti.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09parti.html">Up</a> <a href="bk09partich04s02.html">Next</a> <a href="bk09partich03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk09partich04.html" db-id="d616951e237957" id="cha-multitiercache" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">4</span><span class="sep">.&nbsp;</span>Multi-tier caching for block device operations</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>A multi-tier cache is a replicated/distributed cache that consists of at least two
+                  tiers: one is represented by slower but cheaper rotational block devices (hard disks),
+                  while the other is more expensive but performs faster data operations (for example
+                  SSD flash disks).</p>
+               
+               <p>SUSE Linux Enterprise Server implements two different solutions for caching between
+                  flash and rotational devices: <code class="resource systemitem">bcache</code> and <code class="resource systemitem">lvmcache</code>.</p>
+               </div>
+            <section class="sect1" id="sec-multitiercache-terminology">
+               <header>
+                  <h2><span class="label">4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>General terminology</h2>
+               </header>
+               
+               
+               <p>This section explains several terms often used when describing cache related features:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Migration</span></dt>
+                     <dd>
+                        
+                        <p>Movement of the primary copy of a logical block from one device to the other.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Promotion</span></dt>
+                     <dd>
+                        
+                        <p>Migration from the slow device to the fast device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Demotion</span></dt>
+                     <dd>
+                        
+                        <p>Migration from the fast device to the slow device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Origin device</span></dt>
+                     <dd>
+                        
+                        <p>The big and slower block device. It always contains a copy of the logical block, which
+                           may be out of date or kept in synchronization with the copy on the cache device (depending
+                           on policy).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Cache device</span></dt>
+                     <dd>
+                        
+                        <p>The small and faster block device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Metadata device</span></dt>
+                     <dd>
+                        
+                        <p>A small device that records which blocks are in the cache, which are dirty, and extra
+                           hints for use by the policy object. This information could be put on the cache device
+                           as well, but having it separate allows the volume manager to configure it differently,
+                           for example as a mirror for extra robustness. The metadata device may only be used
+                           by a single cache device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Dirty block</span></dt>
+                     <dd>
+                        
+                        <p>If some process writes to a block of data which is placed in the cache, the cached
+                           block is marked as <em>dirty</em> because it was overwritten in the cache and needs to be written back to the original
+                           device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Cache miss</span></dt>
+                     <dd>
+                        
+                        <p>A request for I/O operations is pointed to the cached device's cache first. If it
+                           cannot find the requested values, it looks in the device itself, which is slow. This
+                           is called a <em>cache miss</em>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Cache hit</span></dt>
+                     <dd>
+                        
+                        <p>When a requested value is found in the cached device's cache, it is served fast. This
+                           is called a <em>cache hit</em>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Cold cache</span></dt>
+                     <dd>
+                        
+                        <p>Cache that holds no values (is empty) and causes <em>cache misses</em>. As the cached block device operations progress, it gets filled with data and becomes
+                           <em>warm</em>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Warm cache</span></dt>
+                     <dd>
+                        
+                        <p>Cache that already holds some values and is likely to result in <em>cache hits</em>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk09parti.html">Up</a></td>
+                  <td class="next"><a href="bk09partich04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Mounting network storage devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Caching modes</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>14.2.&nbsp;Available I/O elevators with blk-mq I/O path</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvch01.html" rel="prev">
+      <link href="bk07partvch01s03.html" rel="next">
+      <link href="bk07partvch01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvch01.html">Up</a> <a href="bk07partvch01s03.html">Next</a> <a href="bk07partvch01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvch01s02.html" db-id="d616951e217750" id="cha-tuning-io-schedulers-blkmq">
+            <header>
+               <h2><span class="label">14<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Available I/O elevators with blk-mq I/O path</h2>
+            </header>
+            
+            
+            <p>Below is a list of elevators available on <span class="phrase productname">SUSE Linux Enterprise Server</span> for devices that use the blk-mq I/O path. If an elevator has tunable parameters,
+               they can be set with the command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>echo <em class="replaceable">VALUE</em> &gt; /sys/block/<em class="replaceable">DEVICE</em>/queue/iosched/<em class="replaceable">TUNABLE</em></code></span></span></pre>
+            </div>
+            
+            <p>In the command above, <em class="replaceable">VALUE</em> is the desired value for the <em class="replaceable">TUNABLE</em> and <em class="replaceable">DEVICE</em> is the block device.</p>
+            
+            <p>To find out what elevators are available for a device (<code class="systemitem">sda</code> for example), run the following command (the currently selected scheduler is listed
+               in brackets):</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /sys/block/sda/queue/scheduler</code></span></span>
+<span class="line"><span class="ld"><code>[mq-deadline] kyber bfq none</code></span></span></pre>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Scheduler options when switching from Legacy Block to blk-mq I/O path</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When switching from legacy block to blk-mq I/O path for a device, the <code class="option">none</code> option is roughly comparable to <code class="option">noop</code>, <code class="option">mq-deadline</code> is comparable to <code class="option">deadline</code>, and <code class="option">bfq</code> is comparable to <code class="option">cfq</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-tuning-io-schedulers-mqdeadline">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">MQ-DEADLINE</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="resource systemitem">MQ-DEADLINE</code> is a latency-oriented I/O scheduler. <code class="resource systemitem">MQ-DEADLINE</code> has the following tunable parameters:</p>
+               
+               <div class="formalobject table" id="tab-tunables-mq-deadline">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">14<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                        <code class="resource systemitem">MQ-DEADLINE</code> tunable parameters</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 30%">
+                        <col style="width: 70%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>File</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Description</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="filename">writes_starved</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Controls how many times reads are preferred over writes. A value of <code class="literal">3</code> means that three read operations can be done before writes and reads are dispatched
+                                 on the same selection criteria.</p>
+                              <p>Default is <code class="literal">3</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">read_expire</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Sets the deadline (current time plus the <code class="literal">read_expire</code> value) for read operations in milliseconds.</p>
+                              <p>Default is <code class="literal">500</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">write_expire</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Sets the deadline (current time plus the <code class="literal">write_expire</code> value) for write operations in milliseconds.</p>
+                              <p>Default is <code class="literal">5000</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">front_merges</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Enables (1) or disables (0) attempts to front merge requests.</p>
+                              <p>Default is <code class="literal">1</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">fifo_batch</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Sets the maximum number of requests per batch (deadline expiration is only checked
+                                 for batches). This parameter allows to balance between latency and throughput. When
+                                 set to <code class="literal">1</code> (that is, one request per batch), it results in <q>first come, first served</q> behavior and lowest latency, with higher values increasing the throughput.</p>
+                              <p>Default is <code class="literal">16</code>.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-io-schedulers-none">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">NONE</code>
+                     </h3>
+               </header>
+               
+               
+               <p>When <code class="resource systemitem">NONE</code> is selected as I/O elevator option for blk-mq, no I/O scheduler is used, and I/O
+                  requests are passed down to the device without further I/O scheduling interaction.</p>
+               
+               <p><code class="resource systemitem">NONE</code> is the default for NVM Express devices. With no overhead compared to other I/O elevator
+                  options, it is considered the fastest way of passing down I/O requests on multiple
+                  queues to such devices.</p>
+               
+               <p>There are no tunable parameters for <code class="resource systemitem">NONE</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-io-schedulers-bfq">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">BFQ</code> (Budget Fair Queueing)</h3>
+               </header>
+               
+               
+               <p><code class="resource systemitem">BFQ</code> is a fairness-oriented scheduler. It is described as "a proportional-share storage-I/O
+                  scheduling algorithm based on the slice-by-slice service scheme of CFQ. But BFQ assigns
+                  budgets, measured in number of sectors, to processes instead of time slices." (Source:
+                  <a class="link" href="https://github.com/torvalds/linux/blob/6f7da290413ba713f0cdd9ff1a2a9bb129ef4f6c/block/bfq-iosched.c#L31">linux-4.12/block/bfq-iosched.c</a>)</p>
+               
+               <p><code class="resource systemitem">BFQ</code> allows to assign I/O priorities to tasks which are taken into account during scheduling
+                  decisions (see <a class="xref xref-sect2" href="bk07partivch01s03.html#cha-tuning-resources-disk-ionice">the section called “Prioritizing disk access with <code class="command">ionice</code>
+                     ”</a>).</p>
+               
+               <p><code class="resource systemitem">BFQ</code> scheduler has the following tunable parameters:</p>
+               
+               <div class="formalobject table" id="tab-tunables-bfq">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">14<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                        <code class="resource systemitem">BFQ</code> tunable parameters</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 30%">
+                        <col style="width: 70%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>File</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Description</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="filename">slice_idle</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Value in milliseconds specifies how long to idle, waiting for next request on an empty
+                                 queue.</p>
+                              <p>Default is <code class="literal">8</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">slice_idle_us</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Same as <code class="filename">slice_idle</code> but in microseconds.</p>
+                              <p>Default is <code class="literal">8000</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">low_latency</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Enables (1) or disables (0) <code class="resource systemitem">BFQ</code>'s low latency mode. This mode prioritizes certain applications (for example, if interactive)
+                                 such that they observe lower latency.</p>
+                              <p>Default is <code class="literal">1</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">back_seek_max</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Maximum value (in Kbytes) for backward seeking.</p>
+                              <p>Default is <code class="literal">16384</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">back_seek_penalty</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Used to compute the cost of backward seeking.</p>
+                              <p>Default is <code class="literal">2</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">fifo_expire_async</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Value (in milliseconds) is used to set the timeout of asynchronous requests.</p>
+                              <p>Default is <code class="literal">250</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">fifo_expire_sync</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Value in milliseconds specifies the timeout of synchronous requests.</p>
+                              <p>Default is <code class="literal">125</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">timeout_sync</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Maximum time in milliseconds that a task (queue) is serviced after it has been selected.</p>
+                              <p>Default is <code class="literal">124</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">max_budget</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Limit for number of sectors that are served at maximum within <code class="literal">timeout_sync</code>. If set to <code class="literal">0</code><code class="resource systemitem">BFQ</code> internally calculates a value based on <code class="filename">timeout_sync</code> and an estimated peak rate.</p>
+                              <p>Default is <code class="literal">0</code> (set to auto-tuning).</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">strict_guarantees</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Enables (1) or disables (0) <code class="resource systemitem">BFQ</code> specific queue handling required to give stricter bandwidth sharing guarantees under
+                                 certain conditions.</p>
+                              <p>Default is <code class="literal">0</code>.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-io-schedulers-kyber">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">KYBER</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="resource systemitem">KYBER</code> is a latency-oriented I/O scheduler. It makes it possible to set target latencies
+                  for reads and synchronous writes and throttles I/O requests in order to try to meet
+                  these target latencies.</p>
+               
+               <div class="formalobject table" id="tab-tunables-kyber">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">14<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                        <code class="resource systemitem">KYBER</code> tunable parameters</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 30%">
+                        <col style="width: 70%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>File</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Description</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="filename">read_lat_nsec</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Sets the target latency for read operations in nanoseconds.</p>
+                              <p>Default is <code class="literal">2000000</code>.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="filename">write_lat_nsec</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Sets the target latency for write operations in nanoseconds.</p>
+                              <p>Default is <code class="literal">10000000</code>.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvch01.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvch01.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">14</span><span class="sep">.&nbsp;</span>Tuning I/O performance</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">14<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>I/O barrier tuning</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

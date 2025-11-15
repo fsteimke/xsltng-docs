@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>7.4.&nbsp;Using OProfile</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiiich04s03.html" rel="prev">
+      <link href="bk07partiiich04s05.html" rel="next">
+      <link href="bk07partiiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiiich04.html">Up</a> <a href="bk07partiiich04s05.html">Next</a> <a href="bk07partiiich04s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partiiich04s04.html" db-id="d616951e210369" id="sec-tuning-oprofile-using">
+            <header>
+               <h2><span class="label">7<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using OProfile</h2>
+            </header>
+            
+            
+            <p>With OProfile, you can profile both the kernel and applications. When profiling the
+               kernel, tell OProfile where to find the <code class="filename">vmlinuz*</code> file. Use the <code class="option">--vmlinux</code> option and point it to <code class="filename">vmlinuz*</code> (generally available in <code class="filename">/boot</code>). If you need to profile kernel modules, OProfile does this by default. However,
+               make sure you read <a class="link" href="https://oprofile.sourceforge.net/doc/kernel-profiling.html">https://oprofile.sourceforge.net/doc/kernel-profiling.html</a>.</p>
+            
+            <p>Most applications do not need to profile the kernel, therefore you should use the
+               <code class="option">--no-vmlinux</code> option to reduce the amount of information.</p>
+            
+            <section class="sect2" id="sec-tuning-oprofile-using-report">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating a report</h3>
+               </header>
+               
+               
+               <p>Starting the daemon, collecting data, stopping the daemon, and creating a report for
+                  the application <em class="replaceable">COMMAND</em>.</p>
+               
+               <div class="informalobject procedure" id="sec-tuning-oprofile-using-report_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open a shell and log in as <code class="systemitem username">root</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Decide whether to profile with or without the Linux kernel:</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p class="formalpara"><span class="title">Profile with the Linux kernel</span><span class="para">Execute the following commands, because <code class="command">operf</code> can only work with uncompressed images:</span></p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cp /boot/vmlinux-`uname -r`.gz /tmp</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>gunzip /tmp/vmlinux*.gz</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>operf--vmlinux=/tmp/vmlinux* <em class="replaceable">COMMAND</em></code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p class="formalpara"><span class="title">Profile without the Linux kernel</span><span class="para">Use the following command:</span></p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>operf --no-vmlinux <em class="replaceable">COMMAND</em></code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>To see which functions call other functions in the output, additionally use the <code class="option">--callgraph</code> option and set a maximum <em class="replaceable">DEPTH</em>:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>operf --no-vmlinux --callgraph</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">DEPTH</em><em class="replaceable">COMMAND</em></code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><code class="command">operf</code> writes its data to <code class="filename"><em class="replaceable">CUR_DIR</em>/oprofile_data/samples/current</code>. After the <code class="command">operf</code> command is finished (or is aborted by <span class="keycombo"><span class="control keycap">Ctrl</span><span class="keycap">C</span></span>), the data can be analyzed with <code class="command">oreport</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>opreport</code></span></span>
+<span class="line"><span class="ld"><code>Overflow stats not available</code></span></span>
+<span class="line"><span class="ld"><code>CPU: CPU with timer interrupt, speed 0 MHz (estimated)</code></span></span>
+<span class="line"><span class="ld"><code>Profiling through timer interrupt</code></span></span>
+<span class="line"><span class="ld"><code>          TIMER:0|</code></span></span>
+<span class="line"><span class="ld"><code>  samples|      %|</code></span></span>
+<span class="line"><span class="ld"><code>------------------</code></span></span>
+<span class="line"><span class="ld"><code>    84877 98.3226 no-vmlinux</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-oprofile-events">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Getting event configurations</h3>
+               </header>
+               
+               
+               <p>The general procedure for event configuration is as follows:</p>
+               
+               <div class="informalobject procedure" id="sec-tuning-oprofile-events_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Use first the events <code class="literal">CPU-CLK_UNHALTED</code> and <code class="literal">INST_RETIRED</code> to find optimization opportunities.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Use specific events to find bottlenecks. To list them, use the command <code class="command">perf list</code>.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>If you need to profile certain events, first check the available events supported
+                  by your processor with the <code class="command">ophelp</code> command (example output generated from Intel Core i5 CPU):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ophelp</code></code></span></span>
+<span class="line"><span class="ld"><code>oprofile: available events for CPU type "Intel Architectural Perfmon"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>See Intel 64 and IA-32 Architectures Software Developer's Manual</code></span></span>
+<span class="line"><span class="ld"><code>Volume 3B (Document 253669) Chapter 18 for architectural perfmon events</code></span></span>
+<span class="line"><span class="ld"><code>This is a limited set of fallback events because oprofile does not know your CPU</code></span></span>
+<span class="line"><span class="ld"><code>CPU_CLK_UNHALTED: (counter: all))</code></span></span>
+<span class="line"><span class="ld"><code>        Clock cycles when not halted (min count: 6000)</code></span></span>
+<span class="line"><span class="ld"><code>INST_RETIRED: (counter: all))</code></span></span>
+<span class="line"><span class="ld"><code>        number of instructions retired (min count: 6000)</code></span></span>
+<span class="line"><span class="ld"><code>LLC_MISSES: (counter: all))</code></span></span>
+<span class="line"><span class="ld"><code>        Last level cache demand requests from this core that missed the LLC (min count: 6000)</code></span></span>
+<span class="line"><span class="ld"><code>        Unit masks (default 0x41)</code></span></span>
+<span class="line"><span class="ld"><code>        ----------</code></span></span>
+<span class="line"><span class="ld"><code>        0x41: No unit mask</code></span></span>
+<span class="line"><span class="ld"><code>LLC_REFS: (counter: all))</code></span></span>
+<span class="line"><span class="ld"><code>        Last level cache demand requests from this core (min count: 6000)</code></span></span>
+<span class="line"><span class="ld"><code>        Unit masks (default 0x4f)</code></span></span>
+<span class="line"><span class="ld"><code>        ----------</code></span></span>
+<span class="line"><span class="ld"><code>        0x4f: No unit mask</code></span></span>
+<span class="line"><span class="ld"><code>BR_MISS_PRED_RETIRED: (counter: all))</code></span></span>
+<span class="line"><span class="ld"><code>        number of mispredicted branches retired (precise) (min count: 500)</code></span></span></pre>
+               </div>
+               
+               <p>Specify the performance counter events with the option <code class="option">--event</code>. Multiple options are possible. This option needs an event name (from <code class="command">ophelp</code>) and a sample rate, for example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>operf --events CPU_CLK_UNHALTED:100000</code></span></span></pre>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Setting sampling rates with <code class="literal">CPU_CLK_UNHALTED</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Setting low sampling rates can seriously impair the system performance while high
+                              sample rates can disrupt the system to such a high degree that the data is useless.
+                              It is recommended to tune the performance metric for being monitored with and without
+                              OProfile and to experimentally determine the minimum sample rate that disrupts the
+                              performance the least.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiiich04s03.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiiich04.html">Up</a></td>
+                  <td class="next"><a href="bk07partiiich04s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Available OProfile utilities</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">7<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Generating reports</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

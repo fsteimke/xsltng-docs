@@ -1,0 +1,230 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>22.4.&nbsp;Managing user and host encryption keys</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich02s03.html" rel="prev">
+      <link href="bk06partiiich02s05.html" rel="next">
+      <link href="bk06partiiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich02.html">Up</a> <a href="bk06partiiich02s05.html">Next</a> <a href="bk06partiiich02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich02s04.html" db-id="d616951e176366" id="sec-ssh-authentic-gen-key">
+            <header>
+               <h2><span class="label">22<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing user and host encryption keys</h2>
+            </header>
+            
+            
+            <p>There are several key types to choose from: DSA, RSA, ECDSA, ECDSA-SK, Ed25519, and
+               Ed25519-SK. DSA was deprecated several years ago, and was disabled in OpenSSH 7.0
+               and should not be used. RSA is the most universal as it is older, and more widely
+               used. (As of OpenSSH 8.2, RSA is deprecated for host keys. Use ECDSA or Ed25519 for
+               host keys.)</p>
+            
+            <p>Ed25519 and ECDSA are stronger and faster. Ed25519 is considered to be the strongest.
+               If you must support older clients that do not support Ed25519 or ECDSA, create host
+               keys in all three formats.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Older clients are unsafe</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Some older SSH clients do not support ECDSA and ED25519. ECDSA and ED25519 were released
+                           with OpenSSH 6.5 in 2014. It is important to keep security services updated, and,
+                           if possible, to not allow unsafe old clients.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>SSH keys serve two purposes: authenticating servers to clients, and authenticating
+               clients to servers (see <a class="xref xref-sect1" href="bk06partiiich02s06.html">the section called “Public key authentication”</a>). Server host keys are stored in <code class="filename">/etc/ssh</code>. Users' personal keys are stored in <code class="filename">/home/<em class="replaceable">user</em>/.ssh</code>.</p>
+            
+            <p><code class="filename">/home/<em class="replaceable">user</em>/.ssh</code> is created when the user creates a new SSH key.</p>
+            
+            <p>Host keys must not have passphrases.</p>
+            
+            <p>In most cases, private user keys should have strong passphrases.</p>
+            
+            <section class="sect2" id="sec-create-ssh-key-client">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating user SSH key pairs</h3>
+               </header>
+               
+               
+               <p>The following procedure shows how to create user OpenSSH encryption keys.</p>
+               
+               <div class="formalobject procedure" id="pro-create-ssh-client-keys">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">22<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating default and customized keys</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>To generate a user key pair with the default parameters (RSA, 3072 bits), use the
+                           <code class="command">ssh-keygen</code> command with no options. Protect your private key with a strong passphrase:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">ssh-keygen</code></code></span></span>
+<span class="line"><span class="ld"><code>Generating public/private rsa key pair.</code></span></span>
+<span class="line"><span class="ld"><code>Enter file in which to save the key (/home/tux/.ssh/id_rsa):</code></span></span>
+<span class="line"><span class="ld"><code>Enter passphrase (empty for no passphrase):</code></span></span>
+<span class="line"><span class="ld"><code>Enter same passphrase again:</code></span></span>
+<span class="line"><span class="ld"><code>Your identification has been saved in id_rsa</code></span></span>
+<span class="line"><span class="ld"><code>Your public key has been saved in id_rsa.pub</code></span></span>
+<span class="line"><span class="ld"><code>The key fingerprint is:</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:z0uJIuc7Doy07bFTe1ppZHLVrkD/bWWlBAF/PcHjblU user@host2</code></span></span>
+<span class="line"><span class="ld"><code>The key's randomart image is:</code></span></span>
+<span class="line"><span class="ld"><code>+---[RSA 3072]----+</code></span></span>
+<span class="line"><span class="ld"><code>|          ..o... |</code></span></span>
+<span class="line"><span class="ld"><code>|           o . +E|</code></span></span>
+<span class="line"><span class="ld"><code>|        . . o +.=|</code></span></span>
+<span class="line"><span class="ld"><code>|       . o . o o+|</code></span></span>
+<span class="line"><span class="ld"><code>|  .   . S . . o +|</code></span></span>
+<span class="line"><span class="ld"><code>| . =  .= * + . = |</code></span></span>
+<span class="line"><span class="ld"><code>|  o *.o.= * . +  |</code></span></span>
+<span class="line"><span class="ld"><code>|   ..Bo+.. . .   |</code></span></span>
+<span class="line"><span class="ld"><code>|    oo==  .      |</code></span></span>
+<span class="line"><span class="ld"><code>+----[SHA256]-----+</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create an RSA key pair with a longer bit length:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">ssh-keygen -b 4096</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>OpenSSH RSA keys can be a maximum of 16,384 bits. However, longer bit lengths are
+                           not necessarily more desirable. See the GnuPG FAQ for more information, <a class="link" href="https://www.gnupg.org/faq/gnupg-faq.html#no_default_of_rsa4096">https://www.gnupg.org/faq/gnupg-faq.html#no_default_of_rsa4096</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>You may create as many user keys as you want, for accessing different servers. Each
+                           key pair must have a unique name, and optionally, a comment. These help you remember
+                           what each key pair is for. Create an RSA key pair with a custom name and a comment:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">ssh-keygen -f <em class="replaceable">backup-server-key -C "infrastructure backup server"</em></code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create an Ed25519 key pair with a custom name and a comment:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">ssh-keygen -t ed25519 -f <em class="replaceable">ldap-server-key -C "Internal LDAP server"</em></code></code></span></span></pre>
+                        </div>
+                        
+                        <p>Ed25519 keys are fixed at 256 bits, which is equivalent in cryptographic strength
+                           to RSA 4096.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-create-ssh-host-keys">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating SSH server host keys</h3>
+               </header>
+               
+               
+               <p>Host keys are managed a little differently. A host key must not have a passphrase,
+                  and the key pairs are stored in <code class="filename">/etc/ssh</code>. OpenSSH automatically generates a set of host keys when it is installed, like the
+                  following example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">ls -l /etc/ssh</code></code></span></span>
+<span class="line"><span class="ld"><code>total 608</code></span></span>
+<span class="line"><span class="ld"><code>-rw------- 1 root root 577834 2021-05-06 04:48 moduli</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r-- 1 root root   2403 2021-05-06 04:48 ssh_config</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r----- 1 root root   3420 2021-05-06 04:48 sshd_config</code></span></span>
+<span class="line"><span class="ld"><code>-rw------- 1 root root   1381 2022-02-10 06:55 ssh_host_dsa_key</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r-- 1 root root    604 2022-02-10 06:55 ssh_host_dsa_key.pub</code></span></span>
+<span class="line"><span class="ld"><code>-rw------- 1 root root    505 2022-02-10 06:55 ssh_host_ecdsa_key</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r-- 1 root root    176 2022-02-10 06:55 ssh_host_ecdsa_key.pub</code></span></span>
+<span class="line"><span class="ld"><code>-rw------- 1 root root    411 2022-02-10 06:55 ssh_host_ed25519_key</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r-- 1 root root     96 2022-02-10 06:55 ssh_host_ed25519_key.pub</code></span></span>
+<span class="line"><span class="ld"><code>-rw------- 1 root root   2602 2022-02-10 06:55 ssh_host_rsa_key</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r-- 1 root root    568 2022-02-10 06:55 ssh_host_rsa_key.pub</code></span></span></pre>
+               </div>
+               
+               <p><code class="command">ssh-keygen</code> has a special option, <code class="option">-A</code>, for creating new host keys. This creates new keys for each of the key types for
+                  which host keys do not exist, with the default key file path, an empty passphrase,
+                  default bit size for the key type, and an empty comment. The following example creates
+                  a complete new set of host keys by first deleting the existing keys, then creating
+                  a new set:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rm /etc/ssh/ssh_host*</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen -A</code></code></span></span></pre>
+               </div>
+               
+               <p>You can replace selected key pairs by first deleting only the keys you want to replace,
+                  because <code class="command">ssh-keygen -A</code> does not replace existing keys.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Do not use DSA keys</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><code class="command">ssh-keygen -A</code> creates DSA keys, even though they have been deprecated as unsafe for several years.
+                              In OpenSSH 7.0 they are still created, but disabled by not being listed in <code class="filename">sshd_config</code>. You may safely delete DSA keys.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When you want to rotate host keys (see <a class="xref xref-sect1" href="bk06partiiich02s05.html">the section called “Rotating host keys”</a>), you must create the new keys individually, because they must exist at the same
+                  time as your old host keys. Your users authenticate with the old keys, and then receive
+                  the list of new keys. They need unique names, to not conflict with the old keys. The
+                  following example creates new RSA and Ed25519 host keys, labeled with the year and
+                  month they were created. Remember, the new host keys must not have passphrases:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">cd /etc/ssh</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen -b 4096 -f "<em class="replaceable">SSH_HOST_RSA_2022_02</em>"</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen -t ed25519 -f "<em class="replaceable">SSH_HOST_ED25519_2022_02</em>"</code></code></span></span></pre>
+               </div>
+               
+               <p>You may name your new keys whatever you want.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich02.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">22<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Password authentication</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Rotating host keys</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

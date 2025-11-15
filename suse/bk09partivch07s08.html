@@ -1,0 +1,619 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>20.8.&nbsp;Advanced topics</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch07s07.html" rel="prev">
+      <link href="bk09partivch07s09.html" rel="next">
+      <link href="bk09partivch07.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch07.html">Up</a> <a href="bk09partivch07s09.html">Next</a> <a href="bk09partivch07s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch07s08.html" db-id="d616951e262319" id="sec-samba-advanced">
+            <header>
+               <h2><span class="label">20<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Advanced topics</h2>
+            </header>
+            
+            
+            <p>This section introduces more advanced techniques to manage both the client and server
+               parts of the Samba suite.</p>
+            
+            <section class="sect2" id="sec-automount-systemd">
+               <header>
+                  <h3><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Automounting CIFS file system using <code class="daemon systemitem">systemd</code>
+                     </h3>
+               </header>
+               
+               
+               <p>You can use <code class="daemon systemitem">systemd</code> to mount CIFS shares on startup. To do so, proceed as described further:</p>
+               
+               <div class="informalobject procedure" id="sec-automount-systemd_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create the mount points:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>mkdir -p <em class="replaceable">PATH_SERVER_SHARED_FOLDER</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>where <em class="replaceable">PATH_SERVER_SHARED_FOLDER</em> is <code class="literal">/cifs/shared</code> in further steps.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create the <code class="daemon systemitem">systemd</code> unit file and generate a file name from the path specified in the previous step where
+                           "/" are replaced with "-", for example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> touch /etc/systemd/system/cifs-shared.mount</code></span></span></pre>
+                        </div>
+                        
+                        <p>with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Description=CIFS share from The-Server</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Mount]</code></span></span>
+<span class="line"><span class="ld"><code>What=//The-Server/Shared-Folder</code></span></span>
+<span class="line"><span class="ld"><code>Where=/cifs/shared</code></span></span>
+<span class="line"><span class="ld"><code>Type=cifs</code></span></span>
+<span class="line"><span class="ld"><code>Options=rw,username=vagrant,password=admin</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=multi-user.target</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enable the service:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable cifs-shared.mount</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the service:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start cifs-shared.mount</code></span></span></pre>
+                        </div>
+                        
+                        <p>To verify that the service is running, run the command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl status cifs-shared.mount</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To confirm that the CIFS shared path is available, try the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span> cd /cifs/shared</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -l</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>total 0</code></span></span>
+<span class="line"><span class="ld"><code>-rwxrwxrwx. 1 root    root    0 Oct 24 22:31 hello-world-cifs.txt</code></span></span>
+<span class="line"><span class="ld"><code>drwxrwxrwx. 2 root    root    0 Oct 24 22:31 subfolder</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r--. 1 vagrant vagrant 0 Oct 28 21:51 testfile.txt</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-samba-advanced-compress">
+               <header>
+                  <h3><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Transparent file compression on Btrfs</h3>
+               </header>
+               
+               
+               <p>Samba allows clients to remotely manipulate file and directory compression flags for
+                  shares placed on the Btrfs file system. Windows Explorer provides the ability to flag
+                  files/directories for transparent compression via the <span class="menuchoice"><span class="guimenu">File</span><span class="guimenu">Properties</span><span class="guimenu">Advanced</span></span> dialog:</p>
+               
+               <div class="figure formalobject" id="sec-samba-advanced-compress_fig1">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><picture class="imageobject"><img src="media/samba_win_expl_advattr.png"></picture></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">20<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Windows Explorer <span class="guimenu">Advanced Attributes</span> dialog</div>
+                  </header>
+               </div>
+               
+               <p>Files flagged for compression are transparently compressed and decompressed by the
+                  underlying file system when accessed or modified. This normally results in storage
+                  capacity savings at the expense of extra CPU overhead when accessing the file. New
+                  files and directories inherit the compression flag from the parent directory, unless
+                  created with the FILE_NO_COMPRESSION option.</p>
+               
+               <p>Windows Explorer presents compressed files and directories visually differently to
+                  those that are not compressed:</p>
+               
+               <div class="figure formalobject" id="sec-samba-advanced-compress_fig2">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><picture class="imageobject"><img src="media/samba_win_expl_view_compressed.png"></picture></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">20<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Windows Explorer directory listing with compressed files</div>
+                  </header>
+               </div>
+               
+               <p>You can enable Samba share compression either manually by adding</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vfs objects = btrfs</code></span></span></pre>
+               </div>
+               
+               <p>to the share configuration in <code class="filename">/etc/samba/smb.conf</code>, or using YaST: <span class="menuchoice"><span class="guimenu">Network Services</span><span class="guimenu">Samba Server</span><span class="guimenu">Add</span></span>, and checking <span class="guimenu">Utilize Btrfs Features</span>.</p>
+               
+               <p>A general overview of compression on Btrfs can be found in <a class="xref xref-sect3" href="bk09partich01s02.html#sec-filesystems-major-btrfs-compress">the section called “Mounting compressed Btrfs file systems”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-samba-advanced-snapshots">
+               <header>
+                  <h3><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Snapshots</h3>
+               </header>
+               
+               
+               <p>Snapshots, also called Shadow Copies, are copies of the state of a file system subvolume
+                  at a certain point in time. Snapper is the tool to manage these snapshots in Linux.
+                  Snapshots are supported on the Btrfs file system or thinly provisioned LVM volumes.
+                  The Samba suite supports managing remote snapshots through the FSRVP protocol on both
+                  the server and client side.</p>
+               
+               <section class="sect3" id="sec-samba-advanced-snapshots-client">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Previous versions</h4>
+                  </header>
+                  
+                  
+                  <p>Snapshots on a Samba server can be exposed to remote Windows clients as previous versions
+                     of files or directories.</p>
+                  
+                  <p>To enable snapshots on a Samba server, the following conditions must be fulfilled:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>The SMB network share resides on a Btrfs subvolume.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The SMB network share path has a related Snapper configuration file. You can create
+                           the snapper file with</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c &lt;cfg_name&gt; create-config <code class="option">/path/to/share</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>For more information on Snapper, see <a class="xref xref-chapter" href="bk01partich10.html">Chapter&nbsp;<span class="label">10</span>, System recovery and snapshot management with Snapper</a>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The snapshot directory tree must allow access for relevant users. For more information,
+                           see the PERMISSIONS section of the vfs_snapper manual page (<code class="command">man 8 vfs_snapper</code>).</p>
+                        </li>
+                     </ul>
+                  
+                  <p>To support remote snapshots, you need to modify the <code class="filename">/etc/samba/smb.conf</code> file. You can do this either with <span class="menuchoice"><span class="guimenu">YaST</span><span class="guimenu">Network Services</span><span class="guimenu">Samba Server</span></span>, or manually by enhancing the relevant share section with</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vfs objects = snapper</code></span></span></pre>
+                  </div>
+                  
+                  <p>Note that you need to restart the Samba service for manual changes to <code class="filename">smb.conf</code> to take effect:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart nmb smb</code></span></span></pre>
+                  </div>
+                  
+                  <div class="figure formalobject" id="fig-yast2-samba-snapshot">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><picture class="imageobject"><img src="media/yast2_samba_snapshot.png"></picture></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">20<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Adding a new Samba share with snapshots enabled</div>
+                     </header>
+                  </div>
+                  
+                  <p>After being configured, snapshots created by Snapper for the Samba share path can
+                     be accessed from Windows Explorer from a file or directory's <span class="guimenu">Previous Versions</span> tab.</p>
+                  
+                  <div class="figure formalobject" id="fig-samba-win-explorer">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><picture class="imageobject"><img src="media/samba_winexpl_previous_versions.png"></picture></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">20<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>The <span class="guimenu">Previous versions</span> tab in Windows explorer</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-samba-advanced-snapshots-server">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Remote share snapshots</h4>
+                  </header>
+                  
+                  
+                  <p>By default, snapshots can only be created and deleted on the Samba server locally,
+                     via the Snapper command line utility, or using Snapper's timeline feature.</p>
+                  
+                  <p>Samba can be configured to process share snapshot creation and deletion requests from
+                     remote hosts using the File Server Remote VSS Protocol (FSRVP).</p>
+                  
+                  <p>In addition to the configuration and prerequisites documented in <a class="xref xref-sect3" href="#sec-samba-advanced-snapshots-client">the section called “Previous versions”</a>, the following global configuration is required in <code class="filename">/etc/samba/smb.conf</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[global]</code></span></span>
+<span class="line"><span class="ld"><code>rpc_daemon:fssd = fork</code></span></span>
+<span class="line"><span class="ld"><code>registry shares = yes</code></span></span>
+<span class="line"><span class="ld"><code>include = registry</code></span></span></pre>
+                  </div>
+                  
+                  <p>FSRVP clients, including Samba's <code class="command">rpcclient</code> and Windows Server 2012 <code class="command">DiskShadow.exe</code>, can then instruct Samba to create or delete a snapshot for a given share, and expose
+                     the snapshot as a new share.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-samba-advanced-snapshots-client-linux">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Managing snapshots remotely from Linux with <code class="command">rpcclient</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="systemitem">samba-client</code> package contains an FSRVP client that can remotely request a Windows/Samba server
+                     to create and expose a snapshot of a given share. You can then use existing tools
+                     in <span class="phrase productname">SUSE Linux Enterprise Server</span> to mount the exposed share and back up its files. Requests to the server are sent
+                     using the <code class="command">rpcclient</code> binary.</p>
+                  
+                  <div class="example formalobject" id="sec-samba-advanced-snapshots-client-linux_ex1">
+                     
+                     
+                     <p>Connect to <code class="literal">win-server.example.com</code> server as an administrator in an <code class="literal">EXAMPLE</code> domain:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient -U '<em class="replaceable">EXAMPLE</em>\Administrator' ncacn_np:<em class="replaceable">win-server.example.com</em>[ndr64,sign]</code></span></span>
+<span class="line"><span class="ld"><code>Enter EXAMPLE/Administrator's password:</code></span></span></pre>
+                     </div>
+                     
+                     <p>Check that the SMB share is visible for <code class="command">rpcclient</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient $&gt; netshareenum</code></span></span>
+<span class="line"><span class="ld"><code>netname: windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>remark:</code></span></span>
+<span class="line"><span class="ld"><code>path:   C:\Shares\windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>password:       (null)</code></span></span></pre>
+                     </div>
+                     
+                     <p>Check that the SMB share supports snapshot creation:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient $&gt; fss_is_path_sup windows_server_2012_share \</code></span></span>
+<span class="line"><span class="ld"><code>UNC \\WIN-SERVER\windows_server_2012_share\ supports shadow copy requests</code></span></span></pre>
+                     </div>
+                     
+                     <p>Request the creation of a share snapshot:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient $&gt; fss_create_expose backup ro windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6: shadow-copy set created</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6(1c26544e-8251-445f-be89-d1e0a3938777): \</code></span></span>
+<span class="line"><span class="ld"><code>\\WIN-SERVER\windows_server_2012_share\ shadow-copy added to set</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6: prepare completed in 0 secs</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6: commit completed in 1 secs</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6(1c26544e-8251-445f-be89-d1e0a3938777): \</code></span></span>
+<span class="line"><span class="ld"><code>share windows_server_2012_share@{1C26544E-8251-445F-BE89-D1E0A3938777} \</code></span></span>
+<span class="line"><span class="ld"><code>exposed as a snapshot of \\WIN-SERVER\windows_server_2012_share\</code></span></span></pre>
+                     </div>
+                     
+                     <p>Confirm that the snapshot share is exposed by the server:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient $&gt; netshareenum</code></span></span>
+<span class="line"><span class="ld"><code>netname: windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>remark:</code></span></span>
+<span class="line"><span class="ld"><code>path:   C:\Shares\windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>password:       (null)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>netname: windows_server_2012_share@{1C26544E-8251-445F-BE89-D1E0A3938777}</code></span></span>
+<span class="line"><span class="ld"><code>remark: (null)</code></span></span>
+<span class="line"><span class="ld"><code>path:   \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy{F6E6507E-F537-11E3-9404-B8AC6F927453}\Shares\windows_server_2012_share\</code></span></span>
+<span class="line"><span class="ld"><code>password:       (null)</code></span></span></pre>
+                     </div>
+                     
+                     <p>Attempt to delete the snapshot share:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient $&gt; fss_delete windows_server_2012_share \</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6 1c26544e-8251-445f-be89-d1e0a3938777</code></span></span>
+<span class="line"><span class="ld"><code>13fe880e-e232-493d-87e9-402f21019fb6(1c26544e-8251-445f-be89-d1e0a3938777): \</code></span></span>
+<span class="line"><span class="ld"><code>\\WIN-SERVER\windows_server_2012_share\ shadow-copy deleted</code></span></span></pre>
+                     </div>
+                     
+                     <p>Confirm that the snapshot share has been removed by the server:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>rpcclient $&gt; netshareenum</code></span></span>
+<span class="line"><span class="ld"><code>netname: windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>remark:</code></span></span>
+<span class="line"><span class="ld"><code>path:   C:\Shares\windows_server_2012_share</code></span></span>
+<span class="line"><span class="ld"><code>password:       (null)</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">20<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using <code class="command">rpcclient</code> to request a Windows server 2012 share snapshot</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-samba-advanced-snapshots-client-winserver">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing snapshots remotely from Windows with <code class="command">DiskShadow.exe</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>You can manage snapshots of SMB shares on the Linux Samba server from Windows clients
+                     as well. Windows Server 2012 includes the <code class="command">DiskShadow.exe</code> utility which can manage remote shares similarly to the <code class="command">rpcclient</code> command described in <a class="xref xref-sect3" href="#sec-samba-advanced-snapshots-client-linux">the section called “Managing snapshots remotely from Linux with <code class="command">rpcclient</code>
+                        ”</a>. Note that you need to carefully set up the Samba server first.</p>
+                  
+                  <p>The following is an example procedure to set up the Samba server so that the Windows
+                     client can manage its shares' snapshots. Note that <em class="replaceable">EXAMPLE</em> is the Active Directory domain used in the testing environment, <code class="uri">fsrvp-server.example.com</code> is the host name of the Samba server, and <code class="filename">/srv/smb</code> is the path to the SMB share.</p>
+                  
+                  <div class="formalobject procedure" id="sec-samba-advanced-snapshots-client-winserver_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">20<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Detailed Samba server configuration</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Join an Active Directory domain via YaST. For more information, see <a class="xref xref-sect1" href="bk09partivch07s07.html">the section called “Samba server in the network with Active Directory”</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Ensure that the Active Directory domain's DNS entry is correct:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fsrvp-server:~ # net -U 'Administrator' ads dns register \</code></span></span>
+<span class="line"><span class="ld"><code>fsrvp-server.example.com &lt;IP address&gt;</code></span></span>
+<span class="line"><span class="ld"><code>Successfully registered hostname with DNS</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Create Btrfs subvolume at <code class="filename">/srv/smb</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fsrvp-server:~ # btrfs subvolume create /srv/smb</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Create a Snapper configuration file for the path <code class="filename">/srv/smb</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fsrvp-server:~ # snapper -c &lt;snapper_config&gt; create-config /srv/smb</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Create a new share with path <code class="filename">/srv/smb</code>, and the YaST <span class="guimenu">Expose Snapshots</span> check box enabled. Make sure to add the following snippets to the global section
+                              of <code class="filename">/etc/samba/smb.conf</code>, as mentioned in <a class="xref xref-sect3" href="#sec-samba-advanced-snapshots-server">the section called “Remote share snapshots”</a>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[global]</code></span></span>
+<span class="line"><span class="ld"><code> rpc_daemon:fssd = fork</code></span></span>
+<span class="line"><span class="ld"><code> registry shares = yes</code></span></span>
+<span class="line"><span class="ld"><code> include = registry</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Restart Samba with <code class="command">systemctl restart nmb smb</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Configure Snapper permissions:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fsrvp-server:~ # snapper -c &lt;snapper_config&gt; set-config \</code></span></span>
+<span class="line"><span class="ld"><code>ALLOW_USERS="EXAMPLE\\\\Administrator EXAMPLE\\\\win-client$"</code></span></span></pre>
+                           </div>
+                           
+                           <p>Ensure that any instances of <code class="literal">ALLOW_USERS</code> are also permitted access to the <code class="filename">.snapshots</code> subdirectory.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fsrvp-server:~ # snapper -c &lt;snapper_config&gt; set-config SYNC_ACL=yes</code></span></span></pre>
+                           </div>
+                           
+                           <div class="admonition important">
+                              <div>
+                                 <div class="icon">☝</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Path escaping</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>Be careful about the '\' escapes! Escape twice to ensure that the value stored in
+                                          <code class="filename">/etc/snapper/configs/&lt;snapper_config&gt;</code> is escaped once.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <p>"EXAMPLE\win-client$" corresponds to the Windows client computer account. Windows
+                              issues initial FSRVP requests while authenticated with this account.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Grant the Windows client account necessary privileges:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fsrvp-server:~ # net -U 'Administrator' rpc rights grant \</code></span></span>
+<span class="line"><span class="ld"><code>"EXAMPLE\\win-client$" SeBackupPrivilege</code></span></span>
+<span class="line"><span class="ld"><code>Successfully granted rights.</code></span></span></pre>
+                           </div>
+                           
+                           <p>The previous command is not needed for the "EXAMPLE\Administrator" user, which has
+                              privileges already granted.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="sec-samba-advanced-snapshots-client-winserver_proc2">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">20<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Windows client setup and <code class="command">DiskShadow.exe</code> in action</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Boot Windows Server 2012 (example host name WIN-CLIENT).</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Join the same Active Directory domain EXAMPLE as with the <span class="phrase productname">SUSE Linux Enterprise Server</span>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Reboot.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Open PowerShell.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Start <code class="command">DiskShadow.exe</code> and begin the backup procedure:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>PS C:\Users\Administrator.EXAMPLE&gt; diskshadow.exe</code></span></span>
+<span class="line"><span class="ld"><code>Microsoft DiskShadow version 1.0</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2012 Microsoft Corporation</code></span></span>
+<span class="line"><span class="ld"><code>On computer:  WIN-CLIENT,  6/17/2014 3:53:54 PM</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>DISKSHADOW&gt; begin backup</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Specify that shadow copies persist across program exits, resets, and reboots:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>DISKSHADOW&gt; set context PERSISTENT</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Check whether the specified share supports snapshots, and create one:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>DISKSHADOW&gt; add volume \\fsrvp-server\sles_snapper</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>DISKSHADOW&gt; create</code></span></span>
+<span class="line"><span class="ld"><code>Alias VSS_SHADOW_1 for shadow ID {de4ddca4-4978-4805-8776-cdf82d190a4a} set as \</code></span></span>
+<span class="line"><span class="ld"><code> environment variable.</code></span></span>
+<span class="line"><span class="ld"><code>Alias VSS_SHADOW_SET for shadow set ID {c58e1452-c554-400e-a266-d11d5c837cb1} \</code></span></span>
+<span class="line"><span class="ld"><code> set as environment variable.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Querying all shadow copies with the shadow copy set ID \</code></span></span>
+<span class="line"><span class="ld"><code> {c58e1452-c554-400e-a266-d11d5c837cb1}</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> * Shadow copy ID = {de4ddca4-4978-4805-8776-cdf82d190a4a}     %VSS_SHADOW_1%</code></span></span>
+<span class="line"><span class="ld"><code>    - Shadow copy set: {c58e1452-c554-400e-a266-d11d5c837cb1}  %VSS_SHADOW_SET%</code></span></span>
+<span class="line"><span class="ld"><code>    - Original count of shadow copies = 1</code></span></span>
+<span class="line"><span class="ld"><code>    - Original volume name: \\FSRVP-SERVER\SLES_SNAPPER\ \</code></span></span>
+<span class="line"><span class="ld"><code>      [volume not on this machine]</code></span></span>
+<span class="line"><span class="ld"><code>    - Creation time: 6/17/2014 3:54:43 PM</code></span></span>
+<span class="line"><span class="ld"><code>    - Shadow copy device name:</code></span></span>
+<span class="line"><span class="ld"><code>      \\FSRVP-SERVER\SLES_SNAPPER@{31afd84a-44a7-41be-b9b0-751898756faa}</code></span></span>
+<span class="line"><span class="ld"><code>    - Originating machine: FSRVP-SERVER</code></span></span>
+<span class="line"><span class="ld"><code>    - Service machine: win-client.example.com</code></span></span>
+<span class="line"><span class="ld"><code>    - Not exposed</code></span></span>
+<span class="line"><span class="ld"><code>    - Provider ID: {89300202-3cec-4981-9171-19f59559e0f2}</code></span></span>
+<span class="line"><span class="ld"><code>    - Attributes:  No_Auto_Release Persistent FileShare</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Number of shadow copies listed: 1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Finish the backup procedure:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>DISKSHADOW&gt; end backup</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>After the snapshot was created, try to delete it and verify the deletion:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>DISKSHADOW&gt; delete shadows volume \\FSRVP-SERVER\SLES_SNAPPER\</code></span></span>
+<span class="line"><span class="ld"><code>Deleting shadow copy {de4ddca4-4978-4805-8776-cdf82d190a4a} on volume \</code></span></span>
+<span class="line"><span class="ld"><code> \\FSRVP-SERVER\SLES_SNAPPER\ from provider \</code></span></span>
+<span class="line"><span class="ld"><code>{89300202-3cec-4981-9171-19f59559e0f2} [Attributes: 0x04000009]...</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Number of shadow copies deleted: 1</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>DISKSHADOW&gt; list shadows all</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Querying all shadow copies on the computer ...</code></span></span>
+<span class="line"><span class="ld"><code>No shadow copies found in system.</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch07s07.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch07.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch07s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">20<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Samba server in the network with Active Directory</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">20<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

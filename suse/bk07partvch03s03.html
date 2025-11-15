@@ -1,0 +1,456 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>16.3.&nbsp;Virtual memory manager (VM) tunable parameters</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvch03s02.html" rel="prev">
+      <link href="bk07partvch03s04.html" rel="next">
+      <link href="bk07partvch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvch03.html">Up</a> <a href="bk07partvch03s04.html">Next</a> <a href="bk07partvch03s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvch03s03.html" db-id="d616951e219710" id="cha-tuning-memory-vm">
+            <header>
+               <h2><span class="label">16<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Virtual memory manager (VM) tunable parameters</h2>
+            </header>
+            
+            
+            <p>When tuning the VM, it should be understood that certain changes take time to affect
+               the workload and take full effect. If the workload changes throughout the day, it
+               may behave differently at different times. A change that increases throughput under
+               certain conditions may decrease it under other conditions.</p>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-reclaim">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Reclaim ratios</h3>
+               </header>
+               
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/swappiness</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This control is used to define how aggressively the kernel swaps out anonymous memory
+                           relative to pagecache and other caches. Increasing the value increases the amount
+                           of swapping. The default value is <code class="literal">60</code>.</p>
+                        
+                        <p>Swap I/O tends to be much less efficient than other I/O. However, certain pagecache
+                           pages are accessed much more frequently than less used anonymous memory. The right
+                           balance should be found here.</p>
+                        
+                        <p>If swap activity is observed during slowdowns, it may be worth reducing this parameter.
+                           If there is a lot of I/O activity and the amount of pagecache in the system is rather
+                           small, or if there are large dormant applications running, increasing this value can
+                           improve performance.</p>
+                        
+                        <p>The more data is swapped out, the longer the system takes to swap data back in when
+                           it is needed.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/vfs_cache_pressure</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This variable controls the tendency of the kernel to reclaim the memory which is used
+                           for caching of VFS caches, versus pagecache and swap. Increasing this value increases
+                           the rate at which VFS caches are reclaimed.</p>
+                        
+                        <p>It is difficult to know when this should be changed, other than by experimentation.
+                           The <code class="command">slabtop</code> command (part of the package <code class="resource systemitem">procps</code>) shows top memory objects used by the kernel. The vfs caches are the "dentry" and
+                           the "*_inode_cache" objects. If these are consuming a large amount of memory in relation
+                           to pagecache, it may be worth trying to increase pressure. Could also help to reduce
+                           swapping. The default value is <code class="literal">100</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/min_free_kbytes</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This controls the amount of memory that is kept free for use by special reserves including
+                           <q>atomic</q> allocations (those which cannot wait for reclaim). This should not normally be lowered
+                           unless the system is being carefully tuned for memory usage (normally useful for embedded
+                           rather than server applications). If <q>page allocation failure</q> messages and stack traces are frequently seen in logs, min_free_kbytes could be increased
+                           until the errors disappear. There is no need for concern if these messages are infrequent.
+                           The default value depends on the amount of RAM.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/watermark_scale_factor</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Broadly speaking, free memory has high, low and min watermarks. When the low watermark
+                           is reached then <code class="command">kswapd</code> wakes to reclaim memory in the background. It stays awake until free memory reaches
+                           the high watermark. Applications will stall and reclaim memory when the min watermark
+                           is reached.</p>
+                        
+                        <p>The <code class="literal">watermark_scale_factor</code> defines the amount of memory left in a node/system before kswapd is woken up and
+                           how much memory needs to be free before kswapd goes back to sleep. The unit is in
+                           fractions of 10,000. The default value of 10 means the distances between watermarks
+                           are 0.1% of the available memory in the node/system. The maximum value is 1000, or
+                           10% of memory.</p>
+                        
+                        <p>Workloads that frequently stall in direct reclaim, accounted by <code class="literal">allocstall</code> in <code class="filename">/proc/vmstat</code>, may benefit from altering this parameter. Similarly, if <code class="command">kswapd</code> is sleeping prematurely, as accounted for by <code class="literal">kswapd_low_wmark_hit_quickly</code>, then it may indicate that the number of pages kept free to avoid stalls is too low.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-writeback">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Writeback parameters</h3>
+               </header>
+               
+               
+               <p>One important change in writeback behavior since <span class="phrase productname">SUSE Linux Enterprise Server</span> 10 is that modification to file-backed mmap() memory is accounted immediately as
+                  dirty memory (and subject to writeback). Whereas previously it would only be subject
+                  to writeback after it was unmapped, upon an msync() system call, or under heavy memory
+                  pressure.</p>
+               
+               <p>Some applications do not expect mmap modifications to be subject to such writeback
+                  behavior, and performance can be reduced. Increasing writeback ratios and times can
+                  improve this type of slowdown.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/dirty_background_ratio</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This is the percentage of the total amount of free and reclaimable memory. When the
+                           amount of dirty pagecache exceeds this percentage, writeback threads start writing
+                           back dirty memory. The default value is <code class="literal">10</code> (%).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/dirty_background_bytes</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This contains the amount of dirty memory at which the background kernel flusher threads
+                           start writeback. <code class="filename">dirty_background_bytes</code> is the counterpart of <code class="filename">dirty_background_ratio</code>. If one of them is set, the other one will automatically be read as <code class="literal">0</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/dirty_ratio</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Similar percentage value as for <code class="filename">dirty_background_ratio</code>. When this is exceeded, applications that want to write to the pagecache are blocked
+                           and wait for kernel background flusher threads to reduce the amount of dirty memory.
+                           The default value is <code class="literal">20</code> (%).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/dirty_bytes</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This file controls the same tunable as <code class="filename">dirty_ratio</code> however the amount of dirty memory is in bytes as opposed to a percentage of reclaimable
+                           memory. Since both <code class="filename">dirty_ratio</code> and <code class="filename">dirty_bytes</code> control the same tunable, if one of them is set, the other one is automatically read
+                           as <code class="literal">0</code>. The minimum value allowed for <code class="filename">dirty_bytes</code> is two pages (in bytes); any value lower than this limit is ignored and the old configuration
+                           will be retained.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/vm/dirty_expire_centisecs</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The data which has been dirty in-memory for longer than this interval is written out
+                           next time a flusher thread wakes up. Expiration is measured based on the modification
+                           time of a file's inode. Therefore, multiple dirtied pages from the same file are all
+                           written when the interval is exceeded.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p><code class="filename">dirty_background_ratio</code> and <code class="filename">dirty_ratio</code> together determine the pagecache writeback behavior. If these values are increased,
+                  more dirty memory is kept in the system for a longer time. With more dirty memory
+                  allowed in the system, the chance to improve throughput by avoiding writeback I/O
+                  and to submitting more optimal I/O patterns increases. However, more dirty memory
+                  can either harm latency when memory needs to be reclaimed or at points of data integrity
+                  (<q>synchronization points</q>) when it needs to be written back to disk.</p>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-writetiming">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Timing differences of I/O writes between SUSE Linux Enterprise 12 and SUSE Linux Enterprise
+                     11</h3>
+               </header>
+               
+               
+               <p>The system is required to limit what percentage of the system's memory contains file-backed
+                  data that needs writing to disk. This guarantees that the system can always allocate
+                  the necessary data structures to complete I/O. The maximum amount of memory that can
+                  be dirty and requires writing at any time is controlled by <code class="literal">vm.dirty_ratio</code> (<code class="filename">/proc/sys/vm/dirty_ratio</code>). The defaults are:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SLE-11-SP3:     vm.dirty_ratio = 40</code></span></span>
+<span class="line"><span class="ld"><code>SLE-12:         vm.dirty_ratio = 20</code></span></span></pre>
+               </div>
+               
+               <p>The primary advantage of using the lower ratio in SUSE Linux Enterprise 12 is that
+                  page reclamation and allocation in low memory situations completes faster as there
+                  is a higher probability that old clean pages are quickly found and discarded. The
+                  secondary advantage is that if all data on the system must be synchronized, then the
+                  time to complete the operation on SUSE Linux Enterprise 12 is lower than SUSE Linux
+                  Enterprise 11 SP3 by default. Most workloads will not notice this change as data is
+                  synchronized with <code class="literal">fsync()</code> by the application or data is not dirtied quickly enough to hit the limits.</p>
+               
+               <p>There are exceptions, and if your application is affected by this, it can manifest
+                  as an unexpected stall during writes. To prove it is affected by dirty data rate limiting
+                  then monitor <code class="literal">/proc/<em class="replaceable">PID_OF_APPLICATION</em>/stack</code> and it will be observed that the application spends significant time in <code class="literal">balance_dirty_pages_ratelimited</code>. If this is observed and it is a problem, then increase the value of <code class="literal">vm.dirty_ratio</code> to 40 to restore the SUSE Linux Enterprise 11 SP3 behavior.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Important</div>
+                        </header>
+                        <div>
+                           
+                           <p>The overall I/O throughput is the same regardless of the setting. The only difference
+                              is the timing of when the I/O is queued.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>This is an example of using <code class="command">dd</code> to asynchronously write 30% of memory to disk which would happen to be affected by
+                  the change in <code class="literal">vm.dirty_ratio</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>MEMTOTAL_MBYTES=`free -m | grep Mem: | awk '{print $2}'`</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>sysctl vm.dirty_ratio=40</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>dd if=/dev/zero of=zerofile ibs=1048576 count=$((MEMTOTAL_MBYTES*30/100))</code></span></span>
+<span class="line"><span class="ld"><code>2507145216 bytes (2.5 GB) copied, 8.00153 s, 313 MB/s</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>sysctl vm.dirty_ratio=20</code></span></span>
+<span class="line"><span class="ld"><code>dd if=/dev/zero of=zerofile ibs=1048576 count=$((MEMTOTAL_MBYTES*30/100))</code></span></span>
+<span class="line"><span class="ld"><code>2507145216 bytes (2.5 GB) copied, 10.1593 s, 247 MB/s</code></span></span></pre>
+               </div>
+               
+               <p>The parameter affects the time it takes for the command to complete and the apparent
+                  write speed of the device. With <code class="literal">dirty_ratio=40</code>, more of the data is cached and written to disk in the background by the kernel.
+                  The speed of I/O is identical in both cases. To demonstrate, this is the result when
+                  <code class="command">dd</code> synchronizes the data before exiting:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>sysctl vm.dirty_ratio=40</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>dd if=/dev/zero of=zerofile ibs=1048576 count=$((MEMTOTAL_MBYTES*30/100)) conv=fdatasync</code></span></span>
+<span class="line"><span class="ld"><code>2507145216 bytes (2.5 GB) copied, 21.0663 s, 119 MB/s</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>sysctl vm.dirty_ratio=20</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>dd if=/dev/zero of=zerofile ibs=1048576 count=$((MEMTOTAL_MBYTES*30/100)) conv=fdatasync</code></span></span>
+<span class="line"><span class="ld"><code>2507145216 bytes (2.5 GB) copied, 21.7286 s, 115 MB/s</code></span></span></pre>
+               </div>
+               
+               <p>As observed, <code class="literal">dirty_ratio</code> had almost no impact here and is within the natural variability of a command. Hence,
+                  <code class="literal">dirty_ratio</code> does not directly impact I/O performance but it may affect the apparent performance
+                  of a workload that writes data asynchronously without synchronizing.</p>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-readahead">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Readahead parameters</h3>
+               </header>
+               
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/sys/block/<em class="replaceable">&lt;bdev&gt;</em>/queue/read_ahead_kb</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>If one or more processes are sequentially reading a file, the kernel reads certain
+                           data in advance (ahead) to reduce the amount of time that processes need to wait for
+                           data to be available. The actual amount of data being read in advance is computed
+                           dynamically, based on the extent of <em>sequentiality</em> of the I/O. This parameter sets the maximum amount of data that the kernel reads
+                           ahead for a single file. If you observe that large sequential reads from a file are
+                           not fast enough, you can try increasing this value. Increasing it too far may result
+                           in readahead thrashing where pagecache used for readahead is reclaimed before it can
+                           be used, or slowdowns because of a large amount of useless I/O. The default value
+                           is <code class="literal">512</code> (KB).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-thp">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Transparent HugePage parameters</h3>
+               </header>
+               
+               
+               <p>Transparent HugePages (THP) provide a way to dynamically allocate huge pages either
+                  on‑demand by the process or deferring the allocation until later via the <code class="command">khugepaged</code> kernel thread. This method is distinct from the use of <code class="literal">hugetlbfs</code> to manually manage their allocation and use. Workloads with contiguous memory access
+                  patterns can benefit greatly from THP. A 1000-fold decrease in page faults can be
+                  observed when running synthetic workloads with contiguous memory access patterns.</p>
+               
+               <p>There are cases when THP may be undesirable. Workloads with sparse memory access patterns
+                  can perform poorly with THP due to excessive memory usage. For example, 2 MB of memory
+                  may be used at fault time instead of 4 KB for each fault and ultimately lead to premature
+                  page reclaim. On releases older than SUSE Linux Enterprise 12 SP2, it was possible
+                  for an application to stall for long periods of time trying to allocate a THP which
+                  frequently led to a recommendation of disabling THP. Such recommendations should be
+                  re-evaluated for SUSE Linux Enterprise 12 SP3 and later releases.</p>
+               
+               <p>The behavior of THP may be configured via the <code class="option">transparent_hugepage=</code> kernel parameter or via sysfs. For example, it may be disabled by adding the kernel
+                  parameter <code class="option">transparent_hugepage=never</code>, rebuilding your grub2 configuration, and rebooting. Verify if THP is disabled with:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /sys/kernel/mm/transparent_hugepage/enabled</code></span></span>
+<span class="line"><span class="ld"><code>always madvise [never]</code></span></span></pre>
+               </div>
+               
+               <p>If disabled, the value <code class="literal">never</code> is shown in square brackets like in the example above. A value of <code class="literal">always</code> mandatorily tries and uses THP at fault time but defers to <code class="command">khugepaged</code> if the allocation fails. A value of <code class="literal">madvise</code> will only allocate THP for address spaces explicitly specified by an application.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/sys/kernel/mm/transparent_hugepage/defrag</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This parameter controls how much effort an application commits when allocating a THP.
+                           A value of <code class="literal">always</code> is the default for SUSE Linux Enterprise 12 SP1 and earlier releases that supported
+                           THP. If a THP is not available, the application tries to defragment memory. It potentially
+                           incurs large stalls in an application if the memory is fragmented and a THP is not
+                           available.</p>
+                        
+                        <p>A value of <code class="literal">madvise</code> means that THP allocation requests will only defragment if the application explicitly
+                           requests it. This is the default for SUSE Linux Enterprise 12 SP2 and later releases.</p>
+                        
+                        <p><code class="literal">defer</code> is only available on SUSE Linux Enterprise 12 SP2 and later releases. If a THP is
+                           not available, the application falls back to using small pages if a THP is not available.
+                           It wakes the <code class="command">kswapd</code> and <code class="command">kcompactd</code> kernel threads to defragment memory in the background and a THP will be allocated
+                           later by <code class="command">khugepaged</code>.</p>
+                        
+                        <p>The final option <code class="literal">never</code> uses small pages if a THP is unavailable but no other action will take place.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-khugepaged">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>khugepaged parameters</h3>
+               </header>
+               
+               
+               <p>khugepaged is automatically started when <code class="literal">transparent_hugepage</code> is set to <code class="literal">always</code> or <code class="literal">madvise</code>, and it will be automatically shut down if it is set to <code class="literal">never</code>. Normally this runs at low frequency but the behavior can be tuned.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/sys/kernel/mm/transparent_hugepage/khugepaged/defrag</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>A value of 0 will disable <code class="command">khugepaged</code> even though THP may still be used at fault time. This may be important for latency-sensitive
+                           applications that benefit from THP but cannot tolerate a stall if <code class="command">khugepaged</code> tries to update an application memory usage.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This parameter controls how many pages are scanned by <code class="command">khugepaged</code> in a single pass. A scan identifies small pages that can be reallocated as THP. Increasing
+                           this value will allocate THP in the background faster at the cost of CPU usage.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">khugepaged</code> sleeps for a short interval specified by this parameter after each pass to limit
+                           how much CPU usage is used. Reducing this value allocates THP in the background faster
+                           at the cost of CPU usage. A value of 0 will force continual scanning.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/sys/kernel/mm/transparent_hugepage/khugepaged/alloc_sleep_millisecs</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This parameter controls how long <code class="command">khugepaged</code> will sleep in the event it fails to allocate a THP in the background waiting for
+                           <code class="command">kswapd</code> and <code class="command">kcompactd</code> to take action.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>The remaining parameters for <code class="command">khugepaged</code> are rarely useful for performance tuning but are fully documented in <code class="filename">/usr/src/linux/Documentation/vm/transhuge.txt</code></p>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-memory-vm-more">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Further VM parameters</h3>
+               </header>
+               
+               
+               <p>For the complete list of the VM tunable parameters, see <code class="filename">/usr/src/linux/Documentation/sysctl/vm.txt</code> (available after having installed the <code class="resource systemitem">kernel-source</code> package).</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvch03s02.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvch03.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch03s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">16<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Reducing memory usage</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">16<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Monitoring VM behavior</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,586 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;10.&nbsp;System recovery and snapshot management with Snapper</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich09s02.html" rel="prev">
+      <link href="bk01partich10s02.html" rel="next">
+      <link href="bk01parti.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01parti.html">Up</a> <a href="bk01partich10s02.html">Next</a> <a href="bk01partich09s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partich10.html" db-id="d616951e17157" id="cha-snapper" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>System recovery and snapshot management with Snapper</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Snapper has a command line interface and a YaST interface. Snapper lets you create
+                  and manage file system snapshots on the following types of file systems:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Btrfs, a copy-on-write file system for Linux that natively supports file system snapshots
+                        of subvolumes. (Subvolumes are separately mountable file systems within a physical
+                        partition.)</p>
+                     
+                     <p>You can also boot from <code class="literal">Btrfs</code> snapshots. For more information, see <a class="xref xref-sect1" href="bk01partich10s03.html">the section called “System rollback by booting from snapshots”</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Thinly provisioned LVM volumes formatted with XFS or Ext4.</p>
+                     </li>
+                  </ul>
+               
+               <p>Using Snapper, you can perform the following tasks:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Undo system changes made by <code class="command">zypper</code> and YaST. See <a class="xref xref-sect1" href="bk01partich10s02.html">the section called “Using Snapper to undo changes”</a> for details.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Restore files from previous snapshots. See <a class="xref xref-sect2" href="bk01partich10s02.html#sec-snapper-undo-delete-file">the section called “Using Snapper to restore files”</a> for details.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Do a system rollback by booting from a snapshot. See <a class="xref xref-sect1" href="bk01partich10s03.html">the section called “System rollback by booting from snapshots”</a> for details.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Manually create and manage snapshots, within the running system. See <a class="xref xref-sect1" href="bk01partich10s06.html">the section called “Manually creating and managing snapshots”</a> for details.</p>
+                     </li>
+                  </ul>
+               </div>
+            <section class="sect1" id="sec-snapper-setup">
+               <header>
+                  <h2><span class="label">10<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Default setup</h2>
+               </header>
+               
+               
+               <p>Snapper on <span class="phrase productname">SUSE Linux Enterprise Server</span> is set up as an undo and recovery tool for system changes. By default, the root partition
+                  (<code class="filename">/</code>) of <span class="phrase productname">SUSE Linux Enterprise Server</span> is formatted with <code class="literal">Btrfs</code>. Taking snapshots is automatically enabled if the root partition (<code class="filename">/</code>) is big enough (more than approximately 16&nbsp;GB). By default, snapshots are disabled
+                  on partitions other than <code class="filename">/</code>.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Enabling Snapper in the installed system</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you disabled Snapper during the installation, you can enable it at any time later.
+                              To do so, create a default Snapper configuration for the root file system by running:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c root create-config /</code></span></span></pre>
+                           </div>
+                           
+                           <p>Afterward enable the different snapshot types as described in <a class="xref xref-sect3" href="#sec-snapper-setup-customize-auto-snapshots">the section called “Disabling/enabling snapshots”</a>.</p>
+                           
+                           <p>On a Btrfs root file system, snapshots require a file system with subvolumes configured
+                              as proposed by the installer and a partition size of at least 16&nbsp;GB.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When a snapshot is created, both the snapshot and the original point to the same blocks
+                  in the file system. So, initially a snapshot does not occupy additional disk space.
+                  If data in the original file system is modified, changed data blocks are copied while
+                  the old data blocks are kept for the snapshot. Therefore, a snapshot occupies the
+                  same amount of space as the data modified. So, over time, the amount of space a snapshot
+                  allocates, constantly grows. As a consequence, deleting files from a <code class="literal">Btrfs</code> file system containing snapshots may <em>not</em> free disk space.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Snapshot location</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Snapshots always reside on the same partition or subvolume on which the snapshot has
+                              been taken. It is not possible to store snapshots on a different partition or subvolume.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>As a result, partitions containing snapshots need to be larger than partitions not
+                  containing snapshots. The exact amount depends strongly on the number of snapshots
+                  you keep and the amount of data modifications. As a rule of thumb, give partitions
+                  twice as much space as you normally would. To prevent disks from running out of space,
+                  old snapshots are automatically cleaned up. Refer to <a class="xref xref-sect3" href="#sec-snapper-setup-customize-archiving">the section called “Controlling snapshot archiving”</a> for details.</p>
+               
+               <section class="sect2" id="snapper-default-settings">
+                  <header>
+                     <h3><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Default settings</h3>
+                  </header>
+                  
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Disks larger than 16&nbsp;GB</span></dt>
+                        <dd>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>Configuration file: <code class="filename">/etc/snapper/configs/root</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">USE_SNAPPER=yes</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">TIMELINE_CREATE=no</code></p>
+                                 </li>
+                              </ul>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Disks smaller than 16&nbsp;GB</span></dt>
+                        <dd>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>Configuration file: not created</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">USE_SNAPPER=no</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">TIMELINE_CREATE=yes</code></p>
+                                 </li>
+                              </ul>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect2" id="snapper-snapshot-type">
+                  <header>
+                     <h3><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Types of snapshots</h3>
+                  </header>
+                  
+                  
+                  <p>Although snapshots themselves do not differ in a technical sense, we distinguish between
+                     three types of snapshots, based on the events that trigger them:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Timeline snapshots</span></dt>
+                        <dd>
+                           
+                           <p>A single snapshot is created every hour. Using the YaST OS installation method (default),
+                              timeline snapshots are enabled, except for the root file system. You can configure
+                              timeline snapshots to be taken at different intervals: hourly, daily, weekly, monthly
+                              and yearly. Old snapshots are automatically deleted. By default, the first snapshot
+                              of the last ten days, months and years is kept.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Installation snapshots</span></dt>
+                        <dd>
+                           
+                           <p>Whenever one or more packages are installed with Zypper or YaST, three installation
+                              snapshots are created. In case an important system component such as the kernel has
+                              been installed, the snapshot pair is marked as important. Old snapshots are automatically
+                              deleted. Installation snapshots are enabled by default.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Administration snapshots</span></dt>
+                        <dd>
+                           
+                           <p>Whenever you make changes to the system using Zypper or YaST, a pair of snapshots
+                              is created: one prior to the system change (<q>pre</q>) and the other one after the system change (<q>post</q>). Old snapshots are automatically deleted. Administration snapshots are enabled by
+                              default.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect2" id="snapper-dir-excludes">
+                  <header>
+                     <h3><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Directories that are excluded from snapshots</h3>
+                  </header>
+                  
+                  
+                  <p>Certain directories need to be excluded from snapshots for different reasons. The
+                     following list shows all directories that are excluded:</p>
+                  
+                  <dl class="long-terms variablelist" lang="">
+                     
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/boot/grub2/i386-pc</code>, <code class="filename">/boot/grub2/x86_64-efi</code>, <code class="filename">/boot/grub2/powerpc-ieee1275</code>, <code class="filename">/boot/grub2/s390x-emu</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>A rollback of the boot loader configuration is not supported. The directories listed
+                              above are architecture-specific. The first two directories are present on AMD64/Intel
+                              64 machines, the latter two on IBM POWER and on IBM&nbsp;Z, respectively.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/home</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If <code class="filename">/home</code> does not reside on a separate partition, it is excluded to avoid data loss on rollbacks.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/opt</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Third-party products usually get installed to <code class="filename">/opt</code>. It is excluded to avoid uninstalling these applications on rollbacks.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/srv</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Contains data for Web and FTP servers. It is excluded to avoid data loss on rollbacks.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/tmp</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>All directories containing temporary files and caches are excluded from snapshots.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/usr/local</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>This directory is used when manually installing software. It is excluded to avoid
+                              uninstalling these installations on rollbacks.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/var</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>This directory contains many variable files, including logs, temporary caches, third
+                              party products in <code class="filename">/var/opt</code>, and is the default location for virtual machine images and databases. Therefore
+                              this subvolume is created to exclude all of this variable data from snapshots and
+                              has Copy-On-Write disabled.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect2" id="sec-snapper-setup-customize">
+                  <header>
+                     <h3><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Customizing the setup</h3>
+                  </header>
+                  
+                  
+                  <p><span class="phrase productname">SUSE Linux Enterprise Server</span> comes with a reasonable default setup, which should be sufficient for most use cases.
+                     However, all aspects of taking automatic snapshots and snapshot keeping can be configured
+                     according to your needs.</p>
+                  
+                  <section class="sect3" id="sec-snapper-setup-customize-auto-snapshots">
+                     <header>
+                        <h4><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Disabling/enabling snapshots</h4>
+                     </header>
+                     
+                     
+                     <p>Each of the three snapshot types (timeline, installation, administration) can be enabled
+                        or disabled independently.</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Disabling/enabling timeline snapshots</span></dt>
+                           <dd>
+                              
+                              <p class="formalpara"><span class="title">Enabling</span><span class="para"><code class="command">snapper -c root set-config "TIMELINE_CREATE=yes"</code></span></p>
+                              
+                              <p class="formalpara"><span class="title">Disabling</span><span class="para"><code class="command">snapper -c root set-config "TIMELINE_CREATE=no"</code></span></p>
+                              
+                              <p>Using the YaST OS installation method (default), timeline snapshots are enabled, except
+                                 for the root file system.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Disabling/enabling installation snapshots</span></dt>
+                           <dd>
+                              
+                              <p class="formalpara"><span class="title titlepunct">Enabling:</span><span class="para">Install the package <code class="resource systemitem">snapper-zypp-plugin</code></span></p>
+                              
+                              <p class="formalpara"><span class="title titlepunct">Disabling:</span><span class="para">Uninstall the package <code class="resource systemitem">snapper-zypp-plugin</code></span></p>
+                              
+                              <p>Installation snapshots are enabled by default.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Disabling/enabling administration snapshots</span></dt>
+                           <dd>
+                              
+                              <p class="formalpara"><span class="title titlepunct">Enabling:</span><span class="para">Set <code class="envar">USE_SNAPPER</code> to <code class="literal">yes</code> in <code class="filename">/etc/sysconfig/yast2</code>.</span></p>
+                              
+                              <p class="formalpara"><span class="title titlepunct">Disabling:</span><span class="para">Set <code class="envar">USE_SNAPPER</code> to <code class="literal">no</code> in <code class="filename">/etc/sysconfig/yast2</code>.</span></p>
+                              
+                              <p>Administration snapshots are enabled by default.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </section>
+                  
+                  <section class="sect3" id="sec-snapper-setup-customize-inst-snapshots">
+                     <header>
+                        <h4><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Controlling installation snapshots</h4>
+                     </header>
+                     
+                     
+                     <p>Taking snapshot pairs upon installing packages with YaST or Zypper is handled by the
+                        <code class="resource systemitem">snapper-zypp-plugin</code>. An XML configuration file, <code class="filename">/etc/snapper/zypp-plugin.conf</code> defines, when to make snapshots. By default the file looks like the following:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> 1 &lt;?xml version="1.0" encoding="utf-8"?&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 2 &lt;snapper-zypp-plugin-conf&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 3  &lt;solvables&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 4   &lt;solvable match="w"<span class="co" id="zypp-conf-match">➃</span> important="true"<span class="co" id="zypp-conf-important">➄</span>&gt;kernel-*<span class="co" id="zypp-conf-kernel">➅</span>&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 5   &lt;solvable match="w" important="true"&gt;dracut&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 6   &lt;solvable match="w" important="true"&gt;glibc&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 7   &lt;solvable match="w" important="true"&gt;systemd*&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 8   &lt;solvable match="w" important="true"&gt;udev&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 9   &lt;solvable match="w"&gt;*&lt;/solvable&gt;<span class="co" id="zypp-conf-packages">➆</span></code></span></span>
+<span class="line"><span class="ld"><code>10  &lt;/solvables&gt;</code></span></span>
+<span class="line"><span class="ld"><code>11 &lt;/snapper-zypp-plugin-conf&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#zypp-conf-match">➃</a></dt>
+                           <dd>
+                              
+                              <p>The match attribute defines whether the pattern is a Unix shell-style wild card (<code class="literal">w</code>) or a Python regular expression (<code class="literal">re</code>).</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#zypp-conf-important">➄</a></dt>
+                           <dd>
+                              
+                              <p>If the given pattern matches and the corresponding package is marked as important
+                                 (for example, kernel packages), the snapshot is also marked as important.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#zypp-conf-kernel">➅</a></dt>
+                           <dd>
+                              
+                              <p>Pattern to match a package name. Based on the setting of the <code class="literal">match</code> attribute, special characters are either interpreted as shell wild cards or regular
+                                 expressions. This pattern matches all package names starting with <code class="literal">kernel-</code>.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#zypp-conf-packages">➆</a></dt>
+                           <dd>
+                              
+                              <p>This line unconditionally matches all packages.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     
+                     <p>With this configuration snapshot, pairs are made whenever a package is installed (line
+                        9). When the kernel, dracut, glibc, systemd or udev packages marked as important are
+                        installed, the snapshot pair is also marked as important (lines 4 to 8). All rules
+                        are evaluated.</p>
+                     
+                     <p>To disable a rule, either delete it or deactivate it using XML comments. To prevent
+                        the system from making snapshot pairs for every package installation for example,
+                        comment line 9:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> 1 &lt;?xml version="1.0" encoding="utf-8"?&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 2 &lt;snapper-zypp-plugin-conf&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 3  &lt;solvables&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 4   &lt;solvable match="w" important="true"&gt;kernel-*&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 5   &lt;solvable match="w" important="true"&gt;dracut&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 6   &lt;solvable match="w" important="true"&gt;glibc&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 7   &lt;solvable match="w" important="true"&gt;systemd*&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 8   &lt;solvable match="w" important="true"&gt;udev&lt;/solvable&gt;</code></span></span>
+<span class="line"><span class="ld"><code> 9   &lt;!-- &lt;solvable match="w"&gt;*&lt;/solvable&gt; --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>10  &lt;/solvables&gt;</code></span></span>
+<span class="line"><span class="ld"><code>11 &lt;/snapper-zypp-plugin-conf&gt;</code></span></span></pre>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-snapper-setup-customizing-new-subvolume">
+                     <header>
+                        <h4><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating and mounting new subvolumes</h4>
+                     </header>
+                     
+                     
+                     <p>Creating a new subvolume underneath the <code class="filename">/</code> hierarchy and permanently mounting it is supported. Such a subvolume is excluded
+                        from snapshots. You need to make sure not to create it inside an existing snapshot,
+                        since you would not be able to delete snapshots anymore after a rollback.</p>
+                     
+                     <p><span class="phrase productname">SUSE Linux Enterprise Server</span> is configured with the <code class="filename">/@/</code> subvolume which serves as an independent root for permanent subvolumes such as <code class="filename">/opt</code>, <code class="filename">/srv</code>, <code class="filename">/home</code> and others. Any new subvolumes you create and permanently mount need to be created
+                        in this initial root file system.</p>
+                     
+                     <p>To do so, run the following commands. In this example, a new subvolume <code class="filename">/usr/important</code> is created from <code class="filename">/dev/sda2</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount /dev/sda2 -o subvol=@ /mnt</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume create /mnt/usr/important</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> umount /mnt</code></span></span></pre>
+                     </div>
+                     
+                     <p>The corresponding entry in <code class="filename">/etc/fstab</code> needs to look like the following:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/sda2 /usr/important btrfs subvol=@/usr/important 0 0</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Disable copy-on-write (cow)</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>A subvolume may contain files that constantly change, such as virtualized disk images,
+                                    database files, or log files. If so, consider disabling the copy-on-write feature
+                                    for this volume, to avoid duplication of disk blocks. Use the <code class="option">nodatacow</code> mount option in <code class="filename">/etc/fstab</code> to do so:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/sda2 /usr/important btrfs nodatacow,subvol=@/usr/important 0 0</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>To alternatively disable copy-on-write for single files or directories, use the command
+                                    <code class="command">chattr +C <em class="replaceable">PATH</em></code>.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-snapper-setup-customize-archiving">
+                     <header>
+                        <h4><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Controlling snapshot archiving</h4>
+                     </header>
+                     
+                     
+                     <p>Snapshots occupy disk space. To prevent disks from running out of space and thus causing
+                        system outages, old snapshots are automatically deleted. By default, up to ten important
+                        installation and administration snapshots and up to ten regular installation and administration
+                        snapshots are kept. If these snapshots occupy more than 50% of the root file system
+                        size, additional snapshots are deleted. A minimum of four important and two regular
+                        snapshots are always kept.</p>
+                     
+                     <p>Refer to <a class="xref xref-sect2" href="bk01partich10s05.html#sec-snapper-config-modify">the section called “Managing existing configurations”</a> for instructions on how to change these values.</p>
+                     </section>
+                  
+                  <section class="sect3" id="sec-snapper-lvm">
+                     <header>
+                        <h4><span class="label">10<span class="sep">.</span>1<span class="sep">.</span>4<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using Snapper on thinly provisioned LVM volumes</h4>
+                     </header>
+                     
+                     
+                     <p>Apart from snapshots on <code class="literal">Btrfs</code> file systems, Snapper also supports taking snapshots on thinly provisioned LVM volumes
+                        (snapshots on regular LVM volumes are <em>not</em> supported) formatted with XFS, Ext4 or Ext3. For more information and setup instructions
+                        on LVM volumes, refer to <a class="xref xref-sect1" href="bk02partiich04s03.html">the section called “LVM configuration”</a>.</p>
+                     
+                     <p>To use Snapper on a thinly provisioned LVM volume, you need to create a Snapper configuration
+                        for it. On LVM it is required to specify the file system with <code class="option">--fstype=lvm(<em class="replaceable">FILESYSTEM</em>)</code>. <code class="literal">ext3</code>, <code class="literal">etx4</code> or <code class="literal">xfs</code> are valid values for <em class="replaceable">FILESYSTEM</em>. Example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c lvm create-config --fstype="lvm(xfs)" /thin_lvm</code></span></span></pre>
+                     </div>
+                     
+                     <p>You can adjust this configuration according to your needs as described in <a class="xref xref-sect2" href="bk01partich10s05.html#sec-snapper-config-modify">the section called “Managing existing configurations”</a>.</p>
+                     </section>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich09s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01parti.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>RPM—the package manager</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using Snapper to undo changes</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

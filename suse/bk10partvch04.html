@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;37.&nbsp;Running virtual machines with qemu-system-ARCH</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvch03s02.html" rel="prev">
+      <link href="bk10partvch04s02.html" rel="next">
+      <link href="bk10partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partv.html">Up</a> <a href="bk10partvch04s02.html">Next</a> <a href="bk10partvch03s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partvch04.html" db-id="d616951e298467" id="cha-qemu-running" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">37</span><span class="sep">.&nbsp;</span>Running virtual machines with qemu-system-ARCH</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Once you have a virtual disk image ready (for more information on disk images, see
+                  <a class="xref xref-sect1" href="bk10partvch03s02.html">the section called “Managing disk images with <code class="command">qemu-img</code>
+                     ”</a>), it is time to start the related virtual machine. <a class="xref xref-sect1" href="bk10partvch03.html#cha-qemu-guest-inst-qemu-kvm">the section called “Basic installation with <code class="command">qemu-system-ARCH</code>
+                     ”</a> introduced simple commands to install and run a VM Guest. This chapter focuses on
+                  a more detailed explanation of <code class="command">qemu-system-ARCH</code> usage, and shows solutions for more specific tasks. For a complete list of <code class="command">qemu-system-ARCH</code>'s options, see its man page (<code class="command">man 1 qemu</code>).</p>
+               </div>
+            <section class="sect1" id="cha-qemu-running-basic">
+               <header>
+                  <h2><span class="label">37<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Basic <code class="command">qemu-system-ARCH</code> invocation</h2>
+               </header>
+               
+               
+               <p>The <code class="command">qemu-system-ARCH</code> command uses the following syntax:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>qemu-system-ARCH <em class="replaceable">OPTIONS</em><span class="co" id="co-qemu-running-basic-opts">⤼</span> -drive file=<em class="replaceable">DISK_IMAGE</em><span class="co" id="co-qemu-running-basic-img">⤽</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-running-basic-opts">⤼</a></dt>
+                     <dd>
+                        
+                        <p><code class="command">qemu-system-ARCH</code> understands many options. Most of them define parameters of the emulated hardware,
+                           while others affect more general emulator behavior. If you do not supply any options,
+                           default values are used, and you need to supply the path to a disk image to be run.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-running-basic-img">⤽</a></dt>
+                     <dd>
+                        
+                        <p>Path to the disk image holding the guest system you want to virtualize. <code class="command">qemu-system-ARCH</code> supports many image formats. Use <code class="command">qemu-img</code><code class="option">--help</code> to list them.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">AArch64 architecture</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>KVM support is available only for 64-bit Arm® architecture (AArch64). Running QEMU
+                              on the AArch64 architecture requires you to specify:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>A machine type designed for QEMU Arm® virtual machines using the <code class="option">-machine virt-<em class="replaceable">VERSION_NUMBER</em></code> option.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>A firmware image file using the <code class="option">-bios</code> option.</p>
+                                 
+                                 <p>You can specify the firmware image files alternatively using the <code class="option">-drive</code> options, for example:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>-drive file=/usr/share/edk2/aarch64/QEMU_EFI-pflash.raw,if=pflash,format=raw</code></span></span>
+<span class="line"><span class="ld"><code>-drive file=/var/lib/libvirt/qemu/nvram/opensuse_VARS.fd,if=pflash,format=raw</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>A CPU of the VM Host Server using the <code class="option">-cpu host</code> option (default is <code class="option">cortex-15</code>).</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>The same Generic Interrupt Controller (GIC) version as the host using the <code class="option">-machine gic-version=host</code> option (default is <code class="option">2</code>).</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>If a graphic mode is needed, a graphic device of type <code class="literal">virtio-gpu-pci</code>.</p>
+                                 </li>
+                              </ul>
+                           
+                           <p>For example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-aarch64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code> -bios /usr/share/qemu/qemu-uefi-aarch64.bin \</code></span></span>
+<span class="line"><span class="ld"><code> -cpu host \</code></span></span>
+<span class="line"><span class="ld"><code> -device virtio-gpu-pci \</code></span></span>
+<span class="line"><span class="ld"><code> -machine virt,accel=kvm,gic-version=host</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvch03s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partv.html">Up</a></td>
+                  <td class="next"><a href="bk10partvch04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">36<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing disk images with <code class="command">qemu-img</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>General <code class="command">qemu-system-ARCH</code> options</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>1.15.&nbsp;Troubleshooting file systems</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich01s14.html" rel="prev">
+      <link href="bk09partich01s16.html" rel="next">
+      <link href="bk09partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich01.html">Up</a> <a href="bk09partich01s16.html">Next</a> <a href="bk09partich01s14.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich01s15.html" db-id="d616951e236790" id="sec-filesystems-trouble">
+            <header>
+               <h2><span class="label">1<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>Troubleshooting file systems</h2>
+            </header>
+            
+            
+            <p>This section describes some known issues and possible solutions for file systems.</p>
+            
+            <section class="sect2" id="sec-filesystems-trouble-btrfs-volfull">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>15<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Btrfs error: no space is left on device</h3>
+               </header>
+               
+               
+               <p>The root (<code class="filename">/</code>) partition using the Btrfs file system stops accepting data. You receive the error
+                  <q><code class="literal">No space left on device</code></q>.</p>
+               
+               <p>See the following sections for information about possible causes and prevention of
+                  this issue.</p>
+               
+               <section class="sect3" id="sec-filesystems-trouble-btrfs-volfull-snapshots">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>15<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Disk space consumed by Snapper snapshots</h4>
+                  </header>
+                  
+                  
+                  <p>If Snapper is running for the Btrfs file system, the <q><code class="literal">No space left on device</code></q> problem is typically caused by having too much data stored as snapshots on your system.</p>
+                  
+                  <p>You can remove some snapshots from Snapper, however, the snapshots are not deleted
+                     immediately and might not free up as much space as you need.</p>
+                  
+                  <p>To delete files from Snapper:</p>
+                  
+                  <div class="informalobject procedure" id="sec-filesystems-trouble-btrfs-volfull-snapshots_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Open a terminal.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>At the command prompt, enter <code class="command">btrfs filesystem show</code>, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs filesystem show</code></span></span>
+<span class="line"><span class="ld"><code>Label: none uuid: 40123456-cb2c-4678-8b3d-d014d1c78c78</code></span></span>
+<span class="line"><span class="ld"><code> Total devices 1 FS bytes used 20.00GB</code></span></span>
+<span class="line"><span class="ld"><code> devid 1 size 20.00GB used 20.00GB path /dev/sda3</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs fi balance start <em class="replaceable">MOUNTPOINT</em> -dusage=5</code></span></span></pre>
+                           </div>
+                           
+                           <p>This command attempts to relocate data in empty or near-empty data chunks, allowing
+                              the space to be reclaimed and reassigned to metadata. This can take a while (many
+                              hours for 1&nbsp;TB) although the system is otherwise usable during this time.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>List the snapshots in Snapper. Enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c root list</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Delete one or more snapshots from Snapper. Enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c root delete <em class="replaceable">SNAPSHOT_NUMBER(S)</em></code></span></span></pre>
+                           </div>
+                           
+                           <p>Ensure that you delete the oldest snapshots first. The older a snapshot is, the more
+                              disk space it occupies.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>To help prevent this problem, you can change the Snapper cleanup algorithms. See <a class="xref xref-sect3" href="bk01partich10s06.html#sec-snapper-manage-metadata-cleanup">the section called “Cleanup algorithms”</a> for details. The configuration values controlling snapshot cleanup are <code class="envar">EMPTY_*</code>, <code class="envar">NUMBER_*</code>, and <code class="envar">TIMELINE_*</code>.</p>
+                  
+                  <p>If you use Snapper with Btrfs on the file system disk, it is advisable to reserve
+                     twice the amount of disk space than the standard storage proposal. The YaST Partitioner
+                     automatically proposes twice the standard disk space in the Btrfs storage proposal
+                     for the root file system.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-filesystems-trouble-btrfs-volfull-var">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>15<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Disk space consumed by log, crash, and cache files</h4>
+                  </header>
+                  
+                  
+                  <p>If the system disk is filling up with data, you can try deleting files from <code class="filename">/var/log</code>, <code class="filename">/var/crash</code>, <code class="filename">/var/lib/systemd/coredump</code> and <code class="filename">/var/cache</code>.</p>
+                  
+                  <p>The Btrfs <code class="systemitem username">root</code> file system subvolumes <code class="filename">/var/log</code>, <code class="filename">/var/crash</code> and <code class="filename">/var/cache</code> can use all of the available disk space during normal operation, and cause a system
+                     malfunction. To help avoid this situation, <span class="phrase productname">SUSE Linux Enterprise Server</span> offers Btrfs quota support for subvolumes. See <a class="xref xref-sect2" href="bk09partich01s02.html#sec-filesystems-major-btrfs-quota">the section called “Btrfs quota support for subvolumes”</a> for details.</p>
+                  
+                  <p>On test and development machines, especially if you have frequent crashes of applications,
+                     you may also want to have a look at <code class="filename">/var/lib/systemd/coredump</code> where the core dumps are stored.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-trouble-balance">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>15<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Btrfs: balancing data across devices</h3>
+               </header>
+               
+               
+               <p>The <code class="command">btrfs balance</code> command is part of the <code class="package">btrfs-progs</code> package. It balances block groups on Btrfs file systems in the following example
+                  situations:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Assume you have a 1&nbsp;TB drive with 600&nbsp;GB used by data and you add another 1&nbsp;TB drive.
+                        The balancing will theoretically result in having 300&nbsp;GB of used space on each drive.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>You have a lot of near-empty chunks on a device. Their space will not be available
+                        until the balancing has cleared those chunks.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>You need to compact half-empty block group based on the percentage of their usage.
+                        The following command will balance block groups whose usage is 5% or less:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs balance start -dusage=5 /</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Tip</div>
+                              </header>
+                              <div>
+                                 
+                                 <p>The <code class="filename">/usr/lib/systemd/system/btrfs-balance.timer</code> timer takes care of cleaning up unused block groups on a monthly basis.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>You need to clear out non-full portions of block devices and spread data more evenly.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>You need to migrate data between different RAID types. For example, to convert data
+                        on a set of disks from RAID1 to RAID5, run the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs balance start -dprofiles=raid1,convert=raid5 /</code></span></span></pre>
+                     </div>
+                     </li>
+                  </ul>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>To fine-tune the default behavior of balancing data on Btrfs file systems—for example,
+                              how frequently or which mount points to balance— inspect and customize <code class="filename">/etc/sysconfig/btrfsmaintenance</code>. The relevant options start with <code class="option">BTRFS_BALANCE_</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>For details about the <code class="command">btrfs balance</code> command usage, see its manual pages (<code class="command">man 8 btrfs-balance</code>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-trouble-defrag">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>15<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>No defragmentation on SSDs</h3>
+               </header>
+               
+               
+               <p>Linux file systems contain mechanisms to avoid data fragmentation and usually it is
+                  not necessary to defragment. However, there are use cases, where data fragmentation
+                  cannot be avoided and where defragmenting the hard disk significantly improves the
+                  performance.</p>
+               
+               <p>This only applies to conventional hard disks. On solid state disks (SSDs) which use
+                  flash memory to store data, the firmware provides an algorithm that determines to
+                  which chips the data is written. Data is usually spread all over the device. Therefore
+                  defragmenting an SSD does not have the desired effect and will reduce the lifespan
+                  of an SSD by writing unnecessary data.</p>
+               
+               <p>For the reasons mentioned above, SUSE explicitly recommends <em>not</em> to defragment SSDs. Some vendors also warn about defragmenting solid state disks.
+                  This includes, but it is not limited to the following:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>HPE 3PAR StoreServ All-Flash</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>HPE 3PAR StoreServ Converged Flash</p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich01s14.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partich01s16.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">1<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>Freeing unused file system blocks</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">1<span class="sep">.</span>16</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

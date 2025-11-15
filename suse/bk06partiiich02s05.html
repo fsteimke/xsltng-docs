@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>22.5.&nbsp;Rotating host keys</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich02s04.html" rel="prev">
+      <link href="bk06partiiich02s06.html" rel="next">
+      <link href="bk06partiiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich02.html">Up</a> <a href="bk06partiiich02s06.html">Next</a> <a href="bk06partiiich02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich02s05.html" db-id="d616951e176596" id="sec-ssh-sshdserver-rotation">
+            <header>
+               <h2><span class="label">22<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Rotating host keys</h2>
+            </header>
+            
+            
+            <p>As of version 6.8, OpenSSH includes a protocol extension that supports host key rotation.
+               SSH server admins must periodically retire old host keys and create new keys, for
+               example if a key has been compromised, or it is time to upgrade to stronger keys.
+               Before OpenSSH 6.8, if <code class="literal">StrictHostKeyChecking</code> was set to <code class="literal">yes</code> in <code class="filename">ssh_config</code> on user machines, users would see a warning that the host key had changed, and were
+               not allowed to connect. Then the users would have to manually delete the server's
+               public key from their <code class="filename">known_hosts</code> file, reconnect and manually accept the new key. Any automated SSH connections, such
+               as scheduled backups, would fail.</p>
+            
+            <p>The new host key rotation scheme provides a method to distribute new keys without
+               service interruptions. When clients connect, the server sends them a list of new keys.
+               Then the next time they log in they are asked if they wish to accept the changes.
+               Give users a few days to connect and receive the new keys, and then you can remove
+               the old keys. The users' <code class="filename">known_hosts</code> files are automatically updated, with new keys added and the old keys removed.</p>
+            
+            <p>Setting up host key rotations requires creating new keys on the server, certain changes
+               to <code class="filename">/etc/ssh/sshd_config</code> on the server, and to <code class="filename">/etc/ssh/ssh_config</code> on the clients.</p>
+            
+            <p>First, create your new key or keys. The following example creates a new RSA key and
+               a new Ed25519 key, with unique names and comments. A useful convention is to name
+               them with the creation date. Remember, a host key must not have a passphrase:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ssh-keygen -t rsa -f ssh_host_rsa_2022-01 -C "main server"</code></code></span></span>
+<span class="line"><span class="ld"><code>Generating public/private rsa key pair.</code></span></span>
+<span class="line"><span class="ld"><code>Enter passphrase (empty for no passphrase):</code></span></span>
+<span class="line"><span class="ld"><code>Enter same passphrase again:</code></span></span>
+<span class="line"><span class="ld"><code>Your identification has been saved in ssh_host_rsa_2022-01</code></span></span>
+<span class="line"><span class="ld"><code>Your public key has been saved in ssh_host_rsa_2022-01.pub</code></span></span>
+<span class="line"><span class="ld"><code>The key fingerprint is:</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:F1FIF2aqOz7D3mGdsjzHpH/kjUWZehBN3uG7FM4taAQ main server</code></span></span>
+<span class="line"><span class="ld"><code>The key's randomart image is:</code></span></span>
+<span class="line"><span class="ld"><code>+---[RSA 3072]----+</code></span></span>
+<span class="line"><span class="ld"><code>|         .Eo*.oo |</code></span></span>
+<span class="line"><span class="ld"><code>|          .B .o.o|</code></span></span>
+<span class="line"><span class="ld"><code>|          o . .++|</code></span></span>
+<span class="line"><span class="ld"><code>|         . o ooo=|</code></span></span>
+<span class="line"><span class="ld"><code>|        S . o +*.|</code></span></span>
+<span class="line"><span class="ld"><code>|         o o.oooo|</code></span></span>
+<span class="line"><span class="ld"><code>|       .o ++oo.= |</code></span></span>
+<span class="line"><span class="ld"><code>|       .+=o+o + .|</code></span></span>
+<span class="line"><span class="ld"><code>|       .oo++..   |</code></span></span>
+<span class="line"><span class="ld"><code>+----[SHA256]-----+</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01 -C "main server"</code></code></span></span>
+<span class="line"><span class="ld"><code>Generating public/private ed25519 key pair.</code></span></span>
+<span class="line"><span class="ld"><code>Enter passphrase (empty for no passphrase):</code></span></span>
+<span class="line"><span class="ld"><code>Enter same passphrase again:</code></span></span>
+<span class="line"><span class="ld"><code>Your identification has been saved in ssh_host_ed25519_2022-01</code></span></span>
+<span class="line"><span class="ld"><code>Your public key has been saved in ssh_host_ed25519_2022-01.pub</code></span></span>
+<span class="line"><span class="ld"><code>The key fingerprint is:</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:2p9K0giXv7WsRnLjwjs4hJ8EFcoX1FWR4nQz6fxnjxg main server</code></span></span>
+<span class="line"><span class="ld"><code>The key's randomart image is:</code></span></span>
+<span class="line"><span class="ld"><code>+--[ED25519 256]--+</code></span></span>
+<span class="line"><span class="ld"><code>|   .+o ...o+     |</code></span></span>
+<span class="line"><span class="ld"><code>| . .... o *      |</code></span></span>
+<span class="line"><span class="ld"><code>|  o..  o = o     |</code></span></span>
+<span class="line"><span class="ld"><code>|  ..   .. o      |</code></span></span>
+<span class="line"><span class="ld"><code>|   o. o S  .     |</code></span></span>
+<span class="line"><span class="ld"><code>|  . oo.*+   E o  |</code></span></span>
+<span class="line"><span class="ld"><code>|   + ++==..  = o |</code></span></span>
+<span class="line"><span class="ld"><code>|    = +oo= o. . .|</code></span></span>
+<span class="line"><span class="ld"><code>|     ..=+o=      |</code></span></span>
+<span class="line"><span class="ld"><code>+----[SHA256]-----+</code></span></span></pre>
+            </div>
+            
+            <p>Record the fingerprints, for users to verify the new keys.</p>
+            
+            <p>Add the new key names to <code class="filename">/etc/ssh/sshd_config</code>, and uncomment any existing keys that are in use:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>## Old keys</code></span></span>
+<span class="line"><span class="ld"><code>HostKey /etc/ssh/ssh_host_rsa_key</code></span></span>
+<span class="line"><span class="ld"><code>HostKey /etc/ssh/ssh_host_ed25519_key</code></span></span>
+<span class="line"><span class="ld"><code>HostKey /etc/ssh/ssh_host_ecdsa_key</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>## New replacement keys</code></span></span>
+<span class="line"><span class="ld"><code>HostKey /etc/ssh/ssh_host_rsa_2022-01</code></span></span>
+<span class="line"><span class="ld"><code>HostKey /etc/ssh/ssh_host_ed25519_2022-01</code></span></span></pre>
+            </div>
+            
+            <p>Save your changes, then restart <code class="daemon systemitem">sshd</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl restart sshd.service</code></code></span></span></pre>
+            </div>
+            
+            <p>The <code class="filename">/etc/ssh/ssh_config</code> file on user machines must include the following settings:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>UpdateHostKeys ask</code></span></span>
+<span class="line"><span class="ld"><code>StrictHostKeyChecking yes</code></span></span></pre>
+            </div>
+            
+            <p>Test connecting from a client by opening an SSH session to the server to receive the
+               new keys list. Log out, then log back in. When you log back in you should see something
+               like the following message:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>The server has updated its host keys.</code></span></span>
+<span class="line"><span class="ld"><code>These changes were verified by the server's existing trusted key.</code></span></span>
+<span class="line"><span class="ld"><code>Deprecating obsolete hostkey: ED25519</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:V28d3VpHgjsCoV04RBCZpLo5c0kEslCZDVdIUnCvqPI</code></span></span>
+<span class="line"><span class="ld"><code>Deprecating obsolete hostkey:</code></span></span>
+<span class="line"><span class="ld"><code>RSA SHA256:+NR4DVdbsUNsqJPIhISzx+eqD4x/awCCwijZ4a9eP8I</code></span></span>
+<span class="line"><span class="ld"><code>Accept updated hostkeys? (yes/no):yes</code></span></span></pre>
+            </div>
+            
+            <p>You may set <code class="literal">UpdateHostKeys ask</code> to <code class="literal">UpdateHostKeys yes</code> to apply the changes automatically, and avoid asking users to approve the changes.</p>
+            
+            <p>For more information:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p><a class="xref xref-sect1" href="bk06partiiich02s04.html">the section called “Managing user and host encryption keys”</a></p>
+                  </li>
+               
+               <li>
+                  
+                  <p><a class="link" href="http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68.html">http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68.html</a></p>
+                  </li>
+               
+               <li>
+                  
+                  <p>man 5 ssh_config, man 5 sshd_config</p>
+                  </li>
+               </ul>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich02.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich02s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">22<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing user and host encryption keys</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Public key authentication</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

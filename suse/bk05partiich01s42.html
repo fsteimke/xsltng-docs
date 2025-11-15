@@ -1,0 +1,369 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.42.&nbsp;Configuration management</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partiich01s41.html" rel="prev">
+      <link href="bk05partiii.html" rel="next">
+      <link href="bk05partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partiich01.html">Up</a> <a href="bk05partiii.html">Next</a> <a href="bk05partiich01s41.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partiich01s42.html" db-id="d616951e146052" id="CreateProfile-ConfigurationManagement" lang="">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>42</span><span class="sep">.&nbsp;</span>Configuration management</h2>
+            </header>
+            
+            
+            
+            <p>AutoYaST allows delegating part of the configuration to a <em>configuration management tool</em> like Salt. AutoYaST takes care of the basic system installation (partitioning, network
+               setup, etc.) and the remaining configuration tasks can be delegated.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Only Salt is supported</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Although Puppet is mentioned in this document, only Salt is supported. Nevertheless,
+                           feel free to report any problems you might find with Puppet.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>AutoYaST supports two different approaches:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Using a configuration management server. In this case, AutoYaST sets up a configuration
+                     management tool. It connects to a master server to get the instructions to configure
+                     the system.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Getting the configuration from elsewhere (for example, an HTTP server or a flash disk
+                     like a USB stick) and running the configuration management tool in stand-alone mode.</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="CreateProfile-ConfigurationManagement-Server">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>42<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Connecting to a configuration management server</h3>
+               </header>
+               
+               
+               <p>This approach is especially useful when a configuration management server (a <em>master</em> in Salt and Puppet jargon) is already in place. In this case, the hardest part might
+                  be to set up a proper authentication mechanism.</p>
+               
+               <p>Both Salt and Puppet support the following authentication methods:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Manual authentication on the fly. When AutoYaST starts the client, a new authentication
+                        request is generated. The administrator can manually accept this request on the server.
+                        AutoYaST will retry the connection. If the key was accepted meanwhile, AutoYaST continues
+                        the installation.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Using a preseed key. Refer to the documentation of your configuration management system
+                        of choice to find out how to generate them. Use the <code class="literal">keys_url</code> option to tell AutoYaST where to look for them.</p>
+                     </li>
+                  </ul>
+               
+               <p>With the configuration example below, AutoYaST will launch the client to generate
+                  the authentication request. It will try to connect up to three times, waiting 15 seconds
+                  between each try.</p>
+               
+               <div class="example formalobject" id="configuration-management-manual-authentication">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;configuration_management&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type&gt;salt&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;master&gt;my-salt-server.example.net&lt;/master&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;auth_attempts config:type="integer"&gt;3&lt;/auth_attempts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;auth_time_out config:type="integer"&gt;15&lt;/auth_time_out&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/configuration_management&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>80</span><span class="sep">.&nbsp;</span>Client/server with manual authentication</div>
+                  </header>
+               </div>
+               
+               <p>However, with the following example, AutoYaST will retrieve the keys from a flash
+                  disk (for example, a USB stick) and will use them to connect to the master server.</p>
+               
+               <div class="example formalobject" id="configuration-management-preseed-keys">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;configuration_management&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type&gt;salt&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;master&gt;my-salt-server.example.net&lt;/master&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;keys_url&gt;usb:/&lt;/keys_url&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/configuration_management&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>81</span><span class="sep">.&nbsp;</span>Client/server with preseed keys</div>
+                  </header>
+               </div>
+               
+               <p>The table below summarizes the supported options for these scenarios.</p>
+               
+               <div class="informalobject informaltable" id="CreateProfile-ConfigurationManagement-Server_informaltable1">
+                  <table>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Attributes</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Value</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Description</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="literal">type</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>String</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Configuration management name. Currently only <code class="literal">salt</code> is supported.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">master</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>String</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Host name or IP address of the configuration management server.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">auth_attempts</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Integer</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Maximum attempts to connect to the server. The default is three attempts.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">auth_time_out</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Integer</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Time (in seconds) between attempts to connect to the server. The default is 15 seconds.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">keys_url</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>URL of used key</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Path to an HTTP server, hard disk, flash disk or similar with the files <code class="literal">default.key</code> and <code class="literal">default.pub</code>. This key must be known to the configuration management master.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">enable_services</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>True/False</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Enables the configuration management services on the client side after the installation.
+                                 The default is <code class="literal">true</code>.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-ConfigurationManagement-Masterless">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>42<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Running in stand-alone mode</h3>
+               </header>
+               
+               
+               <p>For simple scenarios, deploying a configuration management server is unnecessary.
+                  Instead, use Salt or Puppet in <em>stand-alone</em> (or <em>masterless</em>) mode.</p>
+               
+               <p>As there is no server, AutoYaST needs to know where to get the configuration from.
+                  Put the configuration into a TAR archive and store it anywhere (for example, on a
+                  flash disk, an HTTP/HTTPS server, an NFS/SMB share).</p>
+               
+               <p>The TAR archive must have the same layout that is expected under <code class="literal">/srv</code> in a Salt server. This means that you need to place your Salt states in a <code class="filename">salt</code> directory and your formulas in a separate <code class="filename">formulas</code> directory.</p>
+               
+               <p>Additionally, you can have a <code class="filename">pillar</code> directory containing the pillar data. Alternatively, you can provide that data in
+                  a separate TAR archive by using the <code class="literal">pillar_url</code> option.</p>
+               
+               <div class="example formalobject" id="configuration-management-masterless">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;configuration_management&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type&gt;salt&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;states_url&gt;my-salt-server.example.net&lt;/states_url&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;pillar_url&gt;my-salt-server.example.net&lt;/pillar_url&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/configuration_management&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>82</span><span class="sep">.&nbsp;</span>Stand-alone mode</div>
+                  </header>
+               </div>
+               
+               <div class="informalobject informaltable" id="CreateProfile-ConfigurationManagement-Masterless_informaltable1">
+                  <table>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Attributes</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Value</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Description</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="literal">type</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>String</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Configuration management name. Currently only <code class="literal">salt</code> is supported.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">states_url</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>URL</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Location of the Salt states TAR archive. It may include formulas and pillars. Files
+                                 must be located in a <code class="filename">salt</code> directory.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">pillar_url</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>URL</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Location of the TAR archive that contains the pillars.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">modules_url</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>URL</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Location of Puppet modules.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-ConfigurationManagement-SUMAFormulasSupport">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>42<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>SUSE Multi-Linux Manager Salt formulas support</h3>
+               </header>
+               
+               
+               <p>AutoYaST offers support for SUSE Multi-Linux Manager Salt formulas when running in
+                  stand-alone mode. In case a formula is found in the states TAR archive, AutoYaST displays
+                  a screen which allows the user to select and configure the formulas to apply.</p>
+               
+               <p>Bear in mind that this feature defeats the AutoYaST purpose of performing an unattended
+                  installation, as AutoYaST will wait for the user's input.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partiich01s41.html">Prev</a></td>
+                  <td class="up"><a href="bk05partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk05partiii.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>41</span><span class="sep">.&nbsp;</span>Importing SSH keys and configuration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">III</span><span class="sep">.&nbsp;</span>Managing mass installations with dynamic profiles</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

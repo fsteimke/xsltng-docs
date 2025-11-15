@@ -1,0 +1,321 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.4.&nbsp;Deploying RMT on top of the Kubernetes cluster</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk08ch02s03.html" rel="prev">
+      <link href="bk08ch02s05.html" rel="next">
+      <link href="bk08ch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk08ch02.html">Up</a> <a href="bk08ch02s05.html">Next</a> <a href="bk08ch02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk08ch02s04.html" db-id="d616951e227045" id="sec-rmt-deploy-kubernetes">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Deploying RMT on top of the Kubernetes cluster</h2>
+            </header>
+            
+            
+            <p>This section describes how to deploy RMT on top of the Kubernetes cluster. It uses
+               <em>Helm</em> as the package manager to interact with the Kubernetes cluster. Find more details
+               about using Helm at <a class="link" href="https://helm.sh/docs/intro/using_helm/">https://helm.sh/docs/intro/using_helm/</a>.</p>
+            
+            <section class="sect2" id="sec-rmt-deploy-kubernetes-prerequisites">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prerequisites</h3>
+               </header>
+               
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Running Kubernetes cluster</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="command">helm</code> command configured to interact with the cluster</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-rmt-deploy-kubernetes-components">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Application components</h3>
+               </header>
+               
+               
+               <p>Each component of the RMT application is deployed in its own container. RMT consists
+                  of the following components:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">RMT server</span></dt>
+                     <dd>
+                        
+                        <p>Containerized version of the RMT application server with the ability to pass its configuration
+                           via Helm values. Storage is done on a volume that is allocated to the Kubernetes cluster.
+                           You need to adjust the size of the storage depending on the number of repositories
+                           you need to mirror.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">MariaDB</span></dt>
+                     <dd>
+                        
+                        <p>The database back-end for RMT. No post-installation task is needed since RMT creates
+                           the required database and tables at start-up. If passwords are not specified in the
+                           <code class="filename">values.yaml</code> file, they are generated automatically.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Nginx</span></dt>
+                     <dd>
+                        
+                        <p>A Web server configured for RMT routes. Having a properly configured Web server allows
+                           you to target your Ingress traffic (for RMT) to this Nginx service directly. You do
+                           not need to configure Ingress for RMT specific paths handling, as Nginx is configured
+                           to take care of this itself.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-rmt-deploy-kubernetes-values">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The <code class="filename">values.yaml</code> file</h3>
+               </header>
+               
+               
+               <p>The RMT chart includes the <code class="filename">values.yaml</code> file where all parameters are documented and their default values are defined. You
+                  can override these values by providing your own values file, for example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat &lt;&lt; EOF &gt; rmt-config.yaml</code></span></span>
+<span class="line"><span class="ld"><code>---</code></span></span>
+<span class="line"><span class="ld"><code>app:</code></span></span>
+<span class="line"><span class="ld"><code>  storage:</code></span></span>
+<span class="line"><span class="ld"><code>    class: local-path<span class="co" id="co-kubernetes-values-appstorage">⣆</span></code></span></span>
+<span class="line"><span class="ld"><code>  scc:</code></span></span>
+<span class="line"><span class="ld"><code>    enabled: false</code></span></span>
+<span class="line"><span class="ld"><code>    username: "UXXXXXXX"</code></span></span>
+<span class="line"><span class="ld"><code>    password: "PASSXXXX"</code></span></span>
+<span class="line"><span class="ld"><code>    products_enable:</code></span></span>
+<span class="line"><span class="ld"><code>      - SLES/15.3/x86_64</code></span></span>
+<span class="line"><span class="ld"><code>      - sle-module-python2/15.3/x86_64</code></span></span>
+<span class="line"><span class="ld"><code>    products_disable:</code></span></span>
+<span class="line"><span class="ld"><code>      - sle-module-legacy/15.3/x86_64</code></span></span>
+<span class="line"><span class="ld"><code>      - sle-module-cap-tools/15.3/x86_64</code></span></span>
+<span class="line"><span class="ld"><code>db:</code></span></span>
+<span class="line"><span class="ld"><code>  storage:</code></span></span>
+<span class="line"><span class="ld"><code>    class: local-path<span class="co" id="co-kubernetes-values-dbstorage">⣇</span></code></span></span>
+<span class="line"><span class="ld"><code>ingress:</code></span></span>
+<span class="line"><span class="ld"><code>  enabled: true</code></span></span>
+<span class="line"><span class="ld"><code>  hosts:</code></span></span>
+<span class="line"><span class="ld"><code>    - host: chart-example.local</code></span></span>
+<span class="line"><span class="ld"><code>      paths:</code></span></span>
+<span class="line"><span class="ld"><code>        - path: "/"</code></span></span>
+<span class="line"><span class="ld"><code>          pathType: Prefix</code></span></span>
+<span class="line"><span class="ld"><code>  tls:</code></span></span>
+<span class="line"><span class="ld"><code>    - secretName: rmt-cert</code></span></span>
+<span class="line"><span class="ld"><code>      hosts:</code></span></span>
+<span class="line"><span class="ld"><code>        - chart-example.local</code></span></span>
+<span class="line"><span class="ld"><code>EOF</code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-kubernetes-values-appstorage">⣆</a><a class="callout-bug" href="#co-kubernetes-values-dbstorage">⣇</a></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">local-path</code> storage class is only available in Rancher workloads. To make the helm chart succeed,
+                           you need to install the <code class="literal">local-path</code> storage provisioner by running the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <p>And to install RMT, run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>helm install rmtsle oci://registry.suse.com/suse/rmt-helm -f rmt-config.yaml</code></span></span></pre>
+               </div>
+               
+               <section class="sect3" id="sec-rmt-helm-required-values">
+                  <header>
+                     <h4><span class="label">2<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Required values</h4>
+                  </header>
+                  
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: app.scc.password</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: string</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">nil</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: <a class="link" href="https://scc.suse.com/">SUSE Customer Center</a> proxy password. The password string needs to be put inside quotes. If the quote character
+                              <code class="literal">"</code> is part of the string, it has to be escaped with <code class="literal">\</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: app.scc.username</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: string</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">nil</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: <a class="link" href="https://scc.suse.com/">SUSE Customer Center</a> proxy user name. The user name string needs to be put inside quotes. If the quote
+                              character <code class="literal">"</code> is part of the string, it has to be escaped with <code class="literal">\</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: app.scc.products_enable</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: list</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">[]</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: list of products to enable for mirroring</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: app.scc.products_disable</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: list</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">[]</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: list of products to disable for mirroring</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: app.storage.class</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: string</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">""</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: Kubernetes <code class="literal">storageclass</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: db.storage.class</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: string</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">""</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: Kubernetes <code class="literal">storageclass</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: ingress.enabled</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: bool</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">false</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: Ingress Enabled</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: ingress.hosts[0]</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: object</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">{"host":"chart-example.local","paths":[{"path":"/","pathType":"Prefix"}]}</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: DNS name at which the RMT service will be accessible from clients</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: ingress.tls[0].hosts[0]</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: string</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">"chart-example.local"</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: DNS name at which the RMT service will be accessible from clients</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="strong">Key</strong>: ingress.tls[0].secretName</span></dt>
+                        <dd>
+                           
+                           <p><strong class="strong">Type</strong>: string</p>
+                           
+                           <p><strong class="strong">Default</strong>: <code class="literal">"rmt-cert"</code></p>
+                           
+                           <p><strong class="strong">Description</strong>: TLS Ingress Certificate</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk08ch02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk08ch02.html">Up</a></td>
+                  <td class="next"><a href="bk08ch02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Installation on an existing system</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>RMT configuration with YaST</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

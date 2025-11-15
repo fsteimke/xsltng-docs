@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>8.2.&nbsp;Starting and stopping the monolithic daemon</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich01.html" rel="prev">
+      <link href="bk10partiich01s03.html" rel="next">
+      <link href="bk10partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich01.html">Up</a> <a href="bk10partiich01s03.html">Next</a> <a href="bk10partiich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich01s02.html" db-id="d616951e270052" id="libvirt-monolithic-daemon">
+            <header>
+               <h2><span class="label">8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Starting and stopping the monolithic daemon</h2>
+            </header>
+            
+            
+            <p>The monolithic daemon is known as <code class="daemon systemitem">libvirtd</code> and is configured via <code class="filename">/etc/libvirt/libvirtd.conf</code>. <code class="daemon systemitem">libvirtd</code> is managed with several <code class="daemon systemitem">systemd</code> unit files:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p><em>libvirtd.service</em> - The main <code class="daemon systemitem">systemd</code> unit file for launching <code class="daemon systemitem">libvirtd</code>. We recommend configuring <code class="filename">libvirtd.service</code> to start on boot if VMs are also configured to start on host boot.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>libvirtd.socket</em> - The unit file corresponding to the main read-write UNIX socket <code class="filename">/var/run/libvirt/libvirt-sock</code>. We recommend enabling this unit on boot.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>libvirtd-ro.socket</em> - The unit file corresponding to the main read-only UNIX socket <code class="filename">/var/run/libvirt/libvirt-sock-ro</code>. We recommend enabling this unit on boot.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>libvirtd-admin.socket</em> - The unit file corresponding to the administrative UNIX socket <code class="filename">/var/run/libvirt/libvirt-admin-sock</code>. We recommend enabling this unit on boot.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>libvirtd-tcp.socket</em> - The unit file corresponding to the TCP 16509 port for non-TLS remote access. This
+                     unit should not be configured to start on boot until the administrator has configured
+                     a suitable authentication mechanism.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>libvirtd-tls.socket</em> - The unit file corresponding to the TCP 16509 port for TLS remote access. This unit
+                     should not be configured to start on boot until the administrator has deployed x509
+                     certificates and optionally configured a suitable authentication mechanism.</p>
+                  </li>
+               </ul>
+            
+            <p>When <code class="daemon systemitem">systemd</code> socket activation is used, certain configuration settings in <code class="filename">libvirtd.conf</code> are no longer honored. Instead, these settings must be controlled via the system
+               unit files:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p><em>listen_tcp</em> - TCP socket usage is enabled by starting the <code class="filename">libvirtd-tcp.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>listen_tls</em> - TLS socket usage is enabled by starting the <code class="filename">libvirtd-tls.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>tcp_port</em> - Port for the non-TLS TCP socket, controlled via the <code class="option">ListenStream</code> parameter in the <code class="filename">libvirtd-tcp.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>tls_port</em> - Port for the TLS TCP socket, controlled via the <code class="option">ListenStream</code> parameter in the <code class="filename">libvirtd-tls.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>listen_addr</em> - IP address to listen on, independently controlled via the <code class="option">ListenStream</code> parameter in the <code class="filename">libvirtd-tcp.socket</code> or <code class="filename">libvirtd-tls.socket</code> unit files.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>unix_sock_group</em> - UNIX socket group owner, controlled via the <code class="option">SocketGroup</code> parameter in the <code class="filename">libvirtd.socket</code> and <code class="filename">libvirtd-ro.socket</code> unit files.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>unix_sock_ro_perms</em> - Read-only UNIX socket permissions, controlled via the <code class="option">SocketMode</code> parameter in the <code class="filename">libvirtd-ro.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>unix_sock_rw_perms</em> - Read-write UNIX socket permissions, controlled via the <code class="option">SocketMode</code> parameter in the <code class="filename">libvirtd.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>unix_sock_admin_perms</em> - Admin UNIX socket permissions, controlled via the <code class="option">SocketMode</code> parameter in the <code class="filename">libvirtd-admin.socket</code> unit file.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><em>unix_sock_dir</em> - Directory in which all UNIX sockets are created, independently controlled via the
+                     <code class="option">ListenStream</code> parameter in any of the <code class="filename">libvirtd.socket</code>, <code class="filename">libvirtd-ro.socket</code> and <code class="filename">libvirtd-admin.socket</code> unit files.</p>
+                  </li>
+               </ul>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Conflicting services: <code class="daemon systemitem">libvirtd</code> and <code class="daemon systemitem">xendomains</code>
+                           </div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>If <code class="daemon systemitem">libvirtd</code> fails to start, check if the service <code class="daemon systemitem">xendomains</code> is loaded:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>systemctl is-active xendomains active</code></span></span></pre>
+                        </div>
+                        
+                        <p>If the command returns <code class="literal">active</code>, you need to stop <code class="daemon systemitem">xendomains</code> before you can start the <code class="daemon systemitem">libvirtd</code> daemon. If you want <code class="daemon systemitem">libvirtd</code> to also start after rebooting, additionally prevent <code class="daemon systemitem">xendomains</code> from starting automatically. Disable the service:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl stop xendomains</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl disable xendomains</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start libvirtd</code></span></span></pre>
+                        </div>
+                        
+                        <p><code class="daemon systemitem">xendomains</code> and <code class="daemon systemitem">libvirtd</code> provide the same service and when used in parallel, may interfere with one another.
+                           As an example, <code class="daemon systemitem">xendomains</code> may attempt to start a domU already started by <code class="daemon systemitem">libvirtd</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich01.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">8</span><span class="sep">.&nbsp;</span>
+                     <code class="library systemitem">libvirt</code> daemons</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Switching to the monolithic daemon</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

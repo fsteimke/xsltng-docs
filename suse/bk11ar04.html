@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Using KubeVirt on SUSE Linux Enterprise</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar03s10.html" rel="prev">
+      <link href="bk11ar04s02.html" rel="next">
+      <link href="bk11.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="article component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11.html">Up</a> <a href="bk11ar04s02.html">Next</a> <a href="bk11ar03s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="article component" db-chunk="bk11ar04.html" db-id="d616951e321519" id="article-kubevirt" lang="en">
+            <header>
+               <table class="logos">
+                  <colgroup>
+                     <col class="logo left">
+                     <col class="logo right">
+                  </colgroup>
+                  <tbody>
+                     <tr>
+                        <td class="left">
+                           <h1>Using KubeVirt on SUSE Linux Enterprise</h1>
+                           <div class="authorgroup">
+                              <div class="author">
+                                 <h3><span class="first-last personname"><span class="firstname">Jim</span> <span class="surname">Fehlig</span></span></h3>
+                              </div>
+                              <div class="author">
+                                 <h3><span class="first-last personname"><span class="firstname">Vasily</span> <span class="surname">Ulyanov</span></span></h3>
+                              </div>
+                           </div>
+                        </td>
+                        <td class="right"><img class="logo-right" src="./logo/kosit.gif"></td>
+                     </tr>
+                  </tbody>
+               </table>
+               <div class="abstract">
+                  
+                  <p>KubeVirt is a virtual machine management add-on for Kubernetes. KubeVirt extends Kubernetes
+                     by adding additional virtualization resource types through Kubernetes' Custom Resource
+                     Definitions (CRD) API. Along with the Custom Resources, KubeVirt includes controllers
+                     and agents that provide virtual machine management capabilities on the cluster. By
+                     using this mechanism, the Kubernetes API can be used to manage virtual machine resources
+                     similar to other Kubernetes resources.</p>
+                  </div>
+            </header>
+            <div class="db-bfs">
+               
+               </div>
+            <section class="sect1" id="sec-virtualization-kubevirt">
+               <header>
+                  <h2><span class="label">1</span><span class="sep">.&nbsp;</span>KubeVirt components</h2>
+               </header>
+               
+               
+               <p>KubeVirt consists of two RPM-based packages and six container images that provide
+                  the Kubernetes virtual machine management extension. The RPM packages include <code class="package">kubevirt-virtctl</code> and <code class="package">kubevirt-manifests</code>. The container images include <code class="package">virt-api</code>, <code class="package">virt-controller</code>, <code class="package">virt-handler</code>, <code class="package">virt-launcher</code>, and <code class="package">virt-operator</code>, <code class="package">libguestfs-tools</code>.</p>
+               
+               <p><code class="package">kubevirt-virtctl</code> can be installed on any machine with administrator access to the cluster. It contains
+                  the <code class="package">virtctl</code> tool, which provides syntactic sugar on top of the <code class="package">kubectl</code> tool for virtual machine resources. Although the <code class="package">kubectl</code> tool can be used to manage virtual machines, it is a bit awkward since, unlike standard
+                  Kubernetes resources, virtual machines maintain state. Migration is also unique to
+                  virtual machines. If a standard Kubernetes resource needs to be evacuated from a cluster
+                  node, it is destroyed and started again on an alternate node. Since virtual machines
+                  are stateful, they cannot be destroyed and must be live-migrated away if a node is
+                  under evacuation. The <code class="package">virtctl</code> tool abstracts the complexity of managing virtual machines with <code class="package">kubectl</code>. It can be used to stop, start, pause, unpause and migrate virtual machines. <code class="package">virtclt</code> also provides access to the virtual machine's serial console and graphics server.</p>
+               
+               <p><code class="package">kubevirt-manifests</code> contains the manifests, or recipes, for installing KubeVirt. The most interesting
+                  files are <code class="filename">/usr/share/kube-virt/manifests/release/kubevirt-cr.yaml</code> and <code class="filename">/usr/share/kube-virt/manifests/release/kubevirt-operator.yaml</code>. <code class="filename">kubevirt-cr.yaml</code> contains the KubeVirt Custom Resource definition that represents the KubeVirt service.
+                  <code class="filename">kubevirt-operator.yaml</code> is the recipe for deploying the KubeVirt operator, which deploys the KubeVirt service
+                  to the cluster and manages its' lifecycle.</p>
+               
+               <p><code class="package">virt-api</code> is a cluster component that provides the Kubernetes API extension for virtual machine
+                  resources. Like <code class="package">virt-api</code>, <code class="package">virt-controller</code> is a cluster component that watches for new objects created via <code class="package">virt-api</code>, or updates to existing objects, and takes action to ensure the object state matches
+                  the requested state. <code class="package">virt-handler</code> is a DaemonSet and a node component that has the job of keeping the cluster-level
+                  virtual machine object in sync with the <code class="package">libvirtd</code> domain running in <code class="package">virt-launcher</code>. <code class="package">virt-handler</code> can also perform node-centric operations like configuring networking and/or storage
+                  on the node per the virtual machine specification. <code class="package">virt-launcher</code> is also a node component and has the job of running <code class="package">libvirt</code> plus <code class="package">qemu</code> to provide the virtual machine environment. <code class="package">virt-launcher</code> is a lowly pod resource. <code class="package">libguestfs-tools</code> is a component providing a set of utilities for accessing and modifying VM disk images.</p>
+               
+               <p><code class="package">virt-operator</code> implements the Kubernetes operator pattern. Operators encode the human knowledge
+                  required to deploy, run and maintain an application. Operators are a Kubernetes Deployment
+                  resource type and are often used to manage the custom resources and custom controllers
+                  that together provide a more complex Kubernetes application such as KubeVirt.</p>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar03s10.html">Prev</a></td>
+                  <td class="up"><a href="bk11.html">Up</a></td>
+                  <td class="next"><a href="bk11ar04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10</span><span class="sep">.&nbsp;</span>GNU Free Documentation License</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2</span><span class="sep">.&nbsp;</span>Installing KubeVirt on Kubernetes</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

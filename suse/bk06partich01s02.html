@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.2.&nbsp;Structure of a PAM configuration file</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich01.html" rel="prev">
+      <link href="bk06partich01s03.html" rel="next">
+      <link href="bk06partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich01.html">Up</a> <a href="bk06partich01s03.html">Next</a> <a href="bk06partich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich01s02.html" db-id="d616951e154169" id="sec-pam-struc-files">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Structure of a PAM configuration file</h2>
+            </header>
+            
+            
+            <p>PAM can be configured in two ways:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">File based configuration (<code class="filename">/etc/pam.conf</code>)</span></dt>
+                  <dd>
+                     
+                     <p>The configuration of each service is stored in <code class="filename">/etc/pam.conf</code>. However, for maintenance and usability reasons, this configuration scheme is not
+                        used in <span class="phrase productname">SUSE Linux Enterprise Server</span>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Directory based configuration (<code class="filename">/etc/pam.d/</code>)</span></dt>
+                  <dd>
+                     
+                     <p>Every service (or program) that relies on the PAM mechanism has its own configuration
+                        file in the <code class="filename">/etc/pam.d/</code> directory. For example, the service for <code class="daemon systemitem">sshd</code> can be found in the <code class="filename">/etc/pam.d/sshd</code> file.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>The files under <code class="filename">/etc/pam.d/</code> define the PAM modules used for authentication. Each file consists of lines, which
+               define a service, and each line consists of a maximum of four components:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><em class="replaceable">TYPE</em><em class="replaceable">CONTROL</em><em class="replaceable">MODULE_PATH</em><em class="replaceable">MODULE_ARGS</em></code></span></span></pre>
+            </div>
+            
+            <p>The components have the following meaning:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <em class="replaceable">TYPE</em>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Declares the type of the service. PAM modules are processed as stacks. Different types
+                        of modules have different purposes. For example, one module checks the password, another
+                        verifies the location from which the system is accessed, and yet another reads user-specific
+                        settings. PAM knows about four different types of modules:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">auth</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Check the user's authenticity, traditionally by querying a password. However, this
+                                 can also be achieved with a chip card or through biometrics (for example, fingerprints
+                                 or iris scan).</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">account</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Modules of this type check if the user has general permission to use the requested
+                                 service. As an example, such a check should be performed to ensure that no one can
+                                 log in with the user name of an expired account.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">password</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>The purpose of this type of module is to enable the change of an authentication token.
+                                 Usually this is a password.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">session</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Modules of this type are responsible for managing and configuring user sessions. They
+                                 are started before and after authentication to log login attempts and configure the
+                                 user's specific environment (mail accounts, home directory, system limits, etc.).</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <em class="replaceable">CONTROL</em>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Indicates the behavior of a PAM module. Each module can have the following control
+                        flags:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">required</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>A module with this flag must be successfully processed before the authentication may
+                                 proceed. After the failure of a module with the <code class="literal">required</code> flag, all other modules with the same flag are processed before the user receives
+                                 a message about the failure of the authentication attempt.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">requisite</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Modules having this flag must also be processed successfully, in much the same way
+                                 as a module with the <code class="literal">required</code> flag. However, in case of failure a module with this flag gives immediate feedback
+                                 to the user and no further modules are processed. In case of success, other modules
+                                 are subsequently processed, like any modules with the <code class="literal">required</code> flag. The <code class="literal">requisite</code> flag can be used as a basic filter checking for the existence of certain conditions
+                                 that are essential for a correct authentication.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">sufficient</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>After a module with this flag has been successfully processed, the requesting application
+                                 receives an immediate message about the success and no further modules are processed,
+                                 provided there was no preceding failure of a module with the <code class="literal">required</code> flag. The failure of a module with the <code class="literal">sufficient</code> flag has no direct consequences, in the sense that any subsequent modules are processed
+                                 in their respective order.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">optional</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>The failure or success of a module with this flag does not have any direct consequences.
+                                 This can be useful for modules that are only intended to display a message (for example,
+                                 to tell the user that mail has arrived) without taking any further action.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">include</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>If this flag is given, the file specified as argument is inserted at this place.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <em class="replaceable">MODULE_PATH</em>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Contains a full file name of a PAM module. It does not need to be specified explicitly,
+                        if the module is located in the default directory <code class="filename">/lib/security</code> (for all 64-bit platforms supported by <span class="phrase productname">SUSE® Linux Enterprise Server</span>, the directory is <code class="filename">/lib64/security</code>).</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <em class="replaceable">MODULE_ARGS</em>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Contains a space-separated list of options to influence the behavior of a PAM module,
+                        such as <code class="option">debug</code> (enables debugging) or <code class="option">nullok</code> (allows the use of empty passwords).</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>In addition, there are global configuration files for PAM modules under <code class="filename">/etc/security</code>, which define the exact behavior of these modules (examples include <code class="filename">pam_env.conf</code> and <code class="filename">time.conf</code>). Every application that uses a PAM module calls a set of PAM functions, which then
+               process the information in the configuration files and return the result to the requesting
+               application.</p>
+            
+            <p>To simplify the creation and maintenance of PAM modules, common default configuration
+               files for the types <code class="literal">auth</code>, <code class="literal">account</code>, <code class="literal">password</code>, and <code class="literal">session</code> modules have been introduced. These are retrieved from every application's PAM configuration.
+               Updates to the global PAM configuration modules in <code class="filename">common-*</code> are thus propagated across all PAM configuration files without requiring the administrator
+               to update every single PAM configuration file.</p>
+            
+            <p>The global PAM configuration files are maintained using the <code class="command">pam-config</code> tool. This tool automatically adds new modules to the configuration, changes the
+               configuration of existing ones or deletes modules (or options) from the configurations.
+               Manual intervention in maintaining PAM configurations is minimized or no longer required.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">64-bit and 32-bit mixed installations</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When using a 64-bit operating system, it is possible to also include a runtime environment
+                           for 32-bit applications. In this case, make sure that you also install the 32-bit
+                           version of the PAM modules.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich01.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partich01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">2</span><span class="sep">.&nbsp;</span>Authentication with PAM</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The PAM configuration of sshd</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

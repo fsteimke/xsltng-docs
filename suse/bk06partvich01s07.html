@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>43.7.&nbsp;Configuring SELinux</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvich01s06.html" rel="prev">
+      <link href="bk06partvich01s08.html" rel="next">
+      <link href="bk06partvich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvich01.html">Up</a> <a href="bk06partvich01s08.html">Next</a> <a href="bk06partvich01s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvich01s07.html" db-id="d616951e193387" id="sec-selinux-configure">
+            <header>
+               <h2><span class="label">43<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Configuring SELinux</h2>
+            </header>
+            
+            
+            <p>Before you start tuning your server, verify the SELinux installation. You have already
+               used the command <code class="command">sestatus -v</code> to view the current mode, process and file contexts. Next, run</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage boolean -l</code></code></span></span></pre>
+            </div>
+            
+            <p>which lists all Boolean switches that are available, and at the same time verifies
+               that you can access the policy. <a class="xref xref-example" href="#ex-selnx-ls-bool">Example&nbsp;<span class="label">43<span class="sep">.</span>3</span>, “Getting a list of booleans and verifying policy access”</a> shows part of the output of this command.</p>
+            
+            <div class="example formalobject" id="ex-selnx-ls-bool">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage boolean -l</code></code></span></span>
+<span class="line"><span class="ld"><code>SELinux boolean                          Description</code></span></span>
+<span class="line"><span class="ld"><code>ftp_home_dir                   -&gt; off   ftp_home_dir</code></span></span>
+<span class="line"><span class="ld"><code>mozilla_read_content           -&gt; off   mozilla_read_content</code></span></span>
+<span class="line"><span class="ld"><code>spamassassin_can_network       -&gt; off   spamassassin_can_network</code></span></span>
+<span class="line"><span class="ld"><code>httpd_can_network_relay        -&gt; off   httpd_can_network_relay</code></span></span>
+<span class="line"><span class="ld"><code>openvpn_enable_homedirs        -&gt; off   openvpn_enable_homedirs</code></span></span>
+<span class="line"><span class="ld"><code>gpg_agent_env_file             -&gt; off   gpg_agent_env_file</code></span></span>
+<span class="line"><span class="ld"><code>allow_httpd_awstats_script_anon_write -&gt; off   allow_httpd_awstats_script_anon_write</code></span></span>
+<span class="line"><span class="ld"><code>httpd_can_network_connect_db   -&gt; off   httpd_can_network_connect_db</code></span></span>
+<span class="line"><span class="ld"><code>allow_ftpd_full_access         -&gt; off   allow_ftpd_full_access</code></span></span>
+<span class="line"><span class="ld"><code>samba_domain_controller        -&gt; off   samba_domain_controller</code></span></span>
+<span class="line"><span class="ld"><code>httpd_enable_cgi               -&gt; off   httpd_enable_cgi</code></span></span>
+<span class="line"><span class="ld"><code>virt_use_nfs                   -&gt; off   virt_use_nfs</code></span></span></pre>
+               </div>
+               
+               <p>Another command that outputs useful information at this stage is</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage fcontext -l</code></code></span></span></pre>
+               </div>
+               
+               <p>It shows the default file context settings as provided by the policy (see <a class="xref xref-example" href="#ex-selnx-fcon">Example&nbsp;<span class="label">43<span class="sep">.</span>4</span> &amp;Getting file context information&amp;</a> for partial output of this command).</p>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Getting a list of booleans and verifying policy access</div>
+               </header>
+            </div>
+            
+            <div class="example formalobject" id="ex-selnx-fcon">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage fcontext -l</code></code></span></span>
+<span class="line"><span class="ld"><code>/var/run/usb(/.*)?                                 all files          system_u:object_r:hotplug_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/utmp                                      regular file       system_u:object_r:initrc_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/vbe.*                                     regular file       system_u:object_r:hald_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/vmnat.*                                   socket             system_u:object_r:vmware_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/vmware.*                                  all files          system_u:object_r:vmware_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/watchdog\.pid                             regular file       system_u:object_r:watchdog_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/winbindd(/.*)?                            all files          system_u:object_r:winbind_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/wnn-unix(/.*)                             all files          system_u:object_r:canna_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/wpa_supplicant(/.*)?                      all files          system_u:object_r:NetworkManager_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/wpa_supplicant-global                     socket             system_u:object_r:NetworkManager_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/xdmctl(/.*)?                              all files          system_u:object_r:xdm_var_run_t</code></span></span>
+<span class="line"><span class="ld"><code>/var/run/yiff-[0-9]+\.pid                          regular file       system_u:object_r:soundd_var_run_t</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Getting file context information</div>
+               </header>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvich01s06.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partvich01s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">43<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Putting SELinux into enforcing mode</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">43<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Managing SELinux</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

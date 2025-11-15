@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;17.&nbsp;Tuning the network</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvch03s04.html" rel="prev">
+      <link href="bk07partvch04s02.html" rel="next">
+      <link href="bk07partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partv.html">Up</a> <a href="bk07partvch04s02.html">Next</a> <a href="bk07partvch03s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk07partvch04.html" db-id="d616951e220508" id="cha-tuning-network" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">17</span><span class="sep">.&nbsp;</span>Tuning the network</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>The network subsystem is complex and its tuning highly depends on the system use scenario
+                  and on external factors such as software clients or hardware components (switches,
+                  routers, or gateways) in your network. The Linux kernel aims more at reliability and
+                  low latency than low overhead and high throughput. Other settings can mean less security,
+                  but better performance.</p>
+               </div>
+            <section class="sect1" id="sec-tuning-network-buffers">
+               <header>
+                  <h2><span class="label">17<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configurable kernel socket buffers</h2>
+               </header>
+               
+               
+               <p>Most of modern networking is based on the TCP/IP protocol and a socket interface for
+                  communication; for more information about TCP/IP, see <a class="xref xref-chapter" href="bk01partiiich04.html">Chapter&nbsp;<span class="label">23</span>, Basic networking</a>. The Linux kernel handles data it receives or sends via the socket interface in socket
+                  buffers. These kernel socket buffers are tunable.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">TCP autotuning</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Since kernel version 2.6.17 full autotuning with 4 MB maximum buffer size exists.
+                              This means that manual tuning does not improve networking performance considerably.
+                              It is often the best not to touch the following variables, or, at least, to check
+                              the outcome of tuning efforts carefully.</p>
+                           
+                           <p>If you update from an older kernel, it is recommended to remove manual TCP tunings
+                              in favor of the autotuning feature.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The special files in the <code class="filename">/proc</code> file system can modify the size and behavior of kernel socket buffers; for general
+                  information about the <code class="filename">/proc</code> file system, see <a class="xref xref-sect1" href="bk07partiich01s06.html">the section called “The <code class="filename">/proc</code> file system”</a>. Find networking related files in:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/proc/sys/net/core</code></span></span>
+<span class="line"><span class="ld"><code>/proc/sys/net/ipv4</code></span></span>
+<span class="line"><span class="ld"><code>/proc/sys/net/ipv6</code></span></span></pre>
+               </div>
+               
+               <p>General <code class="systemitem">net</code> variables are explained in the kernel documentation (<code class="filename">linux/Documentation/sysctl/net.txt</code>). Special <code class="systemitem">ipv4</code> variables are explained in <code class="filename">linux/Documentation/networking/ip-sysctl.txt</code> and <code class="filename">linux/Documentation/networking/ipvs-sysctl.txt</code>.</p>
+               
+               <p>In the <code class="filename">/proc</code> file system, for example, it is possible to either set the Maximum Socket Receive
+                  Buffer and Maximum Socket Send Buffer for all protocols, or both these options for
+                  the TCP protocol only (in <code class="filename">ipv4</code>) and thus overriding the setting for all protocols (in <code class="filename">core</code>).</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/ipv4/tcp_moderate_rcvbuf</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>If <code class="filename">/proc/sys/net/ipv4/tcp_moderate_rcvbuf</code> is set to <code class="literal">1</code>, autotuning is active and buffer size is adjusted dynamically.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/ipv4/tcp_rmem</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The three values setting the minimum, initial, and maximum size of the Memory Receive
+                           Buffer per connection. They define the actual memory usage, not only TCP window size.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/ipv4/tcp_wmem</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The same as <code class="filename">tcp_rmem</code>, but for Memory Send Buffer per connection.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/core/rmem_max</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Set to limit the maximum receive buffer size that applications can request.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/core/wmem_max</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Set to limit the maximum send buffer size that applications can request.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Via <code class="filename">/proc</code> it is possible to disable TCP features that you do not need (all TCP features are
+                  switched on by default). For example, check the following files:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/ipv4/tcp_timestamps</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>TCP time stamps are defined in RFC1323.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/ipv4/tcp_window_scaling</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>TCP window scaling is also defined in RFC1323.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/proc/sys/net/ipv4/tcp_sack</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Select acknowledgments (SACKS).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Use <code class="command">sysctl</code> to read or write variables of the <code class="filename">/proc</code> file system. <code class="command">sysctl</code> is preferable to <code class="command">cat</code> (for reading) and <code class="command">echo</code> (for writing), because it also reads settings from <code class="filename">/etc/sysctl.conf</code> and, thus, those settings survive reboots reliably. With <code class="command">sysctl</code> you can read all variables and their values easily; as <code class="systemitem username">root</code> use the following command to list TCP related settings:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> sysctl -a | grep tcp</code></span></span></pre>
+               </div>
+               
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Side effects of tuning network variables</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Tuning network variables can affect other system resources such as CPU or memory use.
+                              </p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvch03s04.html">Prev</a></td>
+                  <td class="up"><a href="bk07partv.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">16<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Monitoring VM behavior</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">17<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Detecting network bottlenecks and analyzing network traffic</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

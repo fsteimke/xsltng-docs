@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.5.&nbsp;Upgrading with Zypper</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk03ch05s04.html" rel="prev">
+      <link href="bk03ch05s06.html" rel="next">
+      <link href="bk03ch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk03ch05.html">Up</a> <a href="bk03ch05s06.html">Next</a> <a href="bk03ch05s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk03ch05s05.html" db-id="d616951e107053" id="sec-upgrade-online-zypper">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Upgrading with Zypper</h2>
+            </header>
+            
+            
+            <p>To perform a service pack migration with Zypper, use the command-line tool <code class="command">zypper</code><code class="option">migration</code> from the package <code class="package">zypper-migration-plugin</code>.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Reduce installation size</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When performing the Service Pack migration, YaST will install all recommended packages.
+                           Especially in the case of custom minimal installations, this may increase the installation
+                           size of the system significantly.</p>
+                        
+                        <p>To change this default behavior and allow only required packages, adjust the <code class="option">solver.onlyRequires</code> option in <code class="filename">/etc/zypp/zypp.conf</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>solver.onlyRequires = true</code></span></span></pre>
+                        </div>
+                        
+                        <p>Additionally, edit the file <code class="filename">/etc/zypp/zypper.conf</code> and change the <code class="option">installRecommends</code> option.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>installRecommends=false</code></span></span></pre>
+                        </div>
+                        
+                        <p>This changes the behavior of all package operations, such as the installation of patches
+                           or new packages. To change the behavior of Zypper for a single invocation, use the
+                           parameter <code class="option">--no-recommends</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>To start the service pack migration, do the following:</p>
+            
+            <div class="informalobject procedure" id="pro-upgrade-online-zypper">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>If you are logged in to a GNOME session running on the machine you are going to update,
+                        switch to a text console. Running the update from within a GNOME session is not recommended.
+                        Note that this does not apply when being logged in from a remote machine (unless you
+                        are running a VNC session with GNOME).</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Register your SUSE Linux Enterprise machine if you have not done so:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">SUSEConnect</code> --regcode <em class="replaceable">YOUR_REGISTRATION_CODE</em></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start the migration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper migration</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>Some notes about the migration process:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p>If more than one migration target is available for your system, Zypper allows you
+                              to select one SP from the list. This is the same as skipping one or more SPs. Keep
+                              in mind, online migration for base products (SLES, SLED) remains available only between
+                              the SPs of a major version.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>By default, Zypper uses the option <code class="option">--no-allow-vendor-change</code> which is passed to <code class="command">zypper</code><code class="option">dup</code>. If a package was installed from a third-party repository, this option prevents packages
+                              from being replaced with the same package coming from SUSE.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p> If Zypper finds obsolete repositories coming from DVD or a local server, it is highly
+                              recommended to disable them. Old SUSE Customer Center or RMT repositories are removed
+                              automatically.</p>
+                           </li>
+                        </ul>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Review all the changes, especially the packages that are going to be removed. Proceed
+                        by typing <code class="literal">y</code> (the exact number of packages to upgrade can vary on your system):</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>266 packages to upgrade, 54 to downgrade, 17 new, 8 to reinstall, 5 to remove, 1 to change arch.</code></span></span>
+<span class="line"><span class="ld"><code>Overall download size: 285.1 MiB. Already cached: 0 B  After the operation, additional 139.8 MiB will be used.</code></span></span>
+<span class="line"><span class="ld"><code>Continue? [y/n/? shows all options] (y):</code></span></span></pre>
+                     </div>
+                     
+                     <p>Use the <span class="keycombo"><span class="keycap shift">Shift</span><span class="keycap pageup">Page Up</span></span> or <span class="keycombo"><span class="keycap shift">Shift</span><span class="keycap pagedown">Page Down</span></span> keys to scroll in your shell.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>After successful migration restart your system.</p>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk03ch05s04.html">Prev</a></td>
+                  <td class="up"><a href="bk03ch05.html">Up</a></td>
+                  <td class="next"><a href="bk03ch05s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Upgrading with the online migration tool (YaST)</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Upgrading with plain Zypper</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

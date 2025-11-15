@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;16.&nbsp;Tuning the memory management subsystem</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvch02s04.html" rel="prev">
+      <link href="bk07partvch03s02.html" rel="next">
+      <link href="bk07partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partv.html">Up</a> <a href="bk07partvch03s02.html">Next</a> <a href="bk07partvch02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk07partvch03.html" db-id="d616951e219494" id="cha-tuning-memory" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">16</span><span class="sep">.&nbsp;</span>Tuning the memory management subsystem</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>To understand and tune the memory management behavior of the kernel, it is important
+                  to first have an overview of how it works and cooperates with other subsystems.</p>
+               
+               <p> The memory management subsystem, also called the virtual memory manager, will subsequently
+                  be called <q>VM</q>. The role of the VM is to manage the allocation of physical memory (RAM) for the
+                  entire kernel and user programs. It is also responsible for providing a virtual memory
+                  environment for user processes (managed via POSIX APIs with Linux extensions). Finally,
+                  the VM frees up RAM when there is a shortage, either by trimming caches or swapping
+                  out <q>anonymous</q> memory.</p>
+               
+               <p>The most important thing to understand when examining and tuning VM is how its caches
+                  are managed. The basic goal of the VM's caches is to minimize the cost of I/O as generated
+                  by swapping and file system operations (including network file systems). This is achieved
+                  by avoiding I/O or by submitting I/O in better patterns.</p>
+               
+               <p>Free memory is used and filled up by these caches as required. The more memory is
+                  available for caches and anonymous memory, the more effectively the caches and swapping
+                  operate. However, if a memory shortage is encountered, the caches are trimmed or the
+                  memory is swapped out.</p>
+               
+               <p>For a particular workload, the first thing that can be done to improve performance
+                  is to increase memory and reduce the frequency that memory must be trimmed or swapped.
+                  The second thing is to change the way caches are managed by changing kernel parameters.</p>
+               
+               <p>Finally, the workload itself should be examined and tuned as well. If an application
+                  is allowed to run more processes or threads, effectiveness of VM caches can be reduced,
+                  if each process is operating in its own area of the file system. Memory overheads
+                  are also increased. If applications allocate their own buffers or caches, larger caches
+                  mean that less memory is available for VM caches. However, more processes and threads
+                  can mean more opportunity to overlap and pipeline I/O, and may take better advantage
+                  of multiple cores. Experimentation is required for the best results.</p>
+               </div>
+            <section class="sect1" id="cha-tuning-memory-usage">
+               <header>
+                  <h2><span class="label">16<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Memory usage</h2>
+               </header>
+               
+               
+               <p>Memory allocations can be characterized as <q>pinned</q> (also known as <q>unreclaimable</q>), <q>reclaimable</q> or <q>swappable</q>.</p>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-anonymous">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Anonymous memory</h3>
+                  </header>
+                  
+                  
+                  <p>Anonymous memory tends to be program heap and stack memory (for example, <code class="literal">&gt;malloc()</code>). It is reclaimable, except in special cases such as <code class="literal">mlock</code> or if there is no available swap space. Anonymous memory must be written to swap
+                     before it can be reclaimed. Swap I/O (both swapping in and swapping out pages) tends
+                     to be less efficient than pagecache I/O, because of allocation and access patterns.</p>
+                  </section>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-pagecache">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Pagecache</h3>
+                  </header>
+                  
+                  
+                  <p>A cache of file data. When a file is read from disk or network, the contents are stored
+                     in pagecache. No disk or network access is required, if the contents are up-to-date
+                     in pagecache. tmpfs and shared memory segments count toward pagecache.</p>
+                  
+                  <p>When a file is written to, the new data is stored in pagecache before being written
+                     back to a disk or the network (making it a write-back cache). When a page has new
+                     data not written back yet, it is called <q>dirty</q>. Pages not classified as dirty are <q>clean</q>. Clean pagecache pages can be reclaimed if there is a memory shortage by simply freeing
+                     them. Dirty pages must first be made clean before being reclaimed.</p>
+                  </section>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-buffercache">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Buffercache</h3>
+                  </header>
+                  
+                  
+                  <p>This is a type of pagecache for block devices (for example, /dev/sda). A file system
+                     typically uses the buffercache when accessing its on-disk metadata structures such
+                     as inode tables, allocation bitmaps, and so forth. Buffercache can be reclaimed similarly
+                     to pagecache.</p>
+                  </section>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-bufferheads">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Buffer heads</h3>
+                  </header>
+                  
+                  
+                  <p>Buffer heads are small auxiliary structures that tend to be allocated upon pagecache
+                     access. They can generally be reclaimed easily when the pagecache or buffercache pages
+                     are clean.</p>
+                  </section>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-writeback">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Writeback</h3>
+                  </header>
+                  
+                  
+                  <p>As applications write to files, the pagecache becomes dirty and the buffercache may
+                     become dirty. When the amount of dirty memory reaches a specified number of pages
+                     in bytes (<em>vm.dirty_background_bytes</em>), or when the amount of dirty memory reaches a specific ratio to total memory (<em>vm.dirty_background_ratio</em>), or when the pages have been dirty for longer than a specified amount of time (<em>vm.dirty_expire_centisecs</em>), the kernel begins writeback of pages starting with files that had the pages dirtied
+                     first. The background bytes and ratios are mutually exclusive and setting one will
+                     overwrite the other. Flusher threads perform writeback in the background and allow
+                     applications to continue running. If the I/O cannot keep up with applications dirtying
+                     pagecache, and dirty data reaches a critical setting (<em>vm.dirty_bytes</em> or <em>vm.dirty_ratio</em>), then applications begin to be throttled to prevent dirty data exceeding this threshold.</p>
+                  </section>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-readahead">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Readahead</h3>
+                  </header>
+                  
+                  
+                  <p>The VM monitors file access patterns and may attempt to perform readahead. Readahead
+                     reads pages into the pagecache from the file system that have not been requested yet.
+                     It is done to allow fewer, larger I/O requests to be submitted (more efficient). And
+                     for I/O to be pipelined (I/O performed at the same time as the application is running).</p>
+                  </section>
+               
+               <section class="sect2" id="cha-tuning-memory-usage-vfs">
+                  <header>
+                     <h3><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>VFS caches</h3>
+                  </header>
+                  
+                  
+                  <section class="sect3" id="cha-tuning-memory-usage-vfs-inode">
+                     <header>
+                        <h4><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Inode cache</h4>
+                     </header>
+                     
+                     
+                     <p>This is an in-memory cache of the inode structures for each file system. These contain
+                        attributes such as the file size, permissions and ownership, and pointers to the file
+                        data.</p>
+                     </section>
+                  
+                  <section class="sect3" id="cha-tuning-memory-usage-vfs-dir-entry">
+                     <header>
+                        <h4><span class="label">16<span class="sep">.</span>1<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Directory entry cache</h4>
+                     </header>
+                     
+                     
+                     <p>This is an in-memory cache of the directory entries in the system. These contain a
+                        name (the name of a file), the inode which it refers to, and children entries. This
+                        cache is used when traversing the directory structure and accessing a file by name.</p>
+                     </section>
+                  </section>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvch02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk07partv.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">16<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Reducing memory usage</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;4.&nbsp;SystemTap—filtering and analyzing system data</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiii.html" rel="prev">
+      <link href="bk07partiiich01s02.html" rel="next">
+      <link href="bk07partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiii.html">Up</a> <a href="bk07partiiich01s02.html">Next</a> <a href="bk07partiii.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk07partiiich01.html" db-id="d616951e207344" id="cha-tuning-systemtap" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">4</span><span class="sep">.&nbsp;</span>SystemTap—filtering and analyzing system data</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               
+               
+               <p>SystemTap provides a command line interface and a scripting language to examine the
+                  activities of a running Linux system, particularly the kernel, in fine detail. SystemTap
+                  scripts are written in the SystemTap scripting language, are then compiled to C-code
+                  kernel modules and inserted into the kernel. The scripts can be designed to extract,
+                  filter and summarize data, thus allowing the diagnosis of complex performance problems
+                  or functional problems. SystemTap provides information similar to the output of tools
+                  like <code class="command">netstat</code>, <code class="command">ps</code>, <code class="command">top</code>, and <code class="command">iostat</code>. However, more filtering and analysis options can be used for the collected information.</p>
+               
+               
+               </div>
+            <section class="sect1" id="sec-tuning-systemtap-concept">
+               <header>
+                  <h2><span class="label">4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Conceptual overview</h2>
+               </header>
+               
+               
+               <p>Each time you run a SystemTap script, a SystemTap session is started. Several passes
+                  are done on the script before it is allowed to run. Then, the script is compiled into
+                  a kernel module and loaded. If the script has been executed before and no system components
+                  have changed (for example, different compiler or kernel versions, library paths, or
+                  script contents), SystemTap does not compile the script again. Instead, it uses the
+                  <code class="filename">*.c</code> and <code class="filename">*.ko</code> data stored in the SystemTap cache (<code class="filename">~/.systemtap</code>).</p>
+               
+               <p>The module is unloaded when the tap has finished running. For an example, see the
+                  test run in <a class="xref xref-sect1" href="bk07partiiich01s02.html">the section called “Installation and setup”</a> and the respective explanation. </p>
+               
+               <section class="sect2" id="sec-tuning-systemtap-concept-scripts">
+                  <header>
+                     <h3><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>SystemTap scripts</h3>
+                  </header>
+                  
+                  
+                  <p>SystemTap usage is based on SystemTap scripts (<code class="filename">*.stp</code>). They tell SystemTap which type of information to collect, and what to do once that
+                     information is collected. The scripts are written in the SystemTap scripting language
+                     that is similar to AWK and C. For the language definition, see <a class="link" href="https://sourceware.org/systemtap/langref.pdf">https://sourceware.org/systemtap/langref.pdf</a>. A lot of useful example scripts are available from <a class="link" href="https://www.sourceware.org/systemtap/examples/">https://www.sourceware.org/systemtap/examples/</a>.</p>
+                  
+                  <p>The essential idea behind a SystemTap script is to name <code class="literal">events</code>, and to give them <code class="literal">handlers</code>. When SystemTap runs the script, it monitors for certain events. When an event occurs,
+                     the Linux kernel runs the handler as a sub-routine, then resumes. Thus, events serve
+                     as the triggers for handlers to run. Handlers can record specified data and print
+                     it in a certain manner.</p>
+                  
+                  <p>The SystemTap language only uses a few data types (integers, strings, and associative
+                     arrays of these), and full control structures (blocks, conditionals, loops, functions).
+                     It has a lightweight punctuation (semicolons are optional) and does not need detailed
+                     declarations (types are inferred and checked automatically).</p>
+                  
+                  <p>For more information about SystemTap scripts and their syntax, refer to <a class="xref xref-sect1" href="bk07partiiich01s03.html">the section called “Script syntax”</a> and to the <code class="command">stapprobes</code> and <code class="command">stapfuncs</code> man pages, that are available with the <code class="resource systemitem">systemtap-docs</code> package.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-tuning-systemtap-concept-tapsets">
+                  <header>
+                     <h3><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Tapsets</h3>
+                  </header>
+                  
+                  
+                  <p> Tapsets are a library of pre-written probes and functions that can be used in SystemTap
+                     scripts. When a user runs a SystemTap script, SystemTap checks the script's probe
+                     events and handlers against the tapset library. SystemTap then loads the corresponding
+                     probes and functions before translating the script to C. Like SystemTap scripts themselves,
+                     tapsets use the file name extension <code class="filename">*.stp</code>. </p>
+                  
+                  <p>However, unlike SystemTap scripts, tapsets are not meant for direct execution. They
+                     constitute the library from which other scripts can pull definitions. Thus, the tapset
+                     library is an abstraction layer designed to make it easier for users to define events
+                     and functions. Tapsets provide aliases for functions that users could want to specify
+                     as an event. Knowing the proper alias is often easier than remembering specific kernel
+                     functions that may vary between kernel versions.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-tuning-systemtap-concept-cmd">
+                  <header>
+                     <h3><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Commands and privileges</h3>
+                  </header>
+                  
+                  
+                  <p>The main commands associated with SystemTap are <code class="command">stap</code> and <code class="command">staprun</code>. To execute them, you either need <code class="systemitem username">root</code> privileges or must be a member of the <code class="groupname systemitem">stapdev</code> or <code class="groupname systemitem">stapusr</code> group.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">stap</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>SystemTap front-end. Runs a SystemTap script (either from file, or from standard input).
+                              It translates the script into C code, compiles it, and loads the resulting kernel
+                              module into a running Linux kernel. Then, the requested system trace or probe functions
+                              are performed.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">staprun</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>SystemTap back-end. Loads and unloads kernel modules produced by the SystemTap front-end.
+                              </p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>For a list of options for each command, use <code class="option">--help</code>. For details, refer to the <code class="command">stap</code> and the <code class="command">staprun</code> man pages.</p>
+                  
+                  
+                  
+                  <p> To avoid giving <code class="systemitem username">root</code> access to users solely to enable them to work with SystemTap, use one of the following
+                     SystemTap groups. They are not available by default on <span class="phrase productname">SUSE Linux Enterprise Server</span>, but you can create the groups and modify the access rights accordingly. Also, adjust
+                     the permissions of the <code class="command">staprun</code> command if the security implications are appropriate for your environment.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="groupname systemitem">stapdev</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Members of this group can run SystemTap scripts with <code class="command">stap</code>, or run SystemTap instrumentation modules with <code class="command">staprun</code>. As running <code class="command">stap</code> involves compiling scripts into kernel modules and loading them into the kernel,
+                              members of this group still have effective <code class="systemitem username">root</code> access.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="groupname systemitem">stapusr</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Members of this group are only allowed to run SystemTap instrumentation modules with
+                              <code class="command">staprun</code>. In addition, they can only run those modules from <code class="filename">/lib/modules/<em class="replaceable">KERNEL_VERSION</em>/systemtap/</code>. This directory must be owned by <code class="systemitem username">root</code> and must only be writable for the <code class="systemitem username">root</code> user.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect2" id="sec-tuning-systemtap-concept-dir">
+                  <header>
+                     <h3><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Important files and directories</h3>
+                  </header>
+                  
+                  
+                  <p>The following list gives an overview of the SystemTap main files and directories.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/lib/modules/<em class="replaceable">KERNEL_VERSION</em>/systemtap/</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Holds the SystemTap instrumentation modules.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/usr/share/systemtap/tapset/</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Holds the standard library of tapsets.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/usr/share/doc/packages/systemtap/examples</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Holds several example SystemTap scripts for different purposes. Only available if
+                              the <code class="resource systemitem">systemtap-docs</code> package is installed.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">~/.systemtap/cache</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Data directory for cached SystemTap files.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/tmp/stap*</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Temporary directory for SystemTap files, including translated C code and kernel object.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiii.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiii.html">Up</a></td>
+                  <td class="next"><a href="bk07partiiich01s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Part&nbsp;<span class="label">III</span><span class="sep">.&nbsp;</span>Kernel monitoring</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installation and setup</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

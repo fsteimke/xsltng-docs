@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>41.3.&nbsp;The DHCP server dhcpd</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch04s02.html" rel="prev">
+      <link href="bk01partvch04s04.html" rel="next">
+      <link href="bk01partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch04.html">Up</a> <a href="bk01partvch04s04.html">Next</a> <a href="bk01partvch04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch04s03.html" db-id="d616951e59787" id="sec-dhcp-server">
+            <header>
+               <h2><span class="label">41<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The DHCP server dhcpd</h2>
+            </header>
+            
+            
+            <p>The core of any DHCP system is the dynamic host configuration protocol daemon. This
+               server <em>leases</em> addresses and watches how they are used, according to the settings defined in the
+               configuration file <code class="filename">/etc/dhcpd.conf</code>. By changing the parameters and values in this file, a system administrator can influence
+               the program's behavior in many ways. Look at the basic sample <code class="filename">/etc/dhcpd.conf</code> file in <a class="xref xref-example" href="#dat-dhcp-conf">Example&nbsp;<span class="label">41<span class="sep">.</span>1</span>, “The configuration file /etc/dhcpd.conf”</a>.</p>
+            
+            <div class="example formalobject" id="dat-dhcp-conf">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>default-lease-time 600;         # 10 minutes</code></span></span>
+<span class="line"><span class="ld"><code>max-lease-time 7200;            # 2  hours</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>option domain-name "example.com";</code></span></span>
+<span class="line"><span class="ld"><code>option domain-name-servers 192.168.1.116;</code></span></span>
+<span class="line"><span class="ld"><code>option broadcast-address 192.168.2.255;</code></span></span>
+<span class="line"><span class="ld"><code>option routers 192.168.2.1;</code></span></span>
+<span class="line"><span class="ld"><code>option subnet-mask 255.255.255.0;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>subnet 192.168.2.0 netmask 255.255.255.0</code></span></span>
+<span class="line"><span class="ld"><code> {</code></span></span>
+<span class="line"><span class="ld"><code>  range 192.168.2.10 192.168.2.20;</code></span></span>
+<span class="line"><span class="ld"><code>  range 192.168.2.100 192.168.2.200;</code></span></span>
+<span class="line"><span class="ld"><code> }</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">41<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The configuration file /etc/dhcpd.conf</div>
+               </header>
+            </div>
+            
+            <p>This simple configuration file should be sufficient to get the DHCP server to assign
+               IP addresses in the network. Make sure that a semicolon is inserted at the end of
+               each line, because otherwise dhcpd is not started.</p>
+            
+            <p>The sample file can be divided into three sections. The first one defines how many
+               seconds an IP address is leased to a requesting client by default (<code class="literal">default-lease-time</code>) before it should apply for renewal. This section also includes a statement of the
+               maximum period for which a machine may keep an IP address assigned by the DHCP server
+               without applying for renewal (<code class="literal">max-lease-time</code>).</p>
+            
+            <p>In the second part, certain basic network parameters are defined on a global level:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>The line <code class="literal">option domain-name</code> defines the default domain of your network.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>With the entry <code class="literal">option domain-name-servers</code>, specify up to three values for the DNS servers used to resolve IP addresses into
+                     host names and vice versa. Ideally, configure a name server on your machine or somewhere
+                     else in your network before setting up DHCP. That name server should also define a
+                     host name for each dynamic address and vice versa. To learn how to configure your
+                     own name server, read <a class="xref xref-chapter" href="bk01partvch03.html">Chapter&nbsp;<span class="label">40</span>, The domain name system</a>.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The line <code class="literal">option broadcast-address</code> defines the broadcast address the requesting client should use.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>With <code class="literal">option routers</code>, set where the server should send data packets that cannot be delivered to a host
+                     on the local network (according to the source and target host address and the subnet
+                     mask provided). Especially in smaller networks, this router is identical to the Internet
+                     gateway.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>With <code class="literal">option subnet-mask</code>, specify the netmask assigned to clients.</p>
+                  </li>
+               </ul>
+            
+            <p>The last section of the file defines a network, including a subnet mask. To finish,
+               specify the address range that the DHCP daemon should use to assign IP addresses to
+               interested clients. In <a class="xref xref-example" href="#dat-dhcp-conf">Example&nbsp;<span class="label">41<span class="sep">.</span>1</span>, “The configuration file /etc/dhcpd.conf”</a>, clients may be given any address between <code class="literal">192.168.2.10</code> and <code class="literal">192.168.2.20</code> or <code class="literal">192.168.2.100</code> and <code class="literal">192.168.2.200</code>.</p>
+            
+            <p>After editing these few lines, you should be able to activate the DHCP daemon with
+               the command <code class="command">systemctl start dhcpd</code>. It will be ready for use immediately. Use the command <code class="command">rcdhcpd</code>&nbsp;<code class="option">check-syntax</code> to perform a brief syntax check. If you encounter any unexpected problems with your
+               configuration (the server aborts with an error or does not return <code class="literal">done</code> on start), you should be able to find out what has gone wrong by looking for information
+               either in the main system log that can be queried with the command <code class="command">journalctl</code> (see <a class="xref xref-chapter" href="bk01partiiich02.html">Chapter&nbsp;<span class="label">21</span>, 
+                  <code class="command">journalctl</code>: query the <code class="daemon systemitem">systemd</code> journal</a> for more information).</p>
+            
+            <p>On a default <span class="phrase productname">SUSE Linux Enterprise Server</span> system, the DHCP daemon is started in a chroot environment for security reasons.
+               The configuration files must be copied to the chroot environment so the daemon can
+               find them. Normally, there is no need to worry about this because the command <code class="command">systemctl start dhcpd</code> automatically copies the files.</p>
+            
+            <section class="sect2" id="sec-dhcp-statip">
+               <header>
+                  <h3><span class="label">41<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Clients with fixed IP addresses</h3>
+               </header>
+               
+               
+               <p>DHCP can also be used to assign a predefined, static address to a specific client.
+                  Addresses assigned explicitly always take priority over dynamic addresses from the
+                  pool. A static address never expires in the way a dynamic address would, for example,
+                  if there were not enough addresses available and the server needed to redistribute
+                  them among clients.</p>
+               
+               <p>To identify a client configured with a static address, dhcpd uses the hardware address
+                  (which is a globally unique, fixed numerical code consisting of six octet pairs) for
+                  the identification of all network devices (for example, <code class="literal">00:30:6E:08:EC:80</code>). If the respective lines, like the ones in <a class="xref xref-example" href="#dat-dhcp-conf-add">Example&nbsp;<span class="label">41<span class="sep">.</span>2</span>, “Additions to the configuration file”</a>, are added to the configuration file of <a class="xref xref-example" href="#dat-dhcp-conf">Example&nbsp;<span class="label">41<span class="sep">.</span>1</span>, “The configuration file /etc/dhcpd.conf”</a>, the DHCP daemon always assigns the same set of data to the corresponding client.</p>
+               
+               <div class="example formalobject" id="dat-dhcp-conf-add">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>host jupiter {</code></span></span>
+<span class="line"><span class="ld"><code>hardware ethernet 00:30:6E:08:EC:80;</code></span></span>
+<span class="line"><span class="ld"><code>fixed-address 192.168.2.100;</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">41<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Additions to the configuration file</div>
+                  </header>
+               </div>
+               
+               <p>The name of the respective client (<code class="literal">host</code><em class="replaceable">HOSTNAME</em>, here <code class="systemitem">jupiter</code>) is entered in the first line and the MAC address in the second line. On Linux hosts,
+                  find the MAC address with the command <code class="command">ip</code><code class="option">link show</code> followed by the network device (for example, <code class="literal">eth0</code>). The output should contain something like</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>link/ether 00:30:6E:08:EC:80</code></span></span></pre>
+               </div>
+               
+               <p>In the preceding example, a client with a network card having the MAC address <code class="literal">00:30:6E:08:EC:80</code> is assigned the IP address <code class="ipaddress systemitem">192.168.2.100</code> and the host name <code class="literal">jupiter</code> automatically. The type of hardware to enter is <code class="literal">ethernet</code> in nearly all cases, although <code class="literal">token-ring</code>, which is often found on IBM systems, is also supported.</p>
+               </section>
+            
+            <section class="sect2" id="sec-dhcp-sle">
+               <header>
+                  <h3><span class="label">41<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The <span class="phrase productname">SUSE Linux Enterprise Server</span> version</h3>
+               </header>
+               
+               
+               <p>To improve security, the <span class="phrase productname">SUSE Linux Enterprise Server</span> version of the ISC's DHCP server comes with the non-root/chroot patch by Ari Edelkind
+                  applied. This enables dhcpd to run with the user ID <code class="systemitem username">nobody</code> and run in a chroot environment (<code class="filename">/var/lib/dhcp</code>). To make this possible, the configuration file <code class="filename">dhcpd.conf</code> must be located in <code class="filename">/var/lib/dhcp/etc</code>. The init script automatically copies the file to this directory when starting.</p>
+               
+               <p>Control the server's behavior regarding this feature via entries in the file <code class="filename">/etc/sysconfig/dhcpd</code>. To run dhcpd without the chroot environment, set the variable <code class="systemitem">DHCPD_RUN_CHROOTED</code> in <code class="filename">/etc/sysconfig/dhcpd</code> to <q>no</q>.</p>
+               
+               <p>To enable dhcpd to resolve host names even from within the chroot environment, the
+                  following configuration files must be copied as well:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><code class="filename">/etc/localtime</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="filename">/etc/host.conf</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="filename">/etc/hosts</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="filename">/var/run/netconfig/resolv.conf</code></p>
+                     </li>
+                  </ul>
+               
+               <p>These files are copied to <code class="filename">/var/lib/dhcp/etc/</code> when starting the init script. Take these copies into account for any changes that
+                  they require if they are dynamically modified by scripts like <code class="filename">/etc/ppp/ip-up</code>. However, there should be no need to worry about this if the configuration file only
+                  specifies IP addresses (instead of host names).</p>
+               
+               <p>If your configuration includes additional files that should be copied into the chroot
+                  environment, set these under the variable <code class="systemitem">DHCPD_CONF_INCLUDE_FILES</code> in the file <code class="filename">/etc/sysconfig/dhcpd</code>. To ensure that the DHCP logging facility keeps working even after a restart of the
+                  syslog daemon, there is an additional entry <code class="systemitem">SYSLOGD_ADDITIONAL_SOCKET_DHCP</code> in the file <code class="filename">/etc/sysconfig/syslog</code>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">41<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>DHCP software packages</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">41<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

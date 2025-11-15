@@ -1,0 +1,355 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;33.&nbsp;Xen: converting a paravirtual (PV) guest into a fully virtual (FV/HVM) guest</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch08s03.html" rel="prev">
+      <link href="bk10partv.html" rel="next">
+      <link href="bk10partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiv.html">Up</a> <a href="bk10partv.html">Next</a> <a href="bk10partivch08s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partivch09.html" db-id="d616951e295437" id="pv-to-fv" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">33</span><span class="sep">.&nbsp;</span>Xen: converting a paravirtual (PV) guest into a fully virtual (FV/HVM) guest</h1>
+            </header>
+            
+            
+            <p>This chapter explains how to convert a Xen paravirtual machine into a Xen fully virtualized
+               machine.</p>
+            
+            <div class="formalobject procedure" id="pv-to-fv_proc1">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">33<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Guest side</div>
+               </header>
+               <p>To start the guest in FV mode, you need to run the following steps inside the guest.</p>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Before converting the guest, apply all pending patches and reboot the guest.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>FV machines use the <code class="literal">-default</code> kernel. If this kernel is not already installed, install the <code class="literal">kernel-default</code> package (while running in PV mode).</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>PV machines typically use disk names such as <code class="literal">vda*</code>. These names must be changed to the FV <code class="literal">hd*</code> syntax. This change must be done in the following files:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p><code class="filename">/etc/fstab</code></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p><code class="filename">/boot/grub/menu.lst</code> (SLES 11 only)</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p><code class="filename">/boot/grub*/device.map</code></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p><code class="filename">/etc/sysconfig/bootloader</code></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p><code class="filename">/etc/default/grub</code> (SLES 12, 15, openSUSE)</p>
+                           </li>
+                        </ul>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Prefer UUIDs</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>You should use UUIDs or logical volumes within your <code class="filename">/etc/fstab</code>. Using UUIDs simplifies the use of attached network storage, multipathing and virtualization.
+                                    To find the UUID of your disk, use the command <code class="command">blkid</code>.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>To avoid any error regenerating the <code class="filename">initrd</code> with the required modules, you can create a symbolic link from <code class="filename">/dev/hda2</code> to <code class="filename">/dev/xvda2</code> etc. by using the <code class="command">ln</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ln -sf /dev/xvda2 /dev/hda2</code></span></span>
+<span class="line"><span class="ld"><code>ln -sf /dev/xvda1 /dev/hda1</code></span></span>
+<span class="line"><span class="ld"><code>.....</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>PV and FV machines use different disk and network driver modules. These FV modules
+                        must be added to the initrd manually. The expected modules are <code class="literal">xen-vbd</code> (for disk) and <code class="literal">xen-vnif</code> (for network). These are the only PV drivers for a fully virtualized VM Guest. All
+                        other modules, such as <code class="literal">ata_piix</code>, <code class="literal">ata_generic</code> and <code class="literal">libata</code>, should be added automatically.</p>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Adding modules to the initrd</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <ul class="itemizedlist">
+                                    
+                                    <li>
+                                       
+                                       <p>On SLES 11, you can add modules to the <code class="literal">INITRD_MODULES</code> line in the <code class="filename">/etc/sysconfig/kernel</code> file. For example:</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>INITRD_MODULES="xen-vbd xen-vnif"</code></span></span></pre>
+                                       </div>
+                                       
+                                       <p>Run <code class="command">dracut</code> to build a new initrd containing the modules.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p>On SLES 12, 15 and openSUSE, open or create <code class="filename">/etc/dracut.conf.d/10-virt.conf</code> and add the modules with <code class="literal">force_drivers</code> by adding a line as in the example below (mind the leading whitespace):</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>force_drivers+=" xen-vbd xen-vnif"</code></span></span></pre>
+                                       </div>
+                                       
+                                       <p>Run <code class="command">dracut -f --kver <em class="replaceable">KERNEL_VERSION</em>-default</code> to build a new initrd (for the default version of the kernel) that contains the required
+                                          modules.</p>
+                                       
+                                       <p class="formalpara"><span class="title">Find your kernel version</span><span class="para">Use the <code class="command">uname -r</code> command to get the current version used on your system.</span></p>
+                                       </li>
+                                    </ul>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Before shutting down the guest, set the default boot parameter to the <code class="literal">-default</code> kernel using <code class="command">yast bootloader</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Under <span class="phrase productname">SUSE Linux Enterprise Server</span> 11, if you have an X server running on your guest, you need to adjust the <code class="filename">/etc/X11/xorg.conf</code> file to adjust the X driver. Search for <code class="literal">fbdev</code> and change to <code class="literal">cirrus</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Section "Device"</code></span></span>
+<span class="line"><span class="ld"><code>          Driver       "cirrus"</code></span></span>
+<span class="line"><span class="ld"><code>          ......</code></span></span>
+<span class="line"><span class="ld"><code>          EndSection</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">
+                                    <span class="phrase productname">SUSE Linux Enterprise Server</span> 12/15 and Xorg</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Under <span class="phrase productname">SUSE Linux Enterprise Server</span> 12/15, Xorg automatically adjusts the driver needed to be able to get a working X
+                                    server.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Shut down the guest.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="formalobject procedure" id="pv-to-fv_proc2">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">33<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Host side</div>
+               </header>
+               <p>The following steps explain the action that you need to perform on the host.</p>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>To start the guest in FV mode, the configuration of the VM must be modified to match
+                        an FV configuration. Editing the configuration of the VM can easily be done using
+                        <code class="command">virsh edit [DOMAIN]</code>. The following changes are recommended:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p>Make sure the machine, the type, and the <code class="literal">loader</code> entries in the OS section are changed from <code class="literal">xenpv</code> to <code class="literal">xenfv</code>. The updated OS section should look similar to:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;os&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;type arch='x86_64' machine='xenfv'&gt;hvm&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;loader&gt;/usr/lib/xen/boot/hvmloader&lt;/loader&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;boot dev='hd'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/os&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>In the OS section, remove anything that is specific to PV guests:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;bootloader&gt;pygrub&lt;/bootloader&gt;</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;kernel&gt;/usr/lib/grub2/x86_64-xen/grub.xen&lt;/kernel&gt;</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cmdline&gt;xen-fbfront.video=4,1024,768&lt;/cmdline&gt;</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ul>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>In the devices section, add the qemu emulator as:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;emulator&gt;/usr/lib/xen/bin/qemu-system-i386&lt;/emulator&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Update the disk configuration so the target device and bus use the FV syntax. This
+                              requires replacing the <code class="literal">xen</code> disk bus with <code class="literal">ide</code>, and the <code class="literal">vda</code> target device with <code class="literal">hda</code>. The changes should look similar to:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;target dev='hda' bus='ide'/&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Change the bus for the mouse and keyboard from <code class="literal">xen</code> to <code class="literal">ps2</code>. Also add a new USB tablet device:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;input type='mouse' bus='ps2'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;input type='keyboard' bus='ps2'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;input type='tablet' bus='usb'/&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Change the console target type from <code class="literal">xen</code> to <code class="literal">serial</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;console type='pty'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;target type='serial' port='0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/console&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Change the video configuration from <code class="literal">xen</code> to <code class="literal">cirrus</code>, with 8&nbsp;MB of VRAM:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;video&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;model type='cirrus' vram='8192' heads='1' primary='yes'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/video&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>If desired, add <code class="literal">acpi</code> and <code class="literal">apic</code> to the features of the VM:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;features&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;acpi/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;apic/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/features&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        </ul>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start the guest (using <code class="command">virsh</code> or <code class="command">virt-manager</code>). If the guest is running kernel-default (as verified through <code class="command">uname -a</code>), the machine is running in Fully Virtual mode.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">guestfs-tools</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>To script this process, or work on disk images directly, you can use the guestfs-tools
+                           suite (see <a class="xref xref-sect1" href="bk10partiiich03s03.html">the section called “Guestfs tools”</a> for more information). Several tools exist to help modify disk images.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch08s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiv.html">Up</a></td>
+                  <td class="next"><a href="bk10partv.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">32<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Xen HA and private bridges</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">V</span><span class="sep">.&nbsp;</span>Managing virtual machines with QEMU</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

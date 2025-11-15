@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.15.&nbsp;Using macvtap to share VM Host Server network interfaces</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich08s14.html" rel="prev">
+      <link href="bk10partiich08s16.html" rel="next">
+      <link href="bk10partiich08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich08.html">Up</a> <a href="bk10partiich08s16.html">Next</a> <a href="bk10partiich08s14.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich08s15.html" db-id="d616951e283877" id="sec-libvirt-config-direct">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>Using macvtap to share VM Host Server network interfaces</h2>
+            </header>
+            
+            
+            <p>Macvtap provides direct attachment of a VM Guest virtual interface to a host network
+               interface. The macvtap-based interface extends the VM Host Server network interface
+               and has its own MAC address on the same Ethernet segment. Typically, this is used
+               to make both the VM Guest and the VM Host Server show up directly on the switch that
+               the VM Host Server is connected to.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Macvtap cannot be used with a Linux bridge</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Macvtap cannot be used with network interfaces already connected to a Linux bridge.
+                           Before attempting to create the macvtap interface, remove the interface from the bridge.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">VM Guest to VM Host Server communication with macvtap</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When using macvtap, a VM Guest can communicate with other VM Guests, and with other
+                           external hosts on the network. But it cannot communicate with the VM Host Server on
+                           which the VM Guest runs. This is the defined behavior of macvtap, because of the way
+                           the VM Host Server's physical Ethernet is attached to the macvtap bridge. Traffic
+                           from the VM Guest into that bridge that is forwarded to the physical interface cannot
+                           be bounced back up to the VM Host Server's IP stack. Similarly, traffic from the VM
+                           Host Server's IP stack that is sent to the physical interface cannot be bounced back
+                           up to the macvtap bridge for forwarding to the VM Guest.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>Virtual network interfaces based on macvtap are supported by libvirt by specifying
+               an interface type of <code class="literal">direct</code>. For example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;interface type='direct'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;mac address='aa:bb:cc:dd:ee:ff'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;source dev='eth0' mode='bridge'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;model type='virtio'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;/interface&gt;</code></span></span></pre>
+            </div>
+            
+            <p>The operation mode of the macvtap device can be controlled with the <code class="literal">mode</code> attribute. The following list shows its possible values and a description for each:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p><code class="literal">vepa</code>: all VM Guest packets are sent to an external bridge. Packets whose destination is
+                     a VM Guest on the same VM Host Server as where the packet originates from are sent
+                     back to the VM Host Server by the VEPA capable bridge (today's bridges are typically
+                     not VEPA capable).</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="literal">bridge</code>: packets whose destination is on the same VM Host Server as where they originate
+                     from are directly delivered to the target macvtap device. Both origin and destination
+                     devices need to be in <code class="literal">bridge</code> mode for direct delivery. If either of them is in <code class="literal">vepa</code> mode, a VEPA capable bridge is required.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="literal">private</code>: all packets are sent to the external bridge and delivered to a target VM Guest on
+                     the same VM Host Server if they are sent through an external router or gateway and
+                     that device sends them back to the VM Host Server. This procedure is followed if either
+                     the source or destination device is in private mode.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="literal">passthrough</code>: a special mode that gives more power to the network interface. All packets are forwarded
+                     to the interface, allowing virtio VM Guests to change the MAC address or set promiscuous
+                     mode to bridge the interface or create VLAN interfaces on top of it. A network interface
+                     is not shareable in <code class="literal">passthrough</code> mode. Assigning an interface to a VM Guest disconnects it from the VM Host Server.
+                     For this reason SR-IOV virtual functions are often assigned to the VM Guest in <code class="literal">passthrough</code> mode.</p>
+                  </li>
+               </ul>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich08s14.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich08.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich08s16.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>Configuring network devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>16</span><span class="sep">.&nbsp;</span>Disabling a memory balloon device</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

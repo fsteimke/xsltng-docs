@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.4.&nbsp;Monitoring log files with logwatch
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiich02s03.html" rel="prev">
+      <link href="bk07partiich02s05.html" rel="next">
+      <link href="bk07partiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiich02.html">Up</a> <a href="bk07partiich02s05.html">Next</a> <a href="bk07partiich02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partiich02s04.html" db-id="d616951e206660" id="sec-tuning-syslog-logwatch">
+            <header>
+               <h2><span class="label">3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Monitoring log files with <code class="command">logwatch</code>
+                  </h2>
+            </header>
+            
+            
+            <p><code class="command">logwatch</code> is a customizable, pluggable log-monitoring script. It parses system logs, extracts
+               the important information and presents them in a human readable manner. To use <code class="command">logwatch</code>, install the <code class="package">logwatch</code> package.</p>
+            
+            <p><code class="command">logwatch</code> can either be used at the command line to generate on-the-fly reports, or via <code class="daemon systemitem">cron</code> to regularly create custom reports. Reports can either be printed on the screen,
+               saved to a file, or be mailed to a specified address. The latter is especially useful
+               when automatically generating reports via <code class="daemon systemitem">cron</code>.</p>
+            
+            <p>On the command line, you can tell <code class="command">logwatch</code> for which service and time span to generate a report and how much detail should be
+               included:</p>
+            
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># Detailed report on all kernel messages from yesterday</code></span></span>
+<span class="line"><span class="ld"><code>logwatch --service kernel --detail High --range Yesterday --print</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Low detail report on all sshd events recorded (incl. archived logs)</code></span></span>
+<span class="line"><span class="ld"><code>logwatch --service sshd --detail Low --range All --archives --print</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Mail a report on all smartd messages from May 5th to May 7th to root@localhost</code></span></span>
+<span class="line"><span class="ld"><code>logwatch --service smartd --range 'between 5/5/2005 and 5/7/2005' \</code></span></span>
+<span class="line"><span class="ld"><code>--mailto root@localhost --print</code></span></span></pre>
+            </div>
+            
+            <p>The <code class="option">--range</code> option has got a complex syntax—see <code class="command">logwatch</code><code class="option">--range help</code> for details. A list of all services that can be queried is available with the following
+               command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls /usr/share/logwatch/default.conf/services/ | sed 's/\.conf//g'</code></span></span></pre>
+            </div>
+            
+            <p><code class="command">logwatch</code> can be customized to great detail. However, the default configuration should be sufficient.
+               The default configuration files are located under <code class="filename">/usr/share/logwatch/default.conf/</code>. Never change them because they would get overwritten again with the next update.
+               Rather place custom configuration in <code class="filename">/etc/logwatch/conf/</code> (you may use the default configuration file as a template, though). A detailed HOWTO
+               on customizing <code class="command">logwatch</code> is available at <code class="filename">/usr/share/doc/packages/logwatch/HOWTO-Customize-LogWatch</code>. The following configuration files exist:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">logwatch.conf</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The main configuration file. The default version is extensively commented. Each configuration
+                        option can be overwritten on the command line.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">ignore.conf</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Filter for all lines that should globally be ignored by <code class="command">logwatch</code>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">services/*.conf</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The service directory holds configuration files for each service you can generate
+                        a report for.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">logfiles/*.conf</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Specifications on which log files should be parsed for each service.</p>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiich02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiich02.html">Up</a></td>
+                  <td class="next"><a href="bk07partiich02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Managing log files with <code class="command">logrotate</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring mail forwarding for <code class="systemitem username">root</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

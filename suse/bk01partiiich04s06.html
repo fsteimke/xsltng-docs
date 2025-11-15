@@ -1,0 +1,1736 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>23.6.&nbsp;Configuring a network connection manually</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich04s05.html" rel="prev">
+      <link href="bk01partiiich04s07.html" rel="next">
+      <link href="bk01partiiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich04.html">Up</a> <a href="bk01partiiich04s07.html">Next</a> <a href="bk01partiiich04s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich04s06.html" db-id="d616951e38346" id="sec-network-manconf" lang="">
+            <header>
+               <h2><span class="label">23<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Configuring a network connection manually</h2>
+            </header>
+            
+            
+            
+            <p>Manual configuration of the network software should be the last alternative. Using
+               YaST is recommended. However, this background information about the network configuration
+               can also assist your work with YaST.</p>
+            
+            <section class="sect2" id="sec-network-manconf-wicked">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The <code class="command">wicked</code> network configuration</h3>
+               </header>
+               
+               
+               <p>The tool and library called <code class="command">wicked</code> provides a new framework for network configuration.</p>
+               
+               <p>One of the challenges with traditional network interface management is that different
+                  layers of network management get jumbled together into one single script, or at most
+                  two different scripts. These scripts interact with each other in a way that is not
+                  well defined. This leads to unpredictable issues, obscure constraints and conventions,
+                  etc. Several layers of special hacks for a variety of different scenarios increase
+                  the maintenance burden. Address configuration protocols are being used that are implemented
+                  via daemons like dhcpcd, which interact rather poorly with the rest of the infrastructure.
+                  Funky interface naming schemes that require heavy udev support are introduced to achieve
+                  persistent identification of interfaces.</p>
+               
+               <p>The idea of wicked is to decompose the problem in several ways. None of them is entirely
+                  novel, but trying to put ideas from different projects together is hopefully going
+                  to create a better solution overall.</p>
+               
+               <p>One approach is to use a client/server model. This allows wicked to define standardized
+                  facilities for things like address configuration that are well integrated with the
+                  overall framework. For example, using a specific address configuration, the administrator
+                  may request that an interface should be configured via DHCP or IPv4 zeroconf. In this
+                  case, the address configuration service simply obtains the lease from its server and
+                  passes it on to the wicked server process that installs the requested addresses and
+                  routes.</p>
+               
+               <p>The other approach to decomposing the problem is to enforce the layering aspect. For
+                  any type of network interface, it is possible to define a dbus service that configures
+                  the network interface's device layer—a VLAN, a bridge, a bonding, or a paravirtualized
+                  device. Common functionality, such as address configuration, is implemented by joint
+                  services that are layered on top of these device specific services without having
+                  to implement them specifically.</p>
+               
+               <p>The wicked framework implements these two aspects by using a variety of dbus services,
+                  which get attached to a network interface depending on its type. Here is a rough overview
+                  of the current object hierarchy in wicked.</p>
+               
+               <p>Each network interface is represented via a child object of <code class="systemitem">/org/opensuse/Network/Interfaces</code>. The name of the child object is given by its ifindex. For example, the loopback
+                  interface, which usually gets ifindex 1, is <code class="systemitem">/org/opensuse/Network/Interfaces/1</code>, the first Ethernet interface registered is <code class="systemitem">/org/opensuse/Network/Interfaces/2</code>.</p>
+               
+               <p>Each network interface has a <q>class</q> associated with it, which is used to select the dbus interfaces it supports. By default,
+                  each network interface is of class <code class="literal">netif</code>, and <code class="daemon systemitem">wickedd</code> will automatically attach all interfaces compatible with this class. In the current
+                  implementation, this includes the following interfaces:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">org.opensuse.Network.Interface</span></dt>
+                     <dd>
+                        
+                        <p>Generic network interface functions, such as taking the link up or down, assigning
+                           an MTU, etc.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">org.opensuse.Network.Addrconf.ipv4.dhcp</span>, <span class="term">org.opensuse.Network.Addrconf.ipv6.dhcp</span>, <span class="term">org.opensuse.Network.Addrconf.ipv4.auto</span>
+                        </dt>
+                     <dd>
+                        
+                        <p>Address configuration services for DHCP,  IPv4 zeroconf, etc.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Beyond this, network interfaces may require or offer special configuration mechanisms.
+                  For an Ethernet device, for example, you should be able to control the link speed,
+                  offloading of checksumming, etc. To achieve this, Ethernet devices have a class of
+                  their own, called <code class="literal">netif-ethernet</code>, which is a subclass of <code class="literal">netif</code>. As a consequence, the dbus interfaces assigned to an Ethernet interface include
+                  all the services listed above, plus the <code class="systemitem">org.opensuse.Network.Ethernet</code> service available only to objects belonging to the <code class="literal">netif-ethernet</code> class.</p>
+               
+               <p>Similarly, there exist classes for interface types like bridges, VLANs, bonds, or
+                  infinibands.</p>
+               
+               <p>How do you interact with an interface like VLAN (which is really a virtual network
+                  interface that sits on top of an Ethernet device) that needs to be created first?
+                  For this, wicked defines factory interfaces, such as <code class="systemitem">org.opensuse.Network.VLAN.Factory</code>. Such a factory interface offers a single function that lets you create an interface
+                  of the requested type. These factory interfaces are attached to the <code class="systemitem">/org/opensuse/Network/Interfaces</code> list node.</p>
+               
+               <section class="sect3" id="sec-network-manconf-supported">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                        <code class="literal">wicked</code> architecture and features</h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="literal">wicked</code> service comprises several parts as depicted in <a class="xref xref-figure" href="#wicked-architecture">Figure&nbsp;<span class="label">23<span class="sep">.</span>4</span>, “
+                        <code class="literal">wicked</code> architecture”</a>.</p>
+                  
+                  <div class="figure formalobject" id="wicked-architecture">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><picture class="imageobject"><img src="media/wicked_scheme.png"></picture></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">23<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                           <code class="literal">wicked</code> architecture</div>
+                     </header>
+                  </div>
+                  
+                  <p><code class="literal">wicked</code> currently supports the following:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p>Configuration file back-ends to parse SUSE style <code class="filename">/etc/sysconfig/network</code> files.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>An internal configuration back-end to represent network interface configuration in
+                           XML. </p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Bring up and shutdown of <q>normal</q> network interfaces such as Ethernet or InfiniBand, VLAN, bridge, bonds, tun, tap,
+                           dummy, macvlan, macvtap, hsi, qeth, iucv, and wireless (currently limited to one wpa-psk/eap
+                           network) devices.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>A built-in DHCPv4 client and a built-in DHCPv6 client.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The nanny daemon (enabled by default) helps to automatically bring up configured interfaces
+                           when the device is available (interface hotplugging) and set up the IP configuration
+                           when a link (carrier) is detected. See <a class="xref xref-sect3" href="#sec-network-manconf-using-nanny">the section called “Nanny”</a> for more information.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">wicked</code> was implemented as a group of DBus services that are integrated with systemd. So
+                           the usual <code class="command">systemctl</code> commands will apply to <code class="literal">wicked</code>.</p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-using-wicked">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using <code class="literal">wicked</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>On SUSE Linux Enterprise, <code class="literal">wicked</code> runs by default. If you want to check what is currently enabled and whether it is
+                     running, call:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl status network</code></span></span></pre>
+                  </div>
+                  
+                  <p>If <code class="literal">wicked</code> is enabled, you will see something along these lines:</p>
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked.service - wicked managed network interfaces</code></span></span>
+<span class="line"><span class="ld"><code>    Loaded: loaded (/usr/lib/systemd/system/wicked.service; enabled)</code></span></span>
+<span class="line"><span class="ld"><code>    ...</code></span></span></pre>
+                  </div>
+                  
+                  <p>In case something different is running (for example, NetworkManager) and you want
+                     to switch to <code class="literal">wicked</code>, first stop what is running and then enable <code class="literal">wicked</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl is-active network &amp;&amp; \</code></span></span>
+<span class="line"><span class="ld"><code>systemctl stop      network</code></span></span>
+<span class="line"><span class="ld"><code>systemctl enable --force wicked</code></span></span></pre>
+                  </div>
+                  
+                  <p>This enables the wicked services, creates the <code class="filename">network.service</code> to <code class="filename">wicked.service</code> alias link, and starts the network at the next boot.</p>
+                  
+                  <p>Starting the server process:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl start wickedd</code></span></span></pre>
+                  </div>
+                  
+                  <p>This starts <code class="command">wickedd</code> (the main server) and associated supplicants:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/lib/wicked/bin/wickedd-auto4 --systemd --foreground</code></span></span>
+<span class="line"><span class="ld"><code>/usr/lib/wicked/bin/wickedd-dhcp4 --systemd --foreground</code></span></span>
+<span class="line"><span class="ld"><code>/usr/lib/wicked/bin/wickedd-dhcp6 --systemd --foreground</code></span></span>
+<span class="line"><span class="ld"><code>/usr/sbin/wickedd --systemd --foreground</code></span></span>
+<span class="line"><span class="ld"><code>/usr/sbin/wickedd-nanny --systemd --foreground</code></span></span></pre>
+                  </div>
+                  
+                  <p>Then bringing up the network:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl start wicked</code></span></span></pre>
+                  </div>
+                  
+                  <p>Alternatively use the <code class="filename">network.service</code> alias:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl start network</code></span></span></pre>
+                  </div>
+                  
+                  <p>These commands are using the default or system configuration sources as defined in
+                     <code class="filename">/etc/wicked/client.xml</code>.</p>
+                  
+                  <p>To enable debugging, set <code class="literal">WICKED_DEBUG</code> in <code class="filename">/etc/sysconfig/network/config</code>, for example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>WICKED_DEBUG="all"</code></span></span></pre>
+                  </div>
+                  
+                  <p>Or, to omit some:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>WICKED_DEBUG="all,-dbus,-objectmodel,-xpath,-xml"</code></span></span></pre>
+                  </div>
+                  
+                  <p>Use the client utility to display interface information for all interfaces or the
+                     interface specified with <em class="replaceable">IFNAME</em>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked show all</code></span></span>
+<span class="line"><span class="ld"><code>wicked show <em class="replaceable">IFNAME</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>In XML output:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked show-xml all</code></span></span>
+<span class="line"><span class="ld"><code>wicked show-xml <em class="replaceable">IFNAME</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>Bringing up one interface:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked ifup eth0</code></span></span>
+<span class="line"><span class="ld"><code>wicked ifup wlan0</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+                  </div>
+                  
+                  <p>Because there is no configuration source specified, the wicked client checks its default
+                     sources of configuration defined in <code class="filename">/etc/wicked/client.xml</code>:</p>
+                  
+                  <ol class="orderedlist" type="1">
+                     
+                     <li>
+                        
+                        <p><code class="literal">firmware:</code> iSCSI Boot Firmware Table (iBFT)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">compat:</code><code class="literal">ifcfg</code> files—implemented for compatibility</p>
+                        </li>
+                     </ol>
+                  
+                  <p>Whatever <code class="literal">wicked</code> gets from those sources for a given interface is applied. The intended order of importance
+                     is <code class="literal">firmware</code>, then <code class="literal">compat</code>—this may be changed in the future.</p>
+                  
+                  
+                  <p>For more information, see the <code class="command">wicked</code> man page.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-using-nanny">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Nanny</h4>
+                  </header>
+                  
+                  
+                  <p>Nanny is an event and policy driven daemon that is responsible for asynchronous or
+                     unsolicited scenarios such as hotplugging devices. Thus the nanny daemon helps with
+                     starting or restarting delayed or temporarily gone devices. Nanny monitors device
+                     and link changes, and integrates new devices defined by the current policy set. Nanny
+                     continues to set up even if <code class="command">ifup</code> already exited because of specified timeout constraints.</p>
+                  
+                  <p>By default, the nanny daemon is active on the system. It is enabled in the <code class="filename">/etc/wicked/common.xml</code> configuration file:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;config&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  ...</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;use-nanny&gt;true&lt;/use-nanny&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/config&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>This setting causes ifup and ifreload to apply a policy with the effective configuration
+                     to the nanny daemon; then, nanny configures <code class="daemon systemitem">wickedd</code> and thus ensures hotplug support. It waits in the background for events or changes
+                     (such as new devices or carrier on).</p>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-multiple">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Bringing up multiple interfaces</h4>
+                  </header>
+                  
+                  
+                  <p>For bonds and bridges, it may make sense to define the entire device topology in one
+                     file (ifcfg-bondX), and bring it up in one go. wicked then can bring up the whole
+                     configuration if you specify the top level interface names (of the bridge or bond):</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked ifup br0</code></span></span></pre>
+                  </div>
+                  
+                  <p>This command automatically sets up the bridge and its dependencies in the appropriate
+                     order without the need to list the dependencies (ports, etc.) separately.</p>
+                  
+                  <p>To bring up multiple interfaces in one command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked ifup bond0 br0 br1 br2</code></span></span></pre>
+                  </div>
+                  
+                  <p>Or also all interfaces:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wicked ifup all</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-tunnel">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using tunnels with Wicked</h4>
+                  </header>
+                  
+                  
+                  <p>When you need to use tunnels with Wicked, the <code class="envar">TUNNEL_DEVICE</code> is used for this. It permits to specify an optional device name to bind the tunnel
+                     to the device. The tunneled packets will only be routed via this device.</p>
+                  
+                  <p>For more information, refer to <code class="command">man 5 ifcfg-tunnel</code>.</p>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-incremental">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Handling incremental changes</h4>
+                  </header>
+                  
+                  
+                  <p>With <code class="command">wicked</code>, there is no need to actually take down an interface to reconfigure it (unless it
+                     is required by the kernel). For example, to add another IP address or route to a statically
+                     configured network interface, add the IP address to the interface definition, and
+                     do another <q>ifup</q> operation. The server will try hard to update only those settings that have changed.
+                     This applies to link-level options such as the device MTU or the MAC address, and
+                     network-level settings, such as addresses, routes, or even the address configuration
+                     mode (for example, when moving from a static configuration to DHCP).</p>
+                  
+                  <p>Things get tricky of course with virtual interfaces combining several real devices
+                     such as bridges or bonds. For bonded devices, it is not possible to change certain
+                     parameters while the device is up. Doing that will result in an error.</p>
+                  
+                  <p>However, what should still work, is the act of adding or removing the child devices
+                     of a bond or bridge, or choosing a bond's primary interface.</p>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-address-config">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Wicked extensions: address configuration</h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">wicked</code> is designed to be extensible with shell scripts. These extensions can be defined
+                     in the <code class="filename">config.xml</code> file.</p>
+                  
+                  <p>Currently, several classes of extensions are supported:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p>link configuration: these are scripts responsible for setting up a device's link layer
+                           according to the configuration provided by the client, and for tearing it down again.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>address configuration: these are scripts responsible for managing a device's address
+                           configuration. Usually address configuration and DHCP are managed by <code class="command">wicked</code> itself, but can be implemented by means of extensions.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>firewall extension: these scripts can apply firewall rules.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>Typically, extensions have a start and a stop command, an optional <q>pid file</q>, and a set of environment variables that get passed to the script.</p>
+                  
+                  <p>To illustrate how this is supposed to work, look at a firewall extension defined in
+                     <code class="filename">etc/server.xml</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;dbus-service interface="org.opensuse.Network.Firewall"&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;action name="firewallUp"   command="/etc/wicked/extensions/firewall up"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;action name="firewallDown" command="/etc/wicked/extensions/firewall down"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> &lt;!-- default environment for all calls to this extension script --&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;putenv name="WICKED_OBJECT_PATH" value="$object-path"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;putenv name="WICKED_INTERFACE_NAME" value="$property:name"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;putenv name="WICKED_INTERFACE_INDEX" value="$property:index"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/dbus-service&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>The extension is attached to the <code class="tag tag-starttag">dbus-service</code> tag and defines commands to execute for the actions of this interface. Further, the
+                     declaration can define and initialize environment variables passed to the actions.</p>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-configuration-files">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Wicked extensions: configuration files</h4>
+                  </header>
+                  
+                  
+                  <p>You can extend the handling of configuration files with scripts as well. For example,
+                     DNS updates from leases are ultimately handled by the <code class="filename">extensions/resolver</code> script, with behavior configured in <code class="filename">server.xml</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;system-updater name="resolver"&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;action name="backup" command="/etc/wicked/extensions/resolver backup"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;action name="restore" command="/etc/wicked/extensions/resolver restore"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;action name="install" command="/etc/wicked/extensions/resolver install"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;action name="remove" command="/etc/wicked/extensions/resolver remove"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/system-updater&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>When an update arrives in <code class="systemitem">wickedd</code>, the system updater routines parse the lease and call the appropriate commands (<code class="literal">backup</code>, <code class="literal">install</code>, etc.) in the resolver script. This in turn configures the DNS settings using <code class="command">/sbin/netconfig</code>, or by manually writing <code class="filename">/run/netconfig/resolv.conf</code> as a fallback.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-network-manconf-files" lang="">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuration files</h3>
+               </header>
+               
+               
+               
+               <p>This section provides an overview of the network configuration files and explains
+                  their purpose and the format used.</p>
+               
+               <section class="sect3" id="wicked-configuration-common-xml">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/wicked/common.xml</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="filename">/etc/wicked/common.xml</code> file contains common definitions that should be used by all applications. It is sourced/included
+                     by the other configuration files in this directory. Although you can use this file
+                     to enable debugging across all <code class="literal">wicked</code> components, we recommend to use the file <code class="filename">/etc/wicked/local.xml</code> for this purpose. After applying maintenance updates you might lose your changes
+                     as the <code class="filename">/etc/wicked/common.xml</code> might be overwritten. The <code class="filename">/etc/wicked/common.xml</code> file includes the <code class="filename">/etc/wicked/local.xml</code> in the default installation, thus you typically do not need to modify the <code class="filename">/etc/wicked/common.xml</code>.</p>
+                  
+                  <p>In case you want to disable <code class="literal">nanny</code> by setting the <code class="literal">&lt;use-nanny&gt;</code> to <code class="literal">false</code>, restart the <code class="literal">wickedd.service</code> and then run the following command to apply all configurations and policies:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> wicked ifup all</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Configuration files</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The <code class="literal">wickedd</code>, <code class="literal">wicked</code>, or <code class="literal">nanny</code> programs try to read <code class="filename">/etc/wicked/common.xml</code> if their own configuration files do not exist.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="wicked-configuration-server-xml">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/wicked/server.xml</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The file <code class="filename">/etc/wicked/server.xml</code> is read by the <code class="literal">wickedd</code> server process at start-up. The file stores extensions to the <code class="filename">/etc/wicked/common.xml</code>. On top of that this file configures handling of a resolver and receiving information
+                     from <code class="literal">addrconf</code> supplicants, for example DHCP.</p>
+                  
+                  <p>We recommend to add changes required to this file into a separate file <code class="filename">/etc/wicked/server-local.xml</code>, that gets included by <code class="filename">/etc/wicked/server.xml</code>. By using a separate file you avoid overwriting of your changes during maintenance
+                     updates.</p>
+                  </section>
+               
+               <section class="sect3" id="wicked-configuration-client-xml">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/wicked/client.xml</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="filename">/etc/wicked/client.xml</code> is used by the <code class="command">wicked</code> command. The file specifies the location of a script used when discovering devices
+                     managed by ibft and configures locations of network interface configurations.</p>
+                  
+                  <p>We recommend to add changes required to this file into a separate file <code class="filename">/etc/wicked/client-local.xml</code>, that gets included by <code class="filename">/etc/wicked/server.xml</code>. By using a separate file you avoid overwriting of your changes during maintenance
+                     updates.</p>
+                  </section>
+               
+               <section class="sect3" id="wicked-configuration-nanny-xml">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/wicked/nanny.xml</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="filename">/etc/wicked/nanny.xml</code> configures types of link layers. We recommend to add specific configuration into
+                     a separate file: <code class="filename">/etc/wicked/nanny-local.xml</code> to avoid losing the changes during maintenance updates.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-ifcfg">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/sysconfig/network/ifcfg-*</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>These files contain the traditional configurations for network interfaces.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">
+                                 <code class="command">wicked</code> and the <code class="filename">ifcfg-*</code> files</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p><code class="command">wicked</code> reads these files if you specify the <code class="literal">compat:</code> prefix. According to the <span class="phrase productname">SUSE Linux Enterprise Server</span> default configuration in <code class="filename">/etc/wicked/client.xml</code>, <code class="command">wicked</code> tries these files before the XML configuration files in <code class="filename">/etc/wicked/ifconfig</code>.</p>
+                              
+                              <p>The <code class="option">--ifconfig</code> switch is provided mostly for testing only. If specified, default configuration sources
+                                 defined in <code class="filename">/etc/wicked/ifconfig</code> are not applied.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>The <code class="filename">ifcfg-*</code> files include information such as the start mode and the IP address. Possible parameters
+                     are described in the manual page of <code class="systemitem">ifup</code>. Additionally, most variables from the <code class="filename">dhcp</code> and <code class="filename">wireless</code> files can be used in the <code class="filename">ifcfg-*</code> files if a general setting should be used for only one interface. However, most of
+                     the <code class="filename">/etc/sysconfig/network/config</code> variables are global and cannot be overridden in <code class="literal">ifcfg</code> files. For example, <code class="systemitem">NETCONFIG_*</code> variables are global.</p>
+                  
+                  <p> For configuring <code class="systemitem">macvlan</code> and <code class="systemitem">macvtab</code> interfaces, see the <code class="systemitem">ifcfg-macvlan</code> and <code class="systemitem">ifcfg-macvtap</code> man pages. For example, for a macvlan interface provide a <code class="filename">ifcfg-macvlan0</code> with settings as follows:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STARTMODE='auto'</code></span></span>
+<span class="line"><span class="ld"><code>MACVLAN_DEVICE='eth0'</code></span></span>
+<span class="line"><span class="ld"><code>#MACVLAN_MODE='vepa'</code></span></span>
+<span class="line"><span class="ld"><code>#LLADDR=02:03:04:05:06:aa</code></span></span></pre>
+                  </div>
+                  
+                  <p>For <code class="filename">ifcfg.template</code>, see <a class="xref xref-sect3" href="#sec-network-manconf-files-config-etc">the section called “
+                        <code class="filename">/etc/sysconfig/network/config</code>, <code class="filename">/etc/sysconfig/network/dhcp</code>, and <code class="filename">/etc/sysconfig/network/wireless</code>
+                        ”</a>.</p>
+                  
+                  <p><span class="arch-start phrase">zseries ▶</span>IBM&nbsp;Z does not support USB. The names of the interface files and network aliases contain
+                     IBM&nbsp;Z-specific elements like <code class="literal">qeth</code>.<span class="arch-end phrase">◀</span></p>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-config-etc">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/sysconfig/network/config</code>, <code class="filename">/etc/sysconfig/network/dhcp</code>, and <code class="filename">/etc/sysconfig/network/wireless</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The file <code class="filename">config</code> contains general settings for the behavior of <code class="command">ifup</code>, <code class="command">ifdown</code> and <code class="command">ifstatus</code>. <code class="filename">dhcp</code> contains settings for DHCP and <code class="filename">wireless</code> for wireless LAN cards. The variables in all three configuration files are commented.
+                     Some variables from <code class="filename">/etc/sysconfig/network/config</code> can also be used in <code class="filename">ifcfg-*</code> files, where they are given a higher priority. The <code class="filename">/etc/sysconfig/network/ifcfg.template</code> file lists variables that can be specified in a per interface scope. However, most
+                     of the <code class="filename">/etc/sysconfig/network/config</code> variables are global and cannot be overridden in ifcfg-files. For example, <code class="systemitem">NETWORKMANAGER</code> or <code class="systemitem">NETCONFIG_*</code> variables are global.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Using DHCPv6</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>In SUSE Linux Enterprise&nbsp;11, DHCPv6 used to work even on networks where IPv6 Router
+                                 Advertisements (RAs) were not configured properly. Starting with SUSE Linux Enterprise&nbsp;12,
+                                 DHCPv6 requires that at least one of the routers on the network sends out RAs that
+                                 indicate that this network is managed by DHCPv6.</p>
+                              
+                              <p>For networks where the router cannot be configured correctly, the <code class="literal">ifcfg</code> option allows the user to override this behavior by specifying <code class="literal">DHCLIENT6_MODE='managed'</code> in the <code class="literal">ifcfg</code> file.  You can also activate this workaround with a boot parameter in the installation
+                                 system:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg=eth0=dhcp6,DHCLIENT6_MODE=managed</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-files-routes">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/sysconfig/network/routes</code> and <code class="filename">/etc/sysconfig/network/ifroute-*</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The static routing of TCP/IP packets is determined by the <code class="filename">/etc/sysconfig/network/routes</code> and <code class="filename">/etc/sysconfig/network/ifroute-*</code> files. All the static routes required by the various system tasks can be specified
+                     in <code class="filename">/etc/sysconfig/network/routes</code>: routes to a host, routes to a host via a gateway and routes to a network. For each
+                     interface that needs individual routing, define an additional configuration file:
+                     <code class="filename">/etc/sysconfig/network/ifroute-*</code>. Replace the wild card (<code class="literal">*</code>) with the name of the interface. The entries in the routing configuration files look
+                     like this:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># Destination     Gateway           Netmask            Interface  Options</code></span></span></pre>
+                  </div>
+                  
+                  
+                  <p>The route's destination is in the first column. This column may contain the IP address
+                     of a network or host or, in the case of <em>reachable</em> name servers, the fully qualified network or host name. The network should be written
+                     in CIDR notation (address with the associated routing prefix-length) such as 10.10.0.0/16
+                     for IPv4 or fc00::/7 for IPv6 routes. The keyword <code class="literal">default</code> indicates that the route is the default gateway in the same address family as the
+                     gateway. For devices without a gateway use explicit 0.0.0.0/0 or ::/0 destinations.</p>
+                  
+                  <p>The second column contains the default gateway or a gateway through which a host or
+                     network can be accessed.</p>
+                  
+                  <p>The third column is deprecated; it used to contain the IPv4 netmask of the destination.
+                     For IPv6 routes, the default route, or when using a prefix-length (CIDR notation)
+                     in the first column, enter a dash (<code class="literal">-</code>) here.</p>
+                  
+                  
+                  <p>The fourth column contains the name of the interface. If you leave it empty using
+                     a dash (<code class="literal">-</code>), it can cause unintended behavior in <code class="filename">/etc/sysconfig/network/routes</code>. For more information, see the <code class="systemitem">routes</code> man page.</p>
+                  
+                  <p>An (optional) fifth column can be used to specify special options. For details, see
+                     the <code class="systemitem">routes</code> man page.</p>
+                  
+                  <div class="example formalobject" id="sec-network-manconf-files-routes_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># --- IPv4 routes in CIDR prefix notation:</code></span></span>
+<span class="line"><span class="ld"><code># Destination     [Gateway]         -                  Interface</code></span></span>
+<span class="line"><span class="ld"><code>127.0.0.0/8       -                 -                  lo</code></span></span>
+<span class="line"><span class="ld"><code>204.127.235.0/24  -                 -                  eth0</code></span></span>
+<span class="line"><span class="ld"><code>default           204.127.235.41    -                  eth0</code></span></span>
+<span class="line"><span class="ld"><code>207.68.156.51/32  207.68.145.45     -                  eth1</code></span></span>
+<span class="line"><span class="ld"><code>192.168.0.0/16    207.68.156.51     -                  eth1</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># --- IPv4 routes in deprecated netmask notation"</code></span></span>
+<span class="line"><span class="ld"><code># Destination     [Dummy/Gateway]   Netmask            Interface</code></span></span>
+<span class="line"><span class="ld"><code>#</code></span></span>
+<span class="line"><span class="ld"><code>127.0.0.0         0.0.0.0           255.255.255.0      lo</code></span></span>
+<span class="line"><span class="ld"><code>204.127.235.0     0.0.0.0           255.255.255.0      eth0</code></span></span>
+<span class="line"><span class="ld"><code>default           204.127.235.41    0.0.0.0            eth0</code></span></span>
+<span class="line"><span class="ld"><code>207.68.156.51     207.68.145.45     255.255.255.255    eth1</code></span></span>
+<span class="line"><span class="ld"><code>192.168.0.0       207.68.156.51     255.255.0.0        eth1</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># --- IPv6 routes are always using CIDR notation:</code></span></span>
+<span class="line"><span class="ld"><code># Destination     [Gateway]                -           Interface</code></span></span>
+<span class="line"><span class="ld"><code>2001:DB8:100::/64 -                        -           eth0</code></span></span>
+<span class="line"><span class="ld"><code>2001:DB8:100::/32 fe80::216:3eff:fe6d:c042 -           eth0</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Common network interfaces and some static routes</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-resolv">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/var/run/netconfig/resolv.conf</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The domain to which the host belongs is specified in <code class="filename">/var/run/netconfig/resolv.conf</code> (keyword <code class="systemitem">search</code>). Up to six domains with a total of 256 characters can be specified with the <code class="systemitem">search</code> option. When resolving a name that is not fully qualified, an attempt is made to
+                     generate one by attaching the individual <code class="systemitem">search</code> entries. Up to three name servers can be specified with the <code class="systemitem">nameserver</code> option, each on a line of its own. Comments are preceded by hash mark or semicolon
+                     signs (<code class="literal">#</code> or <code class="literal">;</code>). As an example, see <a class="xref xref-example" href="#dat-net-etc-resolv-conf">Example&nbsp;<span class="label">23<span class="sep">.</span>6</span>, “
+                        <code class="filename">/var/run/netconfig/resolv.conf</code>
+                        ”</a>.</p>
+                  
+                  <p>However, <code class="filename">/etc/resolv.conf</code> should not be edited by hand. It is generated by the <code class="command">netconfig</code> script and is a symbolic link to <code class="filename">/run/netconfig/resolv.conf</code>. To define static DNS configuration without using YaST, edit the appropriate variables
+                     manually in the <code class="filename">/etc/sysconfig/network/config</code> file:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">NETCONFIG_DNS_STATIC_SEARCHLIST</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>list of DNS domain names used for host name lookup</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">NETCONFIG_DNS_STATIC_SERVERS</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>list of name server IP addresses to use for host name lookup</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">NETCONFIG_DNS_FORWARDER</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>the name of the DNS forwarder that needs to be configured, for example <code class="literal">bind</code> or <code class="literal">resolver</code></p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">NETCONFIG_DNS_RESOLVER_OPTIONS</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>arbitrary options that will be written to <code class="filename">/var/run/netconfig/resolv.conf</code>, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>debug attempts:1 timeout:10</code></span></span></pre>
+                           </div>
+                           
+                           <p>For more information, see the <code class="literal">resolv.conf</code> man page.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">NETCONFIG_DNS_RESOLVER_SORTLIST</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>list of up to 10 items, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>130.155.160.0/255.255.240.0 130.155.0.0</code></span></span></pre>
+                           </div>
+                           
+                           <p>For more information, see the <code class="systemitem">resolv.conf</code> man page.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>To disable DNS configuration using netconfig, set <code class="literal">NETCONFIG_DNS_POLICY=''</code>. For more information about <code class="command">netconfig</code>, see the <code class="systemitem">netconfig(8)</code> man page (<code class="command">man 8 netconfig</code>).</p>
+                  
+                  <div class="example formalobject" id="dat-net-etc-resolv-conf">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># Our domain</code></span></span>
+<span class="line"><span class="ld"><code>search example.com</code></span></span>
+<span class="line"><span class="ld"><code>#</code></span></span>
+<span class="line"><span class="ld"><code># We use dns.example.com (192.168.1.116) as nameserver</code></span></span>
+<span class="line"><span class="ld"><code>nameserver 192.168.1.116</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>
+                           <code class="filename">/var/run/netconfig/resolv.conf</code>
+                           </div>
+                     </header>
+                  </div>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-netconfig">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/sbin/netconfig</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">netconfig</code> is a modular tool to manage additional network configuration settings. It merges
+                     statically defined settings with settings provided by autoconfiguration mechanisms
+                     as DHCP or PPP according to a predefined policy. The required changes are applied
+                     to the system by calling the netconfig modules that are responsible for modifying
+                     a configuration file and restarting a service or a similar action.</p>
+                  
+                  <p><code class="command">netconfig</code> recognizes three main actions. The <code class="command">netconfig modify</code> and <code class="command">netconfig remove</code> commands are used by daemons such as DHCP or PPP to provide or remove settings to
+                     netconfig. Only the <code class="command">netconfig update</code> command is available for the user:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">modify</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The <code class="command">netconfig modify</code> command modifies the current interface and service specific dynamic settings and
+                              updates the network configuration. Netconfig reads settings from standard input or
+                              from a file specified with the <code class="option">--lease-file <em class="replaceable">FILENAME</em></code> option and internally stores them until a system reboot (or the next modify or remove
+                              action). Already existing settings for the same interface and service combination
+                              are overwritten. The interface is specified by the <code class="option">-i <em class="replaceable">INTERFACE_NAME</em></code> parameter. The service is specified by the <code class="option">-s <em class="replaceable">SERVICE_NAME</em></code> parameter.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">remove</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The <code class="command">netconfig remove</code> command removes the dynamic settings provided by an editing action for the specified
+                              interface and service combination and updates the network configuration. The interface
+                              is specified by the <code class="option">-i <em class="replaceable">INTERFACE_NAME</em></code> parameter. The service is specified by the <code class="option">-s <em class="replaceable">SERVICE_NAME</em></code> parameter.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">update</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p> The <code class="command">netconfig update</code> command updates the network configuration using current settings. This is useful
+                              when the policy or the static configuration has changed. Use the <code class="option">-m <em class="replaceable">MODULE_TYPE</em></code> parameter to update a specified service only (<code class="systemitem">dns</code>, <code class="systemitem">nis</code>, or <code class="systemitem">ntp</code>).</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  
+                  <p>The netconfig policy and the static configuration settings are defined either manually
+                     or using YaST in the <code class="filename">/etc/sysconfig/network/config</code> file. The dynamic configuration settings provided by autoconfiguration tools such
+                     as DHCP or PPP are delivered directly by these tools with the <code class="command">netconfig modify</code> and <code class="command">netconfig remove</code> actions.  When NetworkManager is enabled, netconfig (in policy mode <code class="literal">auto</code>) uses only NetworkManager settings, ignoring settings from any other interfaces configured
+                     using the traditional ifup method. If NetworkManager does not provide any setting,
+                     static settings are used as a fallback. A mixed usage of NetworkManager and the <code class="command">wicked</code> method is not supported.</p>
+                  
+                  <p>For more information about <code class="command">netconfig</code>, see <code class="command">man 8 netconfig</code>.</p>
+                  </section>
+               
+               
+               <section class="sect3" id="sec-network-manconf-hosts">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/hosts</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>In this file, shown in <a class="xref xref-example" href="#dat-net-etc-hosts">Example&nbsp;<span class="label">23<span class="sep">.</span>7</span>, “
+                        <code class="filename">/etc/hosts</code>
+                        ”</a>, IP addresses are assigned to host names. If no name server is implemented, all hosts
+                     to which an IP connection will be set up must be listed here. For each host, enter
+                     a line consisting of the IP address, the fully qualified host name, and the host name
+                     into the file. The IP address must be at the beginning of the line and the entries
+                     separated by blanks and tabs. Comments are always preceded by the <code class="literal">#</code> sign.</p>
+                  
+                  <div class="example formalobject" id="dat-net-etc-hosts">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>127.0.0.1 localhost</code></span></span>
+<span class="line"><span class="ld"><code>192.168.2.100 jupiter.example.com jupiter</code></span></span>
+<span class="line"><span class="ld"><code>192.168.2.101 venus.example.com venus</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>
+                           <code class="filename">/etc/hosts</code>
+                           </div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-networks">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/networks</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>Here, network names are converted to network addresses. The format is similar to that
+                     of the <code class="filename">hosts</code> file, except the network names precede the addresses. See <a class="xref xref-example" href="#dat-net-networks">Example&nbsp;<span class="label">23<span class="sep">.</span>8</span>, “
+                        <code class="filename">/etc/networks</code>
+                        ”</a>.</p>
+                  
+                  <div class="example formalobject" id="dat-net-networks">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>loopback     127.0.0.0</code></span></span>
+<span class="line"><span class="ld"><code>localnet     192.168.0.0</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>
+                           <code class="filename">/etc/networks</code>
+                           </div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-host">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/host.conf</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>Name resolution—the translation of host and network names via the <em>resolver</em> library—is controlled by this file. This file is only used for programs linked to
+                     libc4 or libc5. For current glibc programs, refer to the settings in <code class="filename">/etc/nsswitch.conf</code>. Each parameter must always be entered on a separate line. Comments are preceded
+                     by a <code class="literal">#</code> sign. <a class="xref xref-table" href="#tab-net-param-hostconf">Table&nbsp;<span class="label">23<span class="sep">.</span>2</span>, “Parameters for /etc/host.conf”</a> shows the parameters available. A sample <code class="filename">/etc/host.conf</code> is shown in <a class="xref xref-example" href="#dat-net-etc-hostconf">Example&nbsp;<span class="label">23<span class="sep">.</span>9</span>, “
+                        <code class="filename">/etc/host.conf</code>
+                        ”</a>.</p>
+                  
+                  <div class="formalobject table" id="tab-net-param-hostconf">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">23<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Parameters for /etc/host.conf</div>
+                     </header>
+                     <table>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep left rowsep">
+                                 <p>order <em>hosts</em>, <em>bind</em></p>
+                              </td>
+                              <td class="btop colsep left rowsep">
+                                 <p>Specifies in which order the services are accessed for the name resolution. Available
+                                    arguments are (separated by blank spaces or commas):</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep"></td>
+                              <td class="colsep left rowsep">
+                                 <p><em>hosts</em>: searches the <code class="filename">/etc/hosts</code> file</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep"></td>
+                              <td class="colsep left rowsep">
+                                 <p><em>bind</em>: accesses a name server</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep"></td>
+                              <td class="colsep left rowsep">
+                                 <p><em>nis</em>: uses NIS</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p>multi <em>on</em>/<em>off</em></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Defines if a host entered in <code class="filename">/etc/hosts</code> can have multiple IP addresses.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p>nospoof <em>on</em> spoofalert <em>on</em>/<em>off</em></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>These parameters influence the name server <em>spoofing</em> but do not exert any influence on the network configuration.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p>trim <em>domainname</em></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>The specified domain name is separated from the host name after host name resolution
+                                    (as long as the host name includes the domain name). This option is useful only if
+                                    names from the local domain are in the <code class="filename">/etc/hosts</code> file, but should still be recognized with the attached domain names.</p>
+                              </td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  
+                  <div class="example formalobject" id="dat-net-etc-hostconf">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># We have named running</code></span></span>
+<span class="line"><span class="ld"><code>order hosts bind</code></span></span>
+<span class="line"><span class="ld"><code># Allow multiple address</code></span></span>
+<span class="line"><span class="ld"><code>multi on</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>
+                           <code class="filename">/etc/host.conf</code>
+                           </div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-nsswitch">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/nsswitch.conf</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The introduction of the GNU C&nbsp;Library 2.0 was accompanied by the introduction of the
+                     <em>Name Service Switch</em> (NSS). Refer to the <code class="systemitem">nsswitch.conf(5)</code> man page and <em>The GNU C Library Reference Manual</em> for details.</p>
+                  
+                  <p>The order for queries is defined in the file <code class="filename">/etc/nsswitch.conf</code>. A sample <code class="filename">nsswitch.conf</code> is shown in <a class="xref xref-example" href="#dat-net-nsswitchconf">Example&nbsp;<span class="label">23<span class="sep">.</span>10</span>, “
+                        <code class="filename">/etc/nsswitch.conf</code>
+                        ”</a>. Comments are preceded by <code class="literal">#</code> signs. In this example, the entry under the <code class="filename">hosts</code> database means that a request is sent to <code class="filename">/etc/hosts</code> (<code class="option">files</code>) via DNS (see <a class="xref xref-chapter" href="bk01partvch03.html">Chapter&nbsp;<span class="label">40</span>, The domain name system</a>).</p>
+                  
+                  <div class="example formalobject" id="dat-net-nsswitchconf">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>passwd:     compat</code></span></span>
+<span class="line"><span class="ld"><code>group:      compat</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>hosts:      files dns</code></span></span>
+<span class="line"><span class="ld"><code>networks:   files dns</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>services:   db files</code></span></span>
+<span class="line"><span class="ld"><code>protocols:  db files</code></span></span>
+<span class="line"><span class="ld"><code>rpc:        files</code></span></span>
+<span class="line"><span class="ld"><code>ethers:     files</code></span></span>
+<span class="line"><span class="ld"><code>netmasks:   files</code></span></span>
+<span class="line"><span class="ld"><code>netgroup:   files nis</code></span></span>
+<span class="line"><span class="ld"><code>publickey:  files</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>bootparams: files</code></span></span>
+<span class="line"><span class="ld"><code>automount:  files nis</code></span></span>
+<span class="line"><span class="ld"><code>aliases:    files nis</code></span></span>
+<span class="line"><span class="ld"><code>shadow:     compat</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>
+                           <code class="filename">/etc/nsswitch.conf</code>
+                           </div>
+                     </header>
+                  </div>
+                  
+                  <p>The <q>databases</q> available over NSS are listed in <a class="xref xref-table" href="#tab-net-nnswitch-db">Table&nbsp;<span class="label">23<span class="sep">.</span>3</span>, “Databases available via /etc/nsswitch.conf”</a>. The configuration options for NSS databases are listed in <a class="xref xref-table" href="#tab-net-nnswitch-conf">Table&nbsp;<span class="label">23<span class="sep">.</span>4</span>, “Configuration options for NSS <q>databases</q>
+                        ”</a>.</p>
+                  
+                  <div class="formalobject table" id="tab-net-nnswitch-db">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">23<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Databases available via /etc/nsswitch.conf</div>
+                     </header>
+                     <table>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep left rowsep">
+                                 <p><code class="option">aliases</code></p>
+                              </td>
+                              <td class="btop colsep left rowsep">
+                                 <p>Mail aliases implemented by <code class="filename">sendmail</code>; see <code class="command">man</code>&nbsp;<code class="option">5 aliases</code>.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">ethers</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Ethernet addresses.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">netmasks</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>List of networks and their subnet masks. Only needed, if you use subnetting.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">group</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>User groups used by <code class="filename">getgrent</code>. See also the man page for <code class="command">group</code>.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">hosts</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Host names and IP addresses, used by <code class="filename">gethostbyname</code> and similar functions.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">netgroup</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Valid host and user lists in the network for controlling access permissions; see the
+                                    <code class="systemitem">netgroup(5)</code> man page.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">networks</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Network names and addresses, used by <code class="filename">getnetent</code>.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">publickey</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Public and secret keys for Secure_RPC used by NFS and NIS+.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">passwd</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>User passwords, used by <code class="filename">getpwent</code>; see the <code class="systemitem">passwd(5)</code> man page.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">protocols</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Network protocols, used by <code class="filename">getprotoent</code>; see the <code class="systemitem">protocols(5)</code> man page.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">rpc</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Remote procedure call names and addresses, used by <code class="filename">getrpcbyname</code> and similar functions.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">services</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Network services, used by <code class="filename">getservent</code>.</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">shadow</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>Shadow passwords of users, used by <code class="filename">getspnam</code>; see the <code class="option">shadow(5)</code> man page.</p>
+                              </td>
+                           </tr>
+                           
+                           </tbody>
+                     </table>
+                  </div>
+                  
+                  <div class="formalobject table" id="tab-net-nnswitch-conf">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">23<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuration options for NSS <q>databases</q>
+                           </div>
+                     </header>
+                     <table>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep left rowsep">
+                                 <p><code class="option">files</code></p>
+                              </td>
+                              <td class="btop colsep left rowsep">
+                                 <p>directly access files, for example, <code class="filename">/etc/aliases</code></p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">db</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>access via a database</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">nis</code>, <code class="option">nisplus</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>NIS, see also <a class="xref xref-chapter" href="bk06partich02.html">Chapter&nbsp;<span class="label">3</span>, Using NIS</a></p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">dns</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>can only be used as an extension for <code class="option">hosts</code> and <code class="option">networks</code></p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep left rowsep">
+                                 <p><code class="option">compat</code></p>
+                              </td>
+                              <td class="colsep left rowsep">
+                                 <p>can only be used as an extension for <code class="option">passwd</code>, <code class="option">shadow</code> and <code class="option">group</code></p>
+                              </td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-nscd">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/nscd.conf</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>This file is used to configure nscd (name service cache daemon). See the <code class="systemitem">nscd(8)</code> and <code class="systemitem">nscd.conf(5)</code> man pages. By default, the system entries of <code class="option">passwd</code>, <code class="option">groups</code> and <code class="option">hosts</code>are cached by nscd. This is important for the performance of directory services, like
+                     NIS and LDAP, because otherwise the network connection needs to be used for every
+                     access to names, groups or hosts. </p>
+                  
+                  <p>If the caching for <code class="option">passwd</code> is activated, it usually takes about fifteen seconds until a newly added local user
+                     is recognized. Reduce this waiting time by restarting nscd with:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart nscd</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-files-hostname">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>
+                        <code class="filename">/etc/hostname</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p><code class="filename">/etc/hostname</code> contains the fully qualified host name (FQHN). The fully qualified host name is the
+                     host name with the domain name attached. This file must contain only one line (in
+                     which the host name is set). It is read while the machine is booting.</p>
+                  </section>
+               </section>
+            
+            
+            <section class="sect2" id="sec-network-manconf-testing">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Testing the configuration</h3>
+               </header>
+               
+               
+               <p>Before you write your configuration to the configuration files, you can test it. To
+                  set up a test configuration, use the <code class="command">ip</code> command. To test the connection, use the <code class="command">ping</code> command.</p>
+               
+               <p>The command <code class="command">ip</code> changes the network configuration directly without saving it in the configuration
+                  file. Unless you enter your configuration in the correct configuration files, the
+                  changed network configuration is lost on reboot.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">
+                              <code class="command">ifconfig</code> and <code class="command">route</code> are obsolete</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The <code class="command">ifconfig</code> and <code class="command">route</code> tools are obsolete. Use <code class="command">ip</code> instead. <code class="command">ifconfig</code>, for example, limits interface names to 9&nbsp;characters.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-network-manconf-ip">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring a network interface with <code class="command">ip</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p><code class="command">ip</code> is a tool to show and configure network devices, routing, policy routing, and tunnels.</p>
+                  
+                  <p><code class="command">ip</code> is a very complex tool. Its common syntax is <code class="command">ip</code>&nbsp;<code class="option"><em class="replaceable">OPTIONS</em><em class="replaceable">OBJECT</em><em class="replaceable">COMMAND</em></code>. You can work with the following objects:</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">link</span></dt>
+                        <dd>
+                           
+                           <p>This object represents a network device.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">address</span></dt>
+                        <dd>
+                           
+                           <p>This object represents the IP address of device.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">neighbor</span></dt>
+                        <dd>
+                           
+                           <p>This object represents an ARP or NDISC cache entry.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">route</span></dt>
+                        <dd>
+                           
+                           <p>This object represents the routing table entry.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">rule</span></dt>
+                        <dd>
+                           
+                           <p>This object represents a rule in the routing policy database.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">maddress</span></dt>
+                        <dd>
+                           
+                           <p>This object represents a multicast address.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">mroute</span></dt>
+                        <dd>
+                           
+                           <p>This object represents a multicast routing cache entry.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">tunnel</span></dt>
+                        <dd>
+                           
+                           <p>This object represents a tunnel over IP.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>If no command is given, the default command is used (usually <code class="command">list</code>).</p>
+                  
+                  <p>Change the state of a device with the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link set <em class="replaceable">DEV_NAME</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>For example, to deactivate device eth0, enter</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link set eth0 down</code></span></span></pre>
+                  </div>
+                  
+                  <p>To activate it again, use</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link set eth0 up</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Disconnecting NIC device</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>If you deactivate a device with</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link set <em class="replaceable">DEV_NAME</em> down</code></span></span></pre>
+                              </div>
+                              
+                              <p>it disables the network interface on a software level.</p>
+                              
+                              <p>If you want to simulate losing the link as if the Ethernet cable is unplugged or the
+                                 connected switch is turned off, run</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link set <em class="replaceable">DEV_NAME</em> carrier off</code></span></span></pre>
+                              </div>
+                              
+                              <p>For example, while <code class="command">ip link set <em class="replaceable">DEV_NAME</em> down</code> drops all routes using <em class="replaceable">DEV_NAME</em>, <code class="command">ip link set DEV carrier off</code> does not. Be aware that <code class="command">carrier off</code> requires support from the network device driver.</p>
+                              
+                              <p>To connect the device back to the physical network, run</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link set <em class="replaceable">DEV_NAME</em> carrier on</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>After activating a device, you can configure it. To set the IP address, use</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip addr add <em class="replaceable">IP_ADDRESS</em> + dev <em class="replaceable">DEV_NAME</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>For example, to set the address of the interface eth0 to 192.168.12.154/30 with standard
+                     broadcast (option <code class="option">brd</code>), enter</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip addr add 192.168.12.154/30 brd + dev eth0</code></span></span></pre>
+                  </div>
+                  
+                  <p>To have a working connection, you must also configure the default gateway. To set
+                     a gateway for your system, enter</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip route add default via gateway_ip_address</code></span></span></pre>
+                  </div>
+                  
+                  <p>To display all devices, use</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link ls</code></span></span></pre>
+                  </div>
+                  
+                  <p>To display the running interfaces only, use</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip link ls up</code></span></span></pre>
+                  </div>
+                  
+                  <p>To print interface statistics for a device, enter</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip -s link ls <em class="replaceable">DEV_NAME</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>To view additional useful information, specifically about virtual network devices,
+                     enter</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip -d link ls <em class="replaceable">DEV_NAME</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>Moreover, to view network layer (IPv4, IPv6) addresses of your devices, enter</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip addr</code></span></span></pre>
+                  </div>
+                  
+                  <p>In the output, you can find information about MAC addresses of your devices. To show
+                     all routes, use</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip route show</code></span></span></pre>
+                  </div>
+                  
+                  <p>For more information about using <code class="command">ip</code>, enter <code class="command">ip</code>&nbsp;<code class="option">help</code> or see the <code class="command">man 8 ip</code> manual page. The <code class="option">help</code> option is also available for all <code class="command">ip</code> subcommands, such as:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip addr help</code></span></span></pre>
+                  </div>
+                  
+                  <p>Find the <code class="command">ip</code> manual in <code class="filename">/usr/share/doc/packages/iproute2/ip-cref.pdf</code>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-network-manconf-testingping">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Testing a connection with ping</h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="command">ping</code> command is the standard tool for testing whether a TCP/IP connection works. It uses
+                     the ICMP protocol to send a small data packet, ECHO_REQUEST datagram, to the destination
+                     host, requesting an immediate reply. If this works, <code class="command">ping</code> displays a message to that effect. This indicates that the network link is functioning.</p>
+                  
+                  <p><code class="command">ping</code> does more than only test the function of the connection between two computers: it
+                     also provides some basic information about the quality of the connection. In <a class="xref xref-example" href="#ex-basicnet-manconf-ping">Example&nbsp;<span class="label">23<span class="sep">.</span>11</span>, “Output of the command ping”</a>, you can see an example of the <code class="command">ping</code> output. The second-to-last line contains information about the number of transmitted
+                     packets, packet loss, and total time of <code class="command">ping</code> running.</p>
+                  
+                  <p>As the destination, you can use a host name or IP address, for example, <code class="command">ping</code>&nbsp;<code class="option">example.com</code> or <code class="command">ping</code>&nbsp;<code class="option">192.168.3.100</code>. The program sends packets until you press <span class="keycombo"><span class="control keycap">Ctrl</span><span class="keycap">C</span></span>.</p>
+                  
+                  <p>If you only need to check the functionality of the connection, you can limit the number
+                     of the packets with the <code class="option">-c</code> option. For example to limit ping to three packets, enter <code class="command">ping</code>&nbsp;<code class="option">-c 3 example.com</code>.</p>
+                  
+                  <div class="example formalobject" id="ex-basicnet-manconf-ping">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ping -c 3 example.com</code></span></span>
+<span class="line"><span class="ld"><code>PING example.com (192.168.3.100) 56(84) bytes of data.</code></span></span>
+<span class="line"><span class="ld"><code>64 bytes from example.com (192.168.3.100): icmp_seq=1 ttl=49 time=188 ms</code></span></span>
+<span class="line"><span class="ld"><code>64 bytes from example.com (192.168.3.100): icmp_seq=2 ttl=49 time=184 ms</code></span></span>
+<span class="line"><span class="ld"><code>64 bytes from example.com (192.168.3.100): icmp_seq=3 ttl=49 time=183 ms</code></span></span>
+<span class="line"><span class="ld"><code>--- example.com ping statistics ---</code></span></span>
+<span class="line"><span class="ld"><code>3 packets transmitted, 3 received, 0% packet loss, time 2007ms</code></span></span>
+<span class="line"><span class="ld"><code>rtt min/avg/max/mdev = 183.417/185.447/188.259/2.052 ms</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Output of the command ping</div>
+                     </header>
+                  </div>
+                  
+                  <p>The default interval between two packets is one second. To change the interval, ping
+                     provides the option <code class="option">-i</code>. For example, to increase the ping interval to ten seconds, enter <code class="command">ping</code>&nbsp;<code class="option">-i 10 example.com</code>.</p>
+                  
+                  <p>In a system with multiple network devices, it is sometimes useful to send the ping
+                     through a specific interface address. To do so, use the <code class="option">-I</code> option with the name of the selected device, for example, <code class="command">ping</code>&nbsp;<code class="option">-I wlan1 example.com</code>.</p>
+                  
+                  <p>For more options and information about using ping, enter <code class="command">ping</code>&nbsp;<code class="option">-h</code> or see the <code class="systemitem">ping (8)</code> man page.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Pinging IPv6 addresses</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>For IPv6 addresses use the <code class="command">ping6</code> command. Note, to ping link-local addresses, you must specify the interface with
+                                 <code class="option">-I</code>. The following command works, if the address is reachable via <code class="literal">eth1</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ping6 -I eth1 fe80::117:21ff:feda:a425</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-network-manconf-scripts">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Unit files and start-up scripts</h3>
+               </header>
+               
+               
+               <p>Apart from the configuration files described above, there are also systemd unit files
+                  and various scripts that load the network services while the machine is booting. These
+                  are started when the system is switched to the <code class="systemitem">multi-user.target</code> target. Some of these unit files and scripts are described in <a class="xref xref-variablelist" href="#var-net-start-scripts">Some unit files and start-up scripts for network programs</a>. For more information about <code class="systemitem">systemd</code>, see <a class="xref xref-chapter" href="bk01partiich04.html">Chapter&nbsp;<span class="label">19</span>, The <code class="daemon systemitem">systemd</code> daemon</a> and for more information about the <code class="systemitem">systemd</code> targets, see the man page of <code class="systemitem">systemd.special</code> (<code class="command">man systemd.special</code>).</p>
+               
+               <div class="long-terms variablelist" id="var-net-start-scripts">
+                  <header>
+                     <div class="title">Some unit files and start-up scripts for network programs</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">network.target</code>
+                              
+                              </span></dt>
+                        <dd>
+                           
+                           <p><code class="systemitem">network.target</code> is the systemd target for networking, but its mean depends on the settings provided
+                              by the system administrator.</p>
+                           
+                           <p>For more information, see <a class="link" href="https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/">https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/</a>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">multi-user.target</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p><code class="systemitem">multi-user.target</code> is the systemd target for a multiuser system with all required network services.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">rpcbind</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts the rpcbind utility that converts RPC program numbers to universal addresses.
+                              It is needed for RPC services, such as an NFS server.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">ypserv</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts the NIS server.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="systemitem">ypbind</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts the NIS client.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/etc/init.d/nfsserver</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts the NFS server.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="filename">/etc/init.d/postfix</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Controls the postfix process.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich04s05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich04.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich04s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">23<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>NetworkManager</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">23<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Basic router setup</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

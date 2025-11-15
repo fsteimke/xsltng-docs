@@ -1,0 +1,654 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.32.&nbsp;Custom user scripts</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partiich01s31.html" rel="prev">
+      <link href="bk05partiich01s33.html" rel="next">
+      <link href="bk05partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partiich01.html">Up</a> <a href="bk05partiich01s33.html">Next</a> <a href="bk05partiich01s31.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partiich01s32.html" db-id="d616951e142619" id="createprofile-scripts" lang="">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>32</span><span class="sep">.&nbsp;</span>Custom user scripts</h2>
+            </header>
+            
+            
+            
+            <p>By adding scripts to the auto-installation process you can customize the installation
+               according to your needs and take control in different stages of the installation.</p>
+            
+            <p>In the auto-installation process, five types of scripts can be executed at different
+               points in time during the installation:</p>
+            
+            <p>Except for <code class="literal">init scripts</code>, all scripts must be included in the <code class="literal">&lt;scripts&gt;</code> section.</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p><code class="literal">pre-scripts</code> (very early, before anything else really happens)</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="literal">postpartitioning-scripts</code> (after partitioning and mounting to <code class="filename">/mnt</code> but before RPM installation)</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="literal">chroot-scripts</code> (after the package installation, before the first boot)</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="literal">post-scripts</code> (during the first boot of the installed system, no services running)</p>
+                  </li>
+               </ul>
+            
+            <p><code class="literal">Init scripts</code> (when the installed system is first booted, when all services are running) are not
+               executed by YaST and therefore have a special Status. See <a class="xref xref-sect2" href="#init-scripts">the section called “Init scripts”</a> for further information.</p>
+            
+            <section class="sect2" id="pre-install-scripts">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Pre-scripts</h3>
+               </header>
+               
+               
+               <p>Executed before YaST does any real change to the system (before partitioning and package
+                  installation but after the hardware detection).</p>
+               
+               <p>You can use a pre-script to modify your control file and let AutoYaST reread it. Find
+                  your control file in <code class="filename">/tmp/profile/autoinst.xml</code>. Adjust the file and store the modified version in <code class="filename">/tmp/profile/modified.xml</code>. AutoYaST will read the modified file after the pre-script finishes.</p>
+               
+               <p>It is also possible to modify the storage devices in your pre-scripts. For example,
+                  you can create new partitions or change the configuration of certain technologies
+                  like multipath. AutoYaST always inspects the storage devices again after executing
+                  all the pre-scripts.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Pre-scripts with confirmation</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Pre-scripts are executed at an early stage of the installation. This means if you
+                              have requested to confirm the installation, these scripts will be executed before
+                              the confirmation screen shows up (<code class="literal">profile/install/general/mode/confirm</code>).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Pre-scripts and Zypper</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>To call <em>Zypper</em> in the pre-script you will need to set the environment variable <em>ZYPP_LOCKFILE_ROOT="/var/run/autoyast"</em> to prevent conflicts with the running YaST process.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The <code class="literal">pre-script</code> elements must be placed as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;pre-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/pre-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/scripts&gt;</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="postpartitioning-install-scripts">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Postpartitioning scripts</h3>
+               </header>
+               
+               
+               <p>Executed after YaST has done the partitioning and written <code class="filename">/etc/fstab</code>. The empty system is already mounted to <code class="filename">/mnt</code>.</p>
+               
+               <p>The <code class="literal">postpartitioning-script</code> elements must be placed as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;postpartitioning-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/postpartitioning-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/scripts&gt;</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="chroot-scripts">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Chroot environment scripts</h3>
+               </header>
+               
+               
+               <p>Chroot scripts are executed before the machine reboots for the first time. You can
+                  execute chroot scripts before the installation chroots into the installed system and
+                  configures the boot loader, or you can execute a script after the chroot into the
+                  installed system has happened (look at the <code class="literal">chrooted</code> parameter for that).</p>
+               
+               <p>The <code class="literal">chroot-scripts</code> elements must be placed as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;chroot-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/chroot-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/scripts&gt;</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="post-install-scripts">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Post-scripts</h3>
+               </header>
+               
+               
+               <p>These scripts are executed after AutoYaST has completed the system configuration and
+                  after it has booted the system for the first time.</p>
+               
+               <p>The <code class="literal">post-script</code> elements must be placed as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;post-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        ...</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/post-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/scripts&gt;</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="init-scripts">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Init scripts</h3>
+               </header>
+               
+               
+               <p>These scripts are executed when YaST has finished, during the initial boot process
+                  after the network has been initialized. These final scripts are executed using <code class="filename">/usr/lib/YaST2/bin/autoyast-initscripts.sh</code> and are executed only once. Init scripts are configured using the tag <em>init-scripts</em>.</p>
+               
+               <p>The <code class="literal">init-script</code> elements must be placed as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  &lt;init-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/init-scripts&gt;</code></span></span></pre>
+               </div>
+               
+               <p>Init scripts are different from the other script types because they are not executed
+                  by YaST, but after YaST has finished. For this reason, their XML representation is
+                  different from other script types.</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Init script XML representation</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">location</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Define a location from where the script gets fetched. Locations can be the same as
+                              for the profile (HTTP, FTP, NFS, etc.).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;location&gt;http://10.10.0.1/myInitScript.sh&lt;/location&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Either &lt;location&gt; or &lt;source&gt; must be defined.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">source</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The script itself (source code), encapsulated in a CDATA tag. If you do not want to
+                              put the whole shell script into the XML profile, use the location parameter.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;![CDATA[echo "Testing the init script" &gt;/tmp/init_out.txt]]&gt;&lt;/source&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Either &lt;location&gt; or &lt;source&gt; must be defined.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">filename</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The file name of the script. It will be stored in a temporary directory under <code class="filename">/tmp</code></p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;filename&gt;mynitScript5.sh&lt;/filename&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional in case you only have a single init script. The default name (<code class="filename">init-scripts</code>) is used in this case. If having specified more than one init script, you must set
+                              a unique name for each script.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">rerun</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Normally, a script is only run once, even if you use <code class="literal">ayast_setup</code> to run an XML file multiple times. Change this default behavior by setting this boolean
+                              to <code class="literal">true</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;rerun config:type="boolean"&gt;true&lt;/rerun&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional. Default is <code class="literal">false</code> (scripts only run once).</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <p>When added to the control file manually, scripts need to be included in a <em>CDATA</em> element to avoid confusion with the file syntax and other tags defined in the control
+                  file.</p>
+               </section>
+            
+            <section class="sect2" id="scripts-syntax">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Script XML representation</h3>
+               </header>
+               
+               
+               <p>Most of the XML elements described below can be used for all the script types described
+                  above, except for <em>init scripts</em>, whose definitions can contain only a subset of these elements. See <a class="xref xref-sect2" href="#init-scripts">the section called “Init scripts”</a> for further information about them.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Deprecated elements</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><code class="literal">debug</code> is a deprecated element and can be removed in future releases. To adapt, use an interpreter-specific
+                              debugging parameter in <code class="literal">interpreter</code>. For example, instead of &lt;interpreter&gt;shell&lt;/interpreter&gt; use &lt;interpreter&gt;/bin/sh
+                              -x&lt;/interpreter&gt; for the same result as having enabled the <code class="literal">debug</code> flag.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Script XML representation</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">location</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Define a location from where the script gets fetched. Locations can be the same as
+                              for the control file (HTTP, FTP, NFS, etc.), for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;location&gt;http://10.10.0.1/myPreScript.sh&lt;/location&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>The location can also be defined as a relative URL, where the path is relative to
+                              the directory with the control file. If the relative URL is used, the <code class="literal">location</code> attribute appears as follows:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;location&gt;relurl://script.sh&lt;/location&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Alternatively, you can use the <code class="literal">repo</code> URI scheme. The script location is relative to the installation source, and the definition
+                              appears as follows:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;location&gt;repo:/script.sh&lt;/location&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Either <code class="literal">location</code> or <code class="literal">source</code> must be defined.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">source</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The script itself (source code), encapsulated in a CDATA tag. If you do not want to
+                              put the whole shell script into the XML control file, refer to the location parameter.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>echo "Testing the pre script" &gt; /tmp/pre-script_out.txt</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/source&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Either <code class="literal">location</code> or <code class="literal">source</code> must be defined.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">interpreter</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specify the interpreter that must be used for the script. Any interpreter available
+                              in the given environment can be specified. It is possible to provide a full path to
+                              the interpreter, including parameters. There are also deprecated keywords interpreter
+                              "shell", "perl" and "python" that are supported by the <code class="literal">debug</code> flag.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;interpreter&gt;/bin/bash -x&lt;/interpreter&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; default is <code class="literal">shell</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">file name</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The file name of the script. It will be stored in a temporary directory under <code class="filename">/tmp</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;filename&gt;myPreScript5.sh&lt;/filename&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; default is the type of the script (pre-scripts in this case). If you have
+                              more than one script, you should define different names for each script. If <code class="literal">filename</code> is not defined and <code class="literal">location</code> is defined, the file name from the location path will be used.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">feedback</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If this boolean is <code class="literal">true</code>, output and error messages of the script (STDOUT and STDERR) will be shown in a pop-up.
+                              The user needs to confirm them via the OK button.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;feedback config:type="boolean"&gt;true&lt;/feedback&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; default is <code class="literal">false</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">feedback_type</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>This can be <code class="literal">message</code>, <code class="literal">warning</code> or <code class="literal">error</code>. Set the timeout for these pop-ups in the &lt;report&gt; section.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;feedback_type&gt;warning&lt;/feedback_type&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; if missing, an always-blocking pop-up is used.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">debug</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If this is <code class="literal">true</code>, every single line of a shell script is logged. Perl scripts are run with warnings
+                              turned on. This only works for the deprecated keyword <code class="literal">interpreter</code>. For other languages, give the path to the interpreter as a parameter in the <code class="literal">interpreter</code> value, for example "&lt;interpreter&gt;ruby -w&lt;/interpreter&gt;".</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;debug config:type="boolean"&gt;true&lt;/debug&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; default is <code class="literal">true</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">notification</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>This text will be shown in a pop-up for the time the script is running in the background.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;notification&gt;Please wait while script is running...&lt;/notification&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; if not configured, no notification pop-up will be shown.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">param-list</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>It is possible to specify parameters given to the script being called. You may have
+                              more than one <code class="literal">param</code> entry. They are concatenated by a single space character on the script command line.
+                              If any shell quoting should be necessary (for example to protect embedded spaces)
+                              you need to include this.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;param-list config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;param&gt;par1&lt;/param&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;param&gt;par2 par3&lt;/param&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;param&gt;"par4.1 par4.2"&lt;/param&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/param-list&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; if not configured, no parameters get passed to script.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">rerun</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>A script is only run once. Even if you use <code class="literal">ayast</code>_setup to run an XML file multiple times, the script is only run once. Change this
+                              default behavior by setting this boolean to <code class="literal">true</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;rerun config:type="boolean"&gt;true&lt;/rerun&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; default is <code class="literal">false</code>, meaning that scripts only run once.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">chrooted</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>During installation, the new system is mounted at <code class="filename">/mnt</code>. If this parameter is set to <code class="literal">false</code>, AutoYaST does not run <code class="command">chroot</code> and does not install the boot loader at this stage. If the parameter is set to <code class="literal">true</code>, AutoYaST performs a <code class="command">chroot</code> into <code class="filename">/mnt</code> and installs the boot loader. The result is that to change anything in the newly-installed
+                              system, you no longer need to use the <code class="filename">/mnt</code> prefix.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;chrooted config:type="boolean"&gt;true&lt;/chrooted&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional; default is <code class="literal">false</code>. This option is only available for chroot environment scripts.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            
+            <section class="sect2" id="script-examples">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>32<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Script example</h3>
+               </header>
+               
+               
+               <div class="example formalobject" id="script-examples_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;?xml version="1.0"?&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;!DOCTYPE profile&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;chroot-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;chrooted config:type="boolean"&gt;true&lt;/chrooted&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;filename&gt;chroot-post.sh&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;interpreter&gt;shell&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;source&gt;&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>echo "Testing chroot (chrooted) scripts"</code></span></span>
+<span class="line"><span class="ld"><code>ls</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;filename&gt;chroot-pre.sh&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;interpreter&gt;/bin/bash -x&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;source&gt;&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>echo "Testing chroot scripts"</code></span></span>
+<span class="line"><span class="ld"><code>df</code></span></span>
+<span class="line"><span class="ld"><code>cd /mnt</code></span></span>
+<span class="line"><span class="ld"><code>ls</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/chroot-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;post-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filename&gt;post.sh&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;interpreter&gt;shell&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;source&gt;&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>echo "Running Post-install script"</code></span></span>
+<span class="line"><span class="ld"><code>systemctl start portmap</code></span></span>
+<span class="line"><span class="ld"><code>mount -a 192.168.1.1:/local /mnt</code></span></span>
+<span class="line"><span class="ld"><code>cp /mnt/test.sh /tmp</code></span></span>
+<span class="line"><span class="ld"><code>umount /mnt</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filename&gt;post.pl&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;interpreter&gt;perl&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;source&gt;&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>print "Running Post-install script";</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/post-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;pre-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;interpreter&gt;shell&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;location&gt;http://192.168.1.1/profiles/scripts/prescripts.sh&lt;/location&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filename&gt;pre.sh&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;interpreter&gt;shell&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;source&gt;&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>echo "Running pre-script"</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/pre-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;postpartitioning-scripts config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filename&gt;postpart.sh&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;interpreter&gt;shell&lt;/interpreter&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;debug config:type="boolean"&gt;false&lt;/debug&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;feedback config:type="boolean"&gt;true&lt;/feedback&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;source&gt;&lt;![CDATA[</code></span></span>
+<span class="line"><span class="ld"><code>touch /mnt/testfile</code></span></span>
+<span class="line"><span class="ld"><code>echo Hi</code></span></span>
+<span class="line"><span class="ld"><code>]]&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/script&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/postpartitioning-scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/scripts&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/profile&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>66</span><span class="sep">.&nbsp;</span>Script configuration</div>
+                  </header>
+               </div>
+               
+               <p>After installation is finished, the scripts and the output logs can be found in the
+                  directory <code class="filename">/var/adm/autoinstall</code>. The scripts are located in the subdirectory <code class="filename">scripts</code> and the output logs in the <code class="filename">log</code> directory.</p>
+               
+               <p>The log consists of the output produced when executing the scripts, containing a combination
+                  of both the standard output and the standard error output.</p>
+               
+               <p>If the script ends with a non-zero exit code, then a warning will be shown with the
+                  content of the logs, unless the <code class="literal">feedback</code> option was provided.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partiich01s31.html">Prev</a></td>
+                  <td class="up"><a href="bk05partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk05partiich01s33.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>31</span><span class="sep">.&nbsp;</span>Users and groups</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>33</span><span class="sep">.&nbsp;</span>System variables (sysconfig)</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

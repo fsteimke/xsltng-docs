@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>17.4.&nbsp;Improving the network performance with receive packet steering (RPS)</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvch04s03.html" rel="prev">
+      <link href="bk07partvch05.html" rel="next">
+      <link href="bk07partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvch04.html">Up</a> <a href="bk07partvch05.html">Next</a> <a href="bk07partvch04s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvch04s04.html" db-id="d616951e220829" id="sec-tuning-network-rps">
+            <header>
+               <h2><span class="label">17<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Improving the network performance with receive packet steering (RPS)</h2>
+            </header>
+            
+            
+            <p>Modern network interface devices can move so many packets that the host can become
+               the limiting factor for achieving maximum performance. To keep up, the system must
+               be able to distribute the work across multiple CPU cores.</p>
+            
+            <p>Some modern network interfaces can help distribute the work to multiple CPU cores
+               through the implementation of multiple transmission and multiple receive queues in
+               hardware. However, others are only equipped with a single queue and the driver must
+               deal with all incoming packets in a single, serialized stream. To work around this
+               issue, the operating system must <q>parallelize</q> the stream to distribute the work across multiple CPUs. On <span class="phrase productname">SUSE Linux Enterprise Server</span> this is done via Receive Packet Steering (RPS). RPS can also be used in virtual environments.</p>
+            
+            <p>RPS creates a unique hash for each data stream using IP addresses and port numbers.
+               The use of this hash ensures that packets for the same data stream are sent to the
+               same CPU, which helps to increase performance.</p>
+            
+            <p>RPS is configured per network device receive queue and interface. The configuration
+               file names match the following scheme:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/sys/class/net/<em class="replaceable">&lt;device&gt;</em>/queues/<em class="replaceable">&lt;rx-queue&gt;</em>/rps_cpus</code></span></span></pre>
+            </div>
+            
+            <p><em class="replaceable">&lt;device&gt;</em> stands for the network device, such as <code class="literal">eth0</code>, <code class="literal">eth1</code>. <em class="replaceable">&lt;rx-queue&gt;</em> stands for the receive queue, such as <code class="literal">rx-0</code>, <code class="literal">rx-1</code>.</p>
+            
+            <p>If the network interface hardware only supports a single receive queue, only <code class="literal">rx-0</code> exists. If it supports multiple receive queues, there is an rx-<em class="replaceable">N</em> directory for each receive queue.</p>
+            
+            <p>These configuration files contain a comma-delimited list of CPU bitmaps. By default,
+               all bits are set to <code class="literal">0</code>. With this setting, RPS is disabled and therefore the CPU that handles the interrupt
+               also processes the packet queue.</p>
+            
+            <p>To enable RPS and enable specific CPUs to process packets for the receive queue of
+               the interface, set the value of their positions in the bitmap to <code class="literal">1</code>. For example, to enable CPUs 0-3 to process packets for the first receive queue for
+               eth0, set the bit positions 0-3 to 1 in binary: <code class="literal">00001111</code>. This representation then needs to be converted to hex—which results in <code class="literal">F</code> in this case. Set this hex value with the following command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> echo "f" &gt; /sys/class/net/eth0/queues/rx-0/rps_cpus</code></span></span></pre>
+            </div>
+            
+            <p>If you wanted to enable CPUs 8-15:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>1111 1111 0000 0000 (binary)</code></span></span>
+<span class="line"><span class="ld"><code>15     15    0    0 (decimal)</code></span></span>
+<span class="line"><span class="ld"><code>F       F    0    0 (hex)</code></span></span></pre>
+            </div>
+            
+            <p>The command to set the hex value of <code class="literal">ff00</code> would be:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> echo "ff00" &gt; /sys/class/net/eth0/queues/rx-0/rps_cpus</code></span></span></pre>
+            </div>
+            
+            <p>On NUMA machines, best performance can be achieved by configuring RPS to use the CPUs
+               on the same NUMA node as the interrupt for the interface's receive queue.</p>
+            
+            <p>On non-NUMA machines, all CPUs can be used. If the interrupt rate is high, excluding
+               the CPU handling the network interface can boost performance. The CPU being used for
+               the network interface can be determined from <code class="filename">/proc/interrupts</code>. For example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cat /proc/interrupts</code></span></span>
+<span class="line"><span class="ld"><code>            CPU0       CPU1       CPU2       CPU3</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>  51:  113915241          0          0          0      Phys-fasteoi   eth0</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+            </div>
+            
+            <p>In this case, <code class="literal">CPU 0</code> is the only CPU processing interrupts for <code class="literal">eth0</code>, since only <code class="literal">CPU0</code> contains a non-zero value.</p>
+            
+            <p>On x86 and AMD64/Intel&nbsp;64 platforms, <code class="command">irqbalance</code> can be used to distribute hardware interrupts across CPUs. See <code class="command">man 1 irqbalance</code> for more details.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvch04s03.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk07partvch05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">17<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Netfilter</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">18</span><span class="sep">.&nbsp;</span>Tuning SUSE Linux Enterprise for SAP</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

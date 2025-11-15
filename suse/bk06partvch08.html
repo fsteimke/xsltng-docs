@@ -1,0 +1,233 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;38.&nbsp;Profiling your Web applications using ChangeHat</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch07s08.html" rel="prev">
+      <link href="bk06partvch08s02.html" rel="next">
+      <link href="bk06partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partv.html">Up</a> <a href="bk06partvch08s02.html">Next</a> <a href="bk06partvch07s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partvch08.html" db-id="d616951e190826" id="cha-apparmor-hat" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">38</span><span class="sep">.&nbsp;</span>Profiling your Web applications using ChangeHat</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>An AppArmor® profile represents the security policy for an individual program instance
+                  or process. It applies to an executable program, but if a portion of the program needs
+                  different access permissions than other portions, the program can <q>change hats</q> to use a different security context, distinctive from the access of the main program.
+                  This is known as a <em>hat</em> or <em>subprofile</em>.</p>
+               
+               <p>ChangeHat enables programs to change to or from a <em>hat</em> within an AppArmor profile. It enables you to define security at a finer level than
+                  the process. This feature requires that each application be made <q>ChangeHat-aware</q>, meaning that it is modified to make a request to the AppArmor module to switch security
+                  domains at specific times during the application execution. One example of a ChangeHat-aware
+                  application is the Apache Web server.</p>
+               
+               <p>A profile can have an arbitrary number of subprofiles, but there are only two levels:
+                  a subprofile cannot have further child profiles. A subprofile is written as a separate
+                  profile. Its name consists of the name of the containing profile followed by the subprofile
+                  name, separated by a <code class="literal">^</code>.</p>
+               
+               <p>Subprofiles are either stored in the same file as the parent profile, or in a separate
+                  file. The latter case is recommended on sites with many hats—it allows the policy
+                  caching to handle changes at the per hat level. If all the hats are in the same file
+                  as the parent profile, then the parent profile and all hats must be recompiled.</p>
+               
+               <p>An external subprofile that is going to be used as a hat, must begin with the word
+                  <code class="literal">hat</code> or the <code class="literal">^</code> character.</p>
+               
+               <p>The following two subprofiles <em>cannot</em> be used as a hat:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/foo//bar { }</code></span></span></pre>
+               </div>
+               
+               <p>or</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>profile /foo//bar { }</code></span></span></pre>
+               </div>
+               
+               <p>While the following two are treated as hats:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>^/foo//bar { }</code></span></span></pre>
+               </div>
+               
+               <p>or</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>hat /foo//bar { } # this syntax is not highlighted in vim</code></span></span></pre>
+               </div>
+               
+               <p>The security of hats is considerably weaker than that of full profiles. Using certain
+                  types of bugs in a program, an attacker may be able to escape from a hat into the
+                  containing profile. This is because the security of hats is determined by a secret
+                  key handled by the containing process, and the code running in the hat must not have
+                  access to the key. Thus, change_hat is most useful with application servers, where
+                  a language interpreter (such as PERL, PHP or Java) is isolating pieces of code such
+                  that they do not have direct access to the memory of the containing process.</p>
+               
+               <p>The rest of this chapter describes using change_hat with Apache, to contain Web server
+                  components run using <code class="literal">mod_perl</code> and <code class="literal">mod_php</code>. Similar approaches can be used with any application server by providing an application
+                  module similar to the <code class="literal">mod_apparmor</code> described next in <a class="xref xref-sect2" href="#sec-apparmor-hat-config-directives">the section called “Location and directory directives”</a>.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">More information</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>For more information, see the <code class="command">change_hat</code> man page.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="General sect1" id="sec-apparmor-hat-config">
+               <header>
+                  <h2><span class="label">38<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring Apache for <code class="systemitem">mod_apparmor</code>
+                     </h2>
+               </header>
+               
+               
+               <p>AppArmor provides a <code class="literal">mod_apparmor</code> module (package <code class="resource systemitem">apache2-mod-apparmor</code>) for the Apache program. This module makes the Apache Web server ChangeHat aware.
+                  Install it along with Apache.</p>
+               
+               <p>When Apache is ChangeHat-aware, it checks for the following customized AppArmor security
+                  profiles in the order given for every URI request that it receives.</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>URI-specific hat. For example, <code class="filename">^www_app_name/templates/classic/images/bar_left.gif</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">DEFAULT_URI</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">HANDLING_UNTRUSTED_INPUT</code></p>
+                     </li>
+                  </ul>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Apache configuration</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you install <code class="resource systemitem">apache2-mod-apparmor</code>, make sure the module is enabled, and then restart Apache by executing the following
+                              command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>a2enmod apparmor &amp;&amp; sudo systemctl reload apache2</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Apache is configured by placing directives in plain text configuration files. The
+                  main configuration file is <code class="filename">/etc/apache2/httpd.conf</code>. When you compile Apache, you can indicate the location of this file. Directives
+                  can be placed in any of these configuration files to alter the way Apache behaves.
+                  When you make changes to the main configuration files, you need to reload Apache with
+                  <code class="command">sudo systemctl reload apache2</code>, so the changes are recognized.</p>
+               
+               <section class="sect2" id="sec-apparmor-hat-config-vhost">
+                  <header>
+                     <h3><span class="label">38<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Virtual host directives</h3>
+                  </header>
+                  
+                  
+                  <p>&lt;VirtualHost&gt; and &lt;/VirtualHost&gt; directives are used to enclose a group of directives
+                     that applies only to a particular virtual host. For more information on Apache virtual
+                     host directives, refer to <a class="link" href="https://httpd.apache.org/docs/2.4/en/mod/core.html#virtualhost">https://httpd.apache.org/docs/2.4/en/mod/core.html#virtualhost</a>.</p>
+                  
+                  <p>The ChangeHat-specific configuration keyword is <code class="literal">AADefaultHatName</code>. It is used similarly to <code class="literal">AAHatName</code>, for example, <code class="literal">AADefaultHatName My_Funky_Default_Hat</code>.</p>
+                  
+                  <p>It allows you to specify a default hat to be used for virtual hosts and other Apache
+                     server directives, so that you can have different defaults for different virtual hosts.
+                     This can be overridden by the <code class="literal">AAHatName</code> directive and is checked for only if there is not a matching <code class="literal">AAHatName</code> or hat named by the URI. If the <code class="literal">AADefaultHatName</code> hat does not exist, it falls back to the <code class="literal">DEFAULT_URI</code> hat if it exists/</p>
+                  
+                  <p>If none of those are matched, it goes back to the <q>parent</q> Apache hat.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-apparmor-hat-config-directives">
+                  <header>
+                     <h3><span class="label">38<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Location and directory directives</h3>
+                  </header>
+                  
+                  
+                  <p>Location and directory directives specify hat names in the program configuration file
+                     so the Apache calls the hat regarding its security. For Apache, you can find documentation
+                     about the location and directory directives at <a class="link" href="https://httpd.apache.org/docs/2.4/en/sections.html">https://httpd.apache.org/docs/2.4/en/sections.html</a>.</p>
+                  
+                  <p>The location directive example below specifies that, for a given location, <code class="literal">mod_apparmor</code> should use a specific hat:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;Location /foo/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  AAHatName MY_HAT_NAME</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/Location&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>This tries to use <code class="literal">MY_HAT_NAME</code> for any URI beginning with <code class="filename">/foo/</code> (<code class="filename">/foo/</code>, <code class="filename">/foo/bar</code>, <code class="filename">/foo/cgi/path/blah_blah/blah</code>, etc.).</p>
+                  
+                  <p>The directory directive works similarly to the location directive, except it refers
+                     to a path in the file system as in the following example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;Directory "/srv/www/www.example.org/docs"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  # Note lack of trailing slash</code></span></span>
+<span class="line"><span class="ld"><code>  AAHatName example.org</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/Directory&gt;</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch07s08.html">Prev</a></td>
+                  <td class="up"><a href="bk06partv.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch08s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">37<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Important file names and directories</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">38<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing ChangeHat-aware applications</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

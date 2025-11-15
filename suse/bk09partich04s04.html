@@ -1,0 +1,230 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.4.&nbsp;
+         lvmcache
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich04s03.html" rel="prev">
+      <link href="bk09partii.html" rel="next">
+      <link href="bk09partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich04.html">Up</a> <a href="bk09partii.html">Next</a> <a href="bk09partich04s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich04s04.html" db-id="d616951e238521" id="sec-multitiercache-lvmcache">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                  <code class="resource systemitem">lvmcache</code>
+                  </h2>
+            </header>
+            
+            
+            <p><code class="resource systemitem">lvmcache</code> is a caching mechanism consisting of logical volumes (LVs). It uses the <code class="literal">dm-cache</code> kernel driver and supports write-through (default) and write-back caching modes.
+               <code class="resource systemitem">lvmcache</code> improves performance of a large and slow LV by dynamically migrating some of its
+               data to a faster and smaller LV. For more information on LVM, see <a class="xref xref-part" href="bk09partii.html">Part&nbsp;<span class="label">II</span>, “Logical volumes (LVM)”</a>.</p>
+            
+            <p>LVM refers to the small, fast LV as a <em>cache pool LV</em>. The large, slow LV is called the <em>origin LV</em>. Because of requirements from dm-cache, LVM further splits the cache pool LV into
+               two devices: the <em>cache data LV</em> and <em>cache metadata LV</em>. The cache data LV is where copies of data blocks are kept from the origin LV to
+               increase speed. The cache metadata LV holds the accounting information that specifies
+               where data blocks are stored.</p>
+            
+            <section class="sect2" id="sec-multitiercache-lvmcache-configure">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring <code class="resource systemitem">lvmcache</code>
+                     </h3>
+               </header>
+               
+               
+               <p>This section describes steps to create and configure LVM based caching.</p>
+               
+               <div class="informalobject procedure" id="sec-multitiercache-lvmcache-configure_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p><em>Create the origin LV.</em> Create a new LV or use an existing LV to become the origin LV:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -n <em class="replaceable">ORIGIN_LV</em> -L 100G vg <em class="replaceable">/dev/SLOW_DEV</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><em>Create the cache data LV.</em> This LV will hold data blocks from the origin LV. The size of this LV is the size
+                           of the cache and will be reported as the size of the cache pool LV.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -n <em class="replaceable">CACHE_DATA_LV</em> -L 10G vg <em class="replaceable">/dev/FAST</em></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><em>Create the cache metadata LV.</em> This LV will hold cache pool metadata. The size of this LV should be approximately
+                           1000 times smaller than the cache data LV, with a minimum size of 8MB.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -n <em class="replaceable">CACHE_METADATA_LV</em> -L 12M vg <em class="replaceable">/dev/FAST</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>List the volumes you have created so far:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvs -a vg</code></span></span>
+<span class="line"><span class="ld"><code>LV                VG   Attr        LSize   Pool Origin</code></span></span>
+<span class="line"><span class="ld"><code>cache_data_lv     vg   -wi-a-----  10.00g</code></span></span>
+<span class="line"><span class="ld"><code>cache_metadata_lv vg   -wi-a-----  12.00m</code></span></span>
+<span class="line"><span class="ld"><code>origin_lv         vg   -wi-a----- 100.00g</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><em>Create a cache pool LV.</em> Combine the data and metadata LVs into a cache pool LV. You can set the cache pool
+                           LV's behavior at the same time.</p>
+                        
+                        <p><em class="replaceable">CACHE_POOL_LV</em> takes the name of <em class="replaceable">CACHE_DATA_LV</em>.</p>
+                        
+                        <p><em class="replaceable">CACHE_DATA_LV</em> is renamed to <em class="replaceable">CACHE_DATA_LV</em>_cdata and becomes hidden.</p>
+                        
+                        <p><em class="replaceable">CACHE_META_LV</em> is renamed to <em class="replaceable">CACHE_DATA_LV</em>_cmeta and becomes hidden.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --type cache-pool \</code></span></span>
+<span class="line"><span class="ld"><code> --poolmetadata vg/cache_metadata_lv vg/cache_data_lv</code></span></span></pre>
+                        </div>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvs -a vg</code></span></span>
+<span class="line"><span class="ld"><code>LV                     VG   Attr       LSize   Pool Origin</code></span></span>
+<span class="line"><span class="ld"><code>cache_data_lv          vg   Cwi---C---  10.00g</code></span></span>
+<span class="line"><span class="ld"><code>[cache_data_lv_cdata]  vg   Cwi-------  10.00g</code></span></span>
+<span class="line"><span class="ld"><code>[cache_data_lv_cmeta]  vg   ewi-------  12.00m</code></span></span>
+<span class="line"><span class="ld"><code>origin_lv              vg   -wi-a----- 100.00g</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><em>Create a cache LV.</em> Create a cache LV by linking the cache pool LV to the origin LV.</p>
+                        
+                        <p>The user accessible cache LV takes the name of the origin LV, while the origin LV
+                           becomes a hidden LV renamed to <em class="replaceable">ORIGIN_LV</em>_corig.</p>
+                        
+                        <p>CacheLV takes the name of <em class="replaceable">ORIGIN_LV</em>.</p>
+                        
+                        <p><em class="replaceable">ORIGIN_LV</em> is renamed to <em class="replaceable">ORIGIN_LV</em>_corig and becomes hidden.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --type cache --cachepool vg/cache_data_lv vg/origin_lv</code></span></span></pre>
+                        </div>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvs -a vg</code></span></span>
+<span class="line"><span class="ld"><code>LV              VG   Attr       LSize   Pool   Origin</code></span></span>
+<span class="line"><span class="ld"><code>cache_data_lv          vg   Cwi---C---  10.00g</code></span></span>
+<span class="line"><span class="ld"><code>[cache_data_lv_cdata]  vg   Cwi-ao----  10.00g</code></span></span>
+<span class="line"><span class="ld"><code>[cache_data_lv_cmeta]  vg   ewi-ao----  12.00m</code></span></span>
+<span class="line"><span class="ld"><code>origin_lv              vg   Cwi-a-C--- 100.00g cache_data_lv [origin_lv_corig]</code></span></span>
+<span class="line"><span class="ld"><code>[origin_lv_corig]      vg   -wi-ao---- 100.00g</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multitiercache-lvmcache-remove">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Removing a cache pool</h3>
+               </header>
+               
+               
+               <p>There are several ways to turn off the LV cache.</p>
+               
+               <section class="sect3" id="sec-multitiercache-lvmcache-remove-detach">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Detach a cache pool LV from a cache LV</h4>
+                  </header>
+                  
+                  
+                  <p>You can disconnect a cache pool LV from a cache LV, leaving an unused cache pool LV
+                     and an uncached origin LV. Data are written back from the cache pool to the origin
+                     LV when necessary.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --splitcache vg/origin_lv</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-multitiercache-lvmcache-remove-wo-origin">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Removing a cache pool LV without removing its origin LV</h4>
+                  </header>
+                  
+                  
+                  <p>This writes back data from the cache pool to the origin LV when necessary, then removes
+                     the cache pool LV, leaving the uncached origin LV.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvremove vg/cache_data_lv</code></span></span></pre>
+                  </div>
+                  
+                  <p>An alternative command that also disconnects the cache pool from the cache LV, and
+                     deletes the cache pool:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --uncache vg/origin_lv</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-multitiercache-lvmcache-remove-both">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Removing both the origin LV and the cache pool LV</h4>
+                  </header>
+                  
+                  
+                  <p>Removing a cache LV removes both the origin LV and the linked cache pool LV.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvremove vg/origin_lv</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-multitiercache-lvmcache-remove-info">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>More information</h4>
+                  </header>
+                  
+                  
+                  <p>You can find more <code class="resource systemitem">lvmcache</code> related topics, such as supported cache modes, redundant sub-logical volumes, cache
+                     policy, or converting existing LVs to cache types, in the <code class="resource systemitem">lvmcache</code> manual page (<code class="command">man 7 lvmcache</code>).</p>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich04s03.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich04.html">Up</a></td>
+                  <td class="next"><a href="bk09partii.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">bcache</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">II</span><span class="sep">.&nbsp;</span>Logical volumes (LVM)</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

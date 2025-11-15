@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>22.2.&nbsp;Server hardening</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich02.html" rel="prev">
+      <link href="bk06partiiich02s03.html" rel="next">
+      <link href="bk06partiiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich02.html">Up</a> <a href="bk06partiiich02s03.html">Next</a> <a href="bk06partiiich02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich02s02.html" db-id="d616951e176158" id="sec-ssh-server-config">
+            <header>
+               <h2><span class="label">22<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Server hardening</h2>
+            </header>
+            
+            
+            <p>OpenSSH ships with a usable default server configuration, but there are additional
+               steps you can take to secure your server.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Maintaining access to a remote SSH server</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When you make changes to any SSH server, either have physical access to the machine,
+                           or keep an active root SSH session open until you have tested your changes, and everything
+                           works correctly. Then you can revert or correct your changes if something goes wrong.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>The default server configuration file, <code class="filename">/etc/ssh/sshd_config</code>, contains the default configuration, and all the defaults are commented out. Override
+               any default item by entering your own configuration item, uncommented, like the following
+               example that sets a different listening port, and specifies the listening IPv4 address
+               on a multi-homed host:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>#Port 22</code></span></span>
+<span class="line"><span class="ld"><code>Port <em class="replaceable">2022</em></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>#ListenAddress 0.0.0.0</code></span></span>
+<span class="line"><span class="ld"><code>ListenAddress <em class="replaceable">192.168.10.100</em></code></span></span></pre>
+            </div>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Update /etc/services</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When you use non-standard listening ports, first check the <code class="filename">/etc/services</code> file for unused ports. Select any unused port above 1024. Then document the ports
+                           you are using in <code class="filename">/etc/services</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>It is a best practice to disallow root logins. Instead, log into the remote machine
+               as an unprivileged user, then use <code class="command">sudo</code> to run commands as root. If you really want to allow root logins, the following server
+               configuration example shows how to configure the server to accept only public-key
+               authentication (<a class="xref xref-sect1" href="bk06partiiich02s06.html">the section called “Public key authentication”</a>) for the root user with the <code class="literal">PermitRootLogin prohibit-password</code> and <code class="literal">PasswordAuthentication</code> options.</p>
+            
+            <p>The following settings for <code class="filename">/etc/ssh/sshd_config</code> strengthen access controls:</p>
+            
+            <div class="example formalobject" id="ex-sshd-conf">
+               
+               
+               <div class="pre-wrap programlisting-wrap" db-numberoflines="32" db-startinglinenumber="1">
+                  <pre class="language-none long numbered programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln"> 1 <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="2"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># Check if the file modes and ownership of the user’s files and</code></span></span>
+<span class="line" db-line="3"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># home directory are correct before allowing them to login</code></span></span>
+<span class="line" db-line="4"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>StrictModes yes</code></span></span>
+<span class="line" db-line="5"><span class="ln"> 5 <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="6"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># If your machine has more than one IP address, define which address or</code></span></span>
+<span class="line" db-line="7"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># addresses it listens on</code></span></span>
+<span class="line" db-line="8"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>ListenAddress <em class="replaceable">192.168.10.100</em></code></span></span>
+<span class="line" db-line="9"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="10"><span class="ln">10 <span class="nsep">|</span></span><span class="ld"><code># Allow only members of the listed groups to log in</code></span></span>
+<span class="line" db-line="11"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>AllowGroups <em class="replaceable">ldapadmins backupadmins</em></code></span></span>
+<span class="line" db-line="12"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="13"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># Or, deny certain groups. If you use both, DenyGroups is read first</code></span></span>
+<span class="line" db-line="14"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>DenyGroups <em class="replaceable">users</em></code></span></span>
+<span class="line" db-line="15"><span class="ln">15 <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="16"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># Allow or deny certain users. If you use both, DenyUsers is read first</code></span></span>
+<span class="line" db-line="17"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>AllowUsers <em class="replaceable">user1 user2@example.com user3</em></code></span></span>
+<span class="line" db-line="18"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>DenyUsers <em class="replaceable">user4 user5@192.168.10.10</em></code></span></span>
+<span class="line" db-line="19"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="20"><span class="ln">20 <span class="nsep">|</span></span><span class="ld"><code># Allow root logins only with public key authentication</code></span></span>
+<span class="line" db-line="21"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>PermitRootLogin prohibit-password</code></span></span>
+<span class="line" db-line="22"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="23"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># Disable password authentication and allow only public key authentication</code></span></span>
+<span class="line" db-line="24"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># for all users</code></span></span>
+<span class="line" db-line="25"><span class="ln">25 <span class="nsep">|</span></span><span class="ld"><code>PasswordAuthentication no</code></span></span>
+<span class="line" db-line="26"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="27"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># Length of time the server waits for a user to log in and complete the</code></span></span>
+<span class="line" db-line="28"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># connection. The default is 120 seconds:</code></span></span>
+<span class="line" db-line="29"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>LoginGraceTime <em class="replaceable">60</em></code></span></span>
+<span class="line" db-line="30"><span class="ln">30 <span class="nsep">|</span></span><span class="ld"><code> </code></span></span>
+<span class="line" db-line="31"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code># Limit the number of failed connection attempts. The default is 6</code></span></span>
+<span class="line" db-line="32"><span class="ln">   <span class="nsep">|</span></span><span class="ld"><code>MaxAuthTries <em class="replaceable">4</em></code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">22<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Example sshd_config</div>
+               </header>
+            </div>
+            
+            <p>After changing <code class="filename">/etc/ssh/sshd_config</code>, run the syntax checker:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">sshd -t</code></code></span></span></pre>
+            </div>
+            
+            <p>The syntax checker only checks for correct syntax, and does not find configuration
+               errors. When you are finished, reload the configuration:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl reload sshd.service</code></code></span></span></pre>
+            </div>
+            
+            <p>Check the server's key directories for correct permissions.</p>
+            
+            <p><code class="filename">/etc/ssh</code> should be mode 0755/drwxr-xr-x, owned by root:root.</p>
+            
+            <p>Private keys should be 0600/-rw-------, owned by root:root.</p>
+            
+            <p>Public keys should be 0644/-rw-r--r--, owned by root:root.</p>
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich02.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich02s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">22</span><span class="sep">.&nbsp;</span>Securing network operations with OpenSSH</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Password authentication</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

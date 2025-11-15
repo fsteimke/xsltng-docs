@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;18.&nbsp;The Polkit authentication framework</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich09s07.html" rel="prev">
+      <link href="bk06partiich10s02.html" rel="next">
+      <link href="bk06partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partii.html">Up</a> <a href="bk06partiich10s02.html">Next</a> <a href="bk06partiich09s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partiich10.html" db-id="d616951e173314" id="cha-security-polkit" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">18</span><span class="sep">.&nbsp;</span>The Polkit authentication framework</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-security-polkit-oview">
+               <header>
+                  <h2><span class="label">18<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Conceptual overview</h2>
+               </header>
+               
+               
+               <p>Polkit consists of multiple components. <code class="command">polkitd</code> is a privileged central background service that performs authentication checks based
+                  on the existing Polkit configuration. Polkit-enabled applications forward specific
+                  authentication requests to the <code class="command">polkitd</code> daemon. A Polkit authentication agent running in the unprivileged user context is
+                  responsible for displaying authentication requests on behalf of the <code class="command">polkitd</code> daemon, and providing the credentials that have been entered interactively by the
+                  user.</p>
+               
+               <p>A Polkit <em>action</em> represents a single activity that is subject to Polkit's authorization rules. For
+                  example, the intent to reboot the computer can be modeled as a single action in Polkit.
+                  Each action has a unique identifier, for the reboot example the action is called <code class="literal">org.freedesktop.login1.reboot</code>.</p>
+               
+               <section class="sect2" id="sec-security-polkit-agents">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The authentication agent</h3>
+                  </header>
+                  
+                  
+                  <p>When a user starts a graphical session in a fully featured desktop environment, an
+                     authentication agent is typically started automatically, running in the background.
+                     You notice it when an authentication prompt appears in response to an application
+                     requesting authorization for a certain action. Using Polkit in text mode or via SSH
+                     is not easily possible, therefore this document focuses on its use in a graphical
+                     session context.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-security-polkit-structure">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuration of Polkit</h3>
+                  </header>
+                  
+                  
+                  <p>Polkit's configuration consists of <em>actions</em> and <em>authorization rules</em>:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Actions (file extension <code class="filename">*.policy</code>)</span></dt>
+                        <dd>
+                           
+                           <p>Actions are defined in XML files that are located in <code class="filename">/usr/share/polkit-1/actions</code>. Each file defines one or more actions for a certain application domain, and each
+                              action contains human-readable descriptions and its default authorization settings.
+                              Although a system administrator can write their own rules, these default policy files
+                              must not be edited directly.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Authorization rules (file extension <code class="filename">*.rules</code>)</span></dt>
+                        <dd>
+                           
+                           <p>Rules are written in the JavaScript programming language, and are located in two places:
+                              <code class="filename">/usr/share/polkit-1/rules.d</code> is used by system packages, and <code class="filename">/etc/polkit-1/rules.d</code> is for locally administered configurations. The rule files contain more complex logic
+                              on top of the default action authorization settings. For example, a rule file could
+                              overrule a restrictive action and allow certain users to use it even without authorization.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect2" id="sec-security-polkit-oview-commands">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Polkit Utilities</h3>
+                  </header>
+                  
+                  
+                  <p>Polkit provides utilities for specific tasks (see also their respective man pages
+                     for further details):</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">pkaction</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Get details about a defined action. See <a class="xref xref-sect1" href="bk06partiich10s03.html">the section called “Querying privileges”</a> for more information.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">pkcheck</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Checks whether a process is authorized for a specific Polkit action.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">pkexec</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Allows programs to be executed as a different user based on Polkit authorization settings.
+                              This is similar to <code class="command">su</code> or <code class="command">sudo</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">pkttyagent</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts a textual authentication agent. This agent is used if a desktop environment
+                              does not have its own authentication agent.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich09s07.html">Prev</a></td>
+                  <td class="up"><a href="bk06partii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich10s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">17<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>
+                     <span class="guimenu">Miscellaneous settings</span>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Authorization types</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.5.&nbsp;Using wake-on-LAN for remote wakeups</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk02partivch02s04.html" rel="prev">
+      <link href="bk02partivch03.html" rel="next">
+      <link href="bk02partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk02partivch02.html">Up</a> <a href="bk02partivch03.html">Next</a> <a href="bk02partivch02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk02partivch02s05.html" db-id="d616951e99745" id="sec-deployment-prep-boot-wol">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using wake-on-LAN for remote wakeups</h2>
+            </header>
+            
+            
+            <p>Wake-on-LAN (WOL) is an Ethernet standard for remotely waking up a computer by sending
+               it a wakeup signal over a network. This signal is called the <q>magic packet</q>. Install WOL on client machines to enable remote wakeups, and on every machine you
+               want to use for sending the wakeup signal. The magic packet is broadcast over UDP
+               port 9 to the MAC address of the network interface on the client machine.</p>
+            
+            <p>When computers are shut down they usually are not turned all the way off, but remain
+               in a low power mode. When the network interface supports WOL, it listens for the magic
+               packet wakeup signal when the machine is powered off. You can send the magic packet
+               manually, or schedule wakeups in a cron job on the sending machine.</p>
+            
+            <section class="sect2" id="sec-deployment-prep-boot-wol-prereqs">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prerequisites</h3>
+               </header>
+               
+               
+               <p>WOL works with both wired and wireless Ethernet cards that support it.</p>
+               
+               <p>You may need to enable WOL in your system BIOS/UEFI.</p>
+               
+               <p>Check your BIOS/UEFI settings for PXE boot, and make sure it is disabled to prevent
+                  accidental re-installations.</p>
+               
+               <p>Adjust your firewall to allow traffic over UDP port 9.</p>
+               </section>
+            
+            <section class="sect2" id="sec-deployment-prep-boot-wiredethernet">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Verifying wired Ethernet support</h3>
+               </header>
+               
+               
+               <p>Run the following command to see if a wired Ethernet interface supports WOL:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ethtool <em class="replaceable">eth0</em> | grep -i wake-on</code></span></span>
+<span class="line"><span class="ld"><code>Supports Wake-on: pumbg</code></span></span>
+<span class="line"><span class="ld"><code>Wake-on: g</code></span></span></pre>
+               </div>
+               
+               <p>The example output shows that eth0 supports WOL, indicated by the <code class="literal">g</code> flag on the <code class="literal">Supports Wake-on</code> line. <code class="literal">Wake-on: g</code> shows that WOL is already enabled, so this interface is ready to receive wakeup signals.
+                  If WOL is not enabled, enable it with this command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ethtool -s <em class="replaceable">eth0</em> wol g</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-deployment-prep-boot-wirelessethernet">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Verifying wireless interface support</h3>
+               </header>
+               
+               
+               <p>Wakeup-over-wifi, or WoWLAN, requires a wireless network interface that supports WoWLAN.
+                  Test it with the <code class="command">iw</code> command, which is provided by the <code class="package">iw</code> package:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in iw</code></span></span></pre>
+               </div>
+               
+               <p>Find your device name:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> iw dev</code></span></span>
+<span class="line"><span class="ld"><code>phy#0</code></span></span>
+<span class="line"><span class="ld"><code>        Interface wlan2</code></span></span>
+<span class="line"><span class="ld"><code>                ifindex 3</code></span></span>
+<span class="line"><span class="ld"><code>                wdev 0x1</code></span></span>
+<span class="line"><span class="ld"><code>                addr 9c:ef:d5:fe:01:7c</code></span></span>
+<span class="line"><span class="ld"><code>                ssid accesspoint</code></span></span>
+<span class="line"><span class="ld"><code>                type managed</code></span></span>
+<span class="line"><span class="ld"><code>                channel 11 (2462 MHz), width: 20 MHz, center1: 2462 MHz</code></span></span>
+<span class="line"><span class="ld"><code>                txpower 20.00 dBm</code></span></span></pre>
+               </div>
+               
+               <p>In this example, the device name to use for querying WoWLAN support is <code class="literal">phy#0</code>. This example shows that it is not supported:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> iw phy#0 wowlan show</code></span></span>
+<span class="line"><span class="ld"><code>command failed: Operation not supported (-95)</code></span></span></pre>
+               </div>
+               
+               <p>This example shows an interface that supports WoWLAN, but is not enabled:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> iw phy#0 wowlan show</code></span></span>
+<span class="line"><span class="ld"><code>WoWLAN is disabled</code></span></span></pre>
+               </div>
+               
+               <p>Enable it:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> iw phy#0 wowlan enable magic-packet</code></span></span>
+<span class="line"><span class="ld"><code>WoWLAN is enabled:</code></span></span>
+<span class="line"><span class="ld"><code>* wake up on magic packet</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-deployment-prep-boot-wol-install">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Installing and testing WOL</h3>
+               </header>
+               
+               
+               <p>To use WOL, install the <code class="package">wol</code> package on the client and sending machines:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in wol</code></span></span></pre>
+               </div>
+               
+               <p>Install <code class="package">wol-udev-rules</code> on your client machines. This package installs a udev rule that enables WOL automatically
+                  at start-up.</p>
+               
+               <p>Get the MAC address of the network interface on the client machine:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ip addr show eth0|grep ether</code></span></span>
+<span class="line"><span class="ld"><code>link/ether 7c:ef:a5:fe:06:7c brd ff:ff:ff:ff:ff:ff</code></span></span></pre>
+               </div>
+               
+               <p>In the example output, <code class="literal">7c:ef:a5:fe:06:7c</code> is the MAC address.</p>
+               
+               <p>Shut down your client machine, and send it a wakeup signal from another computer on
+                  the same subnet:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>wol <em class="replaceable">7c:ef:a5:fe:06:7c</em></code></span></span></pre>
+               </div>
+               
+               <p>If your target machine and second device are on the same network but in different
+                  subnets, specify the broadcast address for your target machine:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>wol -i <em class="replaceable">192.168.0.63 7c:ef:a5:fe:06:7c</em></code></span></span></pre>
+               </div>
+               
+               <p>Because WOL relies on broadcast domains, the sending machine must be on the same network,
+                  though it can be in a different network segment.</p>
+               
+               <p>It is possible to send the magic packet from a different network. One way is with
+                  port forwarding, if your router supports port forwarding to a broadcast address. A
+                  more secure method is to connect to a host inside your network via SSH, and send the
+                  magic packet from there.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk02partivch02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk02partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk02partivch03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Preparing the target system for PXE boot</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">20</span><span class="sep">.&nbsp;</span>Setting up a UEFI HTTP Boot server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

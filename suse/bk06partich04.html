@@ -1,0 +1,275 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;5.&nbsp;LDAP with 389 Directory Server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich03s02.html" rel="prev">
+      <link href="bk06partich04s02.html" rel="next">
+      <link href="bk06parti.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06parti.html">Up</a> <a href="bk06partich04s02.html">Next</a> <a href="bk06partich03s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partich04.html" db-id="d616951e156429" id="cha-security-ldap" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">5</span><span class="sep">.&nbsp;</span>LDAP with 389 Directory Server</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               <p>Ideally, a central server stores the data in a directory and distributes it to all
+                  clients using a well-defined protocol. The structured data allow a wide range of applications
+                  to access them. A central repository reduces the necessary administrative effort.
+                  The use of an open and standardized protocol such as LDAP ensures that as many client
+                  applications as possible can access such information.</p>
+               
+               <p>A directory in this context is a type of database optimized for quick and effective
+                  reading and searching. The type of data stored in a directory tends to be long lived
+                  and changes infrequently. This allows the LDAP service to be optimized for high performance
+                  concurrent reads, whereas conventional databases are optimized for accepting many
+                  writes to data in a short time.</p>
+               </div>
+            <section class="sect1" id="sec-security-ldap-tree" lang="">
+               <header>
+                  <h2><span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Structure of an LDAP directory tree</h2>
+               </header>
+               
+               
+               
+               <p>This section introduces the layout of an LDAP directory tree, and provides the basic
+                  terminology used with regard to LDAP. If you are familiar with LDAP, read on at <a class="xref xref-sect2" href="bk06partich04s03.html#sec-security-ldap-server">the section called “Setting up a new 389 Directory Server instance”</a>.</p>
+               
+               <p>An LDAP directory has a tree structure. All entries (called objects) of the directory
+                  have a defined position within this hierarchy. This hierarchy is called the <em>directory information tree</em> (DIT). The complete path to the desired entry, which unambiguously identifies it,
+                  is called the <em>distinguished name</em> or DN. An object in the tree is identified by its <em>relative distinguished name</em> (RDN). The distinguished name is built from the RDNs of all entries on the path to
+                  the entry.</p>
+               
+               <p>The relations within an LDAP directory tree become more evident in the following example,
+                  shown in <a class="xref xref-figure" href="#fig-ldap-tree">Figure&nbsp;<span class="label">5<span class="sep">.</span>1</span>, “Structure of an LDAP directory”</a>.</p>
+               
+               <div class="figure formalobject" id="fig-ldap-tree">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:472px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/ldap_tree.png" style="width:472px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Structure of an LDAP directory</div>
+                  </header>
+               </div>
+               
+               <p>The complete diagram is a fictional directory information tree. The entries on three
+                  levels are depicted. Each entry corresponds to one box in the image. The complete,
+                  valid <em>distinguished name</em> for the fictional employee <code class="systemitem username">Geeko Linux</code>, in this case, is <code class="literal">cn=Geeko Linux,ou=doc,dc=example,dc=com</code>. It is composed by adding the RDN <code class="literal">cn=Geeko Linux</code> to the DN of the preceding entry <code class="literal">ou=doc,dc=example,dc=com</code>.</p>
+               
+               
+               <p>The types of objects that can be stored in the DIT are globally determined following
+                  a <em>Schema</em>. The type of an object is determined by the <em>object class</em>. The object class determines what attributes the relevant object must or may be assigned.
+                  The Schema contains all object classes and attributes which can be used by the LDAP
+                  server. Attributes are a structured data type. Their syntax, ordering and other behavior
+                  is defined by the Schema. LDAP servers supply a core set of Schemas which can work
+                  in a broad variety of environments. If a custom Schema is required, you can upload
+                  it to an LDAP server.</p>
+               
+               <p><a class="xref xref-table" href="#tab-ldap-schema">Table&nbsp;<span class="label">5<span class="sep">.</span>1</span>, “Commonly used object classes and attributes”</a> offers a small overview of the object classes from <code class="filename">00core.ldif</code> and <code class="filename">06inetorgperson.ldif</code> used in the example, including required attributes (Req. Attr.) and valid attribute
+                  values. After installing 389 Directory Server, these can be found in <code class="filename">/usr/share/dirsrv/schema</code>. </p>
+               
+               <div class="formalobject table" id="tab-ldap-schema">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Commonly used object classes and attributes</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 30%">
+                        <col style="width: 40%">
+                        <col style="width: 16%">
+                        <col style="width: 14%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Object Class</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Meaning</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Example Entry</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Req. Attr.</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="literal">domain</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>name components of the domain</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>example</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>displayName</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">organizationalUnit</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>organizational unit</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="literal">documentationdept</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="literal">ou</code></p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="literal">nsPerson</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>person-related data for the intranet or Internet</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="literal">Tux Linux</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p><code class="literal">cn</code></p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <p><a class="xref xref-example" href="#aus-ldap-schema-help">Example&nbsp;<span class="label">5<span class="sep">.</span>1</span>, “Excerpt from CN=schema”</a> shows an excerpt from a Schema directive with explanations.</p>
+               
+               <div class="example formalobject" id="aus-ldap-schema-help">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>attributetype (1.2.840.113556.1.2.102 NAME 'memberOf' <span class="co" id="co-ldap-schema-core-att-type">⠐</span></code></span></span>
+<span class="line"><span class="ld"><code>       DESC 'Group that the entry belongs to' <span class="co" id="co-ldap-schema-core-desc">⠑</span></code></span></span>
+<span class="line"><span class="ld"><code>       SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 <span class="co" id="co-ldap-schema-core-syntax">⠒</span></code></span></span>
+<span class="line"><span class="ld"><code>       X-ORIGIN 'Netscape Delegated Administrator') <span class="co" id="co-ldap-schema-core-xorigin">⠓</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <span class="co" id="co-ldap-schema-core-oc">⠔</span></code></span></span>
+<span class="line"><span class="ld"><code>       DESC 'A representation of a person in a directory server' <span class="co" id="co-ldap-schema-core-desc-oc">⠕</span></code></span></span>
+<span class="line"><span class="ld"><code>       SUP top STRUCTURAL <span class="co" id="co-ldap-schema-core-sup-oc">⠖</span></code></span></span>
+<span class="line"><span class="ld"><code>       MUST ( displayName $ cn ) <span class="co" id="co-ldap-schema-core-must-oc">⠗</span></code></span></span>
+<span class="line"><span class="ld"><code>       MAY ( userPassword $ seeAlso $ description $ legalName $ mail \</code></span></span>
+<span class="line"><span class="ld"><code>             $ preferredLanguage ) <span class="co" id="co-ldap-schema-core-may-oc">⠘</span></code></span></span>
+<span class="line"><span class="ld"><code>       X-ORIGIN '389 Directory Server Project'</code></span></span>
+<span class="line"><span class="ld"><code>  ...</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Excerpt from CN=schema</div>
+                  </header>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-att-type">⠐</a></dt>
+                     <dd>
+                        
+                        <p>The name of the attribute, its unique <em>object identifier</em> (OID, numerical), and the abbreviation of the attribute.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-desc">⠑</a></dt>
+                     <dd>
+                        
+                        <p>A brief description of the attribute with <code class="literal">DESC</code>. The corresponding RFC, on which the definition is based, may also mentioned here.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-syntax">⠒</a></dt>
+                     <dd>
+                        
+                        <p>The type of data that can be held in the attribute. In this case, it is a case-insensitive
+                           directory string.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-xorigin">⠓</a></dt>
+                     <dd>
+                        
+                        <p>The source of the schema element (for example, the name of the project).</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-oc">⠔</a></dt>
+                     <dd>
+                        
+                        <p>The definition of the object class <code class="literal">nsPerson</code> begins with an OID and the name of the object class (like the definition of the attribute).</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-desc-oc">⠕</a></dt>
+                     <dd>
+                        
+                        <p>A brief description of the object class.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-sup-oc">⠖</a></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">SUP top</code> entry indicates that this object class is not subordinate to another object class.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-must-oc">⠗</a></dt>
+                     <dd>
+                        
+                        <p>With <code class="literal">MUST</code>, list all attribute types that must be used with an object of the type <code class="literal">nsPerson</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-ldap-schema-core-may-oc">⠘</a></dt>
+                     <dd>
+                        
+                        <p>With <code class="literal">MAY</code>, list all attribute types that are optionally permitted with this object class.</p>
+                        </dd>
+                  </dl>
+               </div>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich03s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06parti.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>SSSD</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating and managing a Docker container for 389 Directory Server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

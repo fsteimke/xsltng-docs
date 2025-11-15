@@ -1,0 +1,499 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.&nbsp;Creating a vGPU device</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar06s02.html" rel="prev">
+      <link href="bk11ar06s04.html" rel="next">
+      <link href="bk11ar06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar06.html">Up</a> <a href="bk11ar06s04.html">Next</a> <a href="bk11ar06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar06s03.html" db-id="d616951e324265" id="configure-nvidia-vgpu-passthrough">
+            <header>
+               <h2><span class="label">3</span><span class="sep">.&nbsp;</span>Creating a vGPU device</h2>
+            </header>
+            
+            
+            <section class="sect2" id="configure-nvidia-vgpu-passthrough-without-sriov">
+               <header>
+                  <h3><span class="label">3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Create a legacy vGPU device without support for SR-IOV</h3>
+               </header>
+               
+               
+               <p>All the NVIDIA Volta and earlier architecture GPUs work in this mode.</p>
+               
+               <div class="informalobject procedure" id="configure-nvidia-vgpu-passthrough-without-sriov_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Obtain the Bus/Device/Function (BDF) numbers of the host GPU device:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lspci | grep NVIDIA</code></span></span>
+<span class="line"><span class="ld"><code>84:00.0 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1)</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check for the mdev supported devices and detailed information:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls /sys/bus/pci/devices/0000:84:00.0/mdev_supported_types/</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-105  nvidia-106  nvidia-107  nvidia-108  nvidia-109  nvidia-110 [...]</code></span></span></pre>
+                        </div>
+                        
+                        <p>The map of vGPU mdev devices and their type is as follows:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>nvidia-105 to nvidia-109: 1Q 2Q 4Q 8Q 16Q</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>nvidia-110 to nvidia-114: 1A 2A 4A 8A 16A</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>nvidia-115, nvidia-163, nvidia-217, nvidia-247: 1B 2B 2B4 1B4</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>nvidia-299 to nvidia-301: 4C 8C 16C</p>
+                              </li>
+                           </ul>
+                        
+                        <p>Refer to <a class="link" href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html#vgpu-types-tesla-v100-pcie">https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html#vgpu-types-tesla-v100-pcie</a> for more details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Inspect a vGPU device:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cd /sys/bus/pci/devices/0000:03:00.0/mdev_supported_types/</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls nvidia-105</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat nvidia-105/description</code></span></span>
+<span class="line"><span class="ld"><code>num_heads=2, frl_config=60, framebuffer=1024M, max_resolution=4096x2160, max_instance=16</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat nvidia-105/name</code></span></span>
+<span class="line"><span class="ld"><code>GRID V100-1Q</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Generate a unique ID and create an mdev device based on it:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>uuidgen</code></span></span>
+<span class="line"><span class="ld"><code>      4f3b6e47-0baa-4900-b0b1-284c1ecc192f</code></span></span>
+<span class="line"><span class="ld"><code>      <span class="prompt">&gt;</span><code class="command">sudo</code> echo "4f3b6e47-0baa-4900-b0b1-284c1ecc192f" &gt; nvidia-105/create</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify the new mdev device. You can inspect the content of the <code class="filename">/sys/bus/mdev/devices</code> directory:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cd /sys/bus/mdev/devices</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -l</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Aug 30 23:03 86380ffb-8f13-4685-9c48-0e0f4e65fb87 \</code></span></span>
+<span class="line"><span class="ld"><code> -&gt; ../../../devices/pci0000:80/0000:80:02.0/0000:84:00.0/86380ffb-8f13-4685-9c48-0e0f4e65fb87</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Aug 30 23:03 86380ffb-8f13-4685-9c48-0e0f4e65fb88 \</code></span></span>
+<span class="line"><span class="ld"><code> -&gt; ../../../devices/pci0000:80/0000:80:02.0/0000:84:00.0/86380ffb-8f13-4685-9c48-0e0f4e65fb88</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Aug 30 23:03 86380ffb-8f13-4685-9c48-0e0f4e65fb89 \</code></span></span>
+<span class="line"><span class="ld"><code> -&gt; ../../../devices/pci0000:80/0000:80:02.0/0000:84:00.0/86380ffb-8f13-4685-9c48-0e0f4e65fb89</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root 0 Aug 30 23:03 86380ffb-8f13-4685-9c48-0e0f4e65fb90 \</code></span></span>
+<span class="line"><span class="ld"><code> -&gt; ../../../devices/pci0000:80/0000:80:02.0/0000:84:00.0/86380ffb-8f13-4685-9c48-0e0f4e65fb90</code></span></span></pre>
+                        </div>
+                        
+                        <p>Or you can use the <code class="command">mdevctl</code> command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdevctl list</code></span></span>
+<span class="line"><span class="ld"><code>86380ffb-8f13-4685-9c48-0e0f4e65fb90 0000:84:00.0 nvidia-299</code></span></span>
+<span class="line"><span class="ld"><code>86380ffb-8f13-4685-9c48-0e0f4e65fb89 0000:84:00.0 nvidia-299</code></span></span>
+<span class="line"><span class="ld"><code>86380ffb-8f13-4685-9c48-0e0f4e65fb87 0000:84:00.0 nvidia-299</code></span></span>
+<span class="line"><span class="ld"><code>86380ffb-8f13-4685-9c48-0e0f4e65fb88 0000:84:00.0 nvidia-299</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Query the new vGPU device capability:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi vgpu -q</code></span></span>
+<span class="line"><span class="ld"><code>GPU 00000000:84:00.0</code></span></span>
+<span class="line"><span class="ld"><code>Active vGPUs                      : 1</code></span></span>
+<span class="line"><span class="ld"><code>vGPU ID                           : 3251634323</code></span></span>
+<span class="line"><span class="ld"><code>   VM UUID                       : ee7b7a4b-388a-4357-a425-5318b2c65b3f</code></span></span>
+<span class="line"><span class="ld"><code>   VM Name                       : sle15sp3</code></span></span>
+<span class="line"><span class="ld"><code>   vGPU Name                     : GRID V100-4C</code></span></span>
+<span class="line"><span class="ld"><code>   vGPU Type                     : 299</code></span></span>
+<span class="line"><span class="ld"><code>   vGPU UUID                     : d471c7f2-0a53-11ec-afd3-38b06df18e37</code></span></span>
+<span class="line"><span class="ld"><code>   MDEV UUID                     : 86380ffb-8f13-4685-9c48-0e0f4e65fb87</code></span></span>
+<span class="line"><span class="ld"><code>   Guest Driver Version          : 460.91.03</code></span></span>
+<span class="line"><span class="ld"><code>   License Status                : Licensed</code></span></span>
+<span class="line"><span class="ld"><code>   GPU Instance ID               : N/A</code></span></span>
+<span class="line"><span class="ld"><code>   Accounting Mode               : Disabled</code></span></span>
+<span class="line"><span class="ld"><code>   ECC Mode                      : N/A</code></span></span>
+<span class="line"><span class="ld"><code>   Accounting Buffer Size        : 4000</code></span></span>
+<span class="line"><span class="ld"><code>   Frame Rate Limit              : N/A</code></span></span>
+<span class="line"><span class="ld"><code>   FB Memory Usage</code></span></span>
+<span class="line"><span class="ld"><code>       Total                     : 4096 MiB</code></span></span>
+<span class="line"><span class="ld"><code>       Used                      : 161 MiB</code></span></span>
+<span class="line"><span class="ld"><code>       Free                      : 3935 MiB</code></span></span>
+<span class="line"><span class="ld"><code>   Utilization</code></span></span>
+<span class="line"><span class="ld"><code>       Gpu                       : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>       Memory                    : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>       Encoder                   : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>       Decoder                   : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>   Encoder Stats</code></span></span>
+<span class="line"><span class="ld"><code>       Active Sessions           : 0</code></span></span>
+<span class="line"><span class="ld"><code>       Average FPS               : 0</code></span></span>
+<span class="line"><span class="ld"><code>       Average Latency           : 0</code></span></span>
+<span class="line"><span class="ld"><code>   FBC Stats</code></span></span>
+<span class="line"><span class="ld"><code>       Active Sessions           : 0</code></span></span>
+<span class="line"><span class="ld"><code>       Average FPS               : 0</code></span></span>
+<span class="line"><span class="ld"><code>       Average Latency           : 0</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="configure-nvidia-vgpu-passthrough-with-sriov">
+               <header>
+                  <h3><span class="label">3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Create a vGPU device with support for SR-IOV</h3>
+               </header>
+               
+               
+               <p>All NVIDIA Ampere and newer architecture GPUs work in this mode.</p>
+               
+               <div class="informalobject procedure" id="configure-nvidia-vgpu-passthrough-with-sriov_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Obtain the Bus/Device/Function (BDF) numbers of the host GPU device:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lspci | grep NVIDIA</code></span></span>
+<span class="line"><span class="ld"><code>b1:00.0 3D controller: NVIDIA Corporation GA100 [A100 PCIe 40GB] (rev a1)</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enable virtual functions:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /usr/lib/nvidia/sriov-manage -e 00:b1:0000.0</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Note</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>This configuration is not persistent and must be re-enabled after the host reboot.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Obtain the Bus/Domain/Function (BDF) of virtual functions on the GPU:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -l /sys/bus/pci/devices/0000:b1:00.0/ | grep virtfn</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn0 -&gt; ../0000:b1:00.4</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn1 -&gt; ../0000:b1:00.5</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn10 -&gt; ../0000:b1:01.6</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn11 -&gt; ../0000:b1:01.7</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn12 -&gt; ../0000:b1:02.0</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn13 -&gt; ../0000:b1:02.1</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn14 -&gt; ../0000:b1:02.2</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn15 -&gt; ../0000:b1:02.3</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn2 -&gt; ../0000:b1:00.6</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn3 -&gt; ../0000:b1:00.7</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn4 -&gt; ../0000:b1:01.0</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn5 -&gt; ../0000:b1:01.1</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn6 -&gt; ../0000:b1:01.2</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn7 -&gt; ../0000:b1:01.3</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn8 -&gt; ../0000:b1:01.4</code></span></span>
+<span class="line"><span class="ld"><code>lrwxrwxrwx 1 root root           0 Sep 21 11:58 virtfn9 -&gt; ../0000:b1:01.5</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><em>Create a vGPU device.</em> Select the virtual function (VF) that you want to use to create the vGPU device and
+                           assign it a unique ID.</p>
+                        
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Important</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>Each VF can only create one vGPU instance. To create more vGPU instances, you need
+                                       to use a different VF.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cd /sys/bus/pci/devices/0000:b1:00.0/virtfn1/mdev_supported_types</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>for i in *; do echo "$i" $(cat $i/name) available: $(cat $i/avail*); done</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-468 GRID A100-4C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-469 GRID A100-5C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-470 GRID A100-8C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-471 GRID A100-10C available: 1</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-472 GRID A100-20C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-473 GRID A100-40C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-474 GRID A100-1-5C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-475 GRID A100-2-10C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-476 GRID A100-3-20C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-477 GRID A100-4-20C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-478 GRID A100-7-40C available: 0</code></span></span>
+<span class="line"><span class="ld"><code>nvidia-479 GRID A100-1-5CME available: 0</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>uuidgen</code></span></span>
+<span class="line"><span class="ld"><code>f715f63c-0d00-4007-9c5a-b07b0c6c05de</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> echo "f715f63c-0d00-4007-9c5a-b07b0c6c05de" &gt; nvidia-471/create</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dmesg | tail</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>[ 3218.491843] vfio_mdev f715f63c-0d00-4007-9c5a-b07b0c6c05de: Adding to iommu group 322</code></span></span>
+<span class="line"><span class="ld"><code>[ 3218.499700] vfio_mdev f715f63c-0d00-4007-9c5a-b07b0c6c05de: MDEV: group_id = 322</code></span></span>
+<span class="line"><span class="ld"><code>[ 3599.608540] vfio_mdev f715f63c-0d00-4007-9c5a-b07b0c6c05de: Removing from iommu group 322</code></span></span>
+<span class="line"><span class="ld"><code>[ 3599.616753] vfio_mdev f715f63c-0d00-4007-9c5a-b07b0c6c05de: MDEV: detaching iommu</code></span></span>
+<span class="line"><span class="ld"><code>[ 3626.345530] vfio_mdev f715f63c-0d00-4007-9c5a-b07b0c6c05de: Adding to iommu group 322</code></span></span>
+<span class="line"><span class="ld"><code>[ 3626.353383] vfio_mdev f715f63c-0d00-4007-9c5a-b07b0c6c05de: MDEV: group_id = 322</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify the new vGPU device:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cd /sys/bus/mdev/devices/</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls</code></span></span>
+<span class="line"><span class="ld"><code>f715f63c-0d00-4007-9c5a-b07b0c6c05de</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Query the new vGPU device capability:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi vgpu -q</code></span></span>
+<span class="line"><span class="ld"><code>GPU 00000000:B1:00.0</code></span></span>
+<span class="line"><span class="ld"><code>Active vGPUs                      : 1</code></span></span>
+<span class="line"><span class="ld"><code>vGPU ID                           : 3251634265</code></span></span>
+<span class="line"><span class="ld"><code>  VM UUID                       : b0d9f0c6-a6c2-463e-967b-06cb206415b6</code></span></span>
+<span class="line"><span class="ld"><code>  VM Name                       : sles15sp2-gehc-vm1</code></span></span>
+<span class="line"><span class="ld"><code>  vGPU Name                     : GRID A100-10C</code></span></span>
+<span class="line"><span class="ld"><code>  vGPU Type                     : 471</code></span></span>
+<span class="line"><span class="ld"><code>  vGPU UUID                     : 444f610c-1b08-11ec-9554-ebd10788ee14</code></span></span>
+<span class="line"><span class="ld"><code>  MDEV UUID                     : f715f63c-0d00-4007-9c5a-b07b0c6c05de</code></span></span>
+<span class="line"><span class="ld"><code>  Guest Driver Version          : N/A</code></span></span>
+<span class="line"><span class="ld"><code>  License Status                : N/A</code></span></span>
+<span class="line"><span class="ld"><code>  GPU Instance ID               : N/A</code></span></span>
+<span class="line"><span class="ld"><code>  Accounting Mode               : N/A</code></span></span>
+<span class="line"><span class="ld"><code>  ECC Mode                      : Disabled</code></span></span>
+<span class="line"><span class="ld"><code>  Accounting Buffer Size        : 4000</code></span></span>
+<span class="line"><span class="ld"><code>  Frame Rate Limit              : N/A</code></span></span>
+<span class="line"><span class="ld"><code>  FB Memory Usage</code></span></span>
+<span class="line"><span class="ld"><code>      Total                     : 10240 MiB</code></span></span>
+<span class="line"><span class="ld"><code>      Used                      : 0 MiB</code></span></span>
+<span class="line"><span class="ld"><code>      Free                      : 10240 MiB</code></span></span>
+<span class="line"><span class="ld"><code>  Utilization</code></span></span>
+<span class="line"><span class="ld"><code>      Gpu                       : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>      Memory                    : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>      Encoder                   : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>      Decoder                   : 0 %</code></span></span>
+<span class="line"><span class="ld"><code>  Encoder Stats</code></span></span>
+<span class="line"><span class="ld"><code>      Active Sessions           : 0</code></span></span>
+<span class="line"><span class="ld"><code>      Average FPS               : 0</code></span></span>
+<span class="line"><span class="ld"><code>      Average Latency           : 0</code></span></span>
+<span class="line"><span class="ld"><code>  FBC Stats</code></span></span>
+<span class="line"><span class="ld"><code>      Active Sessions           : 0</code></span></span>
+<span class="line"><span class="ld"><code>      Average FPS               : 0</code></span></span>
+<span class="line"><span class="ld"><code>      Average Latency           : 0</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="configure-nvidia-vgpu-passthrough-mig-backed">
+               <header>
+                  <h3><span class="label">3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a MIG-backed vGPU</h3>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Important</div>
+                        </header>
+                        <div>
+                           
+                           <p>SR-IOV must be enabled to create vGPUs and assign them to guest VMs.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="informalobject procedure" id="configure-nvidia-vgpu-passthrough-mig-backed_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Enable MIG mode for a GPU:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi -i 0 -mig 1</code></span></span>
+<span class="line"><span class="ld"><code>Enabled MIG Mode for GPU 00000000:B1:00.0</code></span></span>
+<span class="line"><span class="ld"><code>All done.</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Query the GPU instance profile:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi mig -lgip</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| GPU instance profiles:                                                      |</code></span></span>
+<span class="line"><span class="ld"><code>| GPU   Name             ID    Instances   Memory     P2P    SM    DEC   ENC  |</code></span></span>
+<span class="line"><span class="ld"><code>|                              Free/Total   GiB              CE    JPEG  OFA  |</code></span></span>
+<span class="line"><span class="ld"><code>|=============================================================================|</code></span></span>
+<span class="line"><span class="ld"><code>|   0  MIG 1g.5gb        19     7/7        4.75       No     14     0     0   |</code></span></span>
+<span class="line"><span class="ld"><code>|                                                             1     0     0   |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>|   0  MIG 1g.5gb+me     20     1/1        4.75       No     14     1     0   |</code></span></span>
+<span class="line"><span class="ld"><code>|                                                             1     1     1   |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>|   0  MIG 2g.10gb       14     3/3        9.75       No     28     1     0   |</code></span></span>
+<span class="line"><span class="ld"><code>|                                                             2     0     0   |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>|   0  MIG 3g.20gb        9     2/2        19.62      No     42     2     0   |</code></span></span>
+<span class="line"><span class="ld"><code>|                                                             3     0     0   |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>|   0  MIG 4g.20gb        5     1/1        19.62      No     56     2     0   |</code></span></span>
+<span class="line"><span class="ld"><code>|                                                             4     0     0   |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>|   0  MIG 7g.40gb        0     1/1        39.50      No     98     5     0   |</code></span></span>
+<span class="line"><span class="ld"><code>|                                                             7     1     1   |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a GPU instance specifying '5' as a GPU profile instance ID and optionally create
+                           a Compute Instance on it, either on the host server or within the guest:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi mig -cgi 5</code></span></span>
+<span class="line"><span class="ld"><code>Successfully created GPU instance ID  1 on GPU  0 using profile MIG 4g.20gb (ID  5)</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi mig -cci -gi 1</code></span></span>
+<span class="line"><span class="ld"><code>Successfully created compute instance ID  0 on GPU  0 GPU instance ID  1 using profile MIG 4g.20gb (ID  3)</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify the GPU instance:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi</code></span></span>
+<span class="line"><span class="ld"><code>Tue Sep 21 11:19:36 2021</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| NVIDIA-SMI 470.63       Driver Version: 470.63       CUDA Version: N/A      |</code></span></span>
+<span class="line"><span class="ld"><code>|-------------------------------+----------------------+----------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</code></span></span>
+<span class="line"><span class="ld"><code>| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</code></span></span>
+<span class="line"><span class="ld"><code>|                               |                      |               MIG M. |</code></span></span>
+<span class="line"><span class="ld"><code>|===============================+======================+======================|</code></span></span>
+<span class="line"><span class="ld"><code>|   0  NVIDIA A100-PCI...  On   | 00000000:B1:00.0 Off |                   On |</code></span></span>
+<span class="line"><span class="ld"><code>| N/A   38C    P0    38W / 250W |      0MiB / 40536MiB |     N/A      Default |</code></span></span>
+<span class="line"><span class="ld"><code>|                               |                      |              Enabled |</code></span></span>
+<span class="line"><span class="ld"><code>+-------------------------------+----------------------+----------------------+</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| MIG devices:                                                                |</code></span></span>
+<span class="line"><span class="ld"><code>+------------------+----------------------+-----------+-----------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| GPU  GI  CI  MIG |         Memory-Usage |        Vol|         Shared        |</code></span></span>
+<span class="line"><span class="ld"><code>|      ID  ID  Dev |           BAR1-Usage | SM     Unc| CE  ENC  DEC  OFA  JPG|</code></span></span>
+<span class="line"><span class="ld"><code>|                  |                      |        ECC|                       |</code></span></span>
+<span class="line"><span class="ld"><code>|==================+======================+===========+=======================|</code></span></span>
+<span class="line"><span class="ld"><code>|  0    1   0   0  |      0MiB / 20096MiB | 56      0 |  4   0    2    0    0 |</code></span></span>
+<span class="line"><span class="ld"><code>|                  |      0MiB / 32767MiB |           |                       |</code></span></span>
+<span class="line"><span class="ld"><code>+------------------+----------------------+-----------+-----------------------+</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| Processes:                                                                  |</code></span></span>
+<span class="line"><span class="ld"><code>|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</code></span></span>
+<span class="line"><span class="ld"><code>|        ID   ID                                                   Usage      |</code></span></span>
+<span class="line"><span class="ld"><code>|=============================================================================|</code></span></span>
+<span class="line"><span class="ld"><code>|  No running processes found                                                 |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Use the MIG instance. You can use the instance directly with the UUID—for example,
+                           assign it to a container or CUDA process.</p>
+                        
+                        <p>You can also create a vGPU on top of it and assign it to a VM guest. The procedure
+                           is the same as for the vGPU with SR-IOV support. Refer to <a class="xref xref-sect2" href="#configure-nvidia-vgpu-passthrough-with-sriov">the section called “Create a vGPU device with support for SR-IOV”</a>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvidia-smi -L</code></span></span>
+<span class="line"><span class="ld"><code>GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-ee14e29d-dd5b-2e8e-eeaf-9d3debd10788)</code></span></span>
+<span class="line"><span class="ld"><code> MIG 4g.20gb     Device  0: (UUID: MIG-fed03f85-fd95-581b-837f-d582496d0260)</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar06.html">Up</a></td>
+                  <td class="next"><a href="bk11ar06s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">2</span><span class="sep">.&nbsp;</span>Configuring vGPU manager in VM Host Server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4</span><span class="sep">.&nbsp;</span>Assign the vGPU device to a VM Guest</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

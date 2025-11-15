@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.&nbsp;VM attestation</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar05s05.html" rel="prev">
+      <link href="bk11ar05s07.html" rel="next">
+      <link href="bk11ar05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar05.html">Up</a> <a href="bk11ar05s07.html">Next</a> <a href="bk11ar05s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar05s06.html" db-id="d616951e323062" id="sec-amd-sev-attest">
+            <header>
+               <h2><span class="label">6</span><span class="sep">.&nbsp;</span>VM attestation</h2>
+            </header>
+            
+            
+            <p>VM attestation is the process of verifying that trusted software components are correctly
+               instantiated on a trusted compute platform. The process typically involves starting
+               a VM in a paused state, retrieving a launch measurement of the instantiated software
+               components, verifying the measurement, then providing a disk password or other key
+               to unlock the VM and resume the paused boot process. The launch measurement includes
+               cryptographic artifacts provided by the VM owner, with the cryptographic root of trust
+               being the AMD SEV platform. The VM owner can be confident their software components
+               have not been compromised and are running on a trusted platform once the launch measurement
+               has been verified.</p>
+            
+            <p>The overall attestation process is moderately complex with plenty of opportunity for
+               error. Care must be taken to ensure the process itself is secure. For example, a secure
+               attestation process cannot be executed directly on the hypervisor running the VM,
+               since the goal is to demonstrate the hypervisor has not acted maliciously and contaminated
+               the VM.</p>
+            
+            <p>Although all the information and APIs required for attestation exist in SLES 15 SP4,
+               SLES 15 SP5 introduces a simple utility called <code class="command">virt-qemu-sev-validate</code> that can be used to satisfy several attestation use cases. For example, automated
+               tests in quality assurance and small <code class="library systemitem">libvirt</code>+KVM deployments that are not managed by large, commercial management stacks.</p>
+            
+            <p><code class="command">virt-qemu-sev-vailidate</code> is included in the <code class="literal">libvirt-client-qemu</code> package and supports both offline and online attestation modes. <code class="command">virt-qemu-sev-validate</code> requires all input for attestation as command-line parameters. Assuming it is invoked
+               on a trusted machine, the results of <code class="command">virt-qemu-sev-validate</code> can be trusted since no information is retrieved from untrusted sources. Online mode
+               is less secure, particularly when executed directly on the hypervisor running the
+               VM.</p>
+            
+            <p>Regardless of mode, the attestation process of a <code class="library systemitem">libvirt</code>+KVM VM starts with creating a VM or Guest Owner (GO) certificate and session blob
+               that is unique for each start of the VM. The certificate and blob can be created with
+               the <code class="command">sevctl</code> utility, available in the <code class="literal">sevctl</code> package. The following example illustrates the use of the <code class="command">sevctl session</code> command to create all the prelaunch SEV-related artifacts. The <em class="replaceable">NAME</em> parameter is optional and allows a prefix to be specified for the artifact file names.
+               Using the VM name as a prefix is convenient for matching artifacts with VMs later.
+               The path to the platform Diffie-Hellman (DH) certificate and the desired SEV policy
+               are required parameters.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>sevctl session --name test-sev /data/sev/pdh.cert 7</code></span></span></pre>
+            </div>
+            
+            <p>The <code class="command">sevctl session</code> command produces four files: tik.bin, tek.bin, godh.b64 and session.b64. If the optional
+               <em class="replaceable">NAME</em> parameter was used, the files are prefixed with the specified value. The transport
+               integrity key (tik.bin) and transport encryption key (tek.bin) are used in the verification
+               stage of the attestation process. The guest owner Diffie-Hellman key (godh.b64) and
+               session blob (session.b64) are copied to the VM XML configuration before starting
+               the VM. See the <code class="tag tag-element">dhCert</code> and <code class="tag tag-element">session</code> subelements of the <code class="tag tag-element">launchSecurity</code> element in the VM configuration section for more details.</p>
+            
+            <p>After the VM session artifacts have been created and VM XML configuration updated,
+               the VM can be started in a paused state, for example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh -c qemu+ssh://<em class="replaceable">USER_NAME</em>@<em class="replaceable">HOST_NAME</em>/system create --paused /path/to/vm.xml</code></span></span></pre>
+            </div>
+            
+            <p>Creating the VM in a paused state allows retrieving the launch measurement from the
+               hypervisor and comparing it to a measurement calculated on a trusted host using trusted
+               inputs. If the measurements compare, the VM owner can be confident the VM has been
+               properly instantiated on the hypervisor and execution can safely be started. The following
+               command demonstrates using the <code class="command">virsh domlaunchsecinfo</code> command to retrieve the paused VM launch measurement and other SEV-related information
+               from the hosting hypervisor.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh -c qemu+ssh://username@hostname/system domlaunchsecinfo sevtest</code></span></span>
+<span class="line"><span class="ld"><code>sev-measurement: VZjxMSlu+UuYkWHN2mAxDVVYXRmL3wqTu84kwk+5QS+4OMii7hs6cMAmXNpmmyS/</code></span></span>
+<span class="line"><span class="ld"><code>sev-api-major  : 1</code></span></span>
+<span class="line"><span class="ld"><code>sev-api-minor  : 51</code></span></span>
+<span class="line"><span class="ld"><code>sev-build-id   : 3</code></span></span>
+<span class="line"><span class="ld"><code>sev-policy     : 7</code></span></span></pre>
+            </div>
+            
+            <p>The retrieved launch measurement can then be given to <code class="command">virt-qemu-sev-validate</code> to verify the VM has been securely instantiated. The following example demonstrates
+               a full offline attestation of the measurement.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virt-qemu-sev-validate --api-major 1 --api-minor 51 --build-id 3 --policy 7 \</code></span></span>
+<span class="line"><span class="ld"><code> --firmware /usr/share/qemu/ovmf-x86_64-sev.bin --tik sevtest_tik.bin --tek sevtest_tek.bin --num-cpus 4 \</code></span></span>
+<span class="line"><span class="ld"><code> --cpu-family 25 --cpu-model 1 --cpu-stepping 1 \</code></span></span>
+<span class="line"><span class="ld"><code> --measurement QJ0oDpFmWj+bGZzFoMPbAxTuC6QD44W5w88x/hQM8toVsB75ci7V1YDfYoI9GTk</code></span></span></pre>
+            </div>
+            
+            <p>It is also possible to use <code class="command">virt-qemu-sev-validate</code> in an online mode, where information needed to perform the VM attestation is retrieved
+               from the hosting hypervisor. The following example demonstrates an online attestation
+               of the VM, where only the hosting hypervisor URI, VM name, and associated TIK and
+               TEK are specified. <code class="command">virt-qemu-sev-validate</code> retrieves the remaining information, including the measurement itself, from the hosting
+               hypervisor:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virt-qemu-sev-validate --tik sevtest_tik.bin --tek sevtest_tek.bin \</code></span></span>
+<span class="line"><span class="ld"><code> --connect qemu+ssh://<em class="replaceable">USER_NAME</em>@<em class="replaceable">HOST_NAME</em>/system --domain sevtest</code></span></span></pre>
+            </div>
+            
+            <p>Once the VM launch measurement has been verified, the VM owner can optionally inject
+               a secret in the VM and resume VM execution. An example of injecting a secret would
+               be providing a key to unlock an encrypted root disk.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh -c qemu+ssh://<em class="replaceable">USER_NAME</em>@<em class="replaceable">HOST_NAME</em>/system domsetlaunchsecstate sevtest \</code></span></span>
+<span class="line"><span class="ld"><code> --secrethdr hdr-str --secret secret-str</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh -c qemu+ssh://<em class="replaceable">USER_NAME</em>@<em class="replaceable">HOST_NAME</em>/system resume sevtest</code></span></span></pre>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar05s05.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar05.html">Up</a></td>
+                  <td class="next"><a href="bk11ar05s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5</span><span class="sep">.&nbsp;</span>VM installation</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">7</span><span class="sep">.&nbsp;</span>SEV with KubeVirt</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

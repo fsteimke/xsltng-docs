@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.4.&nbsp;Retiring Linux servers with sensitive data</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich01s03.html" rel="prev">
+      <link href="bk06partiich01s05.html" rel="next">
+      <link href="bk06partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich01.html">Up</a> <a href="bk06partiich01s05.html">Next</a> <a href="bk06partiich01s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich01s04.html" db-id="d616951e166342" id="sec-sec-prot-general-retiring">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Retiring Linux servers with sensitive data</h2>
+            </header>
+            
+            
+            <p> Security policies contain certain procedures for the treatment of storage media that
+               is going to be retired or disposed of. Disk and media wipe procedures are frequently
+               prescribed, as is complete destruction of the media. You can find several free tools
+               on the Internet. A search for <q>dod disk wipe utility</q> yields several variants. To retire servers with sensitive data, it is important to
+               ensure that data cannot be recovered from the hard disks. To ensure that all traces
+               of data are removed, a wipe utility—such as <code class="command">scrub</code>—can be used. Many wipe utilities overwrite the data several times. This assures that
+               even sophisticated methods are not able to retrieve any parts of the wiped data. Some
+               tools can even be operated from a bootable removable device and remove data according
+               to the U.S. Department of Defense (DoD) standards. Many government agencies specify
+               their own standards for data security. Some standards are stronger than others, yet
+               may require more time to implement.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Wiping wear leveling devices</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Some devices, like SSDs, use wear leveling and do not necessarily write new data in
+                           the same physical locations. Such devices provide their own erasing functionality.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-sec-prot-general-retiring-scrub">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>scrub: disk overwrite utility</h3>
+               </header>
+               
+               
+               <p><code class="command">scrub</code> overwrites hard disks, files and other devices with repeating patterns intended to
+                  make recovering data from these devices more difficult. It operates in three basic
+                  modes: on a character or block device, on a file, or on a specified directory. For
+                  more information, see the manual page <code class="command">man 1 scrub</code>.</p>
+               
+               <div class="variablelist">
+                  <header>
+                     <div class="title">Supported scrub methods</div>
+                  </header>
+                  <dl class="variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">nnsa</span></dt>
+                        <dd>
+                           
+                           <p>4-pass NNSA Policy Letter NAP-14.1-C (XVI-8) for sanitizing removable and non-removable
+                              hard disks, which requires overwriting all locations with a pseudo-random pattern
+                              twice and then with a known pattern: random (x2), 0x00, verify.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">dod</span></dt>
+                        <dd>
+                           
+                           <p>4-pass DoD 5220.22-M section 8-306 procedure (d) for sanitizing removable and non-removable
+                              rigid disks. This requires overwriting all addressable locations with a character,
+                              its complement, a random character and then verifying. Note: scrub performs the random
+                              pass first to make verification easier: random, 0x00, 0xff, verify.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">bsi</span></dt>
+                        <dd>
+                           
+                           <p>9-pass method recommended by the German Center of Security in Information Technologies
+                              (<a class="link" href="https://www.bsi.bund.de">https://www.bsi.bund.de</a>): 0xff, 0xfe, 0xfd, 0xfb, 0xf7, 0xef, 0xdf, 0xbf, 0x7f.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">gutmann</span></dt>
+                        <dd>
+                           
+                           <p>The canonical 35-pass sequence described in Gutmann's paper cited below.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">schneier</span></dt>
+                        <dd>
+                           
+                           <p>7-pass method described by Bruce Schneier in "Applied Cryptography" (1996): 0x00,
+                              0xff, random (x5)</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">pfitzner7</span></dt>
+                        <dd>
+                           
+                           <p>Roy Pfitzner's 7-random-pass method: random (x7).</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">pfitzner33</span></dt>
+                        <dd>
+                           
+                           <p>Roy Pfitzner's 33-random-pass method: random (x33).</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">usarmy</span></dt>
+                        <dd>
+                           
+                           <p>US Army AR380-19 method: 0x00, 0xff, random. (Note: identical to DoD 522.22-M section
+                              8-306 procedure (e) for sanitizing magnetic core memory).</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">fillzero</span></dt>
+                        <dd>
+                           
+                           <p>1-pass pattern: 0x00.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">fillff</span></dt>
+                        <dd>
+                           
+                           <p>1-pass pattern: 0xff.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">random</span></dt>
+                        <dd>
+                           
+                           <p>1-pass pattern: random (x1).</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">random2</span></dt>
+                        <dd>
+                           
+                           <p>2-pass pattern: random (x2).</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">old</span></dt>
+                        <dd>
+                           
+                           <p>6-pass pre-version 1.7 scrub method: 0x00, 0xff, 0xaa, 0x00, 0x55, verify.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">fastold</span></dt>
+                        <dd>
+                           
+                           <p>5-pass pattern: 0x00, 0xff, 0xaa, 0x55 and verify.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">custom=string</span></dt>
+                        <dd>
+                           
+                           <p>1-pass custom pattern. String may contain C-style numerical escapes: \nnn (octal)
+                              or \xnn (hex).</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich01s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich01s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Security via the boot loaders</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">9<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Restricting access to removable media</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

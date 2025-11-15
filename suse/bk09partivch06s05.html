@@ -1,0 +1,486 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.5.&nbsp;Operating an NFS server and clients behind a firewall</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch06s04.html" rel="prev">
+      <link href="bk09partivch06s06.html" rel="next">
+      <link href="bk09partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch06.html">Up</a> <a href="bk09partivch06s06.html">Next</a> <a href="bk09partivch06s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch06s05.html" db-id="d616951e259598" id="sec-nfs-firewall">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Operating an NFS server and clients behind a firewall</h2>
+            </header>
+            
+            
+            <p>Communication between an NFS server and its clients happens via Remote Procedure Calls
+               (RPC). Several RPC services, such as the mount daemon or the file locking service,
+               are part of the Linux NFS implementation. If the server and the clients run behind
+               a firewall, these services and the firewall(s) need to be configured to not block
+               the client-server communication.</p>
+            
+            <p>An NFS 4 server is backwards-compatible with NFS version 3, and firewall configurations
+               vary for both versions. If any of your clients use NFS 3 to mount shares, configure
+               your firewall to allow both NFS 4 and NFS 3.</p>
+            
+            <section class="sect2" id="nfs-firewall-nfsv4">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NFS 4.<em class="replaceable">x</em>
+                     </h3>
+               </header>
+               
+               
+               <p>NFS 4 requires TCP port 2049 to be open on the server side only. To open this port
+                  on the firewall, enable the <code class="literal">nfs</code> service in firewalld <em>on the NFS server</em>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --permanent --add-service=nfs --zone=<em class="replaceable">ACTIVE_ZONE</em></code></span></span>
+<span class="line"><span class="ld"><code>firewall-cmd --reload</code></span></span></pre>
+               </div>
+               
+               <p>Replace <em class="replaceable">ACTIVE_ZONE</em> with the firewall zone used on the NFS server.</p>
+               
+               <p>No additional firewall configuration on the client side is needed when using NFSv4.
+                  By default mount defaults to the highest supported NFS version, so if your client
+                  supports NFSv4, shares will automatically be mounted as version 4.2.</p>
+               </section>
+            
+            <section class="sect2" id="nfs-firewall-nfsv3">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>NFS 3</h3>
+               </header>
+               
+               
+               <p>NFS 3 requires the following services:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><code class="daemon systemitem">portmapper</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="daemon systemitem">nfsd</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="daemon systemitem">mountd</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="daemon systemitem">lockd</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="daemon systemitem">statd</code></p>
+                     </li>
+                  </ul>
+               
+               <p>These services are operated by <code class="systemitem">rpcbind</code>, which, by default, dynamically assigns ports. To allow access to these services
+                  behind a firewall, they need to be configured to run on a static port first. These
+                  ports need to be opened in the firewall(s) afterwards.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="daemon systemitem">portmapper</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>On <span class="phrase productname">SUSE Linux Enterprise Server</span>, <code class="daemon systemitem">portmapper</code> is already configured to run on a static port.</p>
+                        
+                        <div class="informalobject informaltable" id="nfs-firewall-nfsv3_vl1_vle1_li1_informaltable1">
+                           <table>
+                              <colgroup>
+                                 <col style="width: 70%">
+                                 <col style="width: 30%">
+                              </colgroup>
+                              <tbody>
+                                 
+                                 <tr>
+                                    <td class="bleft btop colsep rowsep">
+                                       <p>Port</p>
+                                    </td>
+                                    <td class="btop colsep rowsep">
+                                       <p>111</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Protocol(s)</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>TCP, UDP</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Runs on</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>Client, Server</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep" colspan="2">
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --add-service=rpc-bind --permanent --zone=<em class="replaceable">ACTIVE_ZONE</em></code></span></span></pre>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 </tbody>
+                           </table>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="daemon systemitem">nfsd</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>On <span class="phrase productname">SUSE Linux Enterprise Server</span>, <code class="daemon systemitem">nfsd</code> is already configured to run on a static port.</p>
+                        
+                        <div class="informalobject informaltable" id="nfs-firewall-nfsv3_vl1_vle2_li1_informaltable1">
+                           <table>
+                              <colgroup>
+                                 <col style="width: 50%">
+                                 <col style="width: 50%">
+                              </colgroup>
+                              <tbody>
+                                 
+                                 <tr>
+                                    <td class="bleft btop colsep rowsep">
+                                       <p>Port</p>
+                                    </td>
+                                    <td class="btop colsep rowsep">
+                                       <p>2049</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Protocol(s)</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>TCP, UDP</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Runs on</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>Server</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep" colspan="2">
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --add-service=nfs3 --permanent --zone=<em class="replaceable">ACTIVE_ZONE</em></code></span></span></pre>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 </tbody>
+                           </table>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="daemon systemitem">mountd</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>On <span class="phrase productname">SUSE Linux Enterprise Server</span>, <code class="daemon systemitem">mountd</code> is already configured to run on a static port.</p>
+                        
+                        <div class="informalobject informaltable" id="nfs-firewall-nfsv3_vl1_vle3_li1_informaltable1">
+                           <table>
+                              <colgroup>
+                                 <col style="width: 50%">
+                                 <col style="width: 50%">
+                              </colgroup>
+                              <tbody>
+                                 
+                                 <tr>
+                                    <td class="bleft btop colsep rowsep">
+                                       <p>Port</p>
+                                    </td>
+                                    <td class="btop colsep rowsep">
+                                       <p><em class="replaceable">20048</em></p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Protocol(s)</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>TCP, UDP</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Runs on</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>Server</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep" colspan="2">
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --add-service=mountd --permanent --zone=<em class="replaceable">ACTIVE_ZONE</em></code></span></span></pre>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 </tbody>
+                           </table>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="daemon systemitem">lockd</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>To set a static port for <code class="daemon systemitem">lockd</code>:</p>
+                        
+                        <div class="informalobject procedure" id="nfs-firewall-nfsv3_vl1_vle4_li1_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Edit<code class="filename">/etc/sysconfig/nfs</code> on the server and find and set</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>LOCKD_TCPPORT=<em class="replaceable">NNNNN</em></code></span></span>
+<span class="line"><span class="ld"><code>LOCKD_UDPPORT=<em class="replaceable">NNNN</em></code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>Replace <em class="replaceable">NNNNN</em> with an unused port of your choice. Use the same port for both protocols.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Restart the NFS server:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart nfs-server</code></span></span></pre>
+                                 </div>
+                                 </li>
+                           </ol>
+                        </div>
+                        
+                        <div class="informalobject informaltable" id="nfs-firewall-nfsv3_vl1_vle4_li1_informaltable1">
+                           <table>
+                              <colgroup>
+                                 <col style="width: 50%">
+                                 <col style="width: 50%">
+                              </colgroup>
+                              <tbody>
+                                 
+                                 <tr>
+                                    <td class="bleft btop colsep rowsep">
+                                       <p>Port</p>
+                                    </td>
+                                    <td class="btop colsep rowsep">
+                                       <p><em class="replaceable">NNNNN</em></p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Protocol(s)</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>TCP, UDP</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Runs on</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>Client, Server</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep" colspan="2">
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --add-port=<em class="replaceable">NNNNN</em>/{tcp,udp} --permanent --zone=<em class="replaceable">ACTIVE_ZONE</em></code></span></span></pre>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 </tbody>
+                           </table>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="daemon systemitem">statd</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>To set a static port for <code class="daemon systemitem">statd</code>:</p>
+                        
+                        <div class="informalobject procedure" id="nfs-firewall-nfsv3_vl1_vle5_li1_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Edit<code class="filename">/etc/sysconfig/nfs</code> on the server and find and set</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STATD_PORT=<em class="replaceable">NNNNN</em></code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>Replace <em class="replaceable">NNNNN</em> with an unused port of your choice.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Restart the NFS server:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart nfs-server</code></span></span></pre>
+                                 </div>
+                                 </li>
+                           </ol>
+                        </div>
+                        
+                        <div class="informalobject informaltable" id="nfs-firewall-nfsv3_vl1_vle5_li1_informaltable1">
+                           <table>
+                              <colgroup>
+                                 <col style="width: 50%">
+                                 <col style="width: 50%">
+                              </colgroup>
+                              <tbody>
+                                 
+                                 <tr>
+                                    <td class="bleft btop colsep rowsep">
+                                       <p>Port</p>
+                                    </td>
+                                    <td class="btop colsep rowsep">
+                                       <p><em class="replaceable">NNNNN</em></p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Protocol(s)</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>TCP, UDP</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep">
+                                       <p>Runs on</p>
+                                    </td>
+                                    <td class="colsep rowsep">
+                                       <p>Client, Server</p>
+                                    </td>
+                                 </tr>
+                                 
+                                 <tr>
+                                    <td class="bleft colsep rowsep" colspan="2">
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --add-port=<em class="replaceable">NNNNN</em>/{tcp,udp} --permanent --zone=<em class="replaceable">ACTIVE_ZONE</em></code></span></span></pre>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 </tbody>
+                           </table>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Loading a changed <code class="daemon systemitem">firewalld</code> configuration</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Whenever you change the <code class="daemon systemitem">firewalld</code> configuration, you need to reload the daemon to activate the changes:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --reload</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Firewall zone</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Make sure to replace <em class="replaceable">ACTIVE_ZONE</em> with the firewall zone used on the respective machine. Note that, depending on the
+                              firewall configuration, the active zone can differ from machine to machine.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch06s04.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch06s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring clients</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Managing Access Control Lists over NFSv4</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>26.2.&nbsp;Host-based routing in Xen</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch02.html" rel="prev">
+      <link href="bk10partivch02s03.html" rel="next">
+      <link href="bk10partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partivch02.html">Up</a> <a href="bk10partivch02s03.html">Next</a> <a href="bk10partivch02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partivch02s02.html" db-id="d616951e290992" id="sec-xen-net-host-route">
+            <header>
+               <h2><span class="label">26<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Host-based routing in Xen</h2>
+            </header>
+            
+            
+            <p>Xen can be set up to use host-based routing in the controlling Dom0, although this
+               is not yet well supported from YaST and requires certain amount of manual editing
+               of configuration files. Thus, this is a task that requires an advanced administrator.</p>
+            
+            <p>The following configuration only works when using fixed IP addresses. Using DHCP is
+               not practicable with this procedure, because the IP address must be known to both
+               the VM Guest and the VM Host Server system.</p>
+            
+            <p>The easiest way to create a routed guest is to change the networking from a bridged
+               to a routed network. As a requirement to the following procedures, a VM Guest with
+               a bridged network setup must be installed. For example, the VM Host Server is named
+               earth with the IP 192.168.1.20, and the VM Guest has the name alice with the IP 192.168.1.21.</p>
+            
+            <div class="formalobject procedure" id="proc-xen-network-route-ipv4">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">26<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring a routed IPv4 VM Guest</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Make sure that alice is shut down. Use <code class="systemitem">xl</code> commands to shut down and check.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Prepare the network configuration on the VM Host Server earth:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Create a hotplug interface to route the traffic. To accomplish this, create a file
+                                 named <code class="filename">/etc/sysconfig/network/ifcfg-alice.0</code> with the following content:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>NAME="Xen guest alice"</code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO="static"</code></span></span>
+<span class="line"><span class="ld"><code>STARTMODE="hotplug"</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Ensure that IP forwarding is enabled:</p>
+                              
+                              <div class="substeps">
+                                 <ol class="procedure substeps" type="i">
+                                    
+                                    <li class="step">
+                                       
+                                       <p>In YaST, go to <span class="menuchoice"><span class="guimenu">Network Settings</span><span class="guimenu">Routing</span></span>.</p>
+                                       </li>
+                                    
+                                    <li class="step">
+                                       
+                                       <p>Enter the <span class="guimenu">Routing</span> tab and activate <span class="guimenu">Enable IPv4 Forwarding</span> and <span class="guimenu">Enable IPv6 Forwarding</span> options.</p>
+                                       </li>
+                                    
+                                    <li class="step">
+                                       
+                                       <p>Confirm the setting and quit YaST.</p>
+                                       </li>
+                                    </ol>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Apply the following configuration to <code class="daemon systemitem">firewalld</code>:</p>
+                              
+                              <ul class="itemizedlist" db-mark="bullet">
+                                 
+                                 <li>
+                                    
+                                    <p>Add alice.0 to the devices in the public zone:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --zone=public --add-interface=alice.0</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Tell the firewall which address should be forwarded:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --zone=public \</code></span></span>
+<span class="line"><span class="ld"><code>--add-forward-port=port=80:proto=tcp:toport=80:toaddr="192.168.1.21/32,0/0"</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Make the runtime configuration changes permanent:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> firewall-cmd --runtime-to-permanent</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 </ul>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Add a static route to the interface of alice. To accomplish this, add the following
+                                 line to the end of <code class="filename">/etc/sysconfig/network/routes</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>192.168.1.21  -  -  alice.0</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>To make sure that the switches and routers that the VM Host Server is connected to
+                                 know about the routed interface, activate <code class="literal">proxy_arp</code> on earth. Add the following lines to <code class="filename">/etc/sysctl.conf</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>net.ipv4.conf.default.proxy_arp = 1</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.proxy_arp = 1</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Activate all changes with the commands:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart systemd-sysctl wicked</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Proceed with configuring the Xen configuration of the VM Guest by changing the vif
+                        interface configuration for alice as described in <a class="xref xref-sect1" href="bk10partivch03.html#sec-xen-manage-xl">the section called “XL—Xen management tool”</a>. Make the following changes to the text file you generate during the process:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Remove the snippet</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>bridge=br0</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>And add the following one:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vifname=vifalice.0</code></span></span></pre>
+                              </div>
+                              
+                              <p>or</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vifname=vifalice.0=emu</code></span></span></pre>
+                              </div>
+                              
+                              <p>for a fully virtualized domain.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Change the script that is used to set up the interface to the following:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>script=/etc/xen/scripts/vif-route-ifup</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Activate the new configuration and start the VM Guest.</p>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>The remaining configuration tasks must be accomplished from inside the VM Guest.</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Open a console to the VM Guest with <code class="command">xl console</code><em class="replaceable">DOMAIN</em> and log in.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Check that the guest IP is set to 192.168.1.21.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Provide VM Guest with a host route and a default gateway to the VM Host Server. Do
+                                 this by adding the following lines to <code class="filename">/etc/sysconfig/network/routes</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>192.168.1.20 - - eth0</code></span></span>
+<span class="line"><span class="ld"><code>default 192.168.1.20 - -</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Finally, test the network connection from the VM Guest to the world outside and from
+                        the network to your VM Guest.</p>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch02s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">26</span><span class="sep">.&nbsp;</span>Virtual networking</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">26<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a masqueraded network setup</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

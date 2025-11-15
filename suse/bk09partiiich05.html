@@ -1,0 +1,491 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;11.&nbsp;Resizing software RAID arrays with mdadm</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiiich04.html" rel="prev">
+      <link href="bk09partiiich05s02.html" rel="next">
+      <link href="bk09partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiii.html">Up</a> <a href="bk09partiiich05s02.html">Next</a> <a href="bk09partiiich04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk09partiiich05.html" db-id="d616951e245446" id="cha-raid-resize" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">11</span><span class="sep">.&nbsp;</span>Resizing software RAID arrays with mdadm</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Resizing an existing software RAID device involves increasing or decreasing the space
+                  contributed by each component partition. The file system that resides on the RAID
+                  must also be able to be resized to take advantage of the changes in available space
+                  on the device. In <span class="phrase productname">SUSE Linux Enterprise Server</span>, file system resizing utilities are available for file systems Btrfs, Ext2, Ext3,
+                  Ext4, and XFS (increase size only). Refer to <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a> for more information.</p>
+               
+               <p>The <code class="command">mdadm</code> tool supports resizing only for software RAID levels 1, 4, 5, and 6. These RAID levels
+                  provide disk fault tolerance so that one component partition can be removed at a time
+                  for resizing. In principle, it is possible to perform a hot resize for RAID partitions,
+                  but you must take extra care for your data when doing so.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Back up your data before resizing</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Resizing any partition or file system involves some risks that can potentially result
+                              in losing data. To avoid data loss, ensure that you back up your data before you begin
+                              any resizing task.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Resizing the RAID involves the following tasks. The order in which these tasks are
+                  performed depends on whether you are increasing or decreasing its size.</p>
+               
+               <div class="formalobject table" id="cha-raid-resize_tab1">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Tasks involved in resizing a RAID</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 26%">
+                        <col style="width: 50%">
+                        <col style="width: 12%">
+                        <col style="width: 12%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Tasks</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Description</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Order If Increasing Size</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Order If Decreasing Size</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p>Resize each of the component partitions.</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Increase or decrease the active size of each component partition. You remove only
+                                 one component partition at a time, modify its size, then return it to the RAID.</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>1</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>2</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>Resize the software RAID itself.</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>The RAID does not automatically know about the increases or decreases you make to
+                                 the underlying component partitions. You must inform it about the new size.</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>2</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>3</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>Resize the file system.</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>You must resize the file system that resides on the RAID. This is possible only for
+                                 file systems that provide tools for resizing.</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>3</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>1</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <p>The procedures in the following sections use the device names shown in the following
+                  table. Ensure that you modify the names to use the names of your own devices.</p>
+               
+               <div class="formalobject table" id="cha-raid-resize_tab2">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Scenario for increasing the size of component partitions</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 50%">
+                        <col style="width: 50%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>RAID Device</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Component Partitions</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="filename">/dev/md0</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p><code class="filename">/dev/sda1</code></p>
+                              <p><code class="filename">/dev/sdb1</code></p>
+                              <p><code class="filename">/dev/sdc1</code></p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </div>
+            <section class="sect1" id="sec-raid-resize-incr">
+               <header>
+                  <h2><span class="label">11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Increasing the size of a software RAID</h2>
+               </header>
+               
+               
+               <p>Increasing the size of a software RAID involves the following tasks in the given order:
+                  increase the size of all partitions the RAID consists of, increase the size of the
+                  RAID itself and, finally, increase the size of the file system.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Potential data loss</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If a RAID does not have disk fault tolerance, or it is simply not consistent, data
+                              loss results if you remove any of its partitions. Be very careful when removing partitions,
+                              and ensure that you have a backup of your data available.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect2" id="sec-raid-resize-incr-partitions">
+                  <header>
+                     <h3><span class="label">11<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Increasing the size of component partitions</h3>
+                  </header>
+                  
+                  
+                  <p>Apply the procedure in this section to increase the size of a RAID 1, 4, 5, or 6.
+                     For each component partition in the RAID, remove the partition from the RAID, modify
+                     its size, return it to the RAID, then wait until the RAID stabilizes to continue.
+                     While a partition is removed, the RAID operates in degraded mode and has no or reduced
+                     disk fault tolerance. Even for RAIDs that can tolerate multiple concurrent disk failures,
+                     do not remove more than one component partition at a time. To increase the size of
+                     the component partitions for the RAID, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="sec-raid-resize-incr-partitions_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Open a terminal.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Ensure that the RAID array is consistent and synchronized by entering</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /proc/mdstat</code></span></span></pre>
+                           </div>
+                           
+                           <p>If your RAID array is still synchronizing according to the output of this command,
+                              you must wait until synchronization is complete before continuing.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Attach the device you want use in the RAID, for example <code class="filename">/dev/sda2</code>, but do not mount it.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Replace one of the component partitions from the RAID array. For example, to replace
+                              <code class="filename">/dev/sda1</code> with the bigger device <code class="filename">/dev/sda2</code>, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm /dev/md0 --replace /dev/sda1 --with /dev/sda2</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Increase the size of the partition (<code class="filename">/dev/sda2</code>) by doing one of the following:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p>Increase the size of the partition, using a disk partitioner such as the YaST Partitioner
+                                    or the command line tool parted. This option is the usual choice.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Replace the disk on which the partition resides with a higher-capacity device. This
+                                    option is possible only if no other file systems on the original disk are accessed
+                                    by the system. When the replacement device is added back into the RAID, it takes much
+                                    longer to synchronize the data because all of the data that was on the original device
+                                    must be rebuilt.</p>
+                                 </li>
+                              </ul>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Repeat these steps for each of the remaining component devices in the array. Ensure
+                              that you modify the commands for the correct component partition.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If you get a message that tells you that the kernel could not re-read the partition
+                              table for the RAID, you must reboot the computer after all partitions have been resized
+                              to force an update of the partition table.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Continue with <a class="xref xref-sect2" href="#sec-raid-resize-incr-raid">the section called “Increasing the size of the RAID array”</a>.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>Alternatively, if you are replacing the disks and can install the new disks temporarily
+                     alongside the existing array, you can hot-replace the partitions. This will keep them
+                     in service until a new partition has been rebuilt as a spare, so the array does not
+                     enter a degraded state and remains fault-tolerant during the process. The following
+                     steps replace steps 3–5 in the above procedure.</p>
+                  
+                  <div class="informalobject procedure" id="sec-raid-resize-incr-partitions_proc2">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Mark a component partition for replacement. For example, to replace <code class="filename">/dev/sda1</code>, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm /dev/md0 --replace /dev/sda1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add a replacement partition to the RAID array. For example, to add <code class="filename">/dev/sdd1</code>, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm -a /dev/md0 /dev/sdd1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Once the new partition has been added and has finished rebuilding, the partition marked
+                              for replacement will be automatically marked as faulty, and can be removed from the
+                              array. For example, to remove <code class="filename">/dev/sda1</code>, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm /dev/md0 --remove /dev/sda1</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-raid-resize-incr-raid">
+                  <header>
+                     <h3><span class="label">11<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Increasing the size of the RAID array</h3>
+                  </header>
+                  
+                  
+                  <p>After you have resized each of the component partitions in the RAID (see <a class="xref xref-sect2" href="#sec-raid-resize-incr-partitions">the section called “Increasing the size of component partitions”</a>), the RAID array configuration continues to use the original array size until you
+                     force it to be aware of the newly available space. You can specify a size for the
+                     RAID or use the maximum available space.</p>
+                  
+                  <p>The procedure in this section uses the device name <code class="filename">/dev/md0</code> for the RAID device. Ensure that you modify the name to use the name of your own
+                     device.</p>
+                  
+                  <div class="informalobject procedure" id="sec-raid-resize-incr-raid_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Open a terminal.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Ensure that the RAID array is consistent and synchronized by entering</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /proc/mdstat</code></span></span></pre>
+                           </div>
+                           
+                           <p>If your RAID array is still synchronizing according to the output of this command,
+                              you must wait until synchronization is complete before continuing.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Check the size of the array and the device size known to the array by entering</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm -D /dev/md0 | grep -e "Array Size" -e "Dev Size"</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Do one of the following:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p>Increase the size of the array to the maximum available size by entering</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm --grow /dev/md0 -z max</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Increase the size of the array to the maximum available size by entering</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm --grow /dev/md0 -z max --assume-clean</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>The array uses any space that has been added to the devices, but this space will not
+                                    be synchronized. This is recommended for RAID&nbsp;1 because the synchronization is not
+                                    needed. It can be useful for other RAID levels if the space that was added to the
+                                    member devices was pre-zeroed.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Increase the size of the array to a specified value by entering</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm --grow /dev/md0 -z <em class="replaceable">SIZE</em></code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>Replace <em class="replaceable">SIZE</em> with an integer value in kilobytes (a kilobyte is 1024 bytes) for the desired size.</p>
+                                 </li>
+                              </ul>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Recheck the size of your array and the device size known to the array by entering</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm -D /dev/md0 | grep -e "Array Size" -e "Dev Size"</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Do one of the following:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p>If your array was successfully resized, continue with <a class="xref xref-sect2" href="#sec-raid-resize-incr-fs">the section called “Increasing the size of the file system”</a>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>If your array was not resized as you expected, you must reboot, then try this procedure
+                                    again.</p>
+                                 </li>
+                              </ul>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-raid-resize-incr-fs">
+                  <header>
+                     <h3><span class="label">11<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Increasing the size of the file system</h3>
+                  </header>
+                  
+                  
+                  <p>After you increase the size of the array (see <a class="xref xref-sect2" href="#sec-raid-resize-incr-raid">the section called “Increasing the size of the RAID array”</a>), you are ready to resize the file system.</p>
+                  
+                  <p>You can increase the size of the file system to the maximum space available or specify
+                     an exact size. When specifying an exact size for the file system, ensure that the
+                     new size satisfies the following conditions:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>The new size must be greater than the size of the existing data; otherwise, data loss
+                           occurs.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The new size must be equal to or less than the current RAID size because the file
+                           system size cannot extend beyond the space available.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>Refer to <a class="xref xref-chapter" href="bk09partich02.html">Chapter&nbsp;<span class="label">2</span>, Resizing file systems</a> for detailed instructions.</p>
+                  </section>
+               </section>
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiiich04.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiii.html">Up</a></td>
+                  <td class="next"><a href="bk09partiiich05s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>Creating a degraded RAID array</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Decreasing the size of a software RAID</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

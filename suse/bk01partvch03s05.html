@@ -1,0 +1,341 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>40.5.&nbsp;The /etc/named.conf configuration file</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch03s04.html" rel="prev">
+      <link href="bk01partvch03s06.html" rel="next">
+      <link href="bk01partvch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch03.html">Up</a> <a href="bk01partvch03s06.html">Next</a> <a href="bk01partvch03s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch03s05.html" db-id="d616951e57989" id="sec-dns-named">
+            <header>
+               <h2><span class="label">40<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>The /etc/named.conf configuration file</h2>
+            </header>
+            
+            
+            <p>All the settings for the BIND name server itself are stored in the <code class="filename">/etc/named.conf</code> file. However, the zone data for the domains to handle (consisting of the host names,
+               IP addresses, and so on) are stored in separate files in the <code class="filename">/var/lib/named</code> directory. The details of this are described later.</p>
+            
+            <p><code class="filename">/etc/named.conf</code> is roughly divided into two areas. One is the <code class="systemitem">options</code> section for general settings and the other consists of <code class="systemitem">zone</code> entries for the individual domains. A <code class="systemitem">logging</code> section and <code class="systemitem">acl</code> (access control list) entries are optional. Comment lines begin with a <code class="literal">#</code> sign or <code class="literal">//</code>. A minimal <code class="filename">/etc/named.conf</code> is shown in <a class="xref xref-example" href="#ex-named-mini">Example&nbsp;<span class="label">40<span class="sep">.</span>2</span>, “A basic /etc/named.conf”</a>.</p>
+            
+            <div class="example formalobject" id="ex-named-mini">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options {</code></span></span>
+<span class="line"><span class="ld"><code>        directory "/var/lib/named";</code></span></span>
+<span class="line"><span class="ld"><code>        forwarders { 10.0.0.1; };</code></span></span>
+<span class="line"><span class="ld"><code>        notify no;</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>zone "localhost" in {</code></span></span>
+<span class="line"><span class="ld"><code>       type master;</code></span></span>
+<span class="line"><span class="ld"><code>       file "localhost.zone";</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>zone "0.0.127.in-addr.arpa" in {</code></span></span>
+<span class="line"><span class="ld"><code>        type master;</code></span></span>
+<span class="line"><span class="ld"><code>        file "127.0.0.zone";</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>zone "." in {</code></span></span>
+<span class="line"><span class="ld"><code>        type hint;</code></span></span>
+<span class="line"><span class="ld"><code>        file "root.hint";</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">40<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>A basic /etc/named.conf</div>
+               </header>
+            </div>
+            
+            <section class="sect2" id="sec-dns-named-options">
+               <header>
+                  <h3><span class="label">40<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Important configuration options</h3>
+               </header>
+               
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">directory "<em class="replaceable">FILENAME</em>";</span></dt>
+                     <dd>
+                        
+                        <p>Specifies the directory in which BIND can find the files containing the zone data.
+                           Usually, this is <code class="filename">/var/lib/named</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">forwarders { <em class="replaceable">IP-ADDRESS</em>; };</span></dt>
+                     <dd>
+                        
+                        <p>Specifies the name servers (of the provider) to which DNS requests should be forwarded
+                           if they cannot be resolved directly. Replace <em class="replaceable">IP-ADDRESS</em> with an IP address like <code class="literal">192.168.1.116</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">forward first;</span></dt>
+                     <dd>
+                        
+                        <p>Causes DNS requests to be forwarded before an attempt is made to resolve them via
+                           the root name servers. Instead of <code class="systemitem">forward first</code>, <code class="systemitem">forward only</code> can be written to have all requests forwarded and none sent to the root name servers.
+                           This makes sense for firewall configurations.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">listen-on port 53 { 127.0.0.1; <em class="replaceable">IP-ADDRESS</em>; };</span></dt>
+                     <dd>
+                        
+                        <p>Tells BIND on which network interfaces and port to accept client queries. <code class="literal">port 53</code> does not need to be specified explicitly, because <code class="literal">53</code> is the default port. Enter <code class="literal">127.0.0.1</code> to permit requests from the local host. If you omit this entry entirely, all interfaces
+                           are used by default.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">listen-on-v6 port 53 {any; };</span></dt>
+                     <dd>
+                        
+                        <p>Tells BIND on which port it should listen for IPv6 client requests. The only alternative
+                           to <code class="literal">any</code> is <code class="literal">none</code>. As far as IPv6 is concerned, the server only accepts wild card addresses.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">query-source address * port 53;</span></dt>
+                     <dd>
+                        
+                        <p>This entry is necessary if a firewall is blocking outgoing DNS requests. This tells
+                           BIND to post requests externally from port 53 and not from any of the high ports above
+                           1024.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">query-source-v6 address * port 53;</span></dt>
+                     <dd>
+                        
+                        <p>Tells BIND which port to use for IPv6 queries.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">allow-query { 127.0.0.1; <em class="replaceable">NET</em>; };</span></dt>
+                     <dd>
+                        
+                        <p>Defines the networks from which clients can post DNS requests. Replace <em class="replaceable">NET</em> with address information like <code class="literal">192.168.2.0/24</code>. The <code class="systemitem">/24</code> at the end is an abbreviated expression for the netmask (in this case <code class="netmask systemitem">255.255.255.0</code>).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">allow-transfer ! *;;</span></dt>
+                     <dd>
+                        
+                        <p>Controls which hosts can request zone transfers. In the example, such requests are
+                           denied with <code class="systemitem">! *</code>. Without this entry, zone transfers can be requested from anywhere without restrictions.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">statistics-interval 0;</span></dt>
+                     <dd>
+                        
+                        <p>Without this entry, BIND generates several lines of statistical information per hour
+                           in the system's journal. Set it to 0 to suppress these statistics or set an interval
+                           in minutes.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">cleaning-interval 720;</span></dt>
+                     <dd>
+                        
+                        <p>This option defines at which time intervals BIND clears its cache. This triggers an
+                           entry in the system's journal each time it occurs. The time specification is in minutes.
+                           The default is 60 minutes.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">interface-interval 0;</span></dt>
+                     <dd>
+                        
+                        <p>BIND regularly searches the network interfaces for new or nonexistent interfaces.
+                           If this value is set to <code class="systemitem">0</code>, this is not done and BIND only listens at the interfaces detected at start-up. Otherwise,
+                           the interval can be defined in minutes. The default is sixty minutes.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">notify no;</span></dt>
+                     <dd>
+                        
+                        <p><code class="option">no</code> prevents other name servers from being informed when changes are made to the zone
+                           data or when the name server is restarted.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>For a list of available options, read the man page <code class="command">man 5 named.conf</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-dns-named-log">
+               <header>
+                  <h3><span class="label">40<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Logging</h3>
+               </header>
+               
+               
+               <p>What, how and where logging takes place can be extensively configured in BIND. Normally,
+                  the default settings should be sufficient. <a class="xref xref-example" href="#ex-no-log">Example&nbsp;<span class="label">40<span class="sep">.</span>3</span>, “Entry to disable logging”</a>, shows the simplest form of such an entry and suppresses any logging.</p>
+               
+               <div class="example formalobject" id="ex-no-log">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>logging {</code></span></span>
+<span class="line"><span class="ld"><code>        category default { null; };</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">40<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Entry to disable logging</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-dns-named-zones">
+               <header>
+                  <h3><span class="label">40<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Zone entries</h3>
+               </header>
+               
+               
+               <div class="example formalobject" id="ex-meine-domain">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>zone "example.com" in {</code></span></span>
+<span class="line"><span class="ld"><code>      type master;</code></span></span>
+<span class="line"><span class="ld"><code>      file "example.com.zone";</code></span></span>
+<span class="line"><span class="ld"><code>      notify no;</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">40<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Zone entry for example.com</div>
+                  </header>
+               </div>
+               
+               <p>After <code class="systemitem">zone</code>, specify the name of the domain to administer (<code class="domainname systemitem">example.com</code>) followed by <code class="systemitem">in</code> and a block of relevant options enclosed in curly braces, as shown in <a class="xref xref-example" href="#ex-meine-domain">Example&nbsp;<span class="label">40<span class="sep">.</span>4</span>, “Zone entry for example.com”</a>. To define a <em>secondary zone</em>, switch the <code class="systemitem">type</code> to <code class="literal">secondary</code> and specify a name server that administers this zone as <code class="literal">primary</code> (which, in turn, may be a secondary server of another primary server), as shown in
+                  <a class="xref xref-example" href="#ex-andere-domain">Example&nbsp;<span class="label">40<span class="sep">.</span>5</span>, “Zone entry for example.net”</a>.</p>
+               
+               <div class="example formalobject" id="ex-andere-domain">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>zone "example.net" in {</code></span></span>
+<span class="line"><span class="ld"><code>      type secondary;</code></span></span>
+<span class="line"><span class="ld"><code>      file "secondary/example.net.zone";</code></span></span>
+<span class="line"><span class="ld"><code>      </code></span></span>
+<span class="line"><span class="ld"><code>      masters { 10.0.0.1; }; </code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">40<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Zone entry for example.net</div>
+                  </header>
+               </div>
+               
+               <p>The zone options:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">type primary;</span></dt>
+                     <dd>
+                        
+                        <p>By specifying <code class="literal">primary</code>, tell BIND that the zone is handled by the local name server. This assumes that a
+                           zone file has been created in the correct format.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">type secondary;</span></dt>
+                     <dd>
+                        
+                        <p>This zone is transferred from another name server. It must be used together with <code class="systemitem">primary_servers</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">type hint;</span></dt>
+                     <dd>
+                        
+                        <p>The zone <code class="literal">.</code> of the <code class="literal">hint</code> type is used to set the root name servers. This zone definition can be left as is.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">file <code class="filename">example.com.zone</code> or file <q>secondary/example.net.zone</q>;</span></dt>
+                     <dd>
+                        
+                        <p>This entry specifies the file where zone data for the domain is located. This file
+                           is not required for a secondary server, because this data is pulled from another name
+                           server. To differentiate files of the primary and secondary server, use the directory
+                           <code class="filename">secondary</code> for the secondary files.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">primary_servers { <em class="replaceable">SERVER_IP_ADDRESS</em>; };</span></dt>
+                     <dd>
+                        
+                        <p>This entry is only needed for secondary zones. It specifies from which name server
+                           the zone file should be transferred.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">allow-update {! *; };</span></dt>
+                     <dd>
+                        
+                        <p>This option controls external write access, which would allow clients to make a DNS
+                           entry—something not normally desirable for security reasons. Without this entry, zone
+                           updates are not allowed. The above entry achieves the same because <code class="literal">! *</code> effectively bans any such activity.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch03s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch03.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch03s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">40<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Starting the BIND name server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">40<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Zone files</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

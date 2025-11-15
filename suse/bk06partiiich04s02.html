@@ -1,0 +1,280 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>24.2.&nbsp;Setting up a simple test scenario</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich04.html" rel="prev">
+      <link href="bk06partiiich04s03.html" rel="next">
+      <link href="bk06partiiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich04.html">Up</a> <a href="bk06partiiich04s03.html">Next</a> <a href="bk06partiiich04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich04s02.html" db-id="d616951e180254" id="sec-security-vpn-simplest">
+            <header>
+               <h2><span class="label">24<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a simple test scenario</h2>
+            </header>
+            
+            
+            <p>In the following example, we create a point-to-point VPN tunnel. The example demonstrates
+               how to create a VPN tunnel between one client and a server. It is assumed that your
+               VPN server uses private IP addresses like <code class="ipaddress systemitem"><em class="replaceable">IP_OF_SERVER</em></code> and your client uses the IP address <code class="ipaddress systemitem"><em class="replaceable">IP_OF_CLIENT</em></code>. Make sure you select addresses which do not conflict with other IP addresses.</p>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Use only for testing</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>This following scenario is provided as an example meant for familiarizing yourself
+                           with VPN technology. <em>Do not</em> use this as a real world scenario, as it can compromise the security and safety of
+                           your IT infrastructure.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Names for configuration file</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>To simplify working with OpenVPN configuration files, we recommend the following:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>Place your OpenVPN configuration files in the directory <code class="filename">/etc/openvpn</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Name your configuration files <code class="filename"><em class="replaceable">MY_CONFIGURATION</em>.conf</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>If there are multiple files that belong to the same configuration, place them in a
+                                 subdirectory like <code class="filename">/etc/openvpn/<em class="replaceable">MY_CONFIGURATION</em></code>.</p>
+                              </li>
+                           </ul>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-security-vpn-simplest-vpnserv">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring the VPN server</h3>
+               </header>
+               
+               
+               <p>To configure a VPN server, proceed as follows:</p>
+               
+               <div class="formalobject procedure" id="pro-security-vpn-simplest-vpnserv">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">24<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VPN server configuration</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the package <code class="resource systemitem">openvpn</code> on the machine that later becomes your VPN server.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Open a shell, become <code class="systemitem username">root</code> and create the VPN secret key:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>openvpn --genkey secret /etc/openvpn/secret.key</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy the secret key to your client:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>scp /etc/openvpn/secret.key root@<em class="replaceable">IP_OF_CLIENT</em>:/etc/openvpn/</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create the file <code class="filename">/etc/openvpn/server.conf</code> with the following content:</p>
+                        
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>dev tun</code></span></span>
+<span class="line"><span class="ld"><code>ifconfig <em class="replaceable">IP_OF_SERVER</em><em class="replaceable">IP_OF_CLIENT</em></code></span></span>
+<span class="line"><span class="ld"><code>secret secret.key</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Set up a tun device configuration by creating a file called <code class="filename">/etc/sysconfig/network/ifcfg-tun0</code> with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STARTMODE='manual'</code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO='static'</code></span></span>
+<span class="line"><span class="ld"><code>TUNNEL='tun'</code></span></span>
+<span class="line"><span class="ld"><code>TUNNEL_SET_OWNER='nobody'</code></span></span>
+<span class="line"><span class="ld"><code>TUNNEL_SET_GROUP='nobody'</code></span></span>
+<span class="line"><span class="ld"><code>LINK_REQUIRED=no</code></span></span>
+<span class="line"><span class="ld"><code>PRE_UP_SCRIPT='systemd:openvpn@server'</code></span></span>
+<span class="line"><span class="ld"><code>PRE_DOWN_SCRIPT='systemd:openvpn@service'</code></span></span></pre>
+                        </div>
+                        
+                        <p>The notation <code class="literal">openvpn@server</code> points to the OpenVPN server configuration file located at <code class="filename">/etc/openvpn/server.conf</code>. For more information, see <code class="filename">/usr/share/doc/packages/openvpn/README.SUSE</code>.</p>
+                        </li>
+                     <li class="step" id="st-security-vpn-simplest-vpnserv-yast">
+                        
+                        <p>If you use a firewall, start YaST and open UDP port 1194 (<span class="menuchoice"><span class="guimenu">Security and Users</span><span class="guimenu">Firewall</span><span class="guimenu">Allowed Services</span></span>).</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the OpenVPN server service by setting the tun device to <code class="literal">up</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifup tun0</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>You should see the confirmation:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tun0            up</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-vpn-simplest-vpnclient">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the VPN clients</h3>
+               </header>
+               
+               
+               <p>To configure the VPN client, do the following:</p>
+               
+               <div class="formalobject procedure" id="sec-security-vpn-simplest-vpnclient_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">24<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VPN client configuration</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the package <code class="resource systemitem">openvpn</code> on your client VPN machine.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create <code class="filename">/etc/openvpn/client.conf</code> with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>remote <em class="replaceable">DOMAIN_OR_PUBLIC_IP_OF_SERVER</em></code></span></span>
+<span class="line"><span class="ld"><code>dev tun</code></span></span>
+<span class="line"><span class="ld"><code>ifconfig <em class="replaceable">IP_OF_CLIENT</em><em class="replaceable">IP_OF_SERVER</em></code></span></span>
+<span class="line"><span class="ld"><code>secret secret.key</code></span></span></pre>
+                        </div>
+                        
+                        <p>Replace the placeholder <em class="replaceable">IP_OF_CLIENT</em> in the first line with either the domain name, or the public IP address of your server.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Set up a tun device configuration by creating a file called <code class="filename">/etc/sysconfig/network/ifcfg-tun0</code> with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STARTMODE='manual'</code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO='static'</code></span></span>
+<span class="line"><span class="ld"><code>TUNNEL='tun'</code></span></span>
+<span class="line"><span class="ld"><code>TUNNEL_SET_OWNER='nobody'</code></span></span>
+<span class="line"><span class="ld"><code>TUNNEL_SET_GROUP='nobody'</code></span></span>
+<span class="line"><span class="ld"><code>LINK_REQUIRED=no</code></span></span>
+<span class="line"><span class="ld"><code>PRE_UP_SCRIPT='systemd:openvpn@client'</code></span></span>
+<span class="line"><span class="ld"><code>PRE_DOWN_SCRIPT='systemd:openvpn@client'</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If you use a firewall, start YaST and open UDP port 1194 as described in <a class="xref xref-step" href="#st-security-vpn-simplest-vpnserv-yast">step <span class="label">6</span></a> of <a class="xref xref-procedure" href="#pro-security-vpn-simplest-vpnserv">Procedure&nbsp;<span class="label">24<span class="sep">.</span>1</span>, “VPN server configuration”</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the OpenVPN server service by setting the tun device to <code class="literal">up</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifup tun0</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>You should see the confirmation:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tun0            up</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-vpn-simplest-use">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Testing the VPN example scenario</h3>
+               </header>
+               
+               
+               <p>After OpenVPN has successfully started, test the availability of the tun device with
+                  the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ip addr show tun0</code></span></span></pre>
+               </div>
+               
+               <p>To verify the VPN connection, use <code class="command">ping</code> on both client and server side to see if they can reach each other. Ping the server
+                  from the client:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ping -I tun0 <em class="replaceable">IP_OF_SERVER</em></code></span></span></pre>
+               </div>
+               
+               <p>Ping the client from the server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ping -I tun0 <em class="replaceable">IP_OF_CLIENT</em></code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich04s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">24</span><span class="sep">.&nbsp;</span>Configuring a VPN server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">24<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Setting up your VPN server using a certificate authority</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

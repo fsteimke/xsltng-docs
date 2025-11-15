@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>43.5.&nbsp;Enabling CGI scripts</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch06s04.html" rel="prev">
+      <link href="bk01partvch06s06.html" rel="next">
+      <link href="bk01partvch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch06.html">Up</a> <a href="bk01partvch06s06.html">Next</a> <a href="bk01partvch06s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch06s05.html" db-id="d616951e63355" id="sec-apache2-cgi">
+            <header>
+               <h2><span class="label">43<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Enabling CGI scripts</h2>
+            </header>
+            
+            
+            <p>Apache's Common Gateway Interface (CGI) lets you create dynamic content with programs
+               or scripts (CGI scripts). CGI scripts can be written in any programming language.</p>
+            
+            <p>To enable Apache to deliver content created by CGI scripts, <code class="systemitem">mod_cgi</code> needs to be activated. <code class="systemitem">mod_alias</code> is also needed. Both modules are enabled by default. Refer to <a class="xref xref-sect2" href="bk01partvch06s04.html#sec-apache2-modules-activating">the section called “Activation and deactivation”</a> for details on activating modules.</p>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">CGI security</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Allowing the server to execute CGI scripts is a potential security hole. Refer to
+                           <a class="xref xref-sect1" href="bk01partvch06s08.html">the section called “Avoiding security problems”</a> for additional information.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-apache2-cgi-configuration">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Apache configuration</h3>
+               </header>
+               
+               
+               <p>In <span class="phrase productname">SUSE Linux Enterprise Server</span>, the execution of CGI scripts is only allowed in the directory <code class="filename">/srv/www/cgi-bin/</code>. This location is already configured to execute CGI scripts. If you have created
+                  a virtual host configuration (see <a class="xref xref-sect3" href="bk01partvch06s02.html#sec-apache2-configuration-manually-vhost">the section called “Virtual host configuration”</a>) and want to place your scripts in a host-specific directory, you must unlock and
+                  configure this directory.</p>
+               
+               <div class="example formalobject" id="ex-apache2-cgi-configuration">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ScriptAlias /cgi-bin/ "/srv/www/www.example.com/cgi-bin/"<span class="co" id="co-apache2-cgi-script-alias">⟄</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;Directory "/srv/www/www.example.com/cgi-bin/"&gt;</code></span></span>
+<span class="line"><span class="ld"><code> Options +ExecCGI<span class="co" id="co-apache2-cgi-options">⟅</span></code></span></span>
+<span class="line"><span class="ld"><code> AddHandler cgi-script .cgi .pl<span class="co" id="co-apache2-cgi-handler">⟆</span></code></span></span>
+<span class="line"><span class="ld"><code> Require all granted<span class="co" id="co-apache2-cgi-order">⟇</span></code></span></span>
+<span class="line"><span class="ld"><code>&lt;/Directory&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-apache2-cgi-script-alias">⟄</a></dt>
+                        <dd>
+                           
+                           <p>Tells Apache to handle all files within this directory as CGI scripts.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-apache2-cgi-options">⟅</a></dt>
+                        <dd>
+                           
+                           <p>Enables CGI script execution</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-apache2-cgi-handler">⟆</a></dt>
+                        <dd>
+                           
+                           <p>Tells the server to treat files with the extensions .pl and .cgi as CGI scripts. Adjust
+                              according to your needs.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-apache2-cgi-order">⟇</a></dt>
+                        <dd>
+                           
+                           <p>The <code class="systemitem">Require</code> directive controls the default access state. In this case, access is granted to the
+                              specified directory without limitation. For more information on authentication and
+                              authorization, see <a class="link" href="https://httpd.apache.org/docs/2.4/howto/auth.html">https://httpd.apache.org/docs/2.4/howto/auth.html</a>.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>VirtualHost CGI configuration</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-apache2-cgi-example-script">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Running an example script</h3>
+               </header>
+               
+               
+               <p>CGI programming differs from <q>regular</q> programming in that the CGI programs and scripts must be preceded by a MIME-Type
+                  header such as <code class="literal">Content-type: text/html</code>. This header is sent to the client, so it understands what kind of content it receives.
+                  Secondly, the script's output must be something the client, usually a Web browser,
+                  understands—HTML or plain text or images, for example.</p>
+               
+               <p>A simple test script available under <code class="filename">/usr/share/doc/packages/apache2/test-cgi</code> is part of the Apache package. It outputs the content of certain environment variables
+                  as plain text. Copy this script to either <code class="filename">/srv/www/cgi-bin/</code> or the script directory of your virtual host (<code class="filename">/srv/www/www.example.com/cgi-bin/</code>) and name it <code class="filename">test.cgi</code>. Edit the file to have <code class="literal">#!/bin/sh</code> as the first line.</p>
+               
+               <p>Files accessible by the Web server should be owned by the user <code class="systemitem username">root</code>. For additional information see <a class="xref xref-sect1" href="bk01partvch06s08.html">the section called “Avoiding security problems”</a>. Because the Web server runs with a different user, the CGI scripts must be world-executable
+                  and world-readable. Change into the CGI directory and use the command <code class="command">chmod 755 test.cgi</code> to apply the proper permissions.</p>
+               
+               <p>Now call <code class="uri">http://localhost/cgi-bin/test.cgi</code> or <code class="literal">http://www.example.com/cgi-bin/test.cgi</code>. You should see the <q>CGI/1.0 test script report</q>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apache2-cgi-troubleshooting">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>CGI troubleshooting</h3>
+               </header>
+               
+               
+               <p>If you do not see the output of the test program but an error message instead, check
+                  the following:</p>
+               
+               <div class="itemizedlist">
+                  <header>
+                     <div class="title">CGI troubleshooting</div>
+                  </header>
+                  <ul db-mark="bullet">
+                     <li>
+                        
+                        <p><em>Have you reloaded the server after having changed the configuration?</em> If not, reload with <code class="command">systemctl reload apache2.service</code>.</p>
+                        </li>
+                     <li>
+                        
+                        <p><em>If you have configured your custom CGI directory, is it configured properly?</em> If in doubt, try the script within the default CGI directory <code class="filename">/srv/www/cgi-bin/</code> and call it with <code class="uri">http://localhost/cgi-bin/test.cgi</code>.</p>
+                        </li>
+                     <li>
+                        
+                        <p><em>Are the file permissions correct?</em> Change into the CGI directory and execute <code class="command">ls -l test.cgi</code>. The output should start with</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-rwxr-xr-x  1 root root</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li>
+                        
+                        <p>Make sure that the script does not contain programming errors. If you have not changed
+                           <code class="filename">test.cgi</code>, this should not be the case, but if you are using your own programs, always make
+                           sure that they do not contain programming errors.</p>
+                        </li>
+                  </ul>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch06s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch06.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch06s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">43<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Installing, activating and configuring modules</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">43<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Setting up a secure Web server with SSL</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

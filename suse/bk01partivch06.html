@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;37.&nbsp;Persistent memory</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partivch05s04.html" rel="prev">
+      <link href="bk01partivch06s02.html" rel="next">
+      <link href="bk01partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiv.html">Up</a> <a href="bk01partivch06s02.html">Next</a> <a href="bk01partivch05s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partivch06.html" db-id="d616951e54585" id="cha-nvdimm" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">37</span><span class="sep">.&nbsp;</span>Persistent memory</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-nvdimm-intro">
+               <header>
+                  <h2><span class="label">37<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Introduction</h2>
+               </header>
+               
+               
+               <p>Persistent memory is a new type of computer storage, combining speeds approaching
+                  those of dynamic RAM (DRAM) along with RAM's byte-by-byte addressability, plus the
+                  permanence of solid-state drives (SSDs).</p>
+               
+               <p>SUSE currently supports the use of persistent memory with <span class="phrase productname">SUSE Linux Enterprise Server</span> on machines with the AMD64/Intel&nbsp;64 and POWER architectures.</p>
+               
+               <p>Like conventional RAM, persistent memory is installed directly into mainboard memory
+                  slots. As such, it is supplied in the same physical form factor as RAM—as DIMMs. These
+                  are known as NVDIMMs: non-volatile dual inline memory modules.</p>
+               
+               <p>Unlike RAM, though, persistent memory is also similar to flash-based SSDs in several
+                  ways. Both are based on forms of solid-state memory circuitry, but despite this, both
+                  provide non-volatile storage: Their contents are retained when the system is powered
+                  off or restarted. For both forms of medium, writing data is slower than reading it,
+                  and both support a limited number of rewrite cycles. Finally, also like SSDs, sector-level
+                  access to persistent memory is possible if that is more suitable for a particular
+                  application.</p>
+               
+               <p>Different models use different forms of electronic storage medium, such as Intel 3D
+                  XPoint, or a combination of NAND-flash and DRAM. New forms of non-volatile RAM are
+                  also in development. This means that different vendors and models of NVDIMM offer
+                  different performance and durability characteristics.</p>
+               
+               <p>Because the storage technologies involved are in an early stage of development, different
+                  vendors' hardware may impose different limitations. Thus, the following statements
+                  are generalizations.</p>
+               
+               <p>Persistent memory is up to ten times slower than DRAM, but around a thousand times
+                  faster than flash storage. It can be rewritten on a byte-by-byte basis rather than
+                  flash memory's whole-sector erase-and-rewrite process. Finally, while rewrite cycles
+                  are limited, most forms of persistent memory can handle millions of rewrites, compared
+                  to the thousands of cycles of flash storage.</p>
+               
+               <p>This has two important consequences:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>It is not possible with current technology to run a system with only persistent memory
+                        and thus achieve non-volatile main memory. You must use a mixture of both conventional
+                        RAM and NVDIMMs. The operating system and applications will execute in conventional
+                        RAM, with the NVDIMMs providing fast supplementary storage.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The performance characteristics of different vendors' persistent memory mean that
+                        it may be necessary for programmers to be aware of the hardware specifications of
+                        the NVDIMMs in a particular server, including how many NVDIMMs there are and in which
+                        memory slots they are fitted. This will impact hypervisor use, migration of software
+                        between different host machines, and so on.</p>
+                     </li>
+                  </ul>
+               
+               <p>This new storage subsystem is defined in version 6 of the ACPI standard. However,
+                  <code class="filename">libnvdimm</code> supports pre-standard NVDIMMs and they can be used in the same way.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Intel Optane DC Persistent Memory</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Intel Optane DIMMs memory can be used in specific modes:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>In <em>App Direct Mode</em>, the Intel Optane memory is used as fast persistent storage, an alternative to SSDs
+                                    and NVMe devices. Data in this mode is kept when the system is powered off.</p>
+                                 
+                                 <p>App Direct Mode has been supported since SLES 12 SP4.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>In <em>Memory Mode</em>, the Intel Optane memory serves as a cost-effective, high-capacity alternative to
+                                    DRAM. In this mode, separate DRAM DIMMs act as a cache for the most frequently accessed
+                                    data while the Optane DIMMs memory provides large memory capacity. However, compared
+                                    with DRAM-only systems, this mode is slower under random access workloads. If you
+                                    run applications without Optane-specific enhancements that take advantage of this
+                                    mode, memory performance may decrease. Data in this mode is lost when the system is
+                                    powered off.</p>
+                                 
+                                 <p>Memory Mode has been supported since SLES 15 SP1.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>In <em>Mixed Mode</em>, the Intel Optane memory is partitioned, so it can serve in both modes simultaneously.</p>
+                                 
+                                 <p>Mixed Mode has been supported since SLES 15 SP1.</p>
+                                 </li>
+                              </ul>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partivch05s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiv.html">Up</a></td>
+                  <td class="next"><a href="bk01partivch06s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">36<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Troubleshooting</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Terms</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

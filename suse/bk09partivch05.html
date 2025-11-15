@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;18.&nbsp;Managing multipath I/O for devices</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch04s06.html" rel="prev">
+      <link href="bk09partivch05s02.html" rel="next">
+      <link href="bk09partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiv.html">Up</a> <a href="bk09partivch05s02.html">Next</a> <a href="bk09partivch04s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk09partivch05.html" db-id="d616951e252832" id="cha-multipath" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">18</span><span class="sep">.&nbsp;</span>Managing multipath I/O for devices</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>This section describes how to manage failover and path load balancing for multiple
+                  paths between the servers and block storage devices by using Multipath I/O (MPIO).</p>
+               </div>
+            <section class="sect1" id="sec-multipath-intro">
+               <header>
+                  <h2><span class="label">18<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Understanding multipath I/O</h2>
+               </header>
+               
+               
+               <p>Multipathing is the ability of a server to communicate with the same physical or logical
+                  block storage device across multiple physical paths between the host bus adapters
+                  in the server and the storage controllers for the device, typically in Fibre Channel
+                  (FC) or iSCSI SAN environments.</p>
+               
+               <p>Linux multipathing provides connection fault tolerance and can provide load balancing
+                  across the active connections. When multipathing is configured and running, it automatically
+                  isolates and identifies device connection failures, and reroutes I/O to alternate
+                  connections.</p>
+               
+               <p>Multipathing provides fault tolerance against connection failures, but not against
+                  failures of the storage device itself. The latter is achieved with complementary techniques
+                  like mirroring.</p>
+               
+               <section class="sect2" id="sec-multipath-intro_s2_1">
+                  <header>
+                     <h3><span class="label">18<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Multipath terminology</h3>
+                  </header>
+                  
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Storage array</span></dt>
+                        <dd>
+                           
+                           <p>A hardware device with many disks and multiple fabrics connections (controllers) that
+                              provides SAN storage to clients. Storage arrays typically have RAID and failover features
+                              and support multipathing. Historically, active/passive (failover) and active/active
+                              (load-balancing) storage array configurations were distinguished. These concepts still
+                              exist but they are merely special cases of the concepts of path groups and access
+                              states supported by modern hardware.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Host, host system</span></dt>
+                        <dd>
+                           
+                           <p>The computer running <span class="phrase productname">SUSE Linux Enterprise Server</span> which acts as a client system for a <em>storage array</em>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Multipath map, multipath device</span></dt>
+                        <dd>
+                           
+                           <p>A set of <em>path devices</em>. It represents a storage volume on a storage array and is seen as a single block
+                              device by the host system.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Path device</span></dt>
+                        <dd>
+                           
+                           <p>A member of a multipath map, typically a SCSI device. Each path device represents
+                              a unique connection between the host computer and the actual storage volume, for example,
+                              a logical unit from an iSCSI session.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">WWID</span></dt>
+                        <dd>
+                           
+                           <p>“World Wide Identifier”. <code class="systemitem">multipath-tools</code> uses the WWID to determine which low-level devices should be assembled into a multipath
+                              map. The WWID must be distinguished from the configurable <em>map name</em> (see <a class="xref xref-sect1" href="bk09partivch05s12.html">the section called “Multipath device names and WWIDs”</a>).</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">uevent, udev event</span></dt>
+                        <dd>
+                           
+                           <p>An event sent by the kernel to user space and processed by the <code class="command">udev</code> subsystem. Uevents are generated when devices are added or removed, or when they
+                              change their properties.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Device mapper</span></dt>
+                        <dd>
+                           
+                           <p>A framework in the Linux kernel for creating virtual block devices. I/O operations
+                              to mapped devices are redirected to the underlying block devices. Device mappings
+                              may be stacked. The device mapper implements its own event signaling, also known as
+                              “device mapper events” or “dm events”.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">initramfs</span></dt>
+                        <dd>
+                           
+                           <p>The initial RAM file system, also referred to as “initial RAM disk” (initrd) for historical
+                              reasons (see <a class="xref xref-sect1" href="bk01partiich01.html#sec-boot-terminology">the section called “Terminology”</a>).</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">ALUA</span></dt>
+                        <dd>
+                           
+                           <p>“Asymmetric Logical Unit Access”, a concept introduced with the SCSI standard SCSI-3.
+                              Storage volumes can be accessed via multiple ports, which are organized in port groups
+                              with different states (active, standby, etc.). ALUA defines SCSI commands to query
+                              the port groups and their states and change the state of a port group. Modern storage
+                              arrays that support SCSI usually support ALUA, too.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch04s06.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiv.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">17<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Hardware support</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

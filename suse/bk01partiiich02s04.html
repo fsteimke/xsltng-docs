@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>21.4.&nbsp;Investigating systemd errors</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich02s03.html" rel="prev">
+      <link href="bk01partiiich02s05.html" rel="next">
+      <link href="bk01partiiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich02.html">Up</a> <a href="bk01partiiich02s05.html">Next</a> <a href="bk01partiiich02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich02s04.html" db-id="d616951e34192" id="sec-journalctl-investigate">
+            <header>
+               <h2><span class="label">21<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Investigating <code class="daemon systemitem">systemd</code> errors</h2>
+            </header>
+            
+            
+            <p>This section introduces a simple example to illustrate how to find and fix the error
+               reported by <code class="daemon systemitem">systemd</code> during <code class="command">apache2</code> start-up.</p>
+            
+            <div class="informalobject procedure" id="sec-journalctl-investigate_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Try to start the apache2 service:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># systemctl start apache2</code></span></span>
+<span class="line"><span class="ld"><code>Job for apache2.service failed. See 'systemctl status apache2' and 'journalctl -xn' for details.</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Let us see what the service's status says:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl status apache2</code></span></span>
+<span class="line"><span class="ld"><code>apache2.service - The Apache Webserver</code></span></span>
+<span class="line"><span class="ld"><code>   Loaded: loaded (/usr/lib/systemd/system/apache2.service; disabled)</code></span></span>
+<span class="line"><span class="ld"><code>   Active: failed (Result: exit-code) since Tue 2014-06-03 11:08:13 CEST; 7min ago</code></span></span>
+<span class="line"><span class="ld"><code>  Process: 11026 ExecStop=/usr/sbin/start_apache2 -D SYSTEMD -DFOREGROUND \</code></span></span>
+<span class="line"><span class="ld"><code>           -k graceful-stop (code=exited, status=1/FAILURE)</code></span></span></pre>
+                     </div>
+                     
+                     <p>The ID of the process causing the failure is 11026.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Show the verbose version of messages related to process ID 11026:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> journalctl -o verbose _PID=11026</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>MESSAGE=AH00526: Syntax error on line 6 of /etc/apache2/default-server.conf:</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>MESSAGE=Invalid command 'DocumenttRoot', perhaps misspelled or defined by a module</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Fix the typo inside <code class="filename">/etc/apache2/default-server.conf</code>, start the apache2 service, and print its status:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start apache2 &amp;&amp; systemctl status apache2</code></span></span>
+<span class="line"><span class="ld"><code>apache2.service - The Apache Webserver</code></span></span>
+<span class="line"><span class="ld"><code>   Loaded: loaded (/usr/lib/systemd/system/apache2.service; disabled)</code></span></span>
+<span class="line"><span class="ld"><code>   Active: active (running) since Tue 2014-06-03 11:26:24 CEST; 4ms ago</code></span></span>
+<span class="line"><span class="ld"><code>  Process: 11026 ExecStop=/usr/sbin/start_apache2 -D SYSTEMD -DFOREGROUND</code></span></span>
+<span class="line"><span class="ld"><code>           -k graceful-stop (code=exited, status=1/FAILURE)</code></span></span>
+<span class="line"><span class="ld"><code> Main PID: 11263 (httpd2-prefork)</code></span></span>
+<span class="line"><span class="ld"><code>   Status: "Processing requests..."</code></span></span>
+<span class="line"><span class="ld"><code>   CGroup: /system.slice/apache2.service</code></span></span>
+<span class="line"><span class="ld"><code>           ├─11263 /usr/sbin/httpd2-prefork -f /etc/apache2/httpd.conf -D [...]</code></span></span>
+<span class="line"><span class="ld"><code>           ├─11280 /usr/sbin/httpd2-prefork -f /etc/apache2/httpd.conf -D [...]</code></span></span>
+<span class="line"><span class="ld"><code>           ├─11281 /usr/sbin/httpd2-prefork -f /etc/apache2/httpd.conf -D [...]</code></span></span>
+<span class="line"><span class="ld"><code>           ├─11282 /usr/sbin/httpd2-prefork -f /etc/apache2/httpd.conf -D [...]</code></span></span>
+<span class="line"><span class="ld"><code>           ├─11283 /usr/sbin/httpd2-prefork -f /etc/apache2/httpd.conf -D [...]</code></span></span>
+<span class="line"><span class="ld"><code>           └─11285 /usr/sbin/httpd2-prefork -f /etc/apache2/httpd.conf -D [...]</code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich02.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">21<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Filtering the journal output</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">21<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Journald configuration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

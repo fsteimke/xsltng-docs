@@ -1,0 +1,459 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>34.6.&nbsp;Profile names, flags, paths, and globbing</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch04s05.html" rel="prev">
+      <link href="bk06partvch04s07.html" rel="next">
+      <link href="bk06partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="General sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch04.html">Up</a> <a href="bk06partvch04s07.html">Next</a> <a href="bk06partvch04s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="General sect1" db-chunk="bk06partvch04s06.html" db-id="d616951e184917" id="sec-apparmor-profiles-glob">
+            <header>
+               <h2><span class="label">34<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Profile names, flags, paths, and globbing</h2>
+            </header>
+            
+            
+            <p>A profile is attached to a program by specifying a full path to the program's executable.
+               For example, a standard profile (see <a class="xref xref-sect2" href="bk06partvch04s02.html#sec-apparmor-profiles-types-attached">the section called “Standard profiles”</a>), the profile is defined by</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/bin/foo { ... }</code></span></span></pre>
+            </div>
+            
+            <p>The following sections describe several useful techniques that can be applied when
+               naming a profile or putting a profile in the context of other existing ones, or specifying
+               file paths.</p>
+            
+            <p>AppArmor explicitly distinguishes directory path names from path names. Use a trailing
+               <code class="literal">/</code> for any directory path that needs to be explicitly distinguished:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/some/random/example/* r</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Allow read access to files in the <code class="filename">/some/random/example</code> directory.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/some/random/example/ r</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Allow read access to the directory only.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/some/**/ r</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Give read access to any directories below <code class="filename">/some</code> (but not /some/ itself).</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/some/random/example/** r</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Give read access to files and directories under <code class="filename">/some/random/example</code> (but not /some/random/example/ itself).</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/some/random/example/**[^/] r</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Give read access to files under <code class="filename">/some/random/example</code>. Explicitly exclude directories (<code class="literal">[^/]</code>).</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>Globbing (or regular expression matching) is when you modify the directory path using
+               wild cards to include a group of files or subdirectories. File resources can be specified
+               with a globbing syntax similar to that used by popular shells, such as csh, Bash and
+               zsh.</p>
+            
+            <div class="informalobject informaltable" id="sec-apparmor-profiles-glob_informaltable1">
+               <table>
+                  <tbody>
+                     
+                     <tr>
+                        <td class="bleft btop colsep rowsep">
+                           <p><code class="literal">*</code></p>
+                        </td>
+                        <td class="btop colsep rowsep">
+                           <p>Substitutes for any number of any characters, except <code class="literal">/</code>.</p>
+                           <p>Example: An arbitrary number of path elements.</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p><code class="literal">**</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Substitutes for any number of characters, including <code class="literal">/</code>.</p>
+                           <p>Example: An arbitrary number of path elements, including entire directories.</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p><code class="literal">?</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Substitutes for any single character, except <code class="literal">/</code>.</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p><code class="literal">[abc]</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Substitutes for the single character <code class="literal">a</code>, <code class="literal">b</code>, or <code class="literal">c</code>.</p>
+                           <p>Example: a rule that matches <code class="literal">/home[01]/*/.plan</code> allows a program to access <code class="filename">.plan</code> files for users in both <code class="filename">/home0</code> and <code class="filename">/home1</code>.</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p><code class="literal">[a-c]</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Substitutes for the single character <code class="literal">a</code>, <code class="literal">b</code>, or <code class="literal">c</code>.</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p><code class="literal">{ab,cd}</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Expands to one rule to match <code class="literal">ab</code> and one rule to match <code class="literal">cd</code>.</p>
+                           <p>Example: a rule that matches <code class="literal">/{usr,www}/pages/**</code> grants access to Web pages in both <code class="filename">/usr/pages</code> and <code class="filename">/www/pages</code>.</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p><code class="literal">[^a]</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Substitutes for any character except <code class="literal">a</code>.</p>
+                        </td>
+                     </tr>
+                     </tbody>
+               </table>
+            </div>
+            
+            <section class="sect2" id="sec-apparmor-profiles-flags">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Profile flags</h3>
+               </header>
+               
+               
+               <p>Profile flags control the behavior of the related profile. You can add profile flags
+                  to the profile definition by editing it manually, see the following syntax:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/path/to/profiled/binary flags=(list_of_flags) {</code></span></span>
+<span class="line"><span class="ld"><code>  [...]</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>You can use multiple flags separated by a comma ',' or space ' '. There are three
+                  basic types of profile flags: mode, relative, and attach flags.</p>
+               
+               <p><em>Mode</em> flag is <code class="literal">complain</code> (illegal accesses are allowed and logged). If it is omitted, the profile is in <code class="literal">enforce</code> mode (enforces the policy).</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>A more flexible way of setting the whole profile into complain mode is to create a
+                              symbolic link from the profile file inside the <code class="filename">/etc/apparmor.d/force-complain/</code> directory.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ln -s /etc/apparmor.d/bin.ping /etc/apparmor.d/force-complain/bin.ping</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p><em>Relative</em> flags are <code class="literal">chroot_relative</code> (states that the profile is relative to the chroot instead of namespace) or <code class="literal">namespace_relative</code> (the default, with the path being relative to outside the chroot). They are mutually
+                  exclusive.</p>
+               
+               <p><em>Attach</em> flags consist of two pairs of mutually exclusive flags: <code class="literal">attach_disconnected</code> or <code class="literal">no_attach_disconnected</code> (determine if path names resolved to be outside of the namespace are attached to
+                  the root, which means they have the '/' character at the beginning), and <code class="literal">chroot_attach</code> or <code class="literal">chroot_no_attach</code> (control path name generation when in a chroot environment while a file is accessed
+                  that is external to the chroot but within the namespace).</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-glob-variables">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using variables in profiles</h3>
+               </header>
+               
+               
+               <p>AppArmor allows to use variables holding paths in profiles. Use global variables to
+                  make your profiles portable and local variables to create shortcuts for paths.</p>
+               
+               <p>A typical example of when global variables come in handy are network scenarios in
+                  which user home directories are mounted in different locations. Instead of rewriting
+                  paths to home directories in all affected profiles, you only need to change the value
+                  of a variable. Global variables are defined under <code class="filename">/etc/apparmor.d/tunables</code> and need to be made available via an include statement. Find the variable definitions
+                  for this use case (<code class="envar">@{HOME}</code> and <code class="envar">@{HOMEDIRS}</code>) in the <code class="filename">/etc/apparmor.d/tunables/home</code> file.</p>
+               
+               <p>Local variables are defined at the head of a profile. This is useful to provide the
+                  base of for a chrooted path, for example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>@{CHROOT_BASE}=/tmp/foo</code></span></span>
+<span class="line"><span class="ld"><code>/sbin/rsyslogd {</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code># chrooted applications</code></span></span>
+<span class="line"><span class="ld"><code>@{CHROOT_BASE}/var/lib/*/dev/log w,</code></span></span>
+<span class="line"><span class="ld"><code>@{CHROOT_BASE}/var/log/** w,</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>In the following example, while @{HOMEDIRS} lists where all the user home directories
+                  are stored, @{HOME} is a space-separated list of home directories. Later on, @{HOMEDIRS}
+                  is expanded by two new specific places where user home directories are stored.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>@{HOMEDIRS}=/home/</code></span></span>
+<span class="line"><span class="ld"><code>@{HOME}=@{HOMEDIRS}/*/ /root/</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>@{HOMEDIRS}+=/srv/nfs/home/ /mnt/home/</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>With the current AppArmor tools, variables can only be used when manually editing
+                              and maintaining a profile.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-pattern-matching">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Pattern matching</h3>
+               </header>
+               
+               
+               <p>Profile names can contain globbing expressions allowing the profile to match against
+                  multiple binaries.</p>
+               
+               <p>The following example is valid for systems where the <code class="command">foo</code> binary resides either in <code class="filename">/usr/bin</code> or <code class="filename">/bin</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/{usr/,}bin/foo { ... }</code></span></span></pre>
+               </div>
+               
+               <p>In the following example, when matching against the executable <code class="filename">/bin/foo</code>, the <code class="literal">/bin/foo</code> profile is an exact match so it is chosen. For the executable <code class="filename">/bin/fat</code>, the profile <code class="literal">/bin/foo</code> does not match, and because the <code class="literal">/bin/f*</code> profile is more specific (less general) than <code class="literal">/bin/**</code>, the <code class="literal">/bin/f*</code> profile is chosen.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/bin/foo { ... }</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/bin/f*  { ... }</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/bin/**  { ... }</code></span></span></pre>
+               </div>
+               
+               <p>For more information on profile name globbing examples, see the man page of AppArmor,
+                  <code class="command">man 5 apparmor.d,</code>, section <code class="literal">Globbing</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-namespaces">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Namespaces</h3>
+               </header>
+               
+               
+               <p>Namespaces are used to provide different profiles sets. Say one for the system, another
+                  for a chroot environment or container. Namespaces are hierarchical—a namespace can
+                  see its children but a child cannot see its parent. Namespace names start with a colon
+                  <code class="literal">:</code> followed by an alphanumeric string, a trailing colon <code class="literal">:</code> and an optional double slash <code class="literal">//</code>, such as</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>:childNameSpace://</code></span></span></pre>
+               </div>
+               
+               <p>Profiles loaded to a child namespace are prefixed with their namespace name (viewed
+                  from a parent's perspective):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>:childNameSpace://apache</code></span></span></pre>
+               </div>
+               
+               <p>Namespaces can be entered via the <code class="literal">change_profile</code> API, or named profile transitions:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/path/to/executable px -&gt; :childNameSpace://apache</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-naming-attachment">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Profile naming and attachment specification</h3>
+               </header>
+               
+               
+               <p>Profiles can have a name, and an attachment specification. This allows for profiles
+                  with a logical name that can be more meaningful to users/administrators than a profile
+                  name that contains pattern matching (see <a class="xref xref-sect2" href="#sec-apparmor-profiles-pattern-matching">the section called “Pattern matching”</a>). For example, the default profile</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/** { ... }</code></span></span></pre>
+               </div>
+               
+               <p>can be named</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>profile default /** { ... }</code></span></span></pre>
+               </div>
+               
+               <p>Also, a profile with pattern matching can be named. For example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/lib64/firefox*/firefox-*bin { ... }</code></span></span></pre>
+               </div>
+               
+               <p>can be named</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>profile firefox /usr/lib64/firefox*/firefox-*bin { ... }</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-glob-alias">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Alias rules</h3>
+               </header>
+               
+               
+               <p>Alias rules provide an alternative way to manipulate profile path mappings to site
+                  specific layouts. They are an alternative form of path rewriting to using variables,
+                  and are done post variable resolution. The alias rule says to treat rules that have
+                  the same source prefix as if the rules are at target prefix.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>alias /home/ -&gt; /usr/home/</code></span></span></pre>
+               </div>
+               
+               <p>All the rules that have a prefix match to <code class="filename">/home/</code> provide access to <code class="filename">/usr/home/</code>. For example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/home/username/** r,</code></span></span></pre>
+               </div>
+               
+               <p>allows as well access to</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/home/username/** r,</code></span></span></pre>
+               </div>
+               
+               <p>Aliases provide a quick way of remapping rules without the need to rewrite them. They
+                  keep the source path still accessible—in our example, the alias rule keeps the paths
+                  under <code class="filename">/home/</code> still accessible.</p>
+               
+               <p>With the <code class="literal">alias</code> rule, you can point to multiple targets at the same time.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>alias /home/ -&gt; /usr/home/</code></span></span>
+<span class="line"><span class="ld"><code>alias /home/ -&gt; /mnt/home/</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>With the current AppArmor tools, alias rules can only be used when manually editing
+                              and maintaining a profile.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>Insert global alias definitions in the file <code class="filename">/etc/apparmor.d/tunables/alias</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch04s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch04s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">34<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Network access control</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">34<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>File permission access modes</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

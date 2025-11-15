@@ -1,0 +1,259 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;33.&nbsp;Immunizing programs</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch02s05.html" rel="prev">
+      <link href="bk06partvch03s02.html" rel="next">
+      <link href="bk06partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partv.html">Up</a> <a href="bk06partvch03s02.html">Next</a> <a href="bk06partvch02s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partvch03.html" db-id="d616951e183123" id="cha-apparmor-concept" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">33</span><span class="sep">.&nbsp;</span>Immunizing programs</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Effective hardening of a computer system requires minimizing the number of programs
+                  that mediate privilege, then securing the programs as much as possible. With AppArmor,
+                  you need to profile the programs that are exposed to attack in your environment, which
+                  drastically reduces the amount of work required to harden your computer. AppArmor
+                  profiles enforce policies to make sure that programs do what they are supposed to
+                  do, but nothing else.</p>
+               
+               <p>AppArmor provides immunization technologies that protect applications from the inherent
+                  vulnerabilities they possess. After installing AppArmor, setting up AppArmor profiles,
+                  and rebooting the computer, your system becomes immunized because it begins to enforce
+                  the AppArmor security policies. Protecting programs with AppArmor is called <em>immunizing</em>.</p>
+               
+               <p>Administrators should concern themselves with the applications that are vulnerable
+                  to attacks, and generate profiles for these. Hardening a system thus comes down to
+                  building and maintaining the AppArmor profile set and monitoring any policy violations
+                  or exceptions logged by AppArmor's reporting facility.</p>
+               
+               <p>Users should not notice AppArmor. It runs <q>behind the scenes</q> and does not require any user interaction. Performance is not noticeably affected
+                  by AppArmor. If certain activity of the application is not covered by an AppArmor
+                  profile or if some activity of the application is prevented by AppArmor, the administrator
+                  needs to adjust the profile of this application.</p>
+               
+               <p>AppArmor sets up a collection of default application profiles to protect standard
+                  Linux services. To protect other applications, use the AppArmor tools to create profiles
+                  for the applications that you want protected. This chapter introduces the philosophy
+                  of immunizing programs. Proceed to <a class="xref xref-chapter" href="bk06partvch04.html">Chapter&nbsp;<span class="label">34</span>, Profile components and syntax</a>, <a class="xref xref-chapter" href="bk06partvch06.html">Chapter&nbsp;<span class="label">36</span>, Building and managing profiles with YaST</a>, or <a class="xref xref-chapter" href="bk06partvch07.html">Chapter&nbsp;<span class="label">37</span>, Building profiles from the command line</a> if you are ready to build and manage AppArmor profiles.</p>
+               
+               <p>AppArmor provides streamlined access control for network services by specifying which
+                  files each program is allowed to read, write and execute, and which type of network
+                  it is allowed to access. This ensures that each program does what it is supposed to
+                  do, and nothing else. AppArmor quarantines programs to protect the rest of the system
+                  from being damaged by a compromised process.</p>
+               
+               <p>AppArmor is a host intrusion prevention or mandatory access control scheme. Previously,
+                  access control schemes were centered around users because they were built for large
+                  timeshare systems. Alternatively, modern network servers do not permit users to log
+                  in, but instead provide a variety of network services for users (such as Web, mail,
+                  file and print servers). AppArmor controls the access given to network services and
+                  other programs to prevent weaknesses from being exploited.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Background information for AppArmor</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>To get a more in-depth overview of AppArmor and the overall concept behind it, refer
+                              to <a class="xref xref-sect1" href="bk06partvch01s02.html">the section called “Background information on AppArmor profiling”</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="sec-apparmor-concept-tools">
+               <header>
+                  <h2><span class="label">33<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Introducing the AppArmor framework</h2>
+               </header>
+               
+               
+               <p>This section provides a very basic understanding of what is happening <q>behind the scenes</q> (and under the hood of the YaST interface) when you run AppArmor.</p>
+               
+               <p>An AppArmor profile is a plain text file containing path entries and access permissions.
+                  See <a class="xref xref-sect1" href="bk06partvch04.html#sec-apparmor-profiles-parts">the section called “Breaking an AppArmor profile into its parts”</a> for a detailed reference profile. The directives contained in this text file are
+                  then enforced by the AppArmor routines to quarantine the process or program.</p>
+               
+               <p>The following tools interact in the building and enforcement of AppArmor profiles
+                  and policies:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-status</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-status</code> reports various aspects of the current state of the running AppArmor confinement.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-unconfined</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-unconfined</code> detects any application running on your system that listens for network connections
+                           and is not protected by an AppArmor profile. Refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-unconfined">the section called “aa-unconfined—identifying unprotected processes”</a> for detailed information about this tool.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-autodep</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-autodep</code> creates a basic framework of a profile that needs to be fleshed out before it is
+                           put to use in production. The resulting profile is loaded and put into complain mode,
+                           reporting any behavior of the application that is not (yet) covered by AppArmor rules.
+                           Refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-autodep">the section called “aa-autodep—creating approximate profiles”</a> for detailed information about this tool.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-genprof</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-genprof</code> generates a basic profile and asks you to refine this profile by executing the application
+                           and generating log events that need to be taken care of by AppArmor policies. You
+                           are guided through a series of questions to deal with the log events that have been
+                           triggered during the application's execution. After the profile has been generated,
+                           it is loaded and put into enforce mode. Refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-genprof">the section called “aa-genprof—generating profiles”</a> for detailed information about this tool.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-logprof</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-logprof</code> interactively scans and reviews the log entries generated by an application that
+                           is confined by an AppArmor profile in both complain and enforced modes. It assists
+                           you in generating new entries in the profile concerned. Refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-logprof">the section called “aa-logprof—scanning the system log”</a> for detailed information about this tool.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-easyprof</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-easyprof</code> provides an easy-to-use interface for AppArmor profile generation. <code class="command">aa-easyprof</code> supports the use of templates and policy groups to quickly profile an application.
+                           While this tool can help with policy generation, its utility is dependent on the quality
+                           of the templates, policy groups and abstractions used. <code class="command">aa-easyprof</code> may create a profile that is less restricted than creating the profile with <code class="command">aa-genprof</code> and <code class="command">aa-logprof</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-complain</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-complain</code> toggles the mode of an AppArmor profile from enforce to complain. Violations to rules
+                           set in a profile are logged, but the profile is not enforced. Refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-complain">the section called “aa-complain—entering complain or learning mode”</a> for detailed information about this tool.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-enforce</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-enforce</code> toggles the mode of an AppArmor profile from complain to enforce. Violations to rules
+                           set in a profile are logged and not permitted—the profile is enforced. Refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-enforce">the section called “aa-enforce—entering enforce mode”</a> for detailed information about this tool.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-disable</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-disable</code> disables the enforcement mode for one or more AppArmor profiles. This command unloads
+                           the profile from the kernel and prevent it from being loaded on AppArmor start-up.
+                           The <code class="command">aa-enforce</code> and <code class="command">aa-complain</code> utilities may be used to change this behavior.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-exec</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-exec</code> launches a program confined by the specified AppArmor profile and/or namespace. If
+                           both a profile and namespace are specified, the command is confined by the profile
+                           in the new policy namespace. If a namespace is specified, the profile name of the
+                           current confinement is used. If neither a profile or namespace is specified, the command
+                           runs using standard profile attachment—as if run without <code class="command">aa-exec</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">aa-notify</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="command">aa-notify</code> is a handy utility that displays AppArmor notifications in your desktop environment.
+                           You can also configure it to display a summary of notifications for the specified
+                           number of recent days. For more information, see <a class="xref xref-sect3" href="bk06partvch07s07.html#commandline-profiling-summary-aa-notify">the section called “aa-notify”</a>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch02s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partv.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">32<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Updating your profiles</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">33<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Determining programs to immunize</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

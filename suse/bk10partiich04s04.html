@@ -1,0 +1,210 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.4.&nbsp;Saving and restoring the state of a VM Guest</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich04s03.html" rel="prev">
+      <link href="bk10partiich04s05.html" rel="next">
+      <link href="bk10partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich04.html">Up</a> <a href="bk10partiich04s05.html">Next</a> <a href="bk10partiich04s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich04s04.html" db-id="d616951e275485" id="sec-libvirt-manage-save">
+            <header>
+               <h2><span class="label">11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Saving and restoring the state of a VM Guest</h2>
+            </header>
+            
+            
+            <p>Saving a VM Guest preserves the exact state of the guest’s memory. The operation is
+               similar to <em>hibernating</em> a computer. A saved VM Guest can be quickly restored to its previously saved running
+               condition.</p>
+            
+            <p>When saved, the VM Guest is paused, its current memory state is saved to disk, and
+               then the guest is stopped. The operation does not make a copy of any portion of the
+               VM Guest’s virtual disk. The amount of time taken to save the virtual machine depends
+               on the amount of memory allocated. When saved, a VM Guest’s memory is returned to
+               the pool of memory available on the VM Host Server.</p>
+            
+            <p>The restore operation loads a VM Guest’s previously saved memory state file and starts
+               it. The guest is not booted but instead resumed at the point where it was previously
+               saved. The operation is similar to coming out of hibernation.</p>
+            
+            <p>The VM Guest is saved to a state file. Make sure there is enough space on the partition
+               you are going to save to. For an estimation of the file size in megabytes to be expected,
+               issue the following command on the guest:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>free -mh | awk '/^Mem:/ {print $3}'</code></span></span></pre>
+            </div>
+            
+            <div class="admonition warning" id="adm-vm-restore">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Always restore saved guests</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>After using the save operation, do not boot or start the saved VM Guest. Doing so
+                           would cause the machine's virtual disk and the saved memory state to get out of synchronization.
+                           This can result in critical errors when restoring the guest.</p>
+                        
+                        <p>To be able to work with a saved VM Guest again, use the restore operation. If you
+                           used <code class="command">virsh</code> to save a VM Guest, you cannot restore it using Virtual Machine Manager. In this
+                           case, make sure to restore using <code class="command">virsh</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Synchronize VM Guest's time after restoring it</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>If you restore the VM Guest after a long pause (hours) since it was saved, its time
+                           synchronization service, for example, <code class="daemon systemitem">chronyd</code>, may refuse to synchronize its time. In this case, manually synchronize VM Guest's
+                           time. For example, for KVM hosts, you can use the QEMU guest agent and instruct the
+                           guest with the <code class="command">guest-set-time</code>. Refer to <a class="xref xref-chapter" href="bk10partiiich04.html">Chapter&nbsp;<span class="label">22</span>, QEMU guest agent</a> for more details.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Only for VM Guests with disk types <code class="literal">raw</code>, <code class="literal">qcow2</code>
+                           </div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Saving and restoring VM Guests is only possible if the VM Guest is using a virtual
+                           disk of the type <code class="literal">raw</code> (<code class="filename">.img</code>), or <em>qcow2</em>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-libvirt-manage-save-vmm">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Saving/restoring with Virtual Machine Manager</h3>
+               </header>
+               
+               
+               <div class="formalobject procedure" id="sec-libvirt-manage-save-vmm_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Saving a VM Guest</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open a VNC connection window to a VM Guest. Make sure the guest is running.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose <span class="menuchoice"><span class="guimenu">Virtual Machine</span><span class="guimenu">Shutdown</span><span class="guimenu">Save</span></span>.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="formalobject procedure" id="sec-libvirt-manage-save-vmm_proc2">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Restoring a VM Guest</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open a VNC connection window to a VM Guest. Make sure the guest is not running.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose <span class="menuchoice"><span class="guimenu">Virtual Machine</span><span class="guimenu">Restore</span></span>.</p>
+                        
+                        <p>If the VM Guest was previously saved using Virtual Machine Manager, you are not offered
+                           an option to <span class="guimenu">Run</span> the guest. However, note the caveats on machines saved with <code class="command">virsh</code> outlined in <a class="xref xref-warning" href="#adm-vm-restore">Always restore saved guests</a>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-manage-save-virsh">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Saving and restoring with <code class="command">virsh</code>
+                     </h3>
+               </header>
+               
+               
+               <p>Save a running VM Guest with the command <code class="command">virsh</code><code class="option">save</code> and specify the file which it is saved to.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Save the guest named <code class="literal">opensuse13</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh save opensuse13 /virtual/saves/opensuse13.vmsav</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Save the guest with the ID <code class="literal">37</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh save 37 /virtual/saves/opensuse13.vmsave</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>To restore a VM Guest, use <code class="command">virsh</code><code class="option">restore</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh restore /virtual/saves/opensuse13.vmsave</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich04s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich04s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Changing a VM Guest's state: start, stop, pause</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Creating and managing snapshots</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

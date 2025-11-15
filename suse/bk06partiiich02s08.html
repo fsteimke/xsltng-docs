@@ -1,0 +1,396 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>22.8.&nbsp;OpenSSH certificate authentication</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich02s07.html" rel="prev">
+      <link href="bk06partiiich02s09.html" rel="next">
+      <link href="bk06partiiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich02.html">Up</a> <a href="bk06partiiich02s09.html">Next</a> <a href="bk06partiiich02s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich02s08.html" db-id="d616951e176821" id="sec-ssh-certificate-auth">
+            <header>
+               <h2><span class="label">22<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>OpenSSH certificate authentication</h2>
+            </header>
+            
+            
+            <p>OpenSSH introduced certificate authentication in OpenSSH 5.4. Certificate authentication
+               is similar to public key authentication, except hosts and users authenticate to each
+               other with digitally signed encryption certificates instead of encryption keys. Certificate
+               authentication provides central management for server and user certificates, eliminating
+               the need to manually copy user public keys to multiple hosts. It increases security
+               by giving more control to administrators, and less to users.</p>
+            
+            <p>Certificates consist of a public encryption key, a user-defined identity string, zero
+               or more user names or host names, and other options. User and host public keys are
+               signed by a Certificate Authority (CA) private signing key to create an encryption
+               certificate. Users and hosts trust the public CA key, rather than trusting individual
+               user and host public encryption keys.</p>
+            
+            <p>Traditional OpenSSH public key authentication requires copying user public keys to
+               every SSH server they need access to (to the appropriate <code class="filename">~/.ssh/authorized_keys</code> files), and relying on users to verify new SSH server host keys before accepting
+               them (stored in <code class="filename">~/.ssh/known_hosts</code>). This is error-prone and complicated to manage. Another disadvantage is OpenSSH
+               keys never expire. When you need to revoke a particular public key, you have to find
+               and remove all its copies on your network.</p>
+            
+            <p>Automating the whole process (for example, with Ansible) is virtually a necessity.
+               Large organizations, such as Meta (see <a class="link" href="https://engineering.fb.com/2016/09/12/security/scalable-and-secure-access-with-ssh/">https://engineering.fb.com/2016/09/12/security/scalable-and-secure-access-with-ssh/</a>), automate the process completely, so they can revoke and replace certificates, and
+               even certificate authorities, as often as they want without disrupting operations.</p>
+            
+            <p>A prerequisite is the ability to open SSH sessions to all hosts on your network, and
+               perform tasks like editing configuration files and restarting <code class="daemon systemitem">sshd</code>.</p>
+            
+            <p>Setting up an OpenSSH certificate authority involves the following steps:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Set up a secure trusted server to host your certificate authority, for signing host
+                     and user keys. Create a new key pair for signing keys. The private key signs user
+                     and host keys, and the public key is copied to all users who are allowed access to
+                     the server.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Receive and sign host public keys, then distribute the new host certificates to their
+                     respective hosts. Host certificates go in <code class="filename">/etc/ssh</code>, just like host keys.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Receive and sign user public keys, then distribute the new user certificates to their
+                     owners. User certificates go in <code class="filename">~/.ssh</code>, just like user keys.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Edit configuration files on servers and users' machines, and stop and start <code class="daemon systemitem">sshd</code> on hosts as necessary.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Revoke certificates as needed, for example when you suspect a certificate has been
+                     compromised, a user has left your organization, or a server has been retired. Revoking
+                     a certificate is considerably simpler than finding and removing all relevant public
+                     key copies.</p>
+                  </li>
+               </ul>
+            
+            <p>Users and server admins create and protect their own OpenSSH keys. It is safe to freely
+               share public keys. It is safe to transfer the new certificates by insecure methods,
+               such as email, because they require their private keys to validate.</p>
+            
+            <p>SSH certificates follow the OpenPGP standard, rather than SSL/TLS, and that the certificate
+               format is OpenPGP, not X.509.</p>
+            
+            <section class="sect2" id="sec-ssh-certificate-create-signing-keys">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up a new certificate authority</h3>
+               </header>
+               
+               
+               <p>This section describes how to set up a new certificate authority (CA). Give careful
+                  consideration to organizing your CA, to keep it manageable and efficient.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Protect your certificate authority</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>It is important to protect the machine that hosts your certificate authority. Your
+                              CA is literally the key to your entire network. Anyone who gains access to your CA
+                              can create their own certificates and freely access your network resources, or even
+                              compromise your servers and the CA itself. A common practice is to use a dedicated
+                              machine that is started only when you need to sign keys.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>It is a best practice to create one signing key for servers, and another signing key
+                  for clients. If you have a large number of certificates to manage, it can be helpful
+                  to create your CAs for hosts and clients on separate machines. If you prefer using
+                  a single machine, give each CA its own directory. The examples in this section use
+                  <code class="filename">/ca-ssh-hosts</code> and <code class="filename">/ca-ssh-users</code>. The example machine is <em class="replaceable">ca.example.com</em>.</p>
+               
+               <p>If your security policy requires keeping copies of users' and host's public keys,
+                  store them in their own subdirectories, for easier tracking and avoiding key name
+                  collisions.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">RSA signing keys deprecated</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>OpenSSH 8.2, released February 2020, deprecates RSA signing keys. Use Ed25519 or ECDSA.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The following examples create two signing keys, one for signing host keys, and one
+                  for user keys. Give them strong passphrases:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen -t ed25519 -f <em class="replaceable">/ca-ssh-hosts/ca-host-sign-key -C "signing key for host certificates"</em></code></code></span></span>
+<span class="line"><span class="ld"><code>Generating public/private ed25519 key pair.</code></span></span>
+<span class="line"><span class="ld"><code>Enter passphrase (empty for no passphrase):</code></span></span>
+<span class="line"><span class="ld"><code>Enter same passphrase again:</code></span></span>
+<span class="line"><span class="ld"><code>Your identification has been saved in ca-host-sign-key</code></span></span>
+<span class="line"><span class="ld"><code>Your public key has been saved in ca-host-sign-key.pub</code></span></span>
+<span class="line"><span class="ld"><code>The key fingerprint is:</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:STuQ7HgDrPcEa7ybNIW0n6kPbj28X5HN8GgwllBbAt0</code></span></span>
+<span class="line"><span class="ld"><code> signing key for host certificates</code></span></span>
+<span class="line"><span class="ld"><code>The key's randomart image is:</code></span></span>
+<span class="line"><span class="ld"><code>+--[ED25519 256]--+</code></span></span>
+<span class="line"><span class="ld"><code>|      o+o..      |</code></span></span>
+<span class="line"><span class="ld"><code>|   . . o.=E      |</code></span></span>
+<span class="line"><span class="ld"><code>|    = + B .      |</code></span></span>
+<span class="line"><span class="ld"><code>|   + O + = B     |</code></span></span>
+<span class="line"><span class="ld"><code>|  . O * S = +    |</code></span></span>
+<span class="line"><span class="ld"><code>|   o B + o .     |</code></span></span>
+<span class="line"><span class="ld"><code>|    =o=   .      |</code></span></span>
+<span class="line"><span class="ld"><code>|   o.*+  .       |</code></span></span>
+<span class="line"><span class="ld"><code>|   .=.o+.        |</code></span></span>
+<span class="line"><span class="ld"><code>+----[SHA256]-----+</code></span></span></pre>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen -t ed25519 -f <em class="replaceable">/ca-ssh-users/ca-user-sign-key -C "signing key for user certificates"</em></code></code></span></span>
+<span class="line"><span class="ld"><code>Generating public/private ed25519 key pair.</code></span></span>
+<span class="line"><span class="ld"><code>Enter passphrase (empty for no passphrase):</code></span></span>
+<span class="line"><span class="ld"><code>Enter same passphrase again:</code></span></span>
+<span class="line"><span class="ld"><code>Your identification has been saved in ca-user-sign-key</code></span></span>
+<span class="line"><span class="ld"><code>Your public key has been saved in ca-user-sign-key.pub</code></span></span>
+<span class="line"><span class="ld"><code>The key fingerprint is:</code></span></span>
+<span class="line"><span class="ld"><code>SHA256:taYj8tTnjkzgfHRvQ6HTj8a37PY6rwv96V1x+GHRjIk signing key for user certificates</code></span></span>
+<span class="line"><span class="ld"><code>The key's randomart image is:</code></span></span>
+<span class="line"><span class="ld"><code>+--[ED25519 256]--+</code></span></span>
+<span class="line"><span class="ld"><code>|                 |</code></span></span>
+<span class="line"><span class="ld"><code>|             . +.|</code></span></span>
+<span class="line"><span class="ld"><code>|          . E o.o|</code></span></span>
+<span class="line"><span class="ld"><code>|         . + . ..|</code></span></span>
+<span class="line"><span class="ld"><code>|      . S * o .+.|</code></span></span>
+<span class="line"><span class="ld"><code>|     o + + = +..+|</code></span></span>
+<span class="line"><span class="ld"><code>|    . = * . O + o|</code></span></span>
+<span class="line"><span class="ld"><code>|     + = = o =oo+|</code></span></span>
+<span class="line"><span class="ld"><code>|      . o.o  oOX=|</code></span></span>
+<span class="line"><span class="ld"><code>+----[SHA256]-----+</code></span></span></pre>
+               </div>
+               
+               <p>Copy your public user signing key (be sure you are copying the PUBLIC key) to <code class="filename">/etc/ssh</code> on all hosts running SSH servers. Then enter the full path of the public user signing
+                  key to <code class="filename">/etc/ssh/sshd_config</code> on the hosts:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>TrustedUserCAKeys <em class="replaceable">/etc/ssh/ca-user-sign-key.pub</em></code></span></span></pre>
+               </div>
+               
+               <p>Then restart <code class="daemon systemitem">sshd</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-ssh-certificate-create-host-certs">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating host certificates</h3>
+               </header>
+               
+               
+               <p>The following example signs a host public key to create a host certificate for a database
+                  server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen -s <em class="replaceable">/ca-ssh-hosts/ca-host-sign-key</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code>   <code class="command">-n <em class="replaceable">venus,venus.example.com</em> -I <em class="replaceable">"db-server host cert"</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code>   <code class="command">-h -V +4w <em class="replaceable">/etc/ssh/ssh_host_ed25519_key.pub</em></code></code></span></span>
+<span class="line"><span class="ld"><code>Enter passphrase:</code></span></span>
+<span class="line"><span class="ld"><code>Signed host key /etc/ssh/ssh_host_ed25519_key-cert.pub: id</code></span></span>
+<span class="line"><span class="ld"><code>"db-server host cert" serial 0 for venus,venus.example.com</code></span></span>
+<span class="line"><span class="ld"><code>valid from 2022-08-08T14:20:00 to 2022-09-05T15:21:19</code></span></span></pre>
+               </div>
+               
+               <p>If there is more than one host key on a server, sign them all.</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><code class="option">-s</code> is your private signing key.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="option">-n</code> is your list of principals. For host certificates, the principals are the machine's
+                        host name and fully qualified domain name.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="option">-I</code> is the identity string. This is any comment or description you want. The string is
+                        logged, to help you quickly find relevant log entries.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="option">-h</code> creates a host certificate.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="option">-V</code> sets the expiration date for the certificate. In the example, the certificate expires
+                        in four weeks. (See the "-V validity_interval" section of <code class="command">man 1 ssh-keygen</code> for allowed time formats.)</p>
+                     </li>
+                  </ul>
+               
+               <p>Verify that your new certificate is built the way you want:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">ssh-keygen -Lf /etc/ssh/ssh_host_ed25519_key-cert.pub</code></code></span></span>
+<span class="line"><span class="ld"><code> /etc/ssh/ssh_host_ed25519_key-cert.pub:</code></span></span>
+<span class="line"><span class="ld"><code>        Type: ssh-ed25519-cert-v01@openssh.com host certificate</code></span></span>
+<span class="line"><span class="ld"><code>        Public key: ED25519-CERT SHA256:/</code></span></span>
+<span class="line"><span class="ld"><code>         U7C+qABXYyuvueUuhFKzzVINq3d7IULRLwBstvVC+Q</code></span></span>
+<span class="line"><span class="ld"><code>        Signing CA: ED25519 SHA256:</code></span></span>
+<span class="line"><span class="ld"><code>         STuQ7HgDrPcEa7ybNIW0n6kPbj28X5HN8GgwllBbAt0 (using ssh-ed25519)</code></span></span>
+<span class="line"><span class="ld"><code>        Key ID: "db-server host cert"</code></span></span>
+<span class="line"><span class="ld"><code>        Serial: 0</code></span></span>
+<span class="line"><span class="ld"><code>        Valid: from 2022-08-08T14:20:00 to 2022-09-05T15:21:19</code></span></span>
+<span class="line"><span class="ld"><code>        Principals:</code></span></span>
+<span class="line"><span class="ld"><code>                venus</code></span></span>
+<span class="line"><span class="ld"><code>                venus.example.com</code></span></span>
+<span class="line"><span class="ld"><code>        Critical Options: (none)</code></span></span>
+<span class="line"><span class="ld"><code>        Extensions: (none)</code></span></span></pre>
+               </div>
+               
+               <p>Add the full path of the new host certificate to <code class="filename">/etc/ssh/sshd_config</code>, to make it available to clients:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>HostCertificate <em class="replaceable">/etc/ssh/ssh_host_ed25519_key-cert.pub</em></code></span></span></pre>
+               </div>
+               
+               <p>Restart <code class="daemon systemitem">sshd</code> to load your changes:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl restart sshd.service</code></code></span></span></pre>
+               </div>
+               
+               <p>See <a class="xref xref-sect2" href="#sec-ssh-certificate-user-config">the section called “CA configuration for users”</a> to learn how to configure clients to accept host certificates.</p>
+               </section>
+            
+            <section class="sect2" id="sec-ssh-certificate-user-config">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>CA configuration for users</h3>
+               </header>
+               
+               
+               <p>The following example shows how to configure clients to trust your CA rather than
+                  individual keys. The example grants access to a single server. This entry must be
+                  on a single unbroken line in your users' <code class="filename">~/.ssh/known_hosts</code> files. Move the original <code class="filename">~/.ssh/known_hosts</code> file, and create a new file that contains only the CA configuration. Or, create a
+                  global configuration in <code class="filename">/etc/ssh/ssh_known_hosts</code>, which has the advantage of being un-editable by unprivileged users:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>@cert-authority db,db.example.com ssh-ed25519</code></span></span>
+<span class="line"><span class="ld"><code> AAAAC3NzaC1lZDI1NTE5AAAAIH1pF6DN4BdsfUKWuyiGt/leCvuZ/fPu</code></span></span>
+<span class="line"><span class="ld"><code> YxY7+4V68Fz0 signing key for user certificates</code></span></span></pre>
+               </div>
+               
+               <p>List each server the user is allowed to access in a comma-delimited list, for example
+                  <code class="literal"><em class="replaceable">venus,venus.example.com,saturn,saturn.example.com</em></code>. You may also grant access to all servers in domains with wildcards, for example
+                  <code class="literal">*.example.com,*.example2.com</code>.</p>
+               
+               <p>Try connecting to the server. You should be prompted for the password of the remote
+                  account, without being prompted to verify the host certificate.</p>
+               </section>
+            
+            <section class="sect2" id="sec-ssh-certificate-user-certs">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>8<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Creating user certificates</h3>
+               </header>
+               
+               
+               <p>Sign the user's public key:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ssh-keygen <em class="replaceable">/ca-ssh-hosts/ca-user-sign-key -I "suzanne's cert" -n suzanne -V +52w user-key.pub</em></code></code></span></span>
+<span class="line"><span class="ld"><code> Signed user key .ssh/ed25519key-cert.pub: id "suzanne's cert" serial 0</code></span></span>
+<span class="line"><span class="ld"><code> for suzanne valid from 2022-09-14T12:57:00 to 2023-09-13T12:58:21</code></span></span></pre>
+               </div>
+               
+               <p>The principal on user certificates is always the username. Store the user's certificate
+                  in <code class="filename">~/.ssh</code> on the user's machine.</p>
+               
+               <p>User certificates replace the <code class="filename">~/.ssh/authorized_keys</code> files. Remove this file from a user account on the remote machine, then try opening
+                  an SSH session to that account. You should be able to log in without being prompted
+                  for a password. (Remember, the server should have a <code class="literal">TrustedUserCAKeys /etc/ssh/<em class="replaceable">ca-user-sign-key.pub</em></code> line in its <code class="filename">/etc/ssh/sshd_config</code> file, so that the server knows to trust your certificate authority.)</p>
+               
+               <p>Additionally, look for <code class="literal">Accepted publickey for <em class="replaceable">suzanne</em></code> messages in your log files.</p>
+               </section>
+            
+            <section class="sect2" id="sec-ssh-certificate-revoke-host-keys">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>8<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Revoking host keys</h3>
+               </header>
+               
+               
+               <p>When you need to revoke a certificate because a server has been compromised or retired,
+                  add the certificate's corresponding public key to a file on every client, for example
+                  <code class="filename">/etc/ssh/revoked_keys</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ssh-ed25519-cert-v01@openssh.com</code></span></span>
+<span class="line"><span class="ld"><code>    AAAAIHNzaC1lZDI1NTE5LWNlcnQtdjAxQG9wZW5zc2guY29tAAAAIK6hyvFAhFI+0hkKehF/</code></span></span>
+<span class="line"><span class="ld"><code>    506fD1VdcW29ykfFJn1CPK9lAAAAIAawaXbbEFiQOAe5LGclrCHSLWbEeUauK5+CAuhTJyz0</code></span></span>
+<span class="line"><span class="ld"><code>    AAAAAAAAAAAAAAACAAAAE2RiLXNlcnZlciBob3N0IGNlcnQAAAAeAAAABXZlbnVzAAAAEXZl</code></span></span>
+<span class="line"><span class="ld"><code>    bnVzLmV4YW1wbGUuY29tAAAAAGMabhQAAAAAYz9YgQAAAAAAAAAAAAAAAAAAADMAAAALc3No</code></span></span>
+<span class="line"><span class="ld"><code>    LWVkMjU1MTkAAAAgfWkXoM3gF2x9Qpa7KIa3+V4K+5n98+5jFjv7hXrwXPQAAABTAAAAC3Nz</code></span></span>
+<span class="line"><span class="ld"><code>    aC1lZDI1NTE5AAAAQI+mbJsQjt/9bLiURse8DF3yTa6Yk3HpoE2uf9FW/</code></span></span>
+<span class="line"><span class="ld"><code>    KeLsw2wPeDv0d6jv49Wgr5T3xHYPf+VPJQW35ntFiHTlQg= root@db</code></span></span></pre>
+               </div>
+               
+               <p>This file must be named in <code class="filename">/etc/ssh/sshd_config</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>RevokedKeys /etc/ssh/revoked_keys</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich02s07.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich02.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich02s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">22<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Passphrase-less public key authentication</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Automated public key logins with gnome-keyring</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

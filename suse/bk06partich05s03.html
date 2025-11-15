@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.3.&nbsp;How Kerberos works</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich05s02.html" rel="prev">
+      <link href="bk06partich05s04.html" rel="next">
+      <link href="bk06partich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich05.html">Up</a> <a href="bk06partich05s04.html">Next</a> <a href="bk06partich05s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich05s03.html" db-id="d616951e161930" id="sec-security-kerberos-how">
+            <header>
+               <h2><span class="label">6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>How Kerberos works</h2>
+            </header>
+            
+            
+            <p>Kerberos is often called a third-party trusted authentication service, which means
+               all its clients trust Kerberos's judgment of another client's identity. Kerberos keeps
+               a database of all its users and their private keys.</p>
+            
+            <p>To ensure Kerberos is working correctly, run both the authentication and ticket-granting
+               server on a dedicated machine. Make sure that only the administrator can access this
+               machine physically and over the network. Reduce the (networking) services running
+               on it to the absolute minimum—do not even run <code class="daemon systemitem">sshd</code>.</p>
+            
+            <section class="sect2" id="sec-security-kerberos-how-contact">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>First contact</h3>
+               </header>
+               
+               
+               <p>Your first contact with Kerberos is similar to any login procedure at a normal networking
+                  system. Enter your user name. This piece of information and the name of the ticket-granting
+                  service are sent to the authentication server (Kerberos). If the authentication server
+                  knows you, it generates a random session key for further use between your client and
+                  the ticket-granting server. Now the authentication server prepares a ticket for the
+                  ticket-granting server. The ticket contains the following information—all encrypted
+                  with a session key only the authentication server and the ticket-granting server know:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>The names of both, the client and the ticket-granting server</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The current time</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A lifetime assigned to this ticket</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The client's IP address</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The newly generated session key</p>
+                     </li>
+                  </ul>
+               
+               <p>This ticket is then sent back to the client together with the session key, again in
+                  encrypted form, but this time the private key of the client is used. This private
+                  key is only known to Kerberos and the client, because it is derived from your user
+                  password. Now that the client has received this response, you are prompted for your
+                  password. This password is converted into the key that can decrypt the package sent
+                  by the authentication server. The package is <q>unwrapped</q> and password and key are erased from the workstation's memory. As long as the lifetime
+                  given to the ticket used to obtain other tickets does not expire, your workstation
+                  can prove your identity.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-kerberos-how-request">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Requesting a service</h3>
+               </header>
+               
+               
+               <p>To request a service from any server in the network, the client application needs
+                  to prove its identity to the server. Therefore, the application generates an authenticator.
+                  An authenticator consists of the following components:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>The client's principal</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The client's IP address</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The current time</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A checksum (chosen by the client)</p>
+                     </li>
+                  </ul>
+               
+               <p>All this information is encrypted using the session key that the client has already
+                  received for this special server. The authenticator and the ticket for the server
+                  are sent to the server. The server uses its copy of the session key to decrypt the
+                  authenticator, which gives it all the information needed about the client requesting
+                  its service, to compare it to that contained in the ticket. The server checks if the
+                  ticket and the authenticator originate from the same client.</p>
+               
+               <p>Without any security measures implemented on the server side, this stage of the process
+                  would be an ideal target for replay attacks. Someone could try to resend a request
+                  stolen off the net some time before. To prevent this, the server does not accept any
+                  request with a time stamp and ticket received previously. A request with a time stamp
+                  differing too much from the time the request is received is ignored.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-kerberos-how-mutual">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Mutual authentication</h3>
+               </header>
+               
+               
+               <p>Kerberos authentication can be used in both directions. It is not only a question
+                  of the client being the one it claims to be. The server should also be able to authenticate
+                  itself to the client requesting its service. Therefore, it sends an authenticator
+                  itself. It adds one to the checksum it received in the client's authenticator and
+                  encrypts it with the session key, which is shared between it and the client. The client
+                  takes this response as a proof of the server's authenticity and they both start cooperating.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-kerberos-how-tgs">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Ticket granting—contacting all servers</h3>
+               </header>
+               
+               
+               <p>Tickets are designed to be used for one server at a time. Therefore, you need to get
+                  a new ticket each time you request another service. Kerberos implements a mechanism
+                  to obtain tickets for individual servers. This service is called the <q>ticket-granting service</q>. The ticket-granting service is a service (like any other service mentioned before)
+                  and uses the same access protocols that have already been outlined. Any time an application
+                  needs a ticket that has not already been requested, it contacts the ticket-granting
+                  server. This request consists of the following components:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>The requested principal</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The ticket-granting ticket</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>An authenticator</p>
+                     </li>
+                  </ul>
+               
+               <p>Like any other server, the ticket-granting server now checks the ticket-granting ticket
+                  and the authenticator. If they are considered valid, the ticket-granting server builds
+                  a new session key to be used between the original client and the new server. Then
+                  the ticket for the new server is built, containing the following information:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>The client's principal</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The server's principal</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The current time</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The client's IP address</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The newly generated session key</p>
+                     </li>
+                  </ul>
+               
+               <p>The new ticket has a lifetime, which is either the remaining lifetime of the ticket-granting
+                  ticket or the default for the service. The lesser of both values is assigned. The
+                  client receives this ticket and the session key, which are sent by the ticket-granting
+                  service. But this time the answer is encrypted with the session key that came with
+                  the original ticket-granting ticket. The client can decrypt the response without requiring
+                  the user's password when a new service is contacted. Kerberos can thus acquire ticket
+                  after ticket for the client without bothering the user.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich05s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich05.html">Up</a></td>
+                  <td class="next"><a href="bk06partich05s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Kerberos terminology</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>User view of Kerberos</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

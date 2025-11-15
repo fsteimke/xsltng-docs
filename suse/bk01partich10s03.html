@@ -1,0 +1,464 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.3.&nbsp;System rollback by booting from snapshots</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10s02.html" rel="prev">
+      <link href="bk01partich10s04.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s04.html">Next</a> <a href="bk01partich10s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s03.html" db-id="d616951e18571" id="sec-snapper-snapshot-boot">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System rollback by booting from snapshots</h2>
+            </header>
+            
+            
+            <p>The GRUB&nbsp;2 version included on <span class="phrase productname">SUSE Linux Enterprise Server</span> can boot from Btrfs snapshots. Together with Snapper's rollback feature, this allows
+               to recover a misconfigured system. Only snapshots created for the default Snapper
+               configuration (<code class="literal">root</code>) are bootable.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Supported configuration</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p> As of <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span> system rollbacks are only supported if the default subvolume configuration of the
+                           root partition has not been changed.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>When booting a snapshot, the parts of the file system included in the snapshot are
+               mounted read-only; all other file systems and parts that are excluded from snapshots
+               are mounted read-write and can be modified.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Undoing changes compared to rollback</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When working with snapshots to restore data, it is important to know that there are
+                           two fundamentally different scenarios Snapper can handle:</p>
+                        
+                        <dl class="variablelist">
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">Undoing changes</span></dt>
+                              <dd>
+                                 
+                                 <p>When undoing changes as described in <a class="xref xref-sect1" href="bk01partich10s02.html">the section called “Using Snapper to undo changes”</a>, two snapshots are compared and the changes between these two snapshots are reverted.
+                                    Using this method also allows to explicitly exclude selected files from being restored.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">Rollback</span></dt>
+                              <dd>
+                                 
+                                 <p>When doing rollbacks as described in the following, the system is reset to the state
+                                    at which the snapshot was taken.</p>
+                                 </dd>
+                           </div>
+                           </dl>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>To do a rollback from a bootable snapshot, the following requirements must be met.
+               When doing a default installation, the system is set up accordingly.</p>
+            
+            <div class="itemizedlist">
+               <header>
+                  <div class="title">Requirements for a rollback from a bootable snapshot</div>
+               </header>
+               <ul db-mark="bullet">
+                  <li>
+                     
+                     <p>The root file system needs to be Btrfs. Booting from LVM volume snapshots is not supported.</p>
+                     </li>
+                  <li>
+                     
+                     <p>The root file system needs to be on a single device. To check, run <code class="command">sudo /sbin/btrfs filesystem show</code>. It needs to report <code class="literal">Total devices 1</code>. If more than <code class="literal">1</code> device is listed, your setup is not supported.</p>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Directories excluded from snapshots</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Directories that are excluded from snapshots such as <code class="filename">/srv</code> (see <a class="xref xref-sect2" href="bk01partich10.html#snapper-dir-excludes">the section called “Directories that are excluded from snapshots”</a> for a full list) may reside on separate devices.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li>
+                     
+                     <p>The system needs to be bootable via the installed boot loader.</p>
+                     </li>
+                  <li>
+                     
+                     <p>Only contents of the subvolume <code class="filename">/</code> will be rolled back. It is not possible to include other subvolumes.</p>
+                     </li>
+               </ul>
+            </div>
+            
+            <p>To perform a rollback from a bootable snapshot, do as follows:</p>
+            
+            <div class="informalobject procedure" id="sec-snapper-snapshot-boot_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Boot the system. In the boot menu choose <span class="guimenu">Bootable snapshots</span> and select the snapshot you want to boot. The list of snapshots is listed by date—the
+                        most recent snapshot is listed first.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Log in to the system. Carefully check whether everything works as expected. Note that
+                        you cannot write to any directory that is part of the snapshot. Data you write to
+                        other directories will <em>not</em> get lost, regardless of what you do next.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Depending on whether you want to perform the rollback or not, choose your next step:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>If the system is in a state where you do not want to do a rollback, reboot to boot
+                                 into the current system state. You can then choose a different snapshot, or start
+                                 the rescue system.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>To perform the rollback, run</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper rollback</code></span></span></pre>
+                              </div>
+                              
+                              <p>and reboot afterward. On the boot screen, choose the default boot entry to reboot
+                                 into the reinstated system. A snapshot of the file system status before the rollback
+                                 is created. The default subvolume for root will be replaced with a fresh read-write
+                                 snapshot. For details, see <a class="xref xref-sect2" href="#sec-snapper-snapshot-boot-rollback">the section called “Snapshots after rollback”</a>.</p>
+                              
+                              <p>It is useful to add a description for the snapshot with the <code class="option">-d</code> option. For example:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>New file system root since rollback on <em class="replaceable">DATE</em><em class="replaceable">TIME</em></code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Rolling back to a specific installation state</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>If snapshots are not disabled during installation, an initial bootable snapshot is
+                           created at the end of the initial system installation. You can go back to that state
+                           at any time by booting this snapshot. The snapshot can be identified by the description
+                           <code class="literal">after installation</code>.</p>
+                        
+                        <p>A bootable snapshot is also created when starting a system upgrade to a service pack
+                           or a new major release (provided snapshots are not disabled).</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-snapper-snapshot-boot-rollback">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Snapshots after rollback</h3>
+               </header>
+               
+               
+               <p>Before a rollback is performed, a snapshot of the running file system is created.
+                  The description references the ID of the snapshot that was restored in the rollback.</p>
+               
+               <p>Snapshots created by rollbacks receive the value <code class="literal">number</code> for the <code class="literal">Cleanup</code> attribute. The rollback snapshots are therefore automatically deleted when the set
+                  number of snapshots is reached. Refer to <a class="xref xref-sect1" href="bk01partich10s07.html">the section called “Automatic snapshot clean-up”</a> for details. If the snapshot contains important data, extract the data from the snapshot
+                  before it is removed.</p>
+               
+               <section class="sect3" id="sec-snapper-snapshot-boot-rollback-example">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Example of rollback snapshot</h4>
+                  </header>
+                  
+                  
+                  <p>For example, after a fresh installation the following snapshots are available on the
+                     system:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">snapper</code> --iso list</code></span></span>
+<span class="line"><span class="ld"><code>Type   | # |     | Cleanup | Description           | Userdata</code></span></span>
+<span class="line"><span class="ld"><code>-------+---+ ... +---------+-----------------------+--------------</code></span></span>
+<span class="line"><span class="ld"><code>single | 0 |     |         | current               |</code></span></span>
+<span class="line"><span class="ld"><code>single | 1 |     |         | first root filesystem |</code></span></span>
+<span class="line"><span class="ld"><code>single | 2 |     | number  | after installation    | important=yes</code></span></span></pre>
+                  </div>
+                  
+                  <p>After running <code class="command">sudo snapper rollback</code> snapshot <code class="literal">3</code> is created and contains the state of the system before the rollback was executed.
+                     Snapshot <code class="literal">4</code> is the new default Btrfs subvolume and thus the system after a reboot.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">snapper</code> --iso list</code></span></span>
+<span class="line"><span class="ld"><code>Type   | # |     | Cleanup | Description           | Userdata</code></span></span>
+<span class="line"><span class="ld"><code>-------+---+ ... +---------+-----------------------+--------------</code></span></span>
+<span class="line"><span class="ld"><code>single | 0 |     |         | current               |</code></span></span>
+<span class="line"><span class="ld"><code>single | 1 |     | number  | first root filesystem |</code></span></span>
+<span class="line"><span class="ld"><code>single | 2 |     | number  | after installation    | important=yes</code></span></span>
+<span class="line"><span class="ld"><code>single | 3 |     | number  | rollback backup of #1 | important=yes</code></span></span>
+<span class="line"><span class="ld"><code>single | 4 |     |         |                       |</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-snapshot-boot-identify">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Accessing and identifying snapshot boot entries</h3>
+               </header>
+               
+               
+               <p>To boot from a snapshot, reboot your machine and choose <span class="guimenu">Start Bootloader from a read-only snapshot</span>. A screen listing all bootable snapshots opens. The most recent snapshot is listed
+                  first, the oldest last. Use the keys <span class="down keycap">↓</span> and <span class="keycap up">↑</span> to navigate and press <span class="enter keycap">↵</span> to activate the selected snapshot. Activating a snapshot from the boot menu does
+                  not reboot the machine immediately, but rather opens the boot loader of the selected
+                  snapshot.</p>
+               
+               <div class="figure formalobject" id="fig-snapper-snapshot-boot-identify">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/boot_snapshots.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">10<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Boot loader: snapshots</div>
+                  </header>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Booting Xen from a Btrfs snapshot using UEFI currently fails</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Refer to <a class="link" href="https://www.suse.com/support/kb/doc/?id=000020602">https://www.suse.com/support/kb/doc/?id=000020602</a> for more details.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Each snapshot entry in the boot loader follows a naming scheme which makes it possible
+                  to identify it easily:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[*]<span class="co" id="snapper-boot-important">➇</span><em class="replaceable">OS</em><span class="co" id="snapper-boot-os">➈</span> (<em class="replaceable">KERNEL</em><span class="co" id="snapper-boot-kernel">➉</span>,<em class="replaceable">DATE</em><span class="co" id="snapper-boot-date">➊</span>T<em class="replaceable">TIME</em><span class="co" id="snapper-boot-time">➋</span>,<em class="replaceable">DESCRIPTION</em><span class="co" id="snapper-boot-description">➌</span>)</code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#snapper-boot-important">➇</a></dt>
+                     <dd>
+                        
+                        <p>If the snapshot was marked <code class="literal">important</code>, the entry is marked with a <code class="literal">*</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#snapper-boot-os">➈</a></dt>
+                     <dd>
+                        
+                        <p>Operating system label.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#snapper-boot-date">➊</a></dt>
+                     <dd>
+                        
+                        <p>Date in the format <code class="literal">YYYY-MM-DD</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#snapper-boot-time">➋</a></dt>
+                     <dd>
+                        
+                        <p>Time in the format <code class="literal">HH:MM</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#snapper-boot-description">➌</a></dt>
+                     <dd>
+                        
+                        <p>This field contains a description of the snapshot. In case of a manually created snapshot
+                           this is the string created with the option <code class="option">--description</code> or a custom string (see <a class="xref xref-tip" href="#tip-snapper-snapshot-boot-custom-descr">Setting a custom description for boot loader snapshot entries</a>). In case of an automatically created snapshot, it is the tool that was called, for
+                           example <code class="literal">zypp(zypper)</code> or <code class="literal">yast_sw_single</code>. Long descriptions may be truncated, depending on the size of the boot screen.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <div class="admonition tip" id="tip-snapper-snapshot-boot-custom-descr">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Setting a custom description for boot loader snapshot entries</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>It is possible to replace the default string in the description field of a snapshot
+                              with a custom string. This is for example useful if an automatically created description
+                              is not sufficient, or a user-provided description is too long. To set a custom string
+                              <em class="replaceable">STRING</em> for snapshot <em class="replaceable">NUMBER</em>, use the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper modify --userdata "bootloader=<em class="replaceable">STRING</em>" <em class="replaceable">NUMBER</em></code></span></span></pre>
+                           </div>
+                           
+                           <p>The description should be no longer than 25 characters—everything that exceeds this
+                              size will not be readable on the boot screen.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-snapshot-boot-limits">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Limitations</h3>
+               </header>
+               
+               
+               <p>A <em>complete</em> system rollback, restoring the complete system to the identical state as it was in
+                  when a snapshot was taken, is not possible.</p>
+               
+               <section class="sect3" id="sec-snapper-limits-snapshot-boot-excludes">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Directories excluded from snapshots</h4>
+                  </header>
+                  
+                  
+                  <p>Root file system snapshots do not contain all directories. See <a class="xref xref-sect2" href="bk01partich10.html#snapper-dir-excludes">the section called “Directories that are excluded from snapshots”</a> for details and reasons. As a general consequence, data from these directories is
+                     not restored, resulting in the following limitations.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Add-ons and third-party software may be unusable after a rollback</span></dt>
+                        <dd>
+                           
+                           <p>Applications and add-ons installing data in subvolumes excluded from the snapshot,
+                              such as <code class="filename">/opt</code>, may not work after a rollback if other parts of the application data are also installed
+                              on subvolumes included in the snapshot. Re-install the application or the add-on to
+                              solve this problem.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">File access problems</span></dt>
+                        <dd>
+                           
+                           <p>If an application had changed file permissions and/or ownership in between snapshot
+                              and current system, the application may not be able to access these files. Reset permissions
+                              and/or ownership for the affected files after the rollback.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Incompatible data formats</span></dt>
+                        <dd>
+                           
+                           <p>If a service or an application has established a new data format in between snapshot
+                              and current system, the application may not be able to read the affected data files
+                              after a rollback.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Subvolumes with a mixture of code and data</span></dt>
+                        <dd>
+                           
+                           <p>Subvolumes like <code class="filename">/srv</code> may contain a mixture of code and data. A rollback may result in non-functional code.
+                              A downgrade of the PHP version, for example, may result in broken PHP scripts for
+                              the Web server.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">User data</span></dt>
+                        <dd>
+                           
+                           <p>If a rollback removes users from the system, data that is owned by these users in
+                              directories excluded from the snapshot, is not removed. If a user with the same user
+                              ID is created, this user will inherit the files. Use a tool like <code class="command">find</code> to locate and remove orphaned files.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-snapper-limits-snapshot-boot-grub">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>No rollback of boot loader data</h4>
+                  </header>
+                  
+                  
+                  <p>A rollback of the boot loader is not possible, since all <q>stages</q> of the boot loader must fit together. This cannot be guaranteed when doing rollbacks
+                     of <code class="filename">/boot</code>.</p>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using Snapper to undo changes</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Enabling Snapper in user home directories</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

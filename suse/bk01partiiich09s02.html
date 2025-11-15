@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>28.2.&nbsp;Adding and removing kernel modules</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich09.html" rel="prev">
+      <link href="bk01partiiich10.html" rel="next">
+      <link href="bk01partiiich09.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich09.html">Up</a> <a href="bk01partiiich10.html">Next</a> <a href="bk01partiiich09.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich09s02.html" db-id="d616951e47810" id="sec-mod-modprobe">
+            <header>
+               <h2><span class="label">28<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Adding and removing kernel modules</h2>
+            </header>
+            
+            
+            <p>While it is possible to use <code class="systemitem">insmod</code> and <code class="systemitem">rmmod</code> to add and remove kernel modules, it is recommended to use the <code class="systemitem">modprobe</code> tool instead. <code class="systemitem">modprobe</code> offers several important advantages, including automatic dependency resolution and
+               blacklisting.</p>
+            
+            <p>When used without any parameters, the <code class="systemitem">modprobe</code> command installs a specified kernel module. <code class="systemitem">modprobe</code> must be run with root privileges:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> modprobe acpi</code></span></span></pre>
+            </div>
+            
+            <p>To remove a kernel module, use the <code class="command">-r</code> parameter:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> modprobe -r acpi</code></span></span></pre>
+            </div>
+            
+            <section class="sect2" id="sec-mod-modprobe-d">
+               <header>
+                  <h3><span class="label">28<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Loading kernel modules automatically on boot</h3>
+               </header>
+               
+               
+               <p>Instead of loading kernel modules manually, you can load them automatically during
+                  the boot process using the <code class="systemitem">systemd-modules-load.service</code> service. To enable a kernel module, add a <code class="filename">.conf</code> file to the <code class="filename">/etc/modules-load.d/</code> directory. It is good practice to give the configuration file the same name as the
+                  module, for example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/etc/modules-load.d/rt2800usb.conf</code></span></span></pre>
+               </div>
+               
+               <p>The configuration file must contain the name of the desired kernel module (for example,
+                  <code class="literal">rt2800usb</code>).</p>
+               
+               <p>The described technique allows you to load kernel modules without any parameters.
+                  If you need to load a kernel module with specific options, add a configuration file
+                  to the <code class="filename">/etc/modprobe.d/</code> directory instead. The file must have the <code class="filename">.conf</code> extension. The name of the file should adhere to the following naming convention:
+                  <code class="literal">priority-modulename.conf</code>, for example: <code class="filename">50-thinkfan.conf</code>. The configuration file must contain the name of the kernel module and the desired
+                  parameters. You can use the example command below to create a configuration file containing
+                  the name of the kernel module and its parameters:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>echo "options thinkpad_acpi fan_control=1" | sudo tee /etc/modprobe.d/thinkfan.conf</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Loading kernel modules</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Most kernel modules are loaded by the system automatically when a device is detected
+                              or user space requests specific functionality. Thus, adding modules manually to <code class="filename">/etc/modules-load.d/</code> is rarely required.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-mod-modprobe-blacklist">
+               <header>
+                  <h3><span class="label">28<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Blacklisting kernel modules with modprobe</h3>
+               </header>
+               
+               
+               <p>Blacklisting a kernel module prevents it from loading during the boot process. This
+                  can be useful when you want to disable a module that you suspect is causing problems
+                  on your system. You can still load blacklisted kernel modules manually using the <code class="systemitem">insmod</code> or <code class="systemitem">modprobe</code> tools.</p>
+               
+               <p>To blacklist a module, create a file <code class="filename">/etc/modprobe.d/60-blacklist-<em class="replaceable">MODULE_NAME</em>.conf</code> with the following content:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist <em class="replaceable">MODULE_NAME</em></code></span></span></pre>
+               </div>
+               
+               <p>Run the <code class="command">dracut</code> command as root to generate a new <code class="systemitem">initrd</code> image, then reboot your machine (replace <em class="replaceable">NAME</em> with the name of the current initrd and <em class="replaceable">KERNELVERSION</em> with the currently running kernel):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>su</code></span></span>
+<span class="line"><span class="ld"><code>echo "blacklist nouveau" &gt;&gt; /etc/modprobe.d/60-blacklist-nouveau.conf</code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/dracut --logfile /var/log/YaST2/mkinitrd.log --force /boot/$initrd-<em class="replaceable">NAME</em> $<em class="replaceable">KERNELVERSION</em></code></span></span>
+<span class="line"><span class="ld"><code>reboot</code></span></span></pre>
+               </div>
+               
+               <p>To disable a kernel module temporarily only, blacklist it on-the-fly during the boot.
+                  To do this, press the <span class="keycap">E</span> key when you see the boot screen. This drops you into a minimal editor that allows
+                  you to modify boot parameters. Locate the line that looks as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>linux /boot/vmlinuz...splash= silent quiet showopts</code></span></span></pre>
+               </div>
+               
+               <p>Add the <code class="command">modprobe.blacklist=<em class="replaceable">MODULE_NAME</em></code> command to the end of the line. For example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>linux /boot/vmlinuz...splash= silent quiet showopts modprobe.blacklist=nouveau</code></span></span></pre>
+               </div>
+               
+               <p>Press <span class="keycap">F10</span> or <span class="keycombo"><span class="control keycap">Ctrl</span><span class="keycap">X</span></span> to boot with the specified configuration.</p>
+               
+               <p>To blacklist a kernel module permanently via GRUB, open the <code class="filename">/etc/default/grub</code> file for editing, and add the <code class="command">modprobe.blacklist=<em class="replaceable">MODULE_NAME</em></code> option to the <code class="command">GRUB_CMDLINE_LINUX</code> command. Then run the <code class="command">sudo grub2-mkconfig -o /boot/grub2/grub.cfg</code> command to enable the changes.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich09.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich09.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">28</span><span class="sep">.&nbsp;</span>Managing kernel modules</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">29</span><span class="sep">.&nbsp;</span>Dynamic kernel device management with <code class="service systemitem">udev</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

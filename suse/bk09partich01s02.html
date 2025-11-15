@@ -1,0 +1,1125 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>1.2.&nbsp;Btrfs</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich01.html" rel="prev">
+      <link href="bk09partich01s03.html" rel="next">
+      <link href="bk09partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich01.html">Up</a> <a href="bk09partich01s03.html">Next</a> <a href="bk09partich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich01s02.html" db-id="d616951e233499" id="sec-filesystems-major-btrfs">
+            <header>
+               <h2><span class="label">1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Btrfs</h2>
+            </header>
+            
+            
+            <p>Btrfs is a copy-on-write (COW) file system developed by Chris Mason. It is based on
+               COW-friendly B-trees developed by Ohad Rodeh. Btrfs is a logging-style file system.
+               Instead of journaling the block changes, it writes them in a new location, then links
+               the change in. Until the last write, the new changes are not committed.</p>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-features">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Key features</h3>
+               </header>
+               
+               
+               <p>Btrfs provides fault tolerance, repair, and easy management features, such as the
+                  following:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Writable snapshots that allow you to easily roll back your system if needed after
+                        applying updates, or to back up files.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Subvolume support: Btrfs creates a default subvolume in its assigned pool of space.
+                        It allows you to create additional subvolumes that act as individual file systems
+                        within the same pool of space. The number of subvolumes is limited only by the space
+                        allocated to the pool.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The online check and repair functionality <code class="command">scrub</code> is available as part of the Btrfs command line tools. It verifies the integrity of
+                        data and metadata, assuming the tree structure is fine. You can run scrub periodically
+                        on a mounted file system; it runs as a background process during normal operation.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Different RAID levels for metadata and user data.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Different checksums for metadata and user data to improve error detection.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Integration with Linux Logical Volume Manager (LVM) storage objects.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Integration with the YaST Partitioner and AutoYaST on <span class="phrase productname">SUSE Linux Enterprise Server</span>. This also includes creating a Btrfs file system on Multiple Devices (MD) and Device
+                        Mapper (DM) storage configurations.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Offline migration from existing Ext2, Ext3, and Ext4 file systems.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Boot loader support for <code class="filename">/boot</code>, allowing to boot from a Btrfs partition.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Multi-volume Btrfs is supported in RAID0, RAID1, and RAID10 profiles in <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span>. Higher RAID levels are not supported yet, but might be enabled with a future service
+                        pack.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Use Btrfs commands to set up transparent compression.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-suse">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The root file system setup on <span class="phrase productname">SUSE Linux Enterprise Server</span>
+                     </h3>
+               </header>
+               
+               
+               <p>By default, <span class="phrase productname">SUSE Linux Enterprise Server</span> is set up using Btrfs and snapshots for the root partition. Snapshots allow you to
+                  easily roll back your system if needed after applying updates, or to back up files.
+                  Snapshots can easily be managed with the SUSE Snapper infrastructure as explained
+                  in <a class="xref xref-chapter" href="bk01partich10.html">Chapter&nbsp;<span class="label">10</span>, System recovery and snapshot management with Snapper</a>. For general information about the SUSE Snapper project, see the Snapper Portal wiki
+                  at OpenSUSE.org (<a class="link" href="http://snapper.io">http://snapper.io</a>).</p>
+               
+               <p>When using a snapshot to roll back the system, it must be ensured that data such as
+                  user's home directories, Web and FTP server contents or log files do not get lost
+                  or overwritten during a roll back. This is achieved by using Btrfs subvolumes on the
+                  root file system. Subvolumes can be excluded from snapshots. The default root file
+                  system setup on <span class="phrase productname">SUSE Linux Enterprise Server</span> as proposed by YaST during the installation contains the following subvolumes. They
+                  are excluded from snapshots for the reasons given below.</p>
+               
+               <dl class="long-terms variablelist" lang="">
+                  
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/boot/grub2/i386-pc</code>, <code class="filename">/boot/grub2/x86_64-efi</code>, <code class="filename">/boot/grub2/powerpc-ieee1275</code>, <code class="filename">/boot/grub2/s390x-emu</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>A rollback of the boot loader configuration is not supported. The directories listed
+                           above are architecture-specific. The first two directories are present on AMD64/Intel
+                           64 machines, the latter two on IBM POWER and on IBM&nbsp;Z, respectively.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/home</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>If <code class="filename">/home</code> does not reside on a separate partition, it is excluded to avoid data loss on rollbacks.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/opt</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Third-party products usually get installed to <code class="filename">/opt</code>. It is excluded to avoid uninstalling these applications on rollbacks.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/srv</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Contains data for Web and FTP servers. It is excluded to avoid data loss on rollbacks.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/tmp</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>All directories containing temporary files and caches are excluded from snapshots.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/usr/local</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This directory is used when manually installing software. It is excluded to avoid
+                           uninstalling these installations on rollbacks.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/var</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This directory contains many variable files, including logs, temporary caches, third
+                           party products in <code class="filename">/var/opt</code>, and is the default location for virtual machine images and databases. Therefore
+                           this subvolume is created to exclude all of this variable data from snapshots and
+                           has Copy-On-Write disabled.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Support for rollbacks</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Rollbacks are only supported by SUSE if you do not remove any of the preconfigured
+                              subvolumes. You may, however, add subvolumes using the YaST Partitioner.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-filesystems-major-btrfs-compress">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Mounting compressed Btrfs file systems</h4>
+                  </header>
+                  
+                  
+                  <p>The Btrfs file system supports transparent compression. While enabled, Btrfs compresses
+                     file data when written and decompresses file data when read.</p>
+                  
+                  <p>Use the <code class="option">compress</code> or <code class="option">compress-force</code> mount option and select the compression algorithm, <code class="literal">zstd</code>, <code class="literal">lzo</code>, or <code class="literal">zlib</code> (the default). zlib compression has a higher compression ratio while lzo is faster
+                     and takes less CPU load. The zstd algorithm offers a modern compromise, with performance
+                     close to lzo and compression ratios similar to zlib.</p>
+                  
+                  <p>For example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>mount -o compress=zstd /dev/sdx /mnt</code></span></span></pre>
+                  </div>
+                  
+                  <p>In case you create a file, write to it, and the compressed result is greater or equal
+                     to the uncompressed size, Btrfs will skip compression for future write operations
+                     forever for this file. If you do not like this behavior, use the <code class="option">compress-force</code> option. This can be useful for files that have some initial non-compressible data.</p>
+                  
+                  <p>Note, compression takes effect for new files only. Files that were written without
+                     compression are not compressed when the file system is mounted with the <code class="option">compress</code> or <code class="option">compress-force</code> option. Furthermore, files with the <code class="option">nodatacow</code> attribute never get their extents compressed:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">chattr</code> +C <em class="replaceable">FILE</em><span class="prompt root">#</span><code class="command">mount</code> -o nodatacow  /dev/sdx /mnt</code></span></span></pre>
+                  </div>
+                  
+                  <p>In regard to encryption, this is independent from any compression. After you have
+                     written some data to this partition, print the details:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs filesystem show /mnt</code></span></span>
+<span class="line"><span class="ld"><code>btrfs filesystem show /mnt</code></span></span>
+<span class="line"><span class="ld"><code>Label: 'Test-Btrfs'  uuid: 62f0c378-e93e-4aa1-9532-93c6b780749d</code></span></span>
+<span class="line"><span class="ld"><code>        Total devices 1 FS bytes used 3.22MiB</code></span></span>
+<span class="line"><span class="ld"><code>      devid    1 size 2.00GiB used 240.62MiB path /dev/sdb1</code></span></span></pre>
+                  </div>
+                  
+                  <p>If you want this to be permanent, add the <code class="option">compress</code> or <code class="option">compress-force</code> option into the <code class="filename">/etc/fstab</code> configuration file. For example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>UUID=1a2b3c4d /home btrfs subvol=@/home,<strong class="strong">compress</strong> 0 0</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-filesystems-major-btrfs-suse-mount">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Mounting subvolumes</h4>
+                  </header>
+                  
+                  
+                  <p>A system rollback from a snapshot on <span class="phrase productname">SUSE Linux Enterprise Server</span> is performed by booting from the snapshot first. This allows you to check the snapshot
+                     while running before doing the rollback. Being able to boot from snapshots is achieved
+                     by mounting the subvolumes (which would normally not be necessary).</p>
+                  
+                  <p>In addition to the subvolumes listed in <a class="xref xref-sect2" href="#sec-filesystems-major-btrfs-suse">the section called “The root file system setup on <span class="phrase productname">SUSE Linux Enterprise Server</span>
+                        ”</a> a volume named <code class="literal">@</code> exists. This is the default subvolume that will be mounted as the root partition
+                     (<code class="filename">/</code>). The other subvolumes will be mounted into this volume.</p>
+                  
+                  <p>When booting from a snapshot, not the <code class="literal">@</code> subvolume will be used, but rather the snapshot. The parts of the file system included
+                     in the snapshot will be mounted read-only as <code class="filename">/</code>. The other subvolumes will be mounted writable into the snapshot. This state is temporary
+                     by default: the previous configuration will be restored with the next reboot. To make
+                     it permanent, execute the <code class="command">snapper rollback</code> command. This will make the snapshot that is currently booted the new <em>default</em> subvolume, which will be used after a reboot.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-filesystems-major-btrfs-suse-space">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Checking for free space</h4>
+                  </header>
+                  
+                  
+                  
+                  <p>File system usage is usually checked by running the <code class="command">df</code> command. On a Btrfs file system, the output of <code class="command">df</code> can be misleading, because in addition to the space the raw data allocates, a Btrfs
+                     file system also allocates and uses space for metadata.</p>
+                  
+                  <p>Consequently a Btrfs file system may report being out of space even though it seems
+                     that plenty of space is still available. In that case, all space allocated for the
+                     metadata is used up. Use the following commands to check for used and available space
+                     on a Btrfs file system:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">btrfs filesystem show</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs filesystem show /</code></span></span>
+<span class="line"><span class="ld"><code>Label: 'ROOT'  uuid: 52011c5e-5711-42d8-8c50-718a005ec4b3</code></span></span>
+<span class="line"><span class="ld"><code>        Total devices 1 FS bytes used 10.02GiB</code></span></span>
+<span class="line"><span class="ld"><code>        devid    1 size 20.02GiB used 13.78GiB path /dev/sda3</code></span></span></pre>
+                           </div>
+                           
+                           <p>Shows the total size of the file system and its usage. If these two values in the
+                              last line match, all space on the file system has been allocated.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">btrfs filesystem df</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs filesystem df /</code></span></span>
+<span class="line"><span class="ld"><code>Data, single: total=13.00GiB, used=9.61GiB</code></span></span>
+<span class="line"><span class="ld"><code>System, single: total=32.00MiB, used=16.00KiB</code></span></span>
+<span class="line"><span class="ld"><code>Metadata, single: total=768.00MiB, used=421.36MiB</code></span></span>
+<span class="line"><span class="ld"><code>GlobalReserve, single: total=144.00MiB, used=0.00B</code></span></span></pre>
+                           </div>
+                           
+                           <p>Shows values for allocated (<code class="literal">total</code>) and used space of the file system. If the values for <code class="literal">total</code> and <code class="literal">used</code> for the metadata are almost equal, all space for metadata has been allocated.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">btrfs filesystem usage</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs filesystem usage /</code></span></span>
+<span class="line"><span class="ld"><code>Overall:</code></span></span>
+<span class="line"><span class="ld"><code>    Device size:                  20.02GiB</code></span></span>
+<span class="line"><span class="ld"><code>    Device allocated:             13.78GiB</code></span></span>
+<span class="line"><span class="ld"><code>    Device unallocated:            6.24GiB</code></span></span>
+<span class="line"><span class="ld"><code>    Device missing:                  0.00B</code></span></span>
+<span class="line"><span class="ld"><code>    Used:                         10.02GiB</code></span></span>
+<span class="line"><span class="ld"><code>    Free (estimated):              9.63GiB      (min: 9.63GiB)</code></span></span>
+<span class="line"><span class="ld"><code>    Data ratio:                       1.00</code></span></span>
+<span class="line"><span class="ld"><code>    Metadata ratio:                   1.00</code></span></span>
+<span class="line"><span class="ld"><code>    Global reserve:              144.00MiB      (used: 0.00B)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>             Data     Metadata  System</code></span></span>
+<span class="line"><span class="ld"><code>Id Path      single   single    single   Unallocated</code></span></span>
+<span class="line"><span class="ld"><code>-- --------- -------- --------- -------- -----------</code></span></span>
+<span class="line"><span class="ld"><code> 1 /dev/sda3 13.00GiB 768.00MiB 32.00MiB     6.24GiB</code></span></span>
+<span class="line"><span class="ld"><code>-- --------- -------- --------- -------- -----------</code></span></span>
+<span class="line"><span class="ld"><code>   Total     13.00GiB 768.00MiB 32.00MiB     6.24GiB</code></span></span>
+<span class="line"><span class="ld"><code>   Used       9.61GiB 421.36MiB 16.00KiB</code></span></span></pre>
+                           </div>
+                           
+                           <p>Shows data similar to that of the two previous commands combined.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>For more information refer to <code class="command">man 8 btrfs-filesystem</code> and <a class="link" href="https://btrfs.wiki.kernel.org/index.php/FAQ">https://btrfs.wiki.kernel.org/index.php/FAQ</a>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-migrate">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Migration from ReiserFS and ext file systems to Btrfs</h3>
+               </header>
+               
+               
+               <p>You can migrate data volumes from existing ReiserFS or Ext (Ext2, Ext3, or Ext4) to
+                  the Btrfs file system using the <code class="command">btrfs-convert</code> tool. This allows you to do an in-place conversion of unmounted (offline) file systems,
+                  which may require a bootable install media with the <code class="command">btrfs-convert</code> tool. The tool constructs a Btrfs file system within the free space of the original
+                  file system, directly linking to the data contained in it. There must be enough free
+                  space on the device to create the metadata or the conversion will fail. The original
+                  file system will be intact and no free space will be occupied by the Btrfs file system.
+                  The amount of space required is dependent on the content of the file system and can
+                  vary based on the number of file system objects (such as files, directories, extended
+                  attributes) contained in it. Since the data is directly referenced, the amount of
+                  data on the file system does not impact the space required for conversion, except
+                  for files that use tail packing and are larger than about 2 KiB in size.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Root file system conversion not supported</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Converting the root file system to Btrfs is not supported and not recommended. Automating
+                              such a conversion is not possible due to various steps that need to be tailored to
+                              your specific setup—the process requires a complex configuration to provide a correct
+                              rollback, <code class="filename">/boot</code> must be on the root file system, and the system must have specific subvolumes, etc.
+                              Either keep the existing file system or re-install the whole system from scratch.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>To convert the original file system to the Btrfs file system, run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs-convert /path/to/device</code></span></span></pre>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Check <code class="filename">/etc/fstab</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>After the conversion, you need to ensure that any references to the original file
+                              system in <code class="filename">/etc/fstab</code> have been adjusted to indicate that the device contains a Btrfs file system.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When converted, the contents of the Btrfs file system will reflect the contents of
+                  the source file system. The source file system will be preserved until you remove
+                  the related read-only image created at <code class="filename"><em class="replaceable">fs_root</em>/reiserfs_saved/image</code>. The image file is effectively a 'snapshot' of the ReiserFS file system prior to
+                  conversion and will not be modified as the Btrfs file system is modified. To remove
+                  the image file, remove the <code class="filename">reiserfs_saved</code> subvolume:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs subvolume delete <em class="replaceable">fs_root</em>/reiserfs_saved</code></span></span></pre>
+               </div>
+               
+               <p>To revert the file system back to the original one, use the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs-convert -r /path/to/device</code></span></span></pre>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Lost changes</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Any changes you made to the file system while it was mounted as a Btrfs file system
+                              will be lost. A balance operation must not have been performed in the interim, or
+                              the file system will not be restored correctly.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-admin">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Btrfs administration</h3>
+               </header>
+               
+               
+               <p>Btrfs is integrated in the YaST Partitioner and AutoYaST. It is available during the
+                  installation to allow you to set up a solution for the root file system. You can use
+                  the YaST Partitioner after the installation to view and manage Btrfs volumes.</p>
+               
+               <p>Btrfs administration tools are provided in the <code class="filename">btrfsprogs</code> package. For information about using Btrfs commands, see the <code class="command">man 8 btrfs</code>, <code class="command">man 8 btrfsck</code>, and <code class="command">man 8 mkfs.btrfs</code> commands. For information about Btrfs features, see the <cite class="citetitle">Btrfs wiki</cite> at <a class="link" href="https://btrfs.wiki.kernel.org">https://btrfs.wiki.kernel.org</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-quota">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Btrfs quota support for subvolumes</h3>
+               </header>
+               
+               
+               <p>The Btrfs root file system subvolumes (for example, <code class="filename">/var/log</code>, <code class="filename">/var/crash</code>, or <code class="filename">/var/cache</code>) can use all the available disk space during normal operation, and cause a system
+                  malfunction. To help avoid this situation, <span class="phrase productname">SUSE Linux Enterprise Server</span> offers quota support for Btrfs subvolumes. If you set up the root file system from
+                  a YaST proposal, you are ready to enable and set subvolume quotas.</p>
+               
+               <section class="sect3" id="setting-btrfs-quotas-using-yast">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting Btrfs quotas using YaST</h4>
+                  </header>
+                  
+                  
+                  <p>To set a quota for a subvolume of the root file system by using YaST, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="setting-btrfs-quotas-using-yast_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Start YaST and select <span class="menuchoice"><span class="guimenu">System</span><span class="guimenu">Partitioner</span></span> and confirm the warning with <span class="guimenu">Yes</span>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In the left pane, click <span class="guimenu">Btrfs</span>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In the main window, select the device for which you want to enable subvolume quotas
+                              and click <span class="guimenu">Edit</span> at the bottom.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In the <span class="guimenu">Edit Btrfs</span> window, activate the <span class="guimenu">Enable Subvolume Quotas</span> check box and confirm with <span class="guimenu">Next</span>.</p>
+                           
+                           <div class="figure formalobject" id="setting-btrfs-quotas-using-yast_proc1_step4_fig1">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_btrfs_quotas_enable.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Enabling Btrfs quotas</div>
+                              </header>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>From the list of existing subvolumes, click the subvolume whose size you intend to
+                              limit by quota and click <span class="guimenu">Edit</span> at the bottom.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In the <span class="guimenu">Edit subvolume of Btrfs</span> window, activate <span class="guimenu">Limit size</span> and specify the maximum referenced size. Confirm with <span class="guimenu">Accept</span>.</p>
+                           
+                           <div class="figure formalobject" id="setting-btrfs-quotas-using-yast_proc1_step6_fig1">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_btrfs_quotas_set.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting quota for a subvolume</div>
+                              </header>
+                           </div>
+                           
+                           <p>The new size limit will be displayed next to the subvolume name:</p>
+                           
+                           <div class="figure formalobject" id="setting-btrfs-quotas-using-yast_proc1_step6_fig2">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_btrfs_quotas_edit.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>List of subvolumes for a device</div>
+                              </header>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Apply changes with <span class="guimenu">Next</span>.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="setting-btrfs-quotas-using-cmdline">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting Btrfs quotas on the command line</h4>
+                  </header>
+                  
+                  
+                  <p>To set a quota for a subvolume of the root file system on the command line, proceed
+                     as follows:</p>
+                  
+                  <div class="informalobject procedure" id="setting-btrfs-quotas-using-cmdline_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Enable quota support:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs quota enable /</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Get a list of subvolumes:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume list /</code></span></span></pre>
+                           </div>
+                           
+                           <p>Quotas can only be set for existing subvolumes.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Set a quota for one of the subvolumes that was listed in the previous step. A subvolume
+                              can either be identified by path (for example <code class="filename">/var/tmp</code>) or by <code class="literal">0/<em class="replaceable">SUBVOLUME ID</em></code> (for example <code class="literal">0/272</code>). The following example sets a quota of 5&nbsp;GB for <code class="filename">/var/tmp</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs qgroup limit 5G /var/tmp</code></span></span></pre>
+                           </div>
+                           
+                           <p>The size can either be specified in bytes (5000000000), kilobytes (5000000K), megabytes
+                              (5000M), or gigabytes (5G). The resulting values in bytes slightly differ, since 1024
+                              Bytes = 1 KiB, 1024 KiB = 1 MiB, etc.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To list the existing quotas, use the following command. The column <code class="literal">max_rfer</code> shows the quota in bytes.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs qgroup show -r /</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Nullifying a quota</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>In case you want to nullify an existing quota, set a quota size of <code class="literal">none</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs qgroup limit none /var/tmp</code></span></span></pre>
+                              </div>
+                              
+                              <p>To disable quota support for a partition and all its subvolumes, use <code class="command">btrfs quota disable</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs quota disable /</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="setting-btrfs-quotas-for-more-info">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>More information</h4>
+                  </header>
+                  
+                  
+                  <p>See the <code class="command">man 8 btrfs-qgroup</code> and <code class="command">man 8 btrfs-quota</code> for more details. The <cite class="citetitle">UseCases</cite> page on the Btrfs wiki (<a class="link" href="https://btrfs.wiki.kernel.org/index.php/UseCases">https://btrfs.wiki.kernel.org/index.php/UseCases</a>) also provides more information.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-swapping">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Swapping on Btrfs</h3>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Snapshots with swapping</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>You will not be able to create a snapshot if the source subvolume contains any enabled
+                              swap files.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>SLES supports swapping to a file on the Btrfs file system if the following criteria
+                  relating to the resulting swap file are fulfilled:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>The swap file must have the <code class="option">NODATACOW</code> and <code class="option">NODATASUM</code> mount options.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The swap file can not be compressed—you can ensure this by setting the <code class="option">NODATACOW</code> and <code class="option">NODATASUM</code> mount options. Both options disable swap file compression.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The swap file cannot be activated while exclusive operations are running—such as device
+                        resizing, adding, removing, or replacing, or when a balancing operation is running.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The swap file cannot be sparse.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The swap file can not be an inline file.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The swap file must be on a <code class="literal">single</code> allocation profile file system.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-s-r">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Btrfs send/receive</h3>
+               </header>
+               
+               
+               <p>Btrfs allows to make snapshots to capture the state of the file system. Snapper, for
+                  example, uses this feature to create snapshots before and after system changes, allowing
+                  a rollback. However, together with the send/receive feature, snapshots can also be
+                  used to create and maintain copies of a file system in a remote location. This feature
+                  can, for example, be used to do incremental backups.</p>
+               
+               <p>A <code class="command">btrfs send</code> operation calculates the difference between two read-only snapshots from the same
+                  subvolume and sends it to a file or to STDOUT. A <code class="command">btrfs receive</code> operation takes the result of the send command and applies it to a snapshot.</p>
+               
+               <section class="sect3" id="sec-filesystems-major-btrfs-s-r-requires">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prerequisites</h4>
+                  </header>
+                  
+                  
+                  <p>To use the send/receive feature, the following requirements need to be met:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p>A Btrfs file system is required on the source side (<code class="literal">send</code>) and on the target side (<code class="literal">receive</code>).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Btrfs send/receive operates on snapshots, therefore the respective data needs to reside
+                           in a Btrfs subvolume.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Snapshots on the source side need to be read-only.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>SUSE Linux Enterprise 12 SP2 or better. Earlier versions of SUSE Linux Enterprise
+                           do not support send/receive.</p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect3" id="sec-filesystems-major-btrfs-s-r-backup">
+                  <header>
+                     <h4><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Incremental backups</h4>
+                  </header>
+                  
+                  
+                  <p>The following procedure shows the basic usage of Btrfs send/receive using the example
+                     of creating incremental backups of <code class="filename">/data</code> (source side) in <code class="filename">/backup/data</code> (target side). <code class="filename">/data</code> needs to be a subvolume.</p>
+                  
+                  <div class="formalobject procedure" id="sec-filesystems-major-btrfs-s-r-backup_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Initial setup</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create the initial snapshot (called <code class="literal">snapshot_0</code> in this example) on the source side and make sure it is written to the disk:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume snapshot -r /data /data/bkp_data</code></span></span>
+<span class="line"><span class="ld"><code>sync</code></span></span></pre>
+                           </div>
+                           
+                           <p>A new subvolume <code class="filename">/data/bkp_data</code> is created. It will be used as the basis for the next incremental backup and should
+                              be kept as a reference.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Send the initial snapshot to the target side. Since this is the initial send/receive
+                              operation, the complete snapshot needs to be sent:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> bash -c 'btrfs send /data/bkp_data | btrfs receive /backup'</code></span></span></pre>
+                           </div>
+                           
+                           <p>A new subvolume <code class="filename">/backup/bkp_data</code> is created on the target side.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>When the initial setup has been finished, you can create incremental backups and send
+                     the differences between the current and previous snapshots to the target side. The
+                     procedure is always the same:</p>
+                  
+                  <ol class="orderedlist" type="1">
+                     
+                     <li>
+                        
+                        <p>Create a new snapshot on the source side.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Send the differences to the target side.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Optional: Rename and/or clean up snapshots on both sides.</p>
+                        </li>
+                     </ol>
+                  
+                  <div class="formalobject procedure" id="sec-filesystems-major-btrfs-s-r-backup_proc2">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Performing an incremental backup</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create a new snapshot on the source side and make sure it is written to the disk.
+                              In the following example the snapshot is named bkp_data_<em class="replaceable">CURRENT_DATE</em>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume snapshot -r /data /data/bkp_data_$(date +%F)</code></span></span>
+<span class="line"><span class="ld"><code>sync</code></span></span></pre>
+                           </div>
+                           
+                           <p>A new subvolume, for example <code class="filename">/data/bkp_data_2016-07-07</code>, is created.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Send the difference between the previous snapshot and the one you have created to
+                              the target side. This is achieved by specifying the previous snapshot with the option
+                              <code class="option">-p <em class="replaceable">SNAPSHOT</em></code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> bash -c 'btrfs send -p /data/bkp_data /data/bkp_data_2016-07-07 \</code></span></span>
+<span class="line"><span class="ld"><code>| btrfs receive /backup'</code></span></span></pre>
+                           </div>
+                           
+                           <p>A new subvolume <code class="filename">/backup/bkp_data_2016-07-07</code> is created.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>As a result four snapshots, two on each side, exist:</p>
+                           
+                           <div class="simplelist simplelistvert">
+                              <div class="row"><span>
+                                    <code class="filename">/data/bkp_data</code>
+                                    </span></div>
+                              <div class="row"><span>
+                                    <code class="filename">/data/bkp_data_2016-07-07</code>
+                                    </span></div>
+                              <div class="row"><span>
+                                    <code class="filename">/backup/bkp_data</code>
+                                    </span></div>
+                              <div class="row"><span>
+                                    <code class="filename">/backup/bkp_data_2016-07-07</code>
+                                    </span></div>
+                           </div>
+                           
+                           <p>Now you have three options for how to proceed:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>Keep all snapshots on both sides. With this option you can roll back to any snapshot
+                                    on both sides while having all data duplicated at the same time. No further action
+                                    is required. When doing the next incremental backup, keep in mind to use the next-to-last
+                                    snapshot as parent for the send operation.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Only keep the last snapshot on the source side and all snapshots on the target side.
+                                    Also allows to roll back to any snapshot on both sides—to do a rollback to a specific
+                                    snapshot on the source side, perform a send/receive operation of a complete snapshot
+                                    from the target side to the source side. Do a delete/move operation on the source
+                                    side.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Only keep the last snapshot on both sides. This way you have a backup on the target
+                                    side that represents the state of the last snapshot made on the source side. It is
+                                    not possible to roll back to other snapshots. Do a delete/move operation on the source
+                                    and the target side.</p>
+                                 </li>
+                              </ul>
+                           
+                           <div class="substeps">
+                              <ol class="procedure substeps" type="a">
+                                 
+                                 <li class="step">
+                                    
+                                    <p>To only keep the last snapshot on the source side, perform the following commands:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume delete /data/bkp_data</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mv /data/bkp_data_2016-07-07 /data/bkp_data</code></span></span></pre>
+                                    </div>
+                                    
+                                    <p>The first command will delete the previous snapshot, the second command renames the
+                                       current snapshot to <code class="filename">/data/bkp_data</code>. This ensures that the last snapshot that was backed up is always named <code class="filename">/data/bkp_data</code>. As a consequence, you can also always use this subvolume name as a parent for the
+                                       incremental send operation.</p>
+                                    </li>
+                                 
+                                 <li class="step">
+                                    
+                                    <p>To only keep the last snapshot on the target side, perform the following commands:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume delete /backup/bkp_data</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mv /backup/bkp_data_2016-07-07 /backup/bkp_data</code></span></span></pre>
+                                    </div>
+                                    
+                                    <p>The first command will delete the previous backup snapshot, the second command renames
+                                       the current backup snapshot to <code class="filename">/backup/bkp_data</code>. This ensures that the latest backup snapshot is always named <code class="filename">/backup/bkp_data</code>.</p>
+                                    </li>
+                                 </ol>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Sending to a remote target side</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>To send the snapshots to a remote machine, use SSH:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>btrfs send /data/bkp_data | ssh root@jupiter.example.com 'btrfs receive /backup'</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-btrfs-deduplication">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Data deduplication support</h3>
+               </header>
+               
+               
+               <p>Btrfs supports data deduplication by replacing identical blocks in the file system
+                  with logical links to a single copy of the block in a common storage location. <span class="phrase productname">SUSE Linux Enterprise Server</span> provides the tool <code class="command">duperemove</code> for scanning the file system for identical blocks. When used on a Btrfs file system,
+                  it can also be used to deduplicate these blocks and thus save space on the file system.
+                  <code class="command">duperemove</code> is not installed by default. To make it available, install the package <code class="package">duperemove</code> .</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Deduplicating large datasets</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you intend to deduplicate a large amount of files, use the <code class="option">--hashfile</code> option:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> duperemove <code class="option">--hashfile <em class="replaceable">HASH_FILE</em></code> file1 file2 file3</code></span></span></pre>
+                           </div>
+                           
+                           <p>The <code class="option">--hashfile</code> option stores hashes of all specified files into the <em class="replaceable">HASH_FILE</em> instead of RAM and prevents it from being exhausted. <em class="replaceable">HASH_FILE</em> is reusable—you can deduplicate changes to large datasets very quickly after an initial
+                              run that generated a baseline hash file.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p><code class="command">duperemove</code> can either operate on a list of files or recursively scan a directory:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> duperemove <em class="replaceable">OPTIONS</em> file1 file2 file3</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> duperemove -r <em class="replaceable">OPTIONS</em> directory</code></span></span></pre>
+               </div>
+               
+               <p>It operates in two modes: read-only and de-duping. When run in read-only mode (that
+                  is without the <code class="option">-d</code> switch), it scans the given files or directories for duplicated blocks and prints
+                  them. This works on any file system.</p>
+               
+               <p>Running <code class="command">duperemove</code> in de-duping mode is only supported on Btrfs file systems. After having scanned the
+                  given files or directories, the duplicated blocks will be submitted for deduplication.</p>
+               
+               <p>For more information see <code class="command">man 8 duperemove</code>.</p>
+               </section>
+            
+            <section class="sect2" id="btrfs-delete-subvolumes">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>2<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Deleting subvolumes from the root file system</h3>
+               </header>
+               
+               
+               <p>You may need to delete one of the default Btrfs subvolumes from the root file system
+                  for specific purposes. One of them is transforming a subvolume—for example <code class="filename">@/home</code> or <code class="filename">@/srv</code>—into a file system on a separate device. The following procedure illustrates how
+                  to delete a Btrfs subvolume:</p>
+               
+               <div class="informalobject procedure" id="btrfs-delete-subvolumes_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Identify the subvolume you need to delete (for example <code class="filename">@/opt</code>). Notice that the root path has always subvolume ID '5'.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume list /</code></span></span>
+<span class="line"><span class="ld"><code>ID 256 gen 30 top level 5 path @</code></span></span>
+<span class="line"><span class="ld"><code>ID 258 gen 887 top level 256 path @/var</code></span></span>
+<span class="line"><span class="ld"><code>ID 259 gen 872 top level 256 path @/usr/local</code></span></span>
+<span class="line"><span class="ld"><code>ID 260 gen 886 top level 256 path @/tmp</code></span></span>
+<span class="line"><span class="ld"><code>ID 261 gen 60 top level 256 path @/srv</code></span></span>
+<span class="line"><span class="ld"><code>ID 262 gen 886 top level 256 path @/root</code></span></span>
+<span class="line"><span class="ld"><code>ID 263 gen 39 top level 256 path @/opt</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Find the device name that hosts the root partition:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs device usage /</code></span></span>
+<span class="line"><span class="ld"><code>/dev/sda1, ID: 1</code></span></span>
+<span class="line"><span class="ld"><code>  Device size:            23.00GiB</code></span></span>
+<span class="line"><span class="ld"><code>  Device slack:              0.00B</code></span></span>
+<span class="line"><span class="ld"><code>  Data,single:             7.01GiB</code></span></span>
+<span class="line"><span class="ld"><code>  Metadata,DUP:            1.00GiB</code></span></span>
+<span class="line"><span class="ld"><code>  System,DUP:             16.00MiB</code></span></span>
+<span class="line"><span class="ld"><code>  Unallocated:            14.98GiB</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Mount the root file system (subvolume with ID 5) on a separate mount point (for example
+                           <code class="filename">/mnt</code>):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount -o subvolid=5 /dev/sda1 /mnt</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Delete the <code class="filename">@/opt</code> partition from the mounted root file system:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> btrfs subvolume delete /mnt/@/opt</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Unmount the previously mounted root file system:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> umount /mnt</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich01.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partich01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">1</span><span class="sep">.&nbsp;</span>Overview of file systems in Linux</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>XFS</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

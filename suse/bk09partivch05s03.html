@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.3.&nbsp;Planning for multipathing</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s02.html" rel="prev">
+      <link href="bk09partivch05s04.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s04.html">Next</a> <a href="bk09partivch05s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s03.html" db-id="d616951e253091" id="sec-multipath-planning">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Planning for multipathing</h2>
+            </header>
+            
+            
+            <p>Use the guidelines in this section when planning your multipath I/O solution.</p>
+            
+            <section class="sect2" id="sec-multipath-planning-prereq">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prerequisites</h3>
+               </header>
+               
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>The storage array you use for the multipathed device must support multipathing. For
+                        more information, see <a class="xref xref-sect1" href="bk09partivch05s02.html">the section called “Hardware support”</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>You need to configure multipathing only if multiple physical paths exist between host
+                        bus adapters in the server and host bus controllers for the block storage device.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>For some storage arrays, the vendor provides its own multipathing software to manage
+                        multipathing for the array’s physical and logical devices. In this case, you should
+                        follow the vendor’s instructions for configuring multipathing for those devices.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>When using multipathing in a virtualization environment, the multipathing is controlled
+                        in the host server environment. Configure multipathing for the device before you assign
+                        it to a virtual guest machine.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-planning-types">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Multipath installation types</h3>
+               </header>
+               
+               
+               <p>We distinguish installation types by the way the root device is handled. <a class="xref xref-sect1" href="bk09partivch05s04.html">the section called “Installing <span class="phrase productname">SUSE Linux Enterprise Server</span> on multipath systems”</a> describes how the different setups are created during and after installation.</p>
+               
+               <section class="sect3" id="sec-multipath-planning-type-root">
+                  <header>
+                     <h4><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Root file system on multipath (SAN-boot)</h4>
+                  </header>
+                  
+                  
+                  <p>The root file system is on a multipath device. This is typically the case for diskless
+                     servers that use SAN storage exclusively. On such systems, multipath support is required
+                     for booting, and multipathing must be enabled in the initramfs.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-multipath-planning-type-noroot">
+                  <header>
+                     <h4><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Root file system on a local disk</h4>
+                  </header>
+                  
+                  
+                  <p>The root file system (and possibly some other file systems) is on local storage, for
+                     example, on a directly attached SATA disk or local RAID, but the system additionally
+                     uses file systems in the multipath SAN storage. This system type can be configured
+                     in three different ways:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Multipath setup for local disk</span></dt>
+                        <dd>
+                           
+                           <p>All block devices are part of multipath maps, including the local disk. The root device
+                              appears as a degraded multipath map with just one path. This configuration is created
+                              if multipathing was enabled during the initial system installation with YaST.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry" id="vl-multipath-planning-type-noroot-ignore">
+                        <dt><span class="term">Local disk is excluded from multipath</span></dt>
+                        <dd>
+                           
+                           <p>In this configuration, multipathing is enabled in the initramfs, but the root device
+                              is explicitly excluded from multipath (see <a class="xref xref-sect2" href="bk09partivch05s11.html#sec-multipath-blacklist">the section called “The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                                 ”</a>). <a class="xref xref-procedure" href="bk09partivch05s04.html#pr-multipath-disable-root">Procedure&nbsp;<span class="label">18<span class="sep">.</span>1</span>, “Disabling multipathing for the root disk after installation”</a> describes how to set up this configuration.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry" id="vl-multipath-planning-type-noroot-noinitrd">
+                        <dt><span class="term">Multipath disabled in the initramfs</span></dt>
+                        <dd>
+                           
+                           <p>This setup is created if multipathing was not enabled during the initial system installation
+                              with YaST. This configuration is rather fragile; consider using one of the other options
+                              instead.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-planning-disks">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Disk management tasks</h3>
+               </header>
+               
+               
+               <p>Use third-party SAN array management tools or the user interface of your storage array
+                  to create logical devices and assign them to hosts. Make sure to configure the host
+                  credentials correctly on both sides.</p>
+               
+               <p>You can add or remove volumes to a running host, but detecting the changes may require
+                  rescanning SCSI targets and reconfiguring multipathing on the host. See <a class="xref xref-sect2" href="bk09partivch05s14.html#sec-multipath-best-practice-scandev">the section called “Scanning for new devices without rebooting”</a>.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Storage processors</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>On some disk arrays, the storage array manages the traffic through storage processors.
+                              One processor is active and the other one is passive until there is a failure. If
+                              you are connected to the passive storage processor, you might not see the expected
+                              LUNs, or you might see the LUNs but encounter I/O errors when you try to access them.</p>
+                           
+                           <p>If a disk array has more than one storage processor, ensure that the SAN switch has
+                              a connection to the active storage processor that owns the LUNs you want to access.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-planning-raid">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Software RAID and complex storage stacks</h3>
+               </header>
+               
+               
+               <p>Multipathing is set up on top of basic storage devices such as SCSI disks. In a multi-layered
+                  storage stack, multipathing is always the bottom layer. Other layers such as software
+                  RAID, Logical Volume Management, block device encryption, etc. are layered on top
+                  of it. Therefore, for each device that has multiple I/O paths and that you plan to
+                  use in a software RAID, you must configure the device for multipathing before you
+                  attempt to create the software RAID device.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-planning-ha">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>High-availability solutions</h3>
+               </header>
+               
+               
+               <p>High-availability solutions for clustering storage resources run on top of the multipathing
+                  service on each node. Make sure that the configuration settings in the <code class="filename">/etc/multipath.conf</code> file on each node are consistent across the cluster.</p>
+               
+               <p>Make sure that multipath devices have the same name across all devices. Refer to <a class="xref xref-sect1" href="bk09partivch05s12.html">the section called “Multipath device names and WWIDs”</a> for details.</p>
+               
+               <p>The Distributed Replicated Block Device (DRBD) high-availability solution for mirroring
+                  devices across a LAN runs on top of multipathing. For each device that has multiple
+                  I/O paths and that you plan to use in a DRDB solution, you must configure the device
+                  for multipathing before you configure DRBD.</p>
+               
+               <p>Special care must be taken when using multipathing together with clustering software
+                  that relies on shared storage for fencing, such as <code class="command">pacemaker</code> with <code class="command">sbd</code>. See <a class="xref xref-sect2" href="bk09partivch05s09.html#sec-multipath-policies-cluster">the section called “Queuing policy on clustered servers”</a> for details.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s02.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Hardware support</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Installing <span class="phrase productname">SUSE Linux Enterprise Server</span> on multipath systems</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

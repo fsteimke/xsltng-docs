@@ -1,0 +1,306 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.11.&nbsp;Selecting devices for multipathing</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s10.html" rel="prev">
+      <link href="bk09partivch05s12.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s12.html">Next</a> <a href="bk09partivch05s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s11.html" db-id="d616951e256120" id="sec-multipath-select-devices">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Selecting devices for multipathing</h2>
+            </header>
+            
+            
+            <p>On systems with multipath devices, you might want to avoid setting up multipath maps
+               on some devices (typically local disks). <code class="systemitem">multipath-tools</code> offers various means for configuring which devices should be considered multipath
+               path devices.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">multipath on local disks</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>In general, there is nothing wrong with setting up “degraded” multipath maps with
+                           just a single device on top of local disks. It works fine and requires no extra configuration.
+                           However, some administrators find this confusing or generally oppose this sort of
+                           unnecessary multipathing. Also, the multipath layer causes a slight performance overhead.
+                           See also <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-noroot">the section called “Root file system on a local disk”</a>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>After modifying the <code class="filename">/etc/multipath.conf</code> file, apply your settings as described in <a class="xref xref-sect2" href="bk09partivch05s08.html#sec-multipath-conf-file-apply">the section called “Applying <code class="filename">multipath.conf</code> modifications”</a>.</p>
+            
+            <section class="sect2" id="sec-multipath-blacklist">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The <code class="filename">/etc/multipath.conf</code> file can contain a <code class="literal">blacklist</code> section that lists all devices that should be ignored by <code class="command">multipathd</code> and <code class="command">multipath</code>. The following example illustrates possible ways of excluding devices:</p>
+               
+               <div class="informalexample informalobject" id="sec-multipath-blacklist_informalexample1">
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist {</code></span></span>
+<span class="line"><span class="ld"><code>    wwid 3600605b009e7ed501f0e45370aaeb77f <span class="co" id="mp-co-bl-wwid">⣈</span></code></span></span>
+<span class="line"><span class="ld"><code>    device {  <span class="co" id="mp-co-bl-device">⣉</span></code></span></span>
+<span class="line"><span class="ld"><code>        vendor ATA</code></span></span>
+<span class="line"><span class="ld"><code>        product .*</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>    protocol scsi:sas <span class="co" id="mp-co-bl-prot">⣊</span></code></span></span>
+<span class="line"><span class="ld"><code>    property SCSI_IDENT_LUN_T10 <span class="co" id="mp-co-bl-prop">⣋</span></code></span></span>
+<span class="line"><span class="ld"><code>    devnode "!^dasd[a-z]*" <span class="co" id="mp-co-bl-devnode">⣌</span></code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-bl-wwid">⣈</a></dt>
+                        <dd>
+                           
+                           <p><code class="literal">wwid</code> entries are ideal for excluding specific devices, for example, the root disk.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-bl-device">⣉</a></dt>
+                        <dd>
+                           
+                           <p>This <code class="literal">device</code> section excludes all ATA devices (the regular expression for <code class="literal">product</code> matches anything).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-bl-prot">⣊</a></dt>
+                        <dd>
+                           
+                           <p>Excluding by <code class="literal">protocol</code> allows excluding devices using certain bus types, here SAS. Other common protocol
+                              values are <code class="literal">scsi:fcp</code>, <code class="literal">scsi:iscsi</code>, and <code class="literal">ccw</code>. See <code class="systemitem">multipath.conf(5)</code> for more. To see the protocols that paths in your systems are using, run:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd show paths format "%d %P"</code></span></span></pre>
+                           </div>
+                           
+                           <p>This form is supported since <span class="phrase productname">SLES</span>&nbsp;15 SP1 and <span class="phrase productname">SLES</span>&nbsp;12 SP5.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-bl-prop">⣋</a></dt>
+                        <dd>
+                           
+                           <p>This <code class="literal">property</code> entry excludes devices that have a certain udev property (no matter what the value
+                              of the property is).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#mp-co-bl-devnode">⣌</a></dt>
+                        <dd>
+                           
+                           <p>Excluding devices by <code class="literal">devnode</code> is only recommended for classes of devices using regular expressions, like in the
+                              example, which excludes everything but DASD devices. Using this for individual devices
+                              like <code class="filename">sda</code> is discouraged because device node names are not persistent.</p>
+                           
+                           <p>The example illustrates special syntax that is only supported in the <code class="literal">blacklist</code> and <code class="literal">blacklist_exceptions</code> sections: Prefixing the regular expression with an exclamation mark (<code class="literal">!</code>) negates the match. Note that the exclamation mark must appear within double quotes.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  </div>
+               
+               <p>By default, <code class="systemitem">multipath-tools</code> ignores all devices except SCSI, DASD or NVMe. Technically, the built-in devnode
+                  exclude list is this negated regular expression:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>    devnode !^(sd[a-z]|dasd[a-z]|nvme[0-9])</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-blacklist-exceptions">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The <code class="literal">blacklist exceptions</code> section in <code class="filename">multipath.conf</code>
+                     </h3>
+               </header>
+               
+               
+               <p>Sometimes, it is desired to configure only very specific devices for multipathing.
+                  In this case, devices are excluded by default, and exceptions are defined for devices
+                  that should be part of a multipath map. The <code class="literal">blacklist_exceptions</code> section exists for this purpose. It is typically used like in the following example,
+                  which excludes everything except storage with product string “NETAPP”:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist {</code></span></span>
+<span class="line"><span class="ld"><code>     wwid .*</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span>
+<span class="line"><span class="ld"><code>blacklist_exceptions {</code></span></span>
+<span class="line"><span class="ld"><code>     device {</code></span></span>
+<span class="line"><span class="ld"><code>         vendor ^NETAPP$</code></span></span>
+<span class="line"><span class="ld"><code>         product .*</code></span></span>
+<span class="line"><span class="ld"><code>     }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="literal">blacklist_exceptions</code> section supports all methods described for the <code class="literal">blacklist</code> section above.</p>
+               
+               <p>The <code class="literal">property</code> directive in <code class="literal">blacklist_exceptions</code> is mandatory because every device <em>must</em> have at least one of the “allowed” udev properties to be considered a path device
+                  for multipath (the value of the property does not matter). The built-in default for
+                  <code class="literal">property</code> is</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>    property (SCSI_IDENT_|ID_WWN)</code></span></span></pre>
+               </div>
+               
+               <p>Only devices that have at least one udev property matching this regular expression
+                  will be included.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-device-select-other">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Other options affecting device selection</h3>
+               </header>
+               
+               
+               <p>Besides the <code class="literal">blacklist</code> options, there are several other settings in <code class="filename">/etc/multipath.conf</code> that affect which devices are considered multipath path devices.</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">find_multipaths</span></dt>
+                     <dd>
+                        
+                        <p>This option controls the behavior of <code class="command">multipath</code> and <code class="command">multipathd</code> when a device that is not excluded is first encountered. The possible values are:</p>
+                        
+                        <dl class="variablelist">
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">greedy</span></dt>
+                              <dd>
+                                 
+                                 <p>Every device non-excluded by <code class="literal">blacklist</code> in <code class="filename">/etc/multipath.conf</code> is included. This is the default on SUSE Linux Enterprise. If this setting is active,
+                                    the only way to prevent devices from being added to multipath maps is setting them
+                                    as excluded.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">strict</span></dt>
+                              <dd>
+                                 
+                                 <p>Every device is excluded, even if it is not present in the <code class="literal">blacklist</code> section of <code class="filename">/etc/multipath.conf</code>, unless its WWID is listed in the file <code class="filename">/etc/multipath/wwids</code>. It requires manual maintenance of the WWIDs file (see note below).</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">yes</span></dt>
+                              <dd>
+                                 
+                                 <p>Devices are included if they meet the conditions for <code class="literal">strict</code>, or if at least one other device with the same WWID exists in the system.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">smart</span></dt>
+                              <dd>
+                                 
+                                 <p>If a new WWID is first encountered, it is temporarily marked as multipath path device.
+                                    <code class="command">multipathd</code> waits for some time for additional paths with the same WWID to appear. If this happens,
+                                    the multipath map is set up as usual. Otherwise, when the timeout expires, the single
+                                    device is released to the system as a non-multipath device. The timeout is configurable
+                                    with the option <code class="option">find_multipaths_timeout</code>.</p>
+                                 
+                                 <p>This option depends on <code class="command">systemd</code> features which are only available on SUSE Linux Enterprise Server&nbsp;15.</p>
+                                 </dd>
+                           </div>
+                           </dl>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Maintaining <code class="filename">/etc/multipath/wwids</code>
+                                       </div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p><code class="systemitem">multipath-tools</code> keeps a record of previously setup multipath maps in the file <code class="filename">/etc/multipath/wwids</code> (the “WWIDs file”). Devices with WWIDs listed in this file are considered multipath
+                                       path devices. The file is important for multipath device selection for all values
+                                       of <code class="option">find_multipaths</code> except <code class="literal">greedy</code>.</p>
+                                    
+                                    <p>If <code class="option">find_multipaths</code> is set to <code class="literal">yes</code> or <code class="literal">smart</code>, <code class="command">multipathd</code> adds WWIDs to <code class="filename">/etc/multipath/wwids</code> after setting up new maps, so that these maps will be detected more quickly in the
+                                       future.</p>
+                                    
+                                    <p>The WWIDs file can be manually modified:</p>
+                                    
+                                    <div class="informalexample informalobject" id="sec-multipath-device-select-other_vl1_vle1_li1_note1_informalexample1">
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipath -a 3600a098000aad1e3000064e45f2c2355 <span class="co" id="mp-co-wwid-a">⣍</span><span class="prompt">&gt;</span><code class="command">sudo</code> multipath -w /dev/sdf <span class="co" id="mp-co-wwid-w">⣎</span></code></span></span></pre>
+                                       </div>
+                                       
+                                       <div class="calloutlist">
+                                          <dl>
+                                             <dt class="callout"><a class="callout-bug" href="#mp-co-wwid-a">⣍</a></dt>
+                                             <dd>
+                                                
+                                                <p>This command adds the given WWID to <code class="filename">/etc/multipath/wwids</code>.</p>
+                                                </dd>
+                                             <dt class="callout"><a class="callout-bug" href="#mp-co-wwid-w">⣎</a></dt>
+                                             <dd>
+                                                
+                                                <p>This command removes the WWID of the given device.</p>
+                                                </dd>
+                                          </dl>
+                                       </div>
+                                       </div>
+                                    
+                                    <p>In the <code class="literal">strict</code> mode, this is the only way to add new multipath devices. After modifying the WWIDs
+                                       file, run <code class="command">multipathd reconfigure</code> to apply the changes. We recommend rebuilding the initramfs after applying changes
+                                       to the WWIDs file (see <a class="xref xref-sect2" href="bk09partivch05s07.html#sec-multipath-initrd-sync">the section called “Keeping the initramfs synchronized”</a>).</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">allow_usb_devices</span></dt>
+                     <dd>
+                        
+                        <p>If this option is set to <code class="literal">yes</code>, USB storage devices are considered for multipathing. The default is <code class="literal">no</code>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s10.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s12.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Configuring path grouping and priorities</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Multipath device names and WWIDs</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

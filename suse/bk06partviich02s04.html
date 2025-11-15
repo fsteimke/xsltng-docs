@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>45.4.&nbsp;Setting up audit rules</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partviich02s03.html" rel="prev">
+      <link href="bk06partviich02s05.html" rel="next">
+      <link href="bk06partviich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partviich02.html">Up</a> <a href="bk06partviich02s05.html">Next</a> <a href="bk06partviich02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partviich02s04.html" db-id="d616951e198253" id="sec-audit-aurules">
+            <header>
+               <h2><span class="label">45<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Setting up audit rules</h2>
+            </header>
+            
+            
+            <p>Using audit rules, determine which aspects of the system should be analyzed by audit.
+               Normally this includes important databases and security-relevant configuration files.
+               You may also analyze various system calls in detail if a broad analysis of your system
+               is required. A detailed example configuration that includes most of the rules that
+               are needed in a CAPP compliant environment is available in <a class="xref xref-chapter" href="bk06partviich03.html">Chapter&nbsp;<span class="label">46</span>, Introducing an audit rule set</a>.</p>
+            
+            <p>Audit rules can be passed to the audit daemon on the <code class="command">auditctl</code> command line and by composing a rule set in <code class="filename">/etc/audit/audit.rules</code> which is processed whenever the audit daemon is started. To customize <code class="filename">/etc/audit/audit.rules</code> either edit it directly, or use YaST: <span class="menuchoice"><span class="guimenu">Security and Users</span><span class="guimenu">Linux Audit Framework (LAF)</span><span class="guimenu">Rules for 'auditctl'</span></span>. Rules passed on the command line are not persistent and need to be re-entered when
+               the audit daemon is restarted.</p>
+            
+            <p>A simple rule set for basic auditing on a few important files and directories could
+               look like this:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># basic audit system parameters</code></span></span>
+<span class="line"><span class="ld"><code>-D</code></span></span>
+<span class="line"><span class="ld"><code>-b 8192</code></span></span>
+<span class="line"><span class="ld"><code>-f 1</code></span></span>
+<span class="line"><span class="ld"><code>-e 1</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># some file and directory watches with keys</code></span></span>
+<span class="line"><span class="ld"><code>-w /var/log/audit/ -k LOG_audit</code></span></span>
+<span class="line"><span class="ld"><code>-w /etc/audit/auditd.conf -k CFG_audit_conf -p rxwa</code></span></span>
+<span class="line"><span class="ld"><code>-w /etc/audit/audit.rules -k CFG_audit_rules -p rxwa</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>-w /etc/passwd -k CFG_passwd -p rwxa</code></span></span>
+<span class="line"><span class="ld"><code>-w /etc/sysconfig/ -k CFG_sysconfig</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># an example system call rule</code></span></span>
+<span class="line"><span class="ld"><code>-a entry,always -S umask</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>### add your own rules</code></span></span></pre>
+            </div>
+            
+            <p>When configuring the basic audit system parameters (such as the backlog parameter
+               <code class="literal">-b</code>) test these settings with your intended audit rule set to determine whether the backlog
+               size is appropriate for the level of logging activity caused by your audit rule set.
+               If your chosen backlog size is too small, your system might not be able to handle
+               the audit load and consult the failure flag (<code class="literal">-f</code>) when the backlog limit is exceeded.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Choosing the failure flag</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When choosing the failure flag, <code class="option">-f 2</code> tells your system to perform an immediate shutdown without flushing any pending data
+                           to disk when the limits of your audit system are exceeded. Because this shutdown is
+                           not a clean shutdown, restrict the use of <code class="option">-f 2</code> to the most security-conscious environments and use <code class="option">-f 1</code> (system continues to run, issues a warning and audit stops) for any other setup to
+                           avoid loss of data or data corruption.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>Directory watches produce less verbose output than separate file watches for the files
+               under these directories. To get detailed logging for your system configuration in
+               <code class="filename">/etc/sysconfig</code>, for example, add watches for each file. Audit does not support globbing, which means
+               you cannot create a rule that says <code class="literal">-w /etc/*</code> and watches all files and directories below <code class="filename">/etc</code>.</p>
+            
+            <p>For better identification in the log file, a key has been added to each of the file
+               and directory watches. Using the key, it is easier to comb the logs for events related
+               to a certain rule. When creating keys, distinguish between mere log file watches and
+               configuration file watches by using an appropriate prefix with the key, in this case
+               <code class="literal">LOG</code> for a log file watch and <code class="literal">CFG</code> for a configuration file watch. Using the file name as part of the key also makes
+               it easier for you to identify events of this type in the log file.</p>
+            
+            
+            <p>Another thing to keep in mind when creating file and directory watches is that audit
+               cannot deal with files that do not exist when the rules are created. Any file that
+               is added to your system while audit is already running is not watched unless you extend
+               the rule set to watch this new file.</p>
+            
+            <p>For more information about creating custom rules, refer to <a class="xref xref-sect1" href="bk06partviich01s04.html">the section called “Passing parameters to the audit system”</a>.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Changing audit rules</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>After you change audit rules, always restart the audit daemon with <code class="command">systemctl restart auditd</code> to reread the changed rules.</p>
+                        
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partviich02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partviich02.html">Up</a></td>
+                  <td class="next"><a href="bk06partviich02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">45<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Enabling audit for system calls</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">45<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring audit reports</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

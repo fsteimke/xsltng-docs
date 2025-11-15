@@ -1,0 +1,302 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>20.8.&nbsp;Analyzing the crash dump</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvich02s07.html" rel="prev">
+      <link href="bk07partvich02s09.html" rel="next">
+      <link href="bk07partvich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvich02.html">Up</a> <a href="bk07partvich02s09.html">Next</a> <a href="bk07partvich02s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvich02s08.html" db-id="d616951e223842" id="cha-tuning-kdump-analyze">
+            <header>
+               <h2><span class="label">20<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Analyzing the crash dump</h2>
+            </header>
+            
+            
+            <p>After you obtain the dump, it is time to analyze it. There are several options.</p>
+            
+            <p>The original tool to analyze the dumps is GDB. You can even use it in the latest environments,
+               although it has several disadvantages and limitations:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>GDB was not specifically designed to debug kernel dumps.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>GDB does not support ELF64 binaries on 32-bit platforms.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>GDB does not understand other formats than ELF dumps (it cannot debug compressed dumps).</p>
+                  </li>
+               </ul>
+            
+            <p>That is why the <code class="command">crash</code> utility was implemented. It analyzes crash dumps and debugs the running system as
+               well. It provides functionality specific to debugging the Linux kernel and is much
+               more suitable for advanced debugging.</p>
+            
+            <p>To debug the Linux kernel, install its debugging information package, too. Check if
+               the package is installed on your system with:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">zypper</code> se kernel | <code class="command">grep</code> debug</code></span></span></pre>
+            </div>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Repository for packages with debugging information</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>If you subscribed your system for online updates, you can find <q>debuginfo</q> packages in the <code class="literal">*-Debuginfo-Updates</code> online installation repository relevant for <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span>. Use YaST to enable the repository.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>To open the captured dump in <code class="command">crash</code> on the machine that produced the dump, use a command like this:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><code class="command">crash</code><em class="replaceable">/boot/vmlinux-6.4.0-150700.38-default.gz</em> \</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">/var/crash/2024-04-23-11\:17/vmcore</em></code></span></span></pre>
+            </div>
+            
+            <p>The first parameter represents the kernel image. The second parameter is the dump
+               file captured by Kdump. You can find this file under <code class="filename">/var/crash</code> by default.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Getting basic information from a kernel crash dump</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p><span class="phrase productname">SUSE Linux Enterprise Server</span> ships with the utility <code class="command">kdumpid</code> (included in a package with the same name) for identifying unknown kernel dumps.
+                           It can be used to extract basic information such as architecture and kernel release.
+                           It supports lkcd, diskdump, Kdump files and ELF dumps. When called with the <code class="option">-v</code> switch it tries to extract additional information such as machine type, kernel banner
+                           string and kernel configuration flavor.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="cha-tuning-kdump-analyze-binformat">
+               <header>
+                  <h3><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Kernel binary formats</h3>
+               </header>
+               
+               
+               <p>The Linux kernel comes in Executable and Linkable Format (ELF). This file is called
+                  <code class="literal">vmlinux</code> and is directly generated in the compilation process. Not all boot loaders support
+                  ELF binaries, especially on the AMD64/Intel&nbsp;64 architecture. The following solutions
+                  exist on different architectures supported by <span class="phrase productname">SUSE® Linux Enterprise Server</span>.</p>
+               
+               <section class="sect3" id="cha-tuning-kdump-analyze-binformat-x86">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>AMD64/Intel&nbsp;64</h4>
+                  </header>
+                  
+                  
+                  <p>Kernel packages for AMD64/Intel&nbsp;64 from SUSE contain two kernel files: <code class="filename">vmlinuz</code> and <code class="filename">vmlinux.gz</code>.</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">
+                              <code class="filename">vmlinuz</code>
+                              </span><span class="para">This is the file executed by the boot loader.</span></p>
+                        
+                        <p>The Linux kernel consists of two parts: the kernel itself (<code class="literal">vmlinux</code>) and the setup code run by the boot loader. These two parts are linked together to
+                           create <code class="filename">vmlinuz</code> (note the distinction: <code class="literal">z</code> compared to <code class="literal">x</code>).</p>
+                        
+                        <p>In the kernel source tree, the file is called <code class="filename">bzImage</code>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">
+                              <code class="filename">vmlinux.gz</code>
+                              </span><span class="para">This is a compressed ELF image that can be used by <code class="command">crash</code> and GDB. The ELF image is never used by the boot loader itself on AMD64/Intel&nbsp;64.
+                              Therefore, only a compressed version is shipped.</span></p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect3" id="cha-tuning-kdump-analyze-binformat-ppc">
+                  <header>
+                     <h4><span class="label">20<span class="sep">.</span>8<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>POWER</h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="systemitem">yaboot</code> boot loader on POWER also supports loading ELF images, but not compressed ones. In
+                     the POWER kernel package, there is an ELF Linux kernel file <code class="filename">vmlinux</code>. Considering <code class="command">crash</code>, this is the easiest architecture.</p>
+                  
+                  <p>If you decide to analyze the dump on another machine, you must check both the architecture
+                     of the computer and the files necessary for debugging.</p>
+                  
+                  <p>You can analyze the dump on another computer only if it runs a Linux system of the
+                     same architecture. To check the compatibility, use the command <code class="command">uname</code><code class="option">-i</code> on both computers and compare the outputs.</p>
+                  
+                  <p>If you are going to analyze the dump on another computer, you also need the appropriate
+                     files from the <code class="systemitem">kernel</code> and <code class="systemitem">kernel debug</code> packages.</p>
+                  
+                  <div class="informalobject procedure" id="cha-tuning-kdump-analyze-binformat-ppc_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Put the kernel dump, the kernel image from <code class="filename">/boot</code>, and its associated debugging info file from <code class="filename">/usr/lib/debug/boot</code> into a single empty directory.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Additionally, copy the kernel modules from <code class="filename">/lib/modules/$(uname -r)/kernel/</code> and the associated debug info files from <code class="filename">/usr/lib/debug/lib/modules/$(uname -r)/kernel/</code> into a subdirectory named <code class="filename">modules</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In the directory with the dump, the kernel image, its debug info file, and the <code class="filename">modules</code> subdirectory, start the <code class="command">crash</code> utility:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">crash</code><em class="replaceable">VMLINUX-VERSION vmcore</em></code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>Regardless of the computer on which you analyze the dump, the crash utility produces
+                     output similar to this:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">crash</code><em class="replaceable">/boot/vmlinux-6.4.0-150700.38-default.gz</em> \</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">/var/crash/2024-04-23-11\:17/vmcore</em></code></span></span>
+<span class="line"><span class="ld"><code>crash 7.2.1</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2002-2017  Red Hat, Inc.</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2004, 2005, 2006, 2010  IBM Corporation</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 1999-2006  Hewlett-Packard Co</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2005, 2006, 2011, 2012  Fujitsu Limited</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2006, 2007  VA Linux Systems Japan K.K.</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2005, 2011  NEC Corporation</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 1999, 2002, 2007  Silicon Graphics, Inc.</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 1999, 2000, 2001, 2002  Mission Critical Linux, Inc.</code></span></span>
+<span class="line"><span class="ld"><code>This program is free software, covered by the GNU General Public License,</code></span></span>
+<span class="line"><span class="ld"><code>and you are welcome to change it and/or distribute copies of it under</code></span></span>
+<span class="line"><span class="ld"><code>certain conditions.  Enter "help copying" to see the conditions.</code></span></span>
+<span class="line"><span class="ld"><code>This program has absolutely no warranty.  Enter "help warranty" for details.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>GNU gdb (GDB) 7.6</code></span></span>
+<span class="line"><span class="ld"><code>Copyright (C) 2013 Free Software Foundation, Inc.</code></span></span>
+<span class="line"><span class="ld"><code>License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;</code></span></span>
+<span class="line"><span class="ld"><code>This is free software: you are free to change and redistribute it.</code></span></span>
+<span class="line"><span class="ld"><code>There is NO WARRANTY, to the extent permitted by law.  Type "show copying"</code></span></span>
+<span class="line"><span class="ld"><code>and "show warranty" for details.</code></span></span>
+<span class="line"><span class="ld"><code>This GDB was configured as "x86_64-unknown-linux-gnu".</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>      KERNEL: /boot/vmlinux-6.4.0-150700.38-default.gz</code></span></span>
+<span class="line"><span class="ld"><code>   DEBUGINFO: /usr/lib/debug/boot/vmlinux-6.4.0-150700.38-default.debug</code></span></span>
+<span class="line"><span class="ld"><code>    DUMPFILE: /var/crash/2024-04-23-11:17/vmcore</code></span></span>
+<span class="line"><span class="ld"><code>        CPUS: 2</code></span></span>
+<span class="line"><span class="ld"><code>        DATE: Thu Apr 23 13:17:01 2024</code></span></span>
+<span class="line"><span class="ld"><code>      UPTIME: 00:10:41</code></span></span>
+<span class="line"><span class="ld"><code>LOAD AVERAGE: 0.01, 0.09, 0.09</code></span></span>
+<span class="line"><span class="ld"><code>       TASKS: 42</code></span></span>
+<span class="line"><span class="ld"><code>    NODENAME: eros</code></span></span>
+<span class="line"><span class="ld"><code>     RELEASE: 6.4.0-150700.38-default</code></span></span>
+<span class="line"><span class="ld"><code>     VERSION: #1 SMP 2024-03-31 14:50:44 +0200</code></span></span>
+<span class="line"><span class="ld"><code>     MACHINE: x86_64  (2999 Mhz)</code></span></span>
+<span class="line"><span class="ld"><code>      MEMORY: 16 GB</code></span></span>
+<span class="line"><span class="ld"><code>       PANIC: "SysRq : Trigger a crashdump"</code></span></span>
+<span class="line"><span class="ld"><code>         PID: 9446</code></span></span>
+<span class="line"><span class="ld"><code>     COMMAND: "bash"</code></span></span>
+<span class="line"><span class="ld"><code>        TASK: ffff88003a57c3c0  [THREAD_INFO: ffff880037168000]</code></span></span>
+<span class="line"><span class="ld"><code>         CPU: 1</code></span></span>
+<span class="line"><span class="ld"><code>       STATE: TASK_RUNNING (SYSRQ)</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">crash&gt;</span></code></span></span></pre>
+                  </div>
+                  
+                  <p>The command output prints first useful data: There were 42 tasks running at the moment
+                     of the kernel crash. The cause of the crash was a SysRq trigger invoked by the task
+                     with PID 9446. It was a Bash process because the <code class="command">echo</code> that has been used is an internal command of the Bash shell.</p>
+                  
+                  <p>The <code class="command">crash</code> utility builds upon GDB and provides many additional commands. If you enter <code class="command">bt</code> without any parameters, the backtrace of the task running at the moment of the crash
+                     is printed:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">crash&gt;</span><code class="command">bt</code></code></span></span>
+<span class="line"><span class="ld"><code>PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"</code></span></span>
+<span class="line"><span class="ld"><code> #0 [ffff880037169db0] crash_kexec at ffffffff80268fd6</code></span></span>
+<span class="line"><span class="ld"><code> #1 [ffff880037169e80] __handle_sysrq at ffffffff803d50ed</code></span></span>
+<span class="line"><span class="ld"><code> #2 [ffff880037169ec0] write_sysrq_trigger at ffffffff802f6fc5</code></span></span>
+<span class="line"><span class="ld"><code> #3 [ffff880037169ed0] proc_reg_write at ffffffff802f068b</code></span></span>
+<span class="line"><span class="ld"><code> #4 [ffff880037169f10] vfs_write at ffffffff802b1aba</code></span></span>
+<span class="line"><span class="ld"><code> #5 [ffff880037169f40] sys_write at ffffffff802b1c1f</code></span></span>
+<span class="line"><span class="ld"><code> #6 [ffff880037169f80] system_call_fastpath at ffffffff8020bfbb</code></span></span>
+<span class="line"><span class="ld"><code>    RIP: 00007fa958991f60  RSP: 00007fff61330390  RFLAGS: 00010246</code></span></span>
+<span class="line"><span class="ld"><code>    RAX: 0000000000000001  RBX: ffffffff8020bfbb  RCX: 0000000000000001</code></span></span>
+<span class="line"><span class="ld"><code>    RDX: 0000000000000002  RSI: 00007fa959284000  RDI: 0000000000000001</code></span></span>
+<span class="line"><span class="ld"><code>    RBP: 0000000000000002   R8: 00007fa9592516f0   R9: 00007fa958c209c0</code></span></span>
+<span class="line"><span class="ld"><code>    R10: 00007fa958c209c0  R11: 0000000000000246  R12: 00007fa958c1f780</code></span></span>
+<span class="line"><span class="ld"><code>    R13: 00007fa959284000  R14: 0000000000000002  R15: 00000000595569d0</code></span></span>
+<span class="line"><span class="ld"><code>    ORIG_RAX: 0000000000000001  CS: 0033  SS: 002b</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">crash&gt;</span></code></span></span></pre>
+                  </div>
+                  
+                  <p>Now it is clear what happened: The internal <code class="command">echo</code> command of Bash shell sent a character to <code class="filename">/proc/sysrq-trigger</code>. After the corresponding handler recognized this character, it invoked the <code class="literal">crash_kexec()</code> function. This function called <code class="literal">panic()</code> and Kdump saved a dump.</p>
+                  
+                  <p>In addition to the basic GDB commands and the extended version of <code class="command">bt</code>, the crash utility defines other commands related to the structure of the Linux kernel.
+                     These commands understand the internal data structures of the Linux kernel and present
+                     their contents in a human readable format. For example, you can list the tasks running
+                     at the moment of the crash with <code class="command">ps</code>. With <code class="command">sym</code>, you can list all the kernel symbols with the corresponding addresses, or inquire
+                     an individual symbol for its value. With <code class="command">files</code>, you can display all the open file descriptors of a process. With <code class="command">kmem</code>, you can display details about the kernel memory usage. With <code class="command">vm</code>, you can inspect the virtual memory of a process, even at the level of individual
+                     page mappings. The list of useful commands is long, and many of these accept a wide
+                     range of options.</p>
+                  
+                  <p>The commands that we mentioned reflect the functionality of the common Linux commands,
+                     such as <code class="command">ps</code> and <code class="command">lsof</code>. To find out the exact sequence of events with the debugger, you need to know how
+                     to use GDB and to have strong debugging skills. Both of these are out of the scope
+                     of this document. Additionally, you need to understand the Linux kernel. Several useful
+                     reference information sources are given at the end of this document.</p>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvich02s07.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvich02.html">Up</a></td>
+                  <td class="next"><a href="bk07partvich02s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">20<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Basic Kdump configuration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">20<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Advanced Kdump configuration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

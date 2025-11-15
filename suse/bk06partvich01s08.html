@@ -1,0 +1,478 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>43.8.&nbsp;Managing SELinux</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvich01s07.html" rel="prev">
+      <link href="bk06partvich01s09.html" rel="next">
+      <link href="bk06partvich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvich01.html">Up</a> <a href="bk06partvich01s09.html">Next</a> <a href="bk06partvich01s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvich01s08.html" db-id="d616951e193458" id="sec-selinux-manage">
+            <header>
+               <h2><span class="label">43<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Managing SELinux</h2>
+            </header>
+            
+            
+            <p>The base SELinux configuration is now operational and it can now be configured to
+               secure your server. In SELinux, an additional set of rules is used to define exactly
+               which process or user can access which files, directories, or ports. To do this, SELinux
+               applies a context to every file, directory, process and port. This context is a security
+               label that defines how this file, directory, process or port should be treated. These
+               context labels are used by the SELinux policy, which defines exactly what should be
+               done with the context labels. By default, the policy blocks all non-default access,
+               which means that, as an administrator, you need to enable all features that are non-default
+               on your server.</p>
+            
+            <section class="sect2" id="sec-selinux-viewcontext">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Viewing the security context</h3>
+               </header>
+               
+               
+               <p>As already mentioned, files, directories and ports can be labeled. Within each label,
+                  different contexts are used. To be able to perform your daily administration work,
+                  the type context is what you are most interested in. As an administrator, you work
+                  with the type context. Many commands allow you to use the <code class="option">-Z</code> option to list current context settings. In <a class="xref xref-example" href="#ex-selnx-def-con">Example&nbsp;<span class="label">43<span class="sep">.</span>5</span> &amp;The default context for directories in the root directory&amp;</a> you can see what the context settings are for the directories in the root directory.</p>
+               
+               <div class="example formalobject" id="ex-selnx-def-con">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ls -Z</code></code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-xr-x. root root system_u:object_r:bin_t:s0       bin</code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-xr-x. root root system_u:object_r:boot_t:s0      boot</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:cgroup_t:s0    cgroup</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x+ root root unconfined_u:object_r:default_t:s0 data</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:device_t:s0    dev</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:etc_t:s0       etc</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:home_root_t:s0 home</code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-xr-x. root root system_u:object_r:lib_t:s0       lib</code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-xr-x. root root system_u:object_r:lib_t:s0       lib64</code></span></span>
+<span class="line"><span class="ld"><code>drwx------. root root system_u:object_r:lost_found_t:s0 lost+found</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:mnt_t:s0       media</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:autofs_t:s0    misc</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:mnt_t:s0       mnt</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 mnt2</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 mounts</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:autofs_t:s0    net</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:usr_t:s0       opt</code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-xr-x. root root system_u:object_r:proc_t:s0      proc</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 repo</code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-x---. root root system_u:object_r:admin_home_t:s0 root</code></span></span>
+<span class="line"><span class="ld"><code>dr-xr-xr-x. root root system_u:object_r:bin_t:s0       sbin</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:security_t:s0  selinux</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:var_t:s0       srv</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r--. root root unconfined_u:object_r:swapfile_t:s0 swapfile</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:sysfs_t:s0     sys</code></span></span>
+<span class="line"><span class="ld"><code>drwxrwxrwt. root root system_u:object_r:tmp_t:s0       tmp</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r--. root root unconfined_u:object_r:etc_runtime_t:s0 tmp2.tar</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r--. root root unconfined_u:object_r:etc_runtime_t:s0 tmp.tar</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:usr_t:s0       usr</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. root root system_u:object_r:var_t:s0       var</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>The default context for directories in the root directory</div>
+                  </header>
+               </div>
+               
+               <p>In the listing above, you can see the complete context for all directories. It consists
+                  of a user, a role, and a type. The s0 setting indicates the security level in Multi
+                  Level Security environments. These environments are not discussed here. In such an
+                  environment, make sure that s0 is set. The Context Type defines what kind of activity
+                  is permitted in the directory. Compare, for example, the <code class="filename">/root</code> directory, which has the <code class="filename">admin_home_t</code> context type, and the <code class="filename">/home</code> directory, which has the <code class="filename">home_root_t</code> context type. In the SELinux policy, different kinds of access are defined for these
+                  context types.</p>
+               
+               <p>Security labels are not only associated with files, but also with other items, such
+                  as ports and processes. In <a class="xref xref-example" href="#ex-selnx-set-proc">Example&nbsp;<span class="label">43<span class="sep">.</span>6</span> &amp;Showing SELinux settings for processes with <code class="command">ps Zaux</code>
+                     &amp;</a> for example you can see the context settings for processes on your server.</p>
+               
+               <div class="example formalobject" id="ex-selnx-set-proc">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ps Zaux</code></code></span></span>
+<span class="line"><span class="ld"><code>LABEL                           USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:init_t        root         1  0.0  0.0  10640   808 ?        Ss   05:31   0:00 init [5]</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:kernel_t      root         2  0.0  0.0      0     0 ?        S    05:31   0:00 [kthreadd]</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:kernel_t      root         3  0.0  0.0      0     0 ?        S    05:31   0:00 [ksoftirqd/0]</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:kernel_t      root         6  0.0  0.0      0     0 ?        S    05:31   0:00 [migration/0]</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:kernel_t      root         7  0.0  0.0      0     0 ?        S    05:31   0:00 [watchdog/0]</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:sysadm_t      root      2344  0.0  0.0  27640   852 ?        Ss   05:32   0:00 /usr/sbin/mcelog --daemon --config-file /etc/mcelog/mcelog.conf</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:sshd_t        root      3245  0.0  0.0  69300  1492 ?        Ss   05:32   0:00 /usr/sbin/sshd -o PidFile=/var/run/sshd.init.pid</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:cupsd_t       root      3265  0.0  0.0  68176  2852 ?        Ss   05:32   0:00 /usr/sbin/cupsd</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:nscd_t        root      3267  0.0  0.0 772876  1380 ?        Ssl  05:32   0:00 /usr/sbin/nscd</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:postfix_master_t root   3334  0.0  0.0  38320  2424 ?        Ss   05:32   0:00 /usr/lib/postfix/master</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:postfix_qmgr_t postfix  3358  0.0  0.0  40216  2252 ?        S    05:32   0:00 qmgr -l -t fifo -u</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:crond_t       root      3415  0.0  0.0  14900   800 ?        Ss   05:32   0:00 /usr/sbin/cron</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:fsdaemon_t    root      3437  0.0  0.0  16468  1040 ?        S    05:32   0:00 /usr/sbin/smartd</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:sysadm_t      root      3441  0.0  0.0  66916  2152 ?        Ss   05:32   0:00 login -- root</code></span></span>
+<span class="line"><span class="ld"><code>system_u:system_r:sysadm_t      root      3442  0.0  0.0   4596   800 tty2     Ss+  05:32   0:00 /sbin/mingetty tty2</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Showing SELinux settings for processes with <code class="command">ps Zaux</code>
+                        </div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-selinux-selectmode">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Selecting the SELinux mode</h3>
+               </header>
+               
+               
+               <p>In SELinux, three different modes can be used:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Enforcing:</span></dt>
+                     <dd>
+                        
+                        <p>This is the default mode. SELinux protects your server according to the rules in the
+                           policy, and SELinux logs all its activity to the audit log.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Permissive:</span></dt>
+                     <dd>
+                        
+                        <p>This mode is useful for troubleshooting. If set to Permissive, SELinux does not protect
+                           your server, but it still logs everything that happens to the log files.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Disabled:</span></dt>
+                     <dd>
+                        
+                        <p>In this mode, SELinux is switched off and no logging occurs. The file system labels
+                           are not removed from the file system.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>You have already read how you can set the current SELinux mode from GRUB&nbsp;2 while booting
+                  using the enforcing boot parameter.</p>
+               </section>
+            
+            <section class="sect2" id="sec-selinux-modifycontext">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Modifying SELinux context types</h3>
+               </header>
+               
+               
+               <p>An important part of the work of an administrator is setting context types on files
+                  to ensure appropriate working of SELinux.</p>
+               
+               <p>If a file is created within a specific directory, it inherits the context type of
+                  the parent directory by default. If a file is moved from one location to another location,
+                  it retains the context type that it had in the old location.</p>
+               
+               <p>To set the context type for files, you can use the <code class="command">semanage fcontext</code> command. With this command, you write the new context type to the policy, but it
+                  does not change the actual context type immediately. To apply the context types that
+                  are in the policy, you need to run the <code class="command">restorecon</code> command afterward.</p>
+               
+               <p>The challenge when working with <code class="command">semanage fcontext</code> is to find out which context you need. You can use</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage fcontext -l</code></code></span></span></pre>
+               </div>
+               
+               <p>to list all contexts in the policy, but it may be a bit hard to find out the actual
+                  context you need from that list as it is rather long (see <a class="xref xref-example" href="#ex-selnx-semanage">Example&nbsp;<span class="label">43<span class="sep">.</span>7</span> &amp;Viewing default file contexts&amp;</a>).</p>
+               
+               <div class="example formalobject" id="ex-selnx-semanage">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage fcontext -l | less</code></code></span></span>
+<span class="line"><span class="ld"><code>SELinux fcontext                                   type               Context</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/                                                  directory          system_u:object_r:root_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/.*                                                all files          system_u:object_r:default_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/[^/]+                                             regular file       system_u:object_r:etc_runtime_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/\.autofsck                                        regular file       system_u:object_r:etc_runtime_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/\.autorelabel                                     regular file       system_u:object_r:etc_runtime_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/\.journal                                         all files          X:&gt;&gt;None&gt;&gt;</code></span></span>
+<span class="line"><span class="ld"><code>/\.suspended                                       regular file       system_u:object_r:etc_runtime_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/a?quota\.(user|group)                             regular file       system_u:object_r:quota_db_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/afs                                               directory          system_u:object_r:mnt_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/bin                                               directory          system_u:object_r:bin_t:s0</code></span></span>
+<span class="line"><span class="ld"><code>/bin/.*                                            all files          system_u:object_r:bin_t:s0</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Viewing default file contexts</div>
+                  </header>
+               </div>
+               
+               <p>There are three ways to find out which context settings are available for your services:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Install the service and look at the default context settings that are used. This is
+                        the easiest and recommended option.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Consult the man page for the specific service. Some services have a man page that
+                        ends in <code class="literal">_selinux</code>, which contains all the information you need to find the correct context settings.</p>
+                     
+                     <p>When you have found the right context setting, apply it using <code class="command">semanage fcontext</code>. This command takes <code class="option">-t</code> context type as its first argument, followed by the name of the directory or file
+                        to which you want to apply the context settings. To apply the context to everything
+                        that already exists in the directory where you want to apply the context, you add
+                        the regular expression <code class="literal">(/.*)?</code> to the name of the directory. This means: optionally, match a slash followed by any
+                        character. The examples section of the <code class="command">semanage</code> man page has some useful usage examples for <code class="command">semanage</code>. For more information on regular expressions, see for example the tutorial at <a class="link" href="https://www.regular-expressions.info/">https://www.regular-expressions.info/</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Display a list of all context types that are available on your system:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">seinfo -t</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>Since the command by itself outputs an overwhelming amount of information, it should
+                        be used in combination with <code class="command">grep</code> or a similar command for filtering.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-selinux-applyfilecontext">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>8<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Applying file contexts</h3>
+               </header>
+               
+               
+               <p>To help you apply the SELinux context properly, the following procedure shows how
+                  to set a context using <code class="command">semanage fcontext</code> and <code class="command">restorecon</code>. You notice that at first attempt, the Web server with a non-default document root
+                  does not work. After changing the SELinux context, it does:</p>
+               
+               <div class="informalobject procedure" id="sec-selinux-applyfilecontext_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create the <code class="filename">/web</code> directory and then change to it:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">mkdir /web &amp;&amp; cd /web</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Use a text editor to create the file <code class="filename">/web/index.html</code> that contains the text welcome to my Web site.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Open the file <code class="filename">/etc/apache2/default-server.conf</code> with an editor, and change the DocumentRoot line to <code class="literal">DocumentRoot /web</code></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the Apache Web server:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl start apache2</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Open a session to your local Web server:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">w3m localhost</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>You receive a <em>Connection refused</em> message. Press <span class="enter keycap">↵</span>, and then <code class="command">q</code> to quit w3m.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Find the current context type for the default Apache <code class="literal">DocumentRoot</code>, which is <code class="filename">/srv/www/htdocs</code>. It should be set to <code class="filename">httpd_sys_content_t</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ls -Z /srv/www</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Set the new context in the policy and press <span class="enter keycap">↵</span>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage fcontext -a -f "" -t httpd_sys_content_t '/web(/.*) ?'</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Apply the new context type:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">restorecon /web</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Show the context of the files in the directory <code class="filename">/web</code>. You can see that the new context type has been set properly to the <code class="filename">/web</code> directory, but not to its contents.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ls -Z /web</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Apply the new context recursively to the <code class="filename">/web</code> directory. The type context has now been set correctly.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">restorecon -R /web</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Restart the Web server:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl restart apache2</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>You should now be able to access the contents of the <code class="filename">/web</code> directory.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-selinux-configurepolicy">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>8<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring SELinux policies</h3>
+               </header>
+               
+               
+               <p>The easiest way to change the behavior of the policy is by working with Booleans.
+                  These are on-off switches that you can use to change the settings in the policy. To
+                  find out which Booleans are available, run</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage boolean -l</code></code></span></span></pre>
+               </div>
+               
+               <p>It shows a long list of Booleans, with a short description of what each of these Booleans
+                  does for you. When you have found the Boolean you want to set, you can use <code class="command">setsebool -P</code>, followed by the name of the Boolean that you want to change. It is important to
+                  use the <code class="option">-P</code> option at all times when using <code class="command">setsebool</code>. This option writes the setting to the policy file on disk, and this is the only
+                  way to make sure that the Boolean is applied automatically after a reboot.</p>
+               
+               <p>The procedure below gives an example of changing Boolean settings</p>
+               
+               <div class="informalobject procedure" id="sec-selinux-configurepolicy_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>List Booleans that are related to FTP servers.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage boolean -l | grep ftp</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Turn the Boolean off:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">setsebool allow_ftpd_anon_write off</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>It does not take much time to write the change. Then verify that the Boolean is indeed
+                           turned off:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semanage boolean -l|grep ftpd_anon</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot your server.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check again to see if the <code class="literal">allow_ftpd_anon_write</code> Boolean is still turned on. As it has not yet been written to the policy, you notice
+                           that it is off.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Switch the Boolean and write the setting to the policy:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">setsebool -P allow_ftpd_anon_write</code></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-selinux-module">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>8<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Working with SELinux modules</h3>
+               </header>
+               
+               
+               <p>By default, SELinux uses a modular policy. This means that the policy that implements
+                  SELinux features is not just one huge policy, but it consists of many smaller modules.
+                  Each module covers a specific part of the SELinux configuration. The concept of the
+                  SELinux module was introduced to make it easier for third party vendors to make their
+                  services compatible with SELinux. To get an overview of the SELinux modules, you can
+                  use the <code class="command">semodule -l</code> command. This command lists all current modules in use by SELinux and their version
+                  numbers.</p>
+               
+               <p>As an administrator, you can switch modules on or off. This can be useful to disable
+                  only a part of SELinux and not everything to run a specific service without SELinux
+                  protection. Especially in the case of <span class="phrase productname">SUSE Linux Enterprise Server</span>, where there is not a completely supported SELinux policy yet, it can make sense
+                  to switch off all modules that you do not need so that you can focus on the services
+                  that really do need SELinux protection. To switch off an SELinux module, use</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semodule -d <em class="replaceable">MODULENAME</em></code></code></span></span></pre>
+               </div>
+               
+               <p>To switch it on again, you can use</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">semodule -e modulename</code></code></span></span></pre>
+               </div>
+               
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvich01s07.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partvich01s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">43<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Configuring SELinux</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">43<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Troubleshooting</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

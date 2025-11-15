@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.&nbsp;Running virtual machines</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar04s05.html" rel="prev">
+      <link href="bk11ar04s07.html" rel="next">
+      <link href="bk11ar04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar04.html">Up</a> <a href="bk11ar04s07.html">Next</a> <a href="bk11ar04s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar04s06.html" db-id="d616951e321959" id="sec-virtualization-kubevirt-running-vm">
+            <header>
+               <h2><span class="label">6</span><span class="sep">.&nbsp;</span>Running virtual machines</h2>
+            </header>
+            
+            
+            <p>Two of the most interesting custom resources provided by KubeVirt are <em class="italic">VirtualMachine</em> (VM) and <em class="italic">VirtualMachineInstance</em> (VMI). As the names imply, a VMI is a running instance of a VM. The lifecycle of
+               a VMI can be managed independently from a VM, but long-lived, stateful virtual machines
+               are managed as a VM. The VM is deployed to the cluster in a shutoff state, then activated
+               by changing the desired state to running. Changing a VM resource state can be done
+               with the standard Kubernetes client tool <code class="package">kubectl</code> or with the client <code class="package">virtctl</code> provided by KubeVirt.</p>
+            
+            <p>The VM and VMI custom resources make up part of the KubeVirt API. To create a virtual
+               machine, a VM or VMI manifest must be created that adheres to the API. The API supports
+               setting a wide variety of the common virtual machine attributes, for example, model
+               of vCPU, number of vCPUs, amount of memory, disks, network ports, etc. Below is a
+               simple example of a VMI manifest for a virtual machine with one Nehalem CPU, 2G of
+               memory, one disk, and one network interface:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>apiVersion: kubevirt.io/v1</code></span></span>
+<span class="line"><span class="ld"><code>kind: VirtualMachineInstance</code></span></span>
+<span class="line"><span class="ld"><code>metadata:</code></span></span>
+<span class="line"><span class="ld"><code>  labels:</code></span></span>
+<span class="line"><span class="ld"><code>    special: vmi-host-disk</code></span></span>
+<span class="line"><span class="ld"><code>  name: sles15sp2</code></span></span>
+<span class="line"><span class="ld"><code>spec:</code></span></span>
+<span class="line"><span class="ld"><code>  domain:</code></span></span>
+<span class="line"><span class="ld"><code>    cpu:</code></span></span>
+<span class="line"><span class="ld"><code>      model: Nehalem-IBRS</code></span></span>
+<span class="line"><span class="ld"><code>    devices:</code></span></span>
+<span class="line"><span class="ld"><code>      disks:</code></span></span>
+<span class="line"><span class="ld"><code>      - disk:</code></span></span>
+<span class="line"><span class="ld"><code>          bus: virtio</code></span></span>
+<span class="line"><span class="ld"><code>        name: host-disk</code></span></span>
+<span class="line"><span class="ld"><code>      interfaces:</code></span></span>
+<span class="line"><span class="ld"><code>        - name: green</code></span></span>
+<span class="line"><span class="ld"><code>          masquerade: {}</code></span></span>
+<span class="line"><span class="ld"><code>          ports:</code></span></span>
+<span class="line"><span class="ld"><code>            - port: 80</code></span></span>
+<span class="line"><span class="ld"><code>    machine:</code></span></span>
+<span class="line"><span class="ld"><code>      type: ""</code></span></span>
+<span class="line"><span class="ld"><code>    resources:</code></span></span>
+<span class="line"><span class="ld"><code>      requests:</code></span></span>
+<span class="line"><span class="ld"><code>        memory: 2048M</code></span></span>
+<span class="line"><span class="ld"><code>  terminationGracePeriodSeconds: 0</code></span></span>
+<span class="line"><span class="ld"><code>  networks:</code></span></span>
+<span class="line"><span class="ld"><code>  - name: green</code></span></span>
+<span class="line"><span class="ld"><code>    pod: {}</code></span></span>
+<span class="line"><span class="ld"><code>  volumes:</code></span></span>
+<span class="line"><span class="ld"><code>  - hostDisk:</code></span></span>
+<span class="line"><span class="ld"><code>      path: /hostDisks/sles15sp2/disk.raw</code></span></span>
+<span class="line"><span class="ld"><code>      type: Disk</code></span></span>
+<span class="line"><span class="ld"><code>      shared: true</code></span></span>
+<span class="line"><span class="ld"><code>    name: host-disk</code></span></span></pre>
+            </div>
+            
+            <p>Applying this VMI manifest to the cluster creates a virt-launcher container running
+               <code class="package">libvirt</code> and <code class="package">qemu</code>, providing the familiar KVM virtual machine environment.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl apply -f sles15sp2vmi.yaml</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl get vmis</code></span></span></pre>
+            </div>
+            
+            <p>Similar to other Kubernetes resources, VMs and VMIs can be managed with the <code class="package">kubectl</code> client tool. Any <code class="package">kubectl</code> operation that works with resource types works with the KubeVirt custom resources,
+               for example, describe, delete, get, log, patch, etc. VM resources are a bit more awkward
+               to manage with <code class="package">kubectl</code>. Since a VM resource can be in a shutoff state, turning it on requires patching the
+               manifest to change the desired state to running. Find an example below:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>kubectl patch vm sles15sp2 --type merge -p '{"spec":{"running":true}}'</code></span></span></pre>
+            </div>
+            
+            <p>The <code class="package">virtctl</code> tool included in the <code class="package">kubevirt-virtclt</code> package provides syntactic sugar on top of <code class="package">kubectl</code> for VM and VMI resources, allowing them to be stopped, started, paused, unpaused
+               and migrated. <code class="package">virtctl</code> also provides access to the virtual machine's serial console and graphics server.
+               Find an example below:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl start VM</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl console VMI</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl stop VM</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl pause VM|VMI</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl unpause VM|VMI</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl vnc VMI</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virtctl migrate VM</code></span></span></pre>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar04s05.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar04.html">Up</a></td>
+                  <td class="next"><a href="bk11ar04s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5</span><span class="sep">.&nbsp;</span>Containerized Data Importer</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">7</span><span class="sep">.&nbsp;</span>Live migration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

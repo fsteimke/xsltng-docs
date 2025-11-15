@@ -1,0 +1,846 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>23.4.&nbsp;
+         firewalld
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich03s03.html" rel="prev">
+      <link href="bk06partiiich03s05.html" rel="next">
+      <link href="bk06partiiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich03.html">Up</a> <a href="bk06partiiich03s05.html">Next</a> <a href="bk06partiiich03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich03s04.html" db-id="d616951e178665" id="sec-security-firewall-firewalld">
+            <header>
+               <h2><span class="label">23<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                  <code class="daemon systemitem">firewalld</code>
+                  </h2>
+            </header>
+            
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">
+                           <code class="daemon systemitem">firewalld</code> replaces SuSEfirewall2</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p><span class="phrase productname">SUSE Linux Enterprise Server</span> 15 GA introduces <code class="daemon systemitem">firewalld</code> as the new default software firewall, replacing SuSEfirewall2. If you are upgrading
+                           from a release older than <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 GA, SuSEfirewall2 will be unchanged and you must manually upgrade to <code class="daemon systemitem">firewalld</code> (see <a class="xref xref-sect1" href="bk06partiiich03s05.html">the section called “Migrating from SuSEfirewall2”</a>).</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p><code class="daemon systemitem">firewalld</code> is a daemon that maintains the system's <code class="command">iptables</code> rules and offers a D-Bus interface for operating on them. It comes with a command
+               line utility <code class="command">firewall-cmd</code> and a graphical user interface <code class="command">firewall-config</code> for interacting with it. Since <code class="daemon systemitem">firewalld</code> is running in the background and provides a well defined interface it allows other
+               applications to request changes to the iptables rules, for example to set up virtual
+               machine networking.</p>
+            
+            <p><code class="daemon systemitem">firewalld</code> implements different security zones. Several predefined zones like <code class="literal">internal</code> and <code class="literal">public</code> exist. The administrator can define additional custom zones if desired. Each zone
+               contains its own set of iptables rules. Each network interface is a member of exactly
+               one zone. Individual connections can also be assigned to a zone based on the source
+               addresses.</p>
+            
+            <p>Each zone represents a certain level of trust. For example the <code class="literal">public</code> zone is not trusted, because other computers in this network are not under your control
+               (suitable for Internet or wireless hotspot connections). On the other hand the <code class="literal">internal</code> zone is used for networks that <em>are</em> under your control, like a home or company network. By utilizing zones this way,
+               a host can offer different kinds of services to trusted networks and untrusted networks
+               in a defined way.</p>
+            
+            <p>For more information about the predefined zones and their meaning in <code class="daemon systemitem">firewalld</code>, refer to its manual at <a class="link" href="https://www.firewalld.org/documentation/zone/predefined-zones.html">https://www.firewalld.org/documentation/zone/predefined-zones.html</a>.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">No zone assigned behavior</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>The initial state for network interfaces is to be assigned to no zone at all. In this
+                           case the network interface will be implicitly handled in the default zone, which can
+                           be determined by calling <code class="command">firewall-cmd --get-default-zone</code>. If not configured otherwise, the default zone is the <code class="literal">public</code> zone.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>The <code class="daemon systemitem">firewalld</code> packet filtering model allows any outgoing connections to pass. Outgoing connections
+               are connections that are actively established by the local host. Incoming connections
+               that are established by remote hosts are blocked if the respective service is not
+               allowed in the zone in question. Therefore, each of the interfaces with incoming traffic
+               must be placed in a suitable zone to allow for the desired services to be accessible.
+               For each of the zones, define the services or protocols you need.</p>
+            
+            <p>An important concept of <code class="daemon systemitem">firewalld</code> is the distinction between two separate configurations: the <em>runtime</em> and the <em>permanent</em> configuration. The runtime configuration represents the currently active rules, while
+               the permanent configuration represents the saved rules that will be applied when restarting
+               <code class="daemon systemitem">firewalld</code>. This allows to add temporary rules that will be discarded after restarting <code class="daemon systemitem">firewalld</code>, or to experiment with new rules while being able to revert back to the original
+               state. When you are changing the configuration, you need to be aware of which configuration
+               you are editing. How this is done is discussed in <a class="xref xref-sect3" href="#sec-security-firewall-firewalld-configurations">the section called “Runtime versus permanent configuration”</a>.</p>
+            
+            <p>To perform the <code class="daemon systemitem">firewalld</code> configuration using the graphical user interface <code class="command">firewall-config</code> refer to its <a class="link" href="https://www.firewalld.org/documentation/utilities/firewall-config.html">documentation</a>. In the following section we will be looking at how to perform typical <code class="daemon systemitem">firewalld</code> configuration tasks using <code class="command">firewall-cmd</code> on the command line.</p>
+            
+            <section class="sect2" id="sec-security-firewall-firewalld-nm">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring the firewall with NetworkManager</h3>
+               </header>
+               
+               
+               <p>The NetworkManager supports a basic configuration of <code class="daemon systemitem">firewalld</code> by selecting zones.</p>
+               
+               <p>When editing a wired or wireless connection, go to the <em>Identity</em> tab in the configuration window and use the <code class="literal">Firewall Zone</code> drop-down box.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-firewall-firewalld-yast">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the firewall with YaST</h3>
+               </header>
+               
+               
+               <p>The <code class="command">yast firewall</code> module supports a basic configuration of <code class="daemon systemitem">firewalld</code>. It provides a zone selector, services selector, and ports selector. It does not
+                  support creating custom iptables rules, and limits zone creation and customization
+                  to selecting services and ports.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Changing settings in running mode</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>YaST respects the settings in <code class="filename">/etc/firewalld/firewalld.conf</code>, where the default value for <code class="option">FlushAllOnReload</code> is set to <code class="literal">no</code>. Therefore, YaST does not change settings in running mode. For example, if you have
+                              assigned an interface to a different zone with YaST, restart the firewalld daemon
+                              for the change to take effect.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-firewall-firewalld-cmd">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring the firewall on the command line</h3>
+               </header>
+               
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-cmd_s3_1">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Firewall start-up</h4>
+                  </header>
+                  
+                  
+                  <p><code class="daemon systemitem">firewalld</code> will be installed and enabled by default. It is a regular <code class="daemon systemitem">systemd</code> service that can be configured via <code class="command">systemctl</code> or the YaST Services Manager.</p>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Automatic firewall configuration</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>After the installation, YaST automatically starts <code class="daemon systemitem">firewalld</code> and leaves all interfaces in the default <code class="literal">public</code> zone. If a server application is configured and activated on the system, YaST can
+                                 adjust the firewall rules via the options <span class="guimenu">Open Ports on Selected Interface in Firewall</span> or <span class="guimenu">Open Ports on Firewall</span> in the server configuration modules. Some server module dialogs include a <span class="guimenu">Firewall Details</span> button for activating additional services and ports.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-configurations">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Runtime versus permanent configuration</h4>
+                  </header>
+                  
+                  
+                  <p>By default, all <code class="command">firewall-cmd</code> commands operate on the runtime configuration. You can apply most operations to the
+                     permanent configuration <em>only</em> by adding the <code class="literal">--permanent</code> parameter. When doing so, the change affects the permanent configuration and will
+                     not be effective immediately in the runtime configuration. There is currently no way
+                     to add a rule to both runtime and permanent configurations in a single invocation.
+                     To achieve this you can apply all necessary changes to the runtime configuration and
+                     when all is working as expected issue the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --runtime-to-permanent</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>This writes all current runtime rules into the permanent configuration. Any temporary
+                     modifications you or other programs may have made to the firewall in other contexts
+                     are made permanent this way. If you are unsure about this, you can also take the opposite
+                     approach to be on the safe side: Add new rules to the permanent configuration and
+                     reload <code class="daemon systemitem">firewalld</code> to make them active.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Note</div>
+                           </header>
+                           <div>
+                              
+                              <p>Some configuration items, like the default zone, are shared by both the runtime and
+                                 permanent configurations. Changing them reflects in both configurations at once.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>To revert the runtime configuration to the permanent configuration and thereby discard
+                     any temporary changes, two possibilities exist, either via the <code class="daemon systemitem">firewalld</code> command line interface or via <code class="daemon systemitem">systemd</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --reload</code></code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl reload firewalld</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>For brevity the examples in the following sections will always operate on the runtime
+                     configuration, if applicable. Adjust them accordingly to make them permanent.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-cmd_s3_3">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Assignment of interfaces to zones</h4>
+                  </header>
+                  
+                  
+                  <p>You can list all network interfaces currently assigned to a zone like this:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --zone=public --list-interfaces</code></code></span></span>
+<span class="line"><span class="ld"><code>eth0</code></span></span></pre>
+                  </div>
+                  
+                  <p>Similarly you can query which zone a specific interface is assigned to:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --get-zone-of-interface=eth0</code></code></span></span>
+<span class="line"><span class="ld"><code>public</code></span></span></pre>
+                  </div>
+                  
+                  <p>The following command lines assign an interface to a zone. The variant using <code class="literal">--add-interface</code> works if <code class="literal">eth0</code> is not already assigned to another zone. The variant using <code class="literal">--change-interface</code> always works, removing <code class="literal">eth0</code> from its current zone if necessary:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --zone=internal --add-interface=eth0</code><span class="prompt root">#</span><code class="command">firewall-cmd --zone=internal --change-interface=eth0</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Any operations without an explicit <code class="literal">--zone</code> argument will implicitly operate on the default zone. This pair of commands can be
+                     used for getting and setting the default zone assignment:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --get-default-zone</code></code></span></span>
+<span class="line"><span class="ld"><code>dmz</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --set-default-zone=public</code></code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Important</div>
+                           </header>
+                           <div>
+                              
+                              <p>Any network interfaces not explicitly assigned to a zone are automatically part of
+                                 the default zone. Changing the default zone reassigns all those network interfaces
+                                 immediately for the permanent and runtime configurations. You should never use a trusted
+                                 zone like <code class="literal">internal</code> as the default zone, to avoid unexpected exposure to threats. For example, hotplugged
+                                 network interfaces like USB Ethernet interfaces would automatically become part of
+                                 the trusted zone in such cases.</p>
+                              
+                              <p>Interfaces that are not explicitly part of any zone do not appear in the zone interface
+                                 list. There is currently no command to list unassigned interfaces. Due to this it
+                                 is best to avoid unassigned network interfaces during regular operation.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-cmd-ports">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Making network services accessible</h4>
+                  </header>
+                  
+                  
+                  <p><code class="daemon systemitem">firewalld</code> has a concept of <em>services</em>. A service consists of definitions of ports and protocols. These definitions logically
+                     belong together in the context of a given network service like a Web or mail server
+                     protocol. The following commands can be used to get information about predefined services
+                     and their details:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --get-services</code></code></span></span>
+<span class="line"><span class="ld"><code>[...] dhcp dhcpv6 dhcpv6-client dns docker-registry [...]</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --info-service dhcp</code></code></span></span>
+<span class="line"><span class="ld"><code>dhcp</code></span></span>
+<span class="line"><span class="ld"><code>  ports: 67/udp</code></span></span>
+<span class="line"><span class="ld"><code>  protocols:</code></span></span>
+<span class="line"><span class="ld"><code>  source-ports:</code></span></span>
+<span class="line"><span class="ld"><code>  modules:</code></span></span>
+<span class="line"><span class="ld"><code>  destination:</code></span></span></pre>
+                  </div>
+                  
+                  <p>These service definitions can be used for easily making the associated network functionality
+                     accessible in a zone. This command line opens the HTTP Web server port in the internal
+                     zone, for example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --add-service=http --zone=internal</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>The removal of a service from a zone is performed using the counterpart command <code class="literal">--remove-service</code>. You can also define custom services using the <code class="literal">--new-service</code> subcommand. Refer to <a class="link" href="https://www.firewalld.org/documentation/howto/add-a-service.html">https://www.firewalld.org/documentation/howto/add-a-service.html</a> for more details on how to do this.</p>
+                  
+                  <p>If you just want to open a single port by number, you can use the following approach.
+                     This will open TCP port 8000 in the internal zone:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --add-port=8000/tcp --zone=internal</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>For removal use the counterpart command <code class="literal">--remove-port</code>.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Temporarily opening a service or port</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p><code class="daemon systemitem">firewalld</code> supports a <code class="literal">--timeout</code> parameter that allows to open a service or port for a limited time duration. This
+                                 can be helpful for quick testing and making sure that closing the service or port
+                                 is not forgotten. To allow the <code class="literal">imap</code> service in the <code class="literal">internal</code> zone for 5 minutes, you would call</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --add-service=imap --zone=internal --timeout=5m</code></code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-cmd_s3_5">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Lockdown mode</h4>
+                  </header>
+                  
+                  
+                  <p><code class="daemon systemitem">firewalld</code> offers a <em>lockdown mode</em> that prevents changes to the firewall rules while it is active. Since applications
+                     can automatically change the firewall rules via the D-Bus interface, and depending
+                     on the PolicyKit rules regular users may be able to do the same, it can be helpful
+                     to prevent changes in some situations. You can find more information about this at
+                     <a class="link" href="https://fedoraproject.org/wiki/Features/FirewalldLockdown">https://fedoraproject.org/wiki/Features/FirewalldLockdown</a>.</p>
+                  
+                  <p>It is important to understand that the lockdown mode feature provides no real security,
+                     but merely protection against accidental or benign attempts to change the firewall.
+                     The way the lockdown mode is currently implemented in <code class="daemon systemitem">firewalld</code> provides no security against malicious intent, as is pointed out at <a class="link" href="https://seclists.org/oss-sec/2017/q3/139">https://seclists.org/oss-sec/2017/q3/139</a>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-cmd_s3_6">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Adding custom <code class="command">iptables</code> rules</h4>
+                  </header>
+                  
+                  
+                  <p><code class="daemon systemitem">firewalld</code> claims exclusive control over the host's <code class="systemitem">netfilter</code> rules. You should never modify firewall rules using other tools like <code class="command">iptables</code>. Doing so could confuse <code class="daemon systemitem">firewalld</code> and break security or functionality.</p>
+                  
+                  <p>If you need to add custom firewall rules that aren't covered by <code class="daemon systemitem">firewalld</code> features then there are two ways to do so. To directly pass raw <code class="command">iptables</code> syntax you can use the <code class="literal">--direct</code> option. It expects the table, chain, and priority as initial arguments and the rest
+                     of the command line is passed as is to <code class="command">iptables</code>. The following example adds a connection tracking rule for the forwarding filter
+                     table:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -i eth0 -o eth1 \ -p tcp --dport 80 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Additionally, <code class="daemon systemitem">firewalld</code> implements so called <em>rich rules</em>, an extended syntax for specifying <code class="command">iptables</code> rules in an easier way. You can find the syntax specification at <a class="link" href="https://www.firewalld.org/documentation/man-pages/firewalld.richlanguage.html">https://www.firewalld.org/documentation/man-pages/firewalld.richlanguage.html</a>. The following example drops all IPv4 packets originating from a certain source address:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --zone=public --add-rich-rule='rule family="ipv4" \ source address="192.168.2.4" drop'</code></code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-cmd_s3_7">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Routing, forwarding, and masquerading</h4>
+                  </header>
+                  
+                  
+                  <p><code class="daemon systemitem">firewalld</code> is not designed to run as a fully fledged router. The basic functionality for typical
+                     home router setups is available. For a corporate production router you should not
+                     use <code class="daemon systemitem">firewalld</code>, however, but use dedicated router and firewall devices instead. The following provides
+                     just a few pointers on what to look for to utilize routing in <code class="daemon systemitem">firewalld</code>:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>First of all IP forwarding needs to be enabled as outlined in <a class="xref xref-sect1" href="bk06partiiich03s02.html">the section called “Masquerading basics”</a>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>To enable IPv4 masquerading, for example in the <code class="literal">external</code> zone, issue the following command.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --zone=external --add-masquerade</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="daemon systemitem">firewalld</code> can also enable port forwarding. The following command forwards local TCP connections
+                           on port 80 to another host:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --zone=public \ --add-forward-port=port=80:proto=tcp:toport=80:toaddr=192.168.1.10</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     </ul>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-security-firewall-firewalld-rpcports">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Accessing services listening on dynamic ports</h3>
+               </header>
+               
+               
+               <p>Some network services do not listen on predefined port numbers. Instead they operate
+                  based on the <code class="literal">portmapper</code> or <code class="literal">rpcbind</code> protocol. We will use the term <code class="literal">rpcbind</code> from here on. When one of these services starts, it chooses a random local port and
+                  talks to <code class="literal">rpcbind</code> to make the port number known. <code class="literal">rpcbind</code> itself is listening on a well known port. Remote systems can then query <code class="literal">rpcbind</code> about the network services it knows about and on which ports they are listening.
+                  Not many programs use this approach anymore today. Popular examples are Network Information
+                  Services (NIS; <code class="command">ypserv</code> and <code class="command">ypbind</code>) and the Network File System (NFS) version 3.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">About NFSv4</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The newer NFSv4 requires the single well-known TCP port 2049. For protocol version
+                              4.0, the kernel parameter <code class="literal">fs.nfs.nfs_callback_tcpport</code> may need to be set to a static port (see <a class="xref xref-example" href="#ex-security-firewall-nfscallback">Example&nbsp;<span class="label">23<span class="sep">.</span>1</span>, “Callback port configuration for the <code class="literal">nfs</code> kernel module in <code class="filename">/etc/modprobe.d/60-nfs.conf</code>
+                                 ”</a>). Starting with protocol version 4.1 this setting has also become unnecessary.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The dynamic nature of the <code class="literal">rpcbind</code> protocol makes it difficult to make the affected services behind the firewall accessible.
+                  <code class="daemon systemitem">firewalld</code> does not support these services by itself. For manual configuration, see <a class="xref xref-sect3" href="#sec-security-firewall-firewalld-rpcports-static">the section called “Configuring static ports”</a>. Alternatively, <span class="phrase productname">SUSE Linux Enterprise Server</span> provides a helper script. For details, see <a class="xref xref-sect3" href="#sec-security-firewall-firewalld-rpcports-helper">the section called “Using <code class="package">firewall-rpcbind-helper</code> for configuring static ports”</a>.</p>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-rpcports-static">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring static ports</h4>
+                  </header>
+                  
+                  
+                  <p>One possibility is to configure all involved network services to use fixed port numbers.
+                     Once this is done, the fixed ports can be opened in <code class="daemon systemitem">firewalld</code> and everything should work. The actual port numbers used are at your discretion but
+                     should not clash with any well-known port numbers assigned to other services. See
+                     <a class="xref xref-table" href="#tab-security-firewall-sysconfigports">Table&nbsp;<span class="label">23<span class="sep">.</span>1</span>, “Important sysconfig variables for static port configuration”</a> for a list of the available configuration items for NIS and NFSv3 services. Depending
+                     on your actual NIS or NFS configuration, not all of these ports may be required for
+                     your setup.</p>
+                  
+                  <div class="formalobject table" id="tab-security-firewall-sysconfigports">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">23<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Important sysconfig variables for static port configuration</div>
+                     </header>
+                     <table>
+                        <colgroup>
+                           <col style="width: 44%">
+                           <col style="width: 28%">
+                           <col style="width: 28%">
+                        </colgroup>
+                        <thead>
+                           
+                           <tr>
+                              <th class="bleft btop colsep rowsep">
+                                 <p>File Path</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>Variable Name</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>Example Value</p>
+                              </th>
+                           </tr>
+                           </thead>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep rowsep" rowspan="5"><code class="filename">/etc/sysconfig/nfs</code></td>
+                              <td class="btop colsep rowsep">MOUNTD_PORT</td>
+                              <td class="btop colsep rowsep">21001</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">STATD_PORT</td>
+                              <td class="colsep rowsep">21002</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">LOCKD_TCPPORT</td>
+                              <td class="colsep rowsep">21003</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">LOCKD_UDPPORT</td>
+                              <td class="colsep rowsep">21003</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">RQUOTAD_PORT</td>
+                              <td class="colsep rowsep">21004</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep"><code class="filename">/etc/sysconfig/ypbind</code></td>
+                              <td class="colsep rowsep">YPBIND_OPTIONS</td>
+                              <td class="colsep rowsep">-p 24500</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep" rowspan="3"><code class="filename">/etc/sysconfig/ypserv</code></td>
+                              <td class="colsep rowsep">YPXFRD_ARGS</td>
+                              <td class="colsep rowsep">-p 24501</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">YPSERV_ARGS</td>
+                              <td class="colsep rowsep">-p 24502</td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">YPPASSWDD_ARGS</td>
+                              <td class="colsep rowsep">--port 24503</td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  
+                  <p>You need to restart any related services that are affected by these static port configurations
+                     for the changes to take effect. You can see the currently assigned rpcbind ports by
+                     using the command <code class="command">rpcinfo -p</code>. On success, the statically configured ports should show up there.</p>
+                  
+                  <p>Apart from the port configuration for network services running in userspace there
+                     are also ports that are used by the Linux kernel directly when it comes to NFS. One
+                     of these ports is <code class="literal">nfs_callback_tcpport</code>. It is only required for NFS protocol versions older than 4.1. There is a sysctl
+                     named <code class="literal">fs.nfs.nfs_callback_tcpport</code> to configure this port. This sysctl node only appears dynamically when NFS mounts
+                     are active. Therefore it is best to configure the port via kernel module parameters.
+                     This can be achieved by creating a file as shown in <a class="xref xref-example" href="#ex-security-firewall-nfscallback">Example&nbsp;<span class="label">23<span class="sep">.</span>1</span>, “Callback port configuration for the <code class="literal">nfs</code> kernel module in <code class="filename">/etc/modprobe.d/60-nfs.conf</code>
+                        ”</a>.</p>
+                  
+                  <div class="example formalobject" id="ex-security-firewall-nfscallback">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options nfs callback_tcpport=21005</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Callback port configuration for the <code class="literal">nfs</code> kernel module in <code class="filename">/etc/modprobe.d/60-nfs.conf</code>
+                           </div>
+                     </header>
+                  </div>
+                  
+                  <p>To make this change effective it is easiest to reboot the machine. Otherwise all NFS
+                     services need to be stopped and the <code class="literal">nfs</code> kernel module needs to be reloaded. To verify the active NFS callback port, check
+                     the output of <code class="command">cat /sys/module/nfs/parameters/callback_tcpport</code>.</p>
+                  
+                  <p>For easy handling of the now statically configured RPC ports, it is useful to create
+                     a new <code class="daemon systemitem">firewalld</code> service definition. This service definition groups all related ports and, for example,
+                     makes it easy to make them accessible in a specific zone. In <a class="xref xref-example" href="#ex-security-firewall-newrpcservice">Example&nbsp;<span class="label">23<span class="sep">.</span>2</span>, “Commands to define a new <code class="daemon systemitem">firewalld</code> RPC service for NFS”</a> this is done for the NFS ports as they have been configured in the accompanying examples.</p>
+                  
+                  <div class="example formalobject" id="ex-security-firewall-newrpcservice">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --permanent --new-service=nfs-rpc</code><span class="prompt root">#</span><code class="command">firewall-cmd --permanent --service=nfs-rpc --set-description="NFS related, statically configured RPC ports"</code></code></span></span>
+<span class="line"><span class="ld"><code># add UDP and TCP ports for the given sequence</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">for port in 21001 21002 21003 21004; do firewall-cmd --permanent --service=nfs-rpc --add-port ${port}/udp --add-port ${port}/tcp done</code></code></span></span>
+<span class="line"><span class="ld"><code># the callback port is TCP only</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --permanent --service=nfs-rpc --add-port 21005/tcp</code></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># show the complete definition of the new custom service</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --info-service=nfs-rpc --permanent -v</code></code></span></span>
+<span class="line"><span class="ld"><code>nfs-rpc</code></span></span>
+<span class="line"><span class="ld"><code>  summary:</code></span></span>
+<span class="line"><span class="ld"><code>  description: NFS and related, statically configured RPC ports</code></span></span>
+<span class="line"><span class="ld"><code>  ports: 4711/tcp 21001/udp 21001/tcp 21002/udp 21002/tcp 21003/udp 21003/tcp 21004/udp 21004/tcp</code></span></span>
+<span class="line"><span class="ld"><code>  protocols:</code></span></span>
+<span class="line"><span class="ld"><code>  source-ports:</code></span></span>
+<span class="line"><span class="ld"><code>  modules:</code></span></span>
+<span class="line"><span class="ld"><code>  destination:</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># reload firewalld to make the new service definition available</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --reload</code></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># the new service definition can now be used to open the ports for example in the internal zone</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">firewall-cmd --add-service=nfs-rpc --zone=internal</code></code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Commands to define a new <code class="daemon systemitem">firewalld</code> RPC service for NFS</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-rpcports-helper">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using <code class="package">firewall-rpcbind-helper</code> for configuring static ports</h4>
+                  </header>
+                  
+                  
+                  <p>The steps to configure static ports as shown in the previous section can be simplified
+                     by using the SUSE helper tool <code class="command">firewall-rpc-helper.py</code>. Install it with <code class="command">zypper in firewalld-rpcbind-helper</code>.</p>
+                  
+                  <p>The tool allows interactive configuration of the service patterns discussed in the
+                     previous section. It can also display current port assignments and can be used for
+                     scripting. For details, see <code class="command">firewall-rpc-helper.py --help</code>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-security-firewall-firewalld-nftables">
+                  <header>
+                     <h4><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>nftables as the default back-end</h4>
+                  </header>
+                  
+                  
+                  <p>The default back-end for <code class="daemon systemitem">firewalld</code> is nftables. nftables is a framework by the Linux <code class="systemitem">netfilter</code> project that provides packet filtering, network address translation (NAT) and other
+                     similar functionalities. nftables reuses the existing Netfilter subsystems such as
+                     the connection tracking system, user space queueing, logging and the hook infrastructure.
+                     nftables is a replacement for iptables, ip6tables, arptables, ebtables, and ipset.</p>
+                  
+                  <p>The advantages of using nftables include:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>One framework for both the IPv4 and IPv6 protocols.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Rules are applied atomically instead of fetching, updating and storing a complete
+                           rule set.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Monitor trace events in the <em>nft</em> tool, debug and trace the ruleset via <em>nftrace</em>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The <code class="command">nft</code> command line tool compiles into VM bytecode in netlink format. During the rule set
+                           retrieval, the VM bytecode in netlink format is translated back into the original
+                           ruleset representation.</p>
+                        </li>
+                     </ul>
+                  
+                  <p><strong class="bold">A basic nftables configuration file:</strong></p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span> cat /etc/nftables.conf</code></span></span>
+<span class="line"><span class="ld"><code>    #!/usr/sbin/nft -f</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    flush ruleset</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    # This matches IPv4 and IPv6</code></span></span>
+<span class="line"><span class="ld"><code>    table inet filter {</code></span></span>
+<span class="line"><span class="ld"><code>        # chain names are up to you.</code></span></span>
+<span class="line"><span class="ld"><code>        # what part of the traffic they cover,</code></span></span>
+<span class="line"><span class="ld"><code>        # depends on the type table.</code></span></span>
+<span class="line"><span class="ld"><code>        chain input {</code></span></span>
+<span class="line"><span class="ld"><code>            type filter hook input priority 0; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>        }</code></span></span>
+<span class="line"><span class="ld"><code>        chain forward {</code></span></span>
+<span class="line"><span class="ld"><code>            type filter hook forward priority 0; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>        }</code></span></span>
+<span class="line"><span class="ld"><code>        chain output {</code></span></span>
+<span class="line"><span class="ld"><code>            type filter hook output priority 0; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>        }</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span></pre>
+                  </div>
+                  
+                  <p>In the above example, all traffic is allowed because all chains have the policy <em>accept</em>. Note that, in reality, this is a bad practice, as firewalls should deny traffic
+                     by default.</p>
+                  
+                  <p><strong class="bold">A basic nftables configuration file with masquerade:</strong></p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span> cat /etc/nftables.conf</code></span></span>
+<span class="line"><span class="ld"><code>    #!/sbin/nft -f</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    flush ruleset</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    table ip nat {</code></span></span>
+<span class="line"><span class="ld"><code>      chain prerouting {</code></span></span>
+<span class="line"><span class="ld"><code>        type nat hook prerouting priority 0; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>      }</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>      # for all packets to WAN, after routing, replace source address with primary IP of WAN interface</code></span></span>
+<span class="line"><span class="ld"><code>      chain postrouting {</code></span></span>
+<span class="line"><span class="ld"><code>        type nat hook postrouting priority 100; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>        oifname "wan0" masquerade</code></span></span>
+<span class="line"><span class="ld"><code>      }</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span></pre>
+                  </div>
+                  
+                  <p>If you have a static IP, it would be slightly faster to use source nat (SNAT) instead
+                     of masquerade. The router replaces the source with a predefined IP instead of looking
+                     up the outgoing IP for every packet.</p>
+                  
+                  <p><strong class="bold">An nftables configuration file with some rules applied:</strong></p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span> cat /etc/nftables.conf</code></span></span>
+<span class="line"><span class="ld"><code>    #!/usr/sbin/nft -f</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>flush ruleset</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>table inet filter {</code></span></span>
+<span class="line"><span class="ld"><code>    chain base_checks {</code></span></span>
+<span class="line"><span class="ld"><code>        ## another set, this time for connection tracking states.</code></span></span>
+<span class="line"><span class="ld"><code>        # allow established/related connections</code></span></span>
+<span class="line"><span class="ld"><code>        ct state {established, related} accept;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        # early drop of invalid connections</code></span></span>
+<span class="line"><span class="ld"><code>        ct state invalid drop;</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    chain input {</code></span></span>
+<span class="line"><span class="ld"><code>        type filter hook input priority 0; policy drop;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        # allow from loopback</code></span></span>
+<span class="line"><span class="ld"><code>        iif "lo" accept;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        jump base_checks;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        # allow icmp and igmp</code></span></span>
+<span class="line"><span class="ld"><code>        ip6 nexthdr icmpv6 icmpv6 type { echo-request, echo-reply, packet-too-big, time-exceeded, parameter-problem, destination-unreachable, packet-too-big, mld-listener-query, mld-listener-report, mld-listener-reduction, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, ind-neighbor-solicit, ind-neighbor-advert, mld2-listener-report } accept;</code></span></span>
+<span class="line"><span class="ld"><code>        ip protocol icmp icmp type { echo-request, echo-reply, destination-unreachable, router-solicitation, router-advertisement, time-exceeded, parameter-problem } accept;</code></span></span>
+<span class="line"><span class="ld"><code>        ip protocol igmp accept;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        # for testing reject with logging</code></span></span>
+<span class="line"><span class="ld"><code>        counter log prefix "[nftables] input reject " reject;</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>    chain forward {</code></span></span>
+<span class="line"><span class="ld"><code>        type filter hook forward priority 0; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>    chain output {</code></span></span>
+<span class="line"><span class="ld"><code>        type filter hook output priority 0; policy accept;</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                  </div>
+                  
+                  <p>In the above example:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>The chain policy is to drop and add a reject rule at the end, which means all incoming
+                           traffic is blocked.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>All traffic on the <code class="literal">localhost</code> interface is allowed.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The <code class="literal">base_checks</code> chain handles all packets that are related to established connections. This ensures
+                           that incoming packets for outgoing connections are not blocked.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>ICMP and IGMP packets are allowed by utilizing a set and specific type names.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>A counter keeps a count of both the total number of packets and bytes it has seen
+                           since it was last reset. With nftables, you must specify a counter for each rule you
+                           want to count.</p>
+                        </li>
+                     </ul>
+                  
+                  <section class="sect4" id="sec-security-nftables-more-information">
+                     <header>
+                        <h5><span class="label">23<span class="sep">.</span>4<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>More information</h5>
+                     </header>
+                     
+                     
+                     <p>For more information about nftables, see:</p>
+                     
+                     <ul class="itemizedlist" db-mark="bullet">
+                        
+                        <li>
+                           
+                           <p>Upstream documentation <a class="link" href="https://www.netfilter.org/projects/nftables/index.html">https://www.netfilter.org/projects/nftables/index.html</a></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>nftables man page <a class="link" href="https://www.netfilter.org/projects/nftables/manpage.html">https://www.netfilter.org/projects/nftables/manpage.html</a></p>
+                           </li>
+                        </ul>
+                     </section>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich03.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich03s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">23<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Firewalling basics</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">23<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Migrating from SuSEfirewall2</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

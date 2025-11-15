@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>1.6.&nbsp;Ext4</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich01s05.html" rel="prev">
+      <link href="bk09partich01s07.html" rel="next">
+      <link href="bk09partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich01.html">Up</a> <a href="bk09partich01s07.html">Next</a> <a href="bk09partich01s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich01s06.html" db-id="d616951e235393" id="sec-filesystems-major-ext4">
+            <header>
+               <h2><span class="label">1<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Ext4</h2>
+            </header>
+            
+            
+            <p>In 2006, Ext4 started as a fork from Ext3. It is the latest file system in the extended
+               file system version. Ext4 was originally designed to increase storage size by supporting
+               volumes with a size of up to 1 exbibyte, files with a size of up to 16 tebibytes and
+               an unlimited number of subdirectories. Ext4 uses extents, instead of the traditional
+               direct and indirect block pointers, to map the file contents. Usage of extents improves
+               both storage and retrieval of data from disks.</p>
+            
+            <p>Ext4 also introduces several performance enhancements such as delayed block allocation
+               and a much faster file system checking routine. Ext4 is also more reliable by supporting
+               journal checksums and by providing time stamps measured in nanoseconds. Ext4 is fully
+               backward compatible to Ext2 and Ext3—both file systems can be mounted as Ext4.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Ext3 functionality on Ext4</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>The Ext3 functionality is fully supported by the Ext4 driver in the Ext4 kernel module.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-filesystems-major-ext4-performance">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Reliability and performance</h3>
+               </header>
+               
+               
+               <p>Some other journaling file systems follow the <q>metadata-only</q> journaling approach. This means your metadata is always kept in a consistent state,
+                  but this cannot be automatically guaranteed for the file system data itself. Ext4
+                  is designed to take care of both metadata and data. The degree of <q>care</q> can be customized. Mounting Ext4 in the <code class="option">data=journal</code> mode offers maximum security (data integrity), but can slow down the system because
+                  both metadata and data are journaled. Another approach is to use the <code class="option">data=ordered</code> mode, which ensures both data and metadata integrity, but uses journaling only for
+                  metadata. The file system driver collects all data blocks that correspond to one metadata
+                  update. These data blocks are written to disk before the metadata is updated. As a
+                  result, consistency is achieved for metadata and data without sacrificing performance.
+                  A third mount option to use is <code class="option">data=writeback</code>, which allows data to be written to the main file system after its metadata has been
+                  committed to the journal. This option is often considered the best in performance.
+                  It can, however, allow old data to reappear in files after crash and recovery while
+                  internal file system integrity is maintained. Ext4 uses the <code class="option">data=ordered</code> option as the default.</p>
+               </section>
+            
+            <section class="sect2" id="sec-filesystems-major-ext4-inodesize">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Ext4 file system inode size and number of inodes</h3>
+               </header>
+               
+               
+               <p>An inode stores information about the file and its block location in the file system.
+                  To allow space in the inode for extended attributes and ACLs, the default inode size
+                  was increased to 256 bytes.</p>
+               
+               <p>When you create a new Ext4 file system, the space in the inode table is preallocated
+                  for the total number of inodes that can be created. The bytes-per-inode ratio and
+                  the size of the file system determine how many inodes are possible. When the file
+                  system is made, an inode is created for every bytes-per-inode bytes of space:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>number of inodes = total size of the file system divided by the number of bytes per inode</code></span></span></pre>
+               </div>
+               
+               <p>The number of inodes controls the number of files you can have in the file system:
+                  one inode for each file.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Changing the inode size of an existing Ext4 file system not possible</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>After the inodes are allocated, you cannot change the settings for the inode size
+                              or bytes-per-inode ratio. No new inodes are possible without re-creating the file
+                              system with different settings, or unless the file system gets extended. When you
+                              exceed the maximum number of inodes, no new files can be created on the file system
+                              until some files are deleted.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When you make a new Ext4 file system, you can specify the inode size and bytes-per-inode
+                  ratio to control inode space usage and the number of files possible on the file system.
+                  If the blocks size, inode size, and bytes-per-inode ratio values are not specified,
+                  the default values in the <code class="filename">/etc/mked2fs.conf</code> file are applied. For information, see the <code class="filename">mke2fs.conf(5)</code> man page.</p>
+               
+               <p>Use the following guidelines:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title titlepunct">Inode size:</span><span class="para">The default inode size is 256 bytes. Specify a value in bytes that is a power of 2
+                           and equal to 128 or larger in bytes and up to the block size, such as 128, 256, 512,
+                           and so on. Use 128 bytes only if you do not use extended attributes or ACLs on your
+                           Ext4 file systems.</span></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title titlepunct">Bytes-per-inode ratio:</span><span class="para">The default bytes-per-inode ratio is 16384 bytes. Valid bytes-per-inode ratio values
+                           must be a power of 2 equal to 1024 or greater in bytes, such as 1024, 2048, 4096,
+                           8192, 16384, 32768, and so on. This value should not be smaller than the block size
+                           of the file system, because the block size is the smallest chunk of space used to
+                           store data. The default block size for the Ext4 file system is 4 KiB.</span></p>
+                     
+                     <p>In addition, consider the number of files and the size of files you need to store.
+                        For example, if your file system will have many small files, you can specify a smaller
+                        bytes-per-inode ratio, which increases the number of inodes. If your file system will
+                        have very large files, you can specify a larger bytes-per-inode ratio, which reduces
+                        the number of possible inodes.</p>
+                     
+                     <p>Generally, it is better to have too many inodes than to run out of them. If you have
+                        too few inodes and very small files, you could reach the maximum number of files on
+                        a disk that is practically empty. If you have too many inodes and very large files,
+                        you might have free space reported but be unable to use it because you cannot create
+                        new files in space reserved for inodes.</p>
+                     </li>
+                  </ul>
+               
+               <p>Use any of the following methods to set the inode size and bytes-per-inode ratio:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title titlepunct">Modifying the default settings for all new Ext4 file systems:</span><span class="para">In a text editor, modify the <code class="literal">defaults</code> section of the <code class="filename">/etc/mke2fs.conf</code> file to set the <code class="literal">inode_size</code> and <code class="literal">inode_ratio</code> to the desired default values. The values apply to all new Ext4 file systems. For
+                           example:</span></p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blocksize = 4096</code></span></span>
+<span class="line"><span class="ld"><code>inode_size = 128</code></span></span>
+<span class="line"><span class="ld"><code>inode_ratio = 8192</code></span></span></pre>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title titlepunct">At the command line:</span><span class="para">Pass the inode size (<code class="literal">-I 128</code>) and the bytes-per-inode ratio (<code class="literal">-i 8192</code>) to the <code class="command">mkfs.ext4(8)</code> command or the <code class="command">mke2fs(8)</code> command when you create a new Ext4 file system. For example, use either of the following
+                           commands:</span></p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkfs.ext4 -b 4096 -i 8092 -I 128 /dev/sda2</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mke2fs -t ext4 -b 4096 -i 8192 -I 128 /dev/sda2</code></span></span></pre>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title titlepunct">During installation with YaST:</span><span class="para">Pass the inode size and bytes-per-inode ratio values when you create a new Ext4 file
+                           system during the installation. In the <span class="guimenu">Expert Partitioner</span>, select the partition, click <span class="guimenu">Edit</span>. Under <span class="guimenu">Formatting Options</span>, select <span class="guimenu">Format device</span><span class="guimenu">Ext4</span>, then click <span class="guimenu">Options</span>. In the <span class="guimenu">Format options</span> dialog, select the desired values from the <span class="guimenu">Block Size in Bytes</span>, <span class="guimenu">Bytes-per-inode</span>, and <span class="guimenu">Inode Size</span> drop-down box.</span></p>
+                     
+                     <p>For example, select 4096 for the <span class="guimenu">Block Size in Bytes</span> drop-down box, select 8192 from the <span class="guimenu">Bytes per inode</span> drop-down box, select 128 from the <span class="guimenu">Inode Size</span> drop-down box, then click <span class="guimenu">OK</span>.</p>
+                     
+                     <div class="informalfigure informalobject" id="sec-filesystems-major-ext4-inodesize_il2_li3_informalfigure1">
+                        
+                        <div class="mediaobject">
+                           <div class="media image"><span class="viewport-table" style="width:556px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/ext4_inode_yast_a.png" style="width:556px;"></picture></span></span></span></span></span></div>
+                        </div>
+                        </div>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-upgrade-to-ext4">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Upgrading to Ext4</h3>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Backup of data</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Back up all data on the file system before performing any update of your file system.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="formalobject procedure" id="sec-upgrade-to-ext4_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Upgrading to ext4</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>To upgrade from Ext2 or Ext3, you must enable the following:</p>
+                        
+                        <div class="long-terms variablelist">
+                           <header>
+                              <div class="title">Features required by Ext4</div>
+                           </header>
+                           <dl class="long-terms variablelist">
+                              <div class="varlistentry">
+                                 <dt><span class="term">extents</span></dt>
+                                 <dd>
+                                    
+                                    <p>contiguous blocks on the hard disk that are used to keep files close together and
+                                       prevent fragmentation</p>
+                                    </dd>
+                              </div>
+                              <div class="varlistentry">
+                                 <dt><span class="term">unint_bg</span></dt>
+                                 <dd>
+                                    
+                                    <p>lazy inode table initialization</p>
+                                    </dd>
+                              </div>
+                              <div class="varlistentry">
+                                 <dt><span class="term">dir_index</span></dt>
+                                 <dd>
+                                    
+                                    <p>hashed b-tree lookups for large directories</p>
+                                    </dd>
+                              </div>
+                              <div class="varlistentry">
+                                 <dt><span class="term">on Ext2: <code class="literal">as_journal</code>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <p>enable journaling on your Ext2 file system.</p>
+                                    </dd>
+                              </div>
+                           </dl>
+                        </div>
+                        
+                        <p>To enable the features, run:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>on Ext3:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>tune2fs -O extents,uninit_bg,dir_index <em class="replaceable">DEVICE_NAME</em></code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>on Ext2:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>tune2fs -O extents,uninit_bg,dir_index,has_journal <em class="replaceable">DEVICE_NAME</em></code></span></span></pre>
+                              </div>
+                              </li>
+                           </ul>
+                        </li>
+                     <li class="step">
+                        
+                        <p>As <code class="systemitem username">root</code> edit the <code class="filename">/etc/fstab</code> file: change the <code class="literal">ext3</code> or <code class="literal">ext2</code> record to <code class="literal">ext4</code>. The change takes effect after the next reboot.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To boot a file system that is set up on an ext4 partition, add the modules: <code class="literal">ext4</code> and <code class="literal">jbd</code> in the <code class="literal">initramfs</code>. Open or create <code class="filename">/etc/dracut.conf.d/filesystem.conf</code> and add the following line:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>force_drivers+=" ext4 jbd"</code></span></span></pre>
+                        </div>
+                        
+                        <p>You need to overwrite the existing dracut <code class="filename">initramfs</code> by running:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>dracut -f</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot your system.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich01s05.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partich01s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Ext3</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">1<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>ReiserFS</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

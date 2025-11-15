@@ -1,0 +1,261 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>13.4.&nbsp;The transactional-update command</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich13s03.html" rel="prev">
+      <link href="bk01partich13s05.html" rel="next">
+      <link href="bk01partich13.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich13.html">Up</a> <a href="bk01partich13s05.html">Next</a> <a href="bk01partich13s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich13s04.html" db-id="d616951e22922" id="cha-transactional-updates_s1_4">
+            <header>
+               <h2><span class="label">13<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>The <code class="command">transactional-update</code> command</h2>
+            </header>
+            
+            
+            <p>The <code class="command">transactional-update</code> command enables atomic installation or removal of updates. Updates are applied only
+               if they all can be successfully installed. <code class="command">transactional-update</code> creates a snapshot of your system before the update is applied, and you can restore
+               this snapshot. All changes become active only after reboot.</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">--continue</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The <code class="command">--continue</code> option is for making multiple changes to an existing snapshot without rebooting.</p>
+                     
+                     <p>The default <code class="command">transactional-update</code> behavior is to create a new snapshot from the current root file system. If you forget
+                        something, such as installing a new package, you have to reboot to apply your previous
+                        changes, run <code class="command">transactional-update</code> again to install the forgotten package, and reboot again. You cannot run the <code class="command">transactional-update</code> command multiple times without rebooting to add more changes to the snapshot, because
+                        that creates separate independent snapshots that do not include changes from the previous
+                        snapshots.</p>
+                     
+                     <p>Use the <code class="command">--continue</code> option to make as many changes as you want without rebooting. A separate snapshot
+                        is made each time, and each snapshot contains all the changes you made in the previous
+                        snapshots, plus your new changes. Repeat this process as many times as you want, and
+                        when the final snapshot includes everything you want reboot the system, and your final
+                        snapshot becomes the new root file system.</p>
+                     
+                     <p>Another useful feature of the <code class="command">--continue</code> option is you may select any existing snapshot as the base for your new snapshot.
+                        The following example demonstrates running <code class="command">transactional-update</code> to install a new package in a snapshot based on snapshot 13, and then running it
+                        again to install another package:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update pkg install <em class="replaceable">package_1</em></code></code></span></span></pre>
+                     </div>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update --continue 13 pkg install <em class="replaceable">package_2</em></code></code></span></span></pre>
+                     </div>
+                     
+                     <p>The <code class="command">--continue [num]</code> option calls <code class="command">snapper create --from</code>, see <a class="xref xref-sect2" href="bk01partich10s06.html#sec-snapper-manage-create">the section called “Creating snapshots”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">cleanup</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>If the current root file system is identical to the active root file system (after
+                        a reboot, before <code class="command">transactional-update</code> creates a new snapshot with updates), all old snapshots without a cleanup algorithm
+                        get a cleanup algorithm set. This ensures that old snapshots are deleted by Snapper.
+                        (See the section about cleanup algorithms in snapper(8).) This also removes all unreferenced
+                        (and thus unused) <code class="filename">/etc</code> overlay directories in <code class="filename">/var/lib/overlay</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update cleanup</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">pkg in/install</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Installs individual packages from the available channels using the <code class="command">zypper install</code> command. This command can also be used to install Program Temporary Fix (PTF) RPM
+                        files.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update pkg install <em class="replaceable">package_name</em></code></code></span></span></pre>
+                     </div>
+                     
+                     <p>or</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update pkg install <em class="replaceable">rpm1 rpm2</em></code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">pkg rm/remove</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Removes individual packages from the active snapshot using the <code class="command">zypper remove</code> command. This command can also be used to remove PTF RPM files.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update pkg remove <em class="replaceable">package_name</em></code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">pkg up/update</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Updates individual packages from the active snapshot using the <code class="command">zypper update</code> command. Only packages that are part of the snapshot of the base file system can
+                        be updated.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update pkg update <em class="replaceable">package_name</em></code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">up/update</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>If there are new updates available, a new snapshot is created and <code class="command">zypper up/update</code> updates the snapshot.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update up</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">dup</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>If there are new updates available, a new snapshot is created and <code class="command">zypper dup –no-allow-vendor-change</code> updates the snapshot. The snapshot is activated afterwards and becomes the new root
+                        file system after reboot.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update dup</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">patch</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>If there are new updates available, a new snapshot is created and <code class="command">zypper patch</code> updates the snapshot.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update patch</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">rollback</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>This sets the default subvolume. On systems with a read-write file system <code class="command">snapper rollback</code> is called. On a read-only file system and without any argument, the current system
+                        is set to a new default root file system. If you specify a number, that snapshot is
+                        used as the default root file system. On a read-only file system, it does not create
+                        any additional snapshots.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update rollback <em class="replaceable">snapshot_number</em></code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">grub.cfg</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>This creates a new GRUB2 configuration. Sometimes it is necessary to adjust the boot
+                        configuration, for example, adding additional kernel parameters. Edit <em class="replaceable">/etc/default/grub</em>, run <code class="command">transactional-update grub.cfg</code>, and then reboot to activate the change. You must immediately reboot, or the new
+                        GRUB2 configuration gets overwritten with the default by the next <code class="command">transactional-update</code> run.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update grub.cfg</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">reboot</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>This parameter triggers a reboot after the action is completed.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update <em class="replaceable">dup</em> reboot</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">--help</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>This prints a help screen with options and subcommands.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">transactional-update --help</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich13s03.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich13.html">Up</a></td>
+                  <td class="next"><a href="bk01partich13s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">13<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Managing automatic updates</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">13<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Troubleshooting</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

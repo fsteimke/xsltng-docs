@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.2.&nbsp;Hardware support</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05.html" rel="prev">
+      <link href="bk09partivch05s03.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s03.html">Next</a> <a href="bk09partivch05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s02.html" db-id="d616951e252996" id="sec-multipath-hardware">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Hardware support</h2>
+            </header>
+            
+            
+            <p>The multipathing drivers and tools are available on all architectures supported by
+               <span class="phrase productname">SUSE Linux Enterprise Server</span>. The generic, protocol-agnostic driver works with most multipath-capable storage
+               hardware on the market. Some storage array vendors provide their own multipathing
+               management tools. Consult the vendor’s hardware documentation to determine what settings
+               are required.</p>
+            
+            <section class="sect2" id="sec-multipath-hardware-implementations">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Multipath implementations: device mapper and NVMe</h3>
+               </header>
+               
+               
+               <p>The traditional, generic implementation of multipathing under Linux uses the device
+                  mapper framework. For most device types like SCSI devices, device mapper multipathing
+                  is the only available implementation. Device mapper multipath is highly configurable
+                  and flexible.</p>
+               
+               <p>The Linux <em>NVM Express</em> (NVMe) kernel subsystem implements multipathing natively in the kernel. This implementation
+                  creates less computational overhead for NVMe devices, which are typically fast devices
+                  with very low latencies. Native NVMe multipathing requires no user space component.
+                  Since SLE 15, native multipathing has been the default for NVMe multipath devices.
+                  For details, refer to <a class="xref xref-sect2" href="bk09partivch04s02.html#sec-nvmeof-host-configuration-multipathing">the section called “Multipathing”</a>.</p>
+               
+               <p>This chapter documents device mapper multipath and its user-space component, <code class="systemitem">multipath-tools</code>. <code class="systemitem">multipath-tools</code> also has limited support for native NVMe multipathing (see <a class="xref xref-sect1" href="bk09partivch05s13.html">the section called “Miscellaneous options”</a>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-hardware-autodetect">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Storage array autodetection for multipathing</h3>
+               </header>
+               
+               
+               <p>Device mapper multipath is a generic technology. Multipath device detection requires
+                  only that the low-level (for example, SCSI) devices are detected by the kernel, and
+                  that device properties reliably identify multiple low-level devices as being different
+                  “paths” to the same volume rather than actually different devices.</p>
+               
+               <p>The <code class="filename">multipath-tools</code> package detects storage arrays by their vendor and product names. It provides built-in
+                  configuration defaults for a large variety of storage products. Consult the hardware
+                  documentation of your storage array: some vendors provide specific recommendations
+                  for Linux multipathing configuration.</p>
+               
+               <p>If you need to apply changes to the built-in configuration for your storage array,
+                  read <a class="xref xref-sect1" href="bk09partivch05s08.html">the section called “Multipath configuration”</a>.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Disclaimer about built-in hardware properties</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><code class="filename">multipath-tools</code> has built-in presets for many storage arrays. The existence of such presets for a
+                              given storage product <em>does not imply</em> that the vendor of the storage product has tested the product with <code class="systemitem">dm-multipath</code>, nor that the vendor endorses or supports the use of <code class="systemitem">dm-multipath</code> with the product. Always consult the original vendor documentation for support-related
+                              questions.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-hardware-handlers">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Storage arrays that require specific hardware handlers</h3>
+               </header>
+               
+               
+               <p>Some storage arrays require special commands for failover from one path to the other,
+                  or non-standard error-handling methods. These special commands and methods are implemented
+                  by hardware handlers in the Linux kernel. Modern SCSI storage arrays support the “Asymmetric
+                  Logical Unit Access” (ALUA) hardware handler defined in the SCSI standard. Besides
+                  ALUA, the SLE kernel contains hardware handlers for Netapp E-Series (RDAC), the Dell/EMC
+                  CLARiiON CX family of arrays, and legacy arrays from HP.</p>
+               
+               <p>Since Linux kernel 4.4, the Linux kernel has automatically detected hardware handlers
+                  for most arrays, including all arrays supporting ALUA. The only requirement is that
+                  the device handler modules are loaded at the time the respective devices are probed.
+                  The <code class="systemitem">multipath-tools</code> package ensures this by installing appropriate configuration files. Once a device
+                  handler is attached to a given device, it cannot be changed anymore.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">18</span><span class="sep">.&nbsp;</span>Managing multipath I/O for devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Planning for multipathing</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

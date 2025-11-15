@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>22.3.&nbsp;Synchronizing the clocks with phc2sys
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partviich01s02.html" rel="prev">
+      <link href="bk07partviich01s04.html" rel="next">
+      <link href="bk07partviich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partviich01.html">Up</a> <a href="bk07partviich01s04.html">Next</a> <a href="bk07partviich01s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partviich01s03.html" db-id="d616951e225315" id="tuning-ptp-phc2sys">
+            <header>
+               <h2><span class="label">22<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Synchronizing the clocks with <code class="command">phc2sys</code>
+                  </h2>
+            </header>
+            
+            
+            <p>Use <code class="command">phc2sys</code> to synchronize the system clock to the PTP hardware clock (PHC) on the network card.
+               The system clock is considered a <em>slave</em>, while the network card a <em>master</em>. PHC itself is synchronized with <code class="command">ptp4l</code> (see <a class="xref xref-sect1" href="bk07partviich01s02.html">the section called “Using PTP”</a>). Use <code class="option">-s</code> to specify the master clock by device or network interface. Use <code class="option">-w</code> to wait until <code class="command">ptp4l</code> is in a synchronized state.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> phc2sys -s eth0 -w</code></span></span></pre>
+            </div>
+            
+            <p>PTP operates in <em>International Atomic Time</em> (TAI), while the system clock uses <em>Coordinated Universal Time</em> (UTC). If you do not specify <code class="option">-w</code> to wait for <code class="command">ptp4l</code> synchronization, you can specify the offset in seconds between TAI and UTC with <code class="option">-O</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> phc2sys -s eth0 -O -35</code></span></span></pre>
+            </div>
+            
+            <p>You can run <code class="command">phc2sys</code> as a service as well:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start phc2sys</code></span></span></pre>
+            </div>
+            
+            <p>In this case, <code class="command">phc2sys</code> reads its options from the <code class="filename">/etc/sysconfig/phc2sys</code> file. For more information on <code class="command">phc2sys</code> options, see <code class="command">man 8 phc2sys</code>.</p>
+            
+            <p>To enable the <code class="command">phc2sys</code> service permanently, run the following:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable phc2sys</code></span></span></pre>
+            </div>
+            
+            <p>To disable it, run</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl disable phc2sys</code></span></span></pre>
+            </div>
+            
+            <section class="sect2" id="tuning-ptp-phc2sys-verify">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Verifying time synchronization</h3>
+               </header>
+               
+               
+               <p>When PTP time synchronization is working properly and hardware time stamping is used,
+                  <code class="command">ptp4l</code> and <code class="command">phc2sys</code> output messages with time offsets and frequency adjustments periodically to the system
+                  log.</p>
+               
+               <p>An example of the <code class="command">ptp4l</code> output:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ptp4l[351.358]: selected /dev/ptp0 as PTP clock</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[352.361]: port 1: INITIALIZING to LISTENING on INITIALIZE</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[352.361]: port 0: INITIALIZING to LISTENING on INITIALIZE</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[353.210]: port 1: new foreign master 00a069.eefe.0b442d-1</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[357.214]: selected best master clock 00a069.eefe.0b662d</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[357.214]: port 1: LISTENING to UNCALIBRATED on RS_SLAVE</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[359.224]: master offset       3304 s0 freq      +0 path delay      9202</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[360.224]: master offset       3708 s1 freq  -28492 path delay      9202</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[361.224]: master offset      -3145 s2 freq  -32637 path delay      9202</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[361.224]: port 1: UNCALIBRATED to SLAVE on MASTER_CLOCK_SELECTED</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[362.223]: master offset       -145 s2 freq  -30580 path delay      9202</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[363.223]: master offset       1043 s2 freq  -28436 path delay      8972</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[371.235]: master offset        285 s2 freq  -28511 path delay      9199</code></span></span>
+<span class="line"><span class="ld"><code>ptp4l[372.235]: master offset        -78 s2 freq  -28788 path delay      9204</code></span></span></pre>
+               </div>
+               
+               <p>An example of the <code class="command">phc2sys</code> output:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>phc2sys[616.617]: Waiting for ptp4l...</code></span></span>
+<span class="line"><span class="ld"><code>phc2sys[628.628]: phc offset     66341 s0 freq      +0 delay   2729</code></span></span>
+<span class="line"><span class="ld"><code>phc2sys[629.628]: phc offset     64668 s1 freq  -37690 delay   2726</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>phc2sys[646.630]: phc offset      -333 s2 freq  -37426 delay   2747</code></span></span>
+<span class="line"><span class="ld"><code>phc2sys[646.630]: phc offset       194 s2 freq  -36999 delay   2749</code></span></span></pre>
+               </div>
+               
+               <p><code class="command">ptp4l</code> normally writes messages with high frequency. You can reduce the frequency with the
+                  <code class="literal">summary_interval</code> directive. Its value is an exponent of the 2^N expression. For example, to reduce
+                  the output to every 1024 (which is equal to 2^10) seconds, add the following line
+                  to the <code class="filename">/etc/ptp4l.conf</code> file:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>summary_interval 10</code></span></span></pre>
+               </div>
+               
+               <p>You can also reduce the frequency of the <code class="command">phc2sys</code> command's updates with the <code class="option">-u <em class="replaceable">SUMMARY-UPDATES</em></code> option.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partviich01s02.html">Prev</a></td>
+                  <td class="up"><a href="bk07partviich01.html">Up</a></td>
+                  <td class="next"><a href="bk07partviich01s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">22<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using PTP</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Examples of configurations</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

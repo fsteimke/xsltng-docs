@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>29.5.&nbsp;Dedicating CPU resources</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch05s04.html" rel="prev">
+      <link href="bk10partivch05s06.html" rel="next">
+      <link href="bk10partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partivch05.html">Up</a> <a href="bk10partivch05s06.html">Next</a> <a href="bk10partivch05s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partivch05s05.html" db-id="d616951e293252" id="xen-config-cpupinning">
+            <header>
+               <h2><span class="label">29<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Dedicating CPU resources</h2>
+            </header>
+            
+            
+            <p>In Xen it is possible to specify how many and which CPU cores the Dom0 or VM Guest
+               should use to retain its performance. The performance of Dom0 is important for the
+               overall system, as the disk and network drivers are running on it. Also I/O intensive
+               guests' workloads may consume lots of Dom0s' CPU cycles. However, the performance
+               of VM Guests is also important, to be able to accomplish the task they were set up
+               for.</p>
+            
+            <section class="sect2" id="config-cpupinning-dom0">
+               <header>
+                  <h3><span class="label">29<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Dom0</h3>
+               </header>
+               
+               
+               <p>Dedicating CPU resources to Dom0 results in a better overall performance of the virtualized
+                  environment because Dom0 has free CPU time to process I/O requests from VM Guests.
+                  Failing to dedicate exclusive CPU resources to Dom0 may results in a poor performance
+                  and can cause the VM Guests to function incorrectly.</p>
+               
+               <p>Dedicating CPU resources involves three basic steps: modifying Xen boot line, binding
+                  Dom0's VCPUs to a physical processor, and configuring CPU-related options on VM Guests:</p>
+               
+               <div class="informalobject procedure" id="config-cpupinning-dom0_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>First you need to append the <code class="literal">dom0_max_vcpus=X</code> to the Xen boot line. Do so by adding the following line to <code class="filename">/etc/default/grub</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>GRUB_CMDLINE_XEN="dom0_max_vcpus=X"</code></span></span></pre>
+                        </div>
+                        
+                        <p>If <code class="filename">/etc/default/grub</code> already contains a line setting <code class="envar">GRUB_CMDLINE_XEN</code>, rather append <code class="literal">dom0_max_vcpus=X</code> to this line.</p>
+                        
+                        <p><code class="literal">X</code> needs to be replaced by the number of VCPUs dedicated to Dom0.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Update the GRUB&nbsp;2 configuration file by running the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> grub2-mkconfig -o /boot/grub2/grub.cfg</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot for the change to take effect.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>The next step is to bind (or <q>pin</q>) each Dom0's VCPU to a physical processor.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl vcpu-pin Domain-0 0 0</code></span></span>
+<span class="line"><span class="ld"><code>xl vcpu-pin Domain-0 1 1</code></span></span></pre>
+                        </div>
+                        
+                        <p>The first line binds Dom0's VCPU number 0 to the physical processor number 0, while
+                           the second line binds Dom0's VCPU number 1 to the physical processor number 1.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Lastly, you need to make sure no VM Guest uses the physical processors dedicated to
+                           VCPUs of Dom0. Assuming you are running an 8-CPU system, you need to add</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>cpus="2-8"</code></span></span></pre>
+                        </div>
+                        
+                        <p>to the configuration file of the relevant VM Guest.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="config-cpupinning-domU">
+               <header>
+                  <h3><span class="label">29<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VM Guests</h3>
+               </header>
+               
+               
+               <p>It is often necessary to dedicate specific CPU resources to a virtual machine. By
+                  default, a virtual machine uses any available CPU core. Its performance can be improved
+                  by assigning a reasonable number of physical processors to it as other VM Guests are
+                  not allowed to use them after that. Assuming a machine with 8 CPU cores while a virtual
+                  machine needs to use 2 of them, change its configuration file as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vcpus=2</code></span></span>
+<span class="line"><span class="ld"><code>cpus="2,3"</code></span></span></pre>
+               </div>
+               
+               <p>The above example dedicates <code class="literal">2</code> processors to the VM Guest, and these being the third and fourth one, (<code class="literal">2</code> and <code class="literal">3</code> counted from zero). If you need to assign more physical processors, use the <code class="literal">cpus="2-8"</code> syntax.</p>
+               
+               <p>If you need to change the CPU assignment for a guest named <q>alice</q> in a hotplug manner, do the following on the related Dom0:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl vcpu-set alice 2</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl vcpu-pin alice 0 2</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl vcpu-pin alice 1 3</code></span></span></pre>
+               </div>
+               
+               <p>The example dedicates 2 physical processors to the guest, and bind its VCPU 0 to physical
+                  processor 2 and VCPU 1 to physical processor 3. Now check the assignment:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl vcpu-list alice</code></span></span>
+<span class="line"><span class="ld"><code>Name                              ID VCPUs   CPU State   Time(s) CPU Affinity</code></span></span>
+<span class="line"><span class="ld"><code>alice                             4     0     2   -b-       1.9 2-3</code></span></span>
+<span class="line"><span class="ld"><code>alice                             4     1     3   -b-       2.8 2-3</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch05s04.html">Prev</a></td>
+                  <td class="up"><a href="bk10partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch05s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">29<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Virtual keyboards</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">29<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>HVM features</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

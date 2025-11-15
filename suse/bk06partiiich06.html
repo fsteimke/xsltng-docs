@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;26.&nbsp;Improving network security with sysctl variables</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich05s02.html" rel="prev">
+      <link href="bk06partiv.html" rel="next">
+      <link href="bk06partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiii.html">Up</a> <a href="bk06partiv.html">Next</a> <a href="bk06partiiich05s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partiiich06.html" db-id="d616951e181630" id="cha-sec-sysctl" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">26</span><span class="sep">.&nbsp;</span>Improving network security with <code class="command">sysctl</code> variables</h1>
+            </header>
+            
+            
+            
+            <p>Sysctl (system control) variables control certain kernel parameters that influence
+               the behavior of different parts of the operating system, for example the Linux network
+               stack. These parameters can be looked up in the <code class="literal">proc</code> file system, in <code class="filename">/proc/sys</code>. Many kernel parameters can be changed directly by writing a new value into a parameter
+               pseudo file. However, these changes are not persisted and are lost after a system
+               reboot. Therefore, we recommend configuring all changes in a sysctl configuration
+               file to have them applied at every system start.</p>
+            
+            <p>In this chapter, several networking related variables are configured that improve
+               the security features of Linux. Depending on the presence of a firewall and its settings,
+               certain variables listed here already have the safe values by default. You can check
+               the current value of a setting by using the <code class="command">sysctl</code> utility like this:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>/sbin/sysctl net.ipv4.conf.all.rp_filter</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.rp_filter = 2</code></span></span></pre>
+            </div>
+            
+            <p>To apply the following settings, create a configuration file <code class="filename">/etc/sysctl.d/</code>. The file needs to end with a <code class="filename">.conf</code> suffix, for example <code class="filename">/etc/sysctl.d/network.conf</code>. For details, refer to <code class="command">man 5 sysctl.d</code>.</p>
+            
+            <p>Set the variables from the following list as appropriate for your environment.</p>
+            
+            <ul class="itemizedlist" id="il-security-sysctl">
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># the default setting for this is 2 (loose mode)</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.default.rp_filter = 1</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.rp_filter = 1</code></span></span></pre>
+                  </div>
+                  
+                  <p>This setting enables the IPv4 reverse path filter in strict mode. It ensures that
+                     answers to incoming IP packets are always sent out via the interface from that the
+                     packets have been received. If the system would direct answer packets to a different
+                     outgoing interface according to the routing table, these packets would be discarded.
+                     The setting prevents certain kinds of IP spoofing attacks that are, for example, used
+                     for distributed denial-of-service (DDoS) attacks.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># the default setting for this should already be 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.default.accept_source_route = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.accept_source_route = 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>This setting disables the acceptance of packets with the <code class="option">SSR</code> option set in the IPv4 packet header. Packets that use <em>Source Routing</em> are rejected. This prevents IP packet redirection, that is redirection to a host
+                     behind a firewall, that is not directly reachable otherwise.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># the default setting for this should already be 1</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.tcp_syncookies = 1</code></span></span></pre>
+                  </div>
+                  
+                  <p>This enables TCP SYN Cookie Protection for IPv4 <em>and</em> IPv6. It addresses a specific denial-of-service attack on the TCP protocol level.
+                     The protection involves a small CPU trade-off in favor of avoiding memory exhaustion
+                     caused by attackers. The protection mechanism consists of a fallback algorithm that
+                     only comes into play when no further TCP connections can be accepted the normal way.
+                     The mechanism is not fully TCP protocol compliant and can thus cause protocol issues
+                     in certain TCP contexts. The alternative would be to drop additional connections in
+                     overload scenarios. This also needs a differentiation between legitimate high TCP
+                     load and a TCP denial-of-service attack. If you expect a high load of TCP connections
+                     on your system, then this setting could be counterproductive.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># default is 128</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.tcp_max_syn_backlog = 4096</code></span></span></pre>
+                  </div>
+                  
+                  <p>The TCP SYN backlog defines the number of SYN packets that are queued for further
+                     processing. Once the queue limit is exceeded, all new incoming SYN-packets are dropped
+                     and new TCP connections are not possible (or the SYN cookie protection kicks in).
+                     Increasing this value improves the protection against TCP SYN flood attacks.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># the default setting for this should already be 1</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.icmp_echo_ignore_broadcasts = 1</code></span></span></pre>
+                  </div>
+                  
+                  <p>ICMP echo requests (ping) can be sent to an IPv4 broadcast address in order to scan
+                     a network for existing hosts / IP addresses or to perform an ICMP flood within a network
+                     segment. This setting causes the networking stack to ignore ICMP echo packets sent
+                     to a broadcast address.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># the default setting for this should already be 1</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.icmp_ignore_bogus_error_responses = 1</code></span></span></pre>
+                  </div>
+                  
+                  <p>This setting avoids filling up log files with unnecessary error messages coming from
+                     invalid responses to broadcast frames. Refer to <a class="link" href="https://datatracker.ietf.org/doc/html/rfc1122#section-3.2.2">RFC 1122 <cite class="citetitle">Requirements for Internet Hosts -- Communication Layers</cite> Section 3.2.2</a> for more information.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># default should already be 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.default.accept_redirects = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.accept_redirects = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv6.conf.default.accept_redirects = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv6.conf.all.accept_redirects = 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>Disables the acceptance of ICMP redirect messages. These messages are sent by gateways
+                     to inform a host about a better route to an outside network. These redirects can be
+                     misused for man-in-the-middle attacks.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>net.ipv4.conf.default.secure_redirects = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.secure_redirects = 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>Accepting 'secure' ICMP redirects (from those gateways listed as default gateways)
+                     has few legitimate uses. It should be disabled unless it is absolutely required.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>net.ipv4.conf.default.send_redirects = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.conf.all.send_redirects = 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>A node should not send IPv4 ICMP redirects, unless it acts as a router.</p>
+                  </li>
+               
+               <li>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># default should already be 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.ip_forward = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv6.conf.all.forwarding = 0</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv6.conf.default.forwarding = 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>IP forwarding should only be enabled on systems acting as routers.</p>
+                  </li>
+               </ul>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich05s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiv.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">25<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating a new PKI</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">IV</span><span class="sep">.&nbsp;</span>Regulations and compliance</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>44.6.&nbsp;Querying the audit daemon logs with ausearch
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partviich01s05.html" rel="prev">
+      <link href="bk06partviich01s07.html" rel="next">
+      <link href="bk06partviich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partviich01.html">Up</a> <a href="bk06partviich01s07.html">Next</a> <a href="bk06partviich01s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partviich01s06.html" db-id="d616951e196832" id="sec-audit-ausearch">
+            <header>
+               <h2><span class="label">44<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Querying the audit daemon logs with <code class="command">ausearch</code>
+                  </h2>
+            </header>
+            
+            
+            <p>The <code class="command">aureport</code> tool helps you to create overall summaries of what is happening on the system, but
+               if you are interested in the details of a particular event, <code class="command">ausearch</code> is the tool to use.</p>
+            
+            <p><code class="command">ausearch</code> allows you to search the audit logs using special keys and search phrases that relate
+               to most of the flags that appear in event messages in <code class="filename">/var/log/audit/audit.log</code>. Not all record types contain the same search phrases. There are no <code class="literal">hostname</code> or <code class="literal">uid</code> entries in a <code class="literal">PATH</code> record, for example.</p>
+            
+            <p>When searching, make sure that you choose appropriate search criteria to catch all
+               records you need. Otherwise, you could be searching for a specific type of record
+               and still get various other related records along with it. This is caused by different
+               parts of the kernel contributing additional records for events that are related to
+               the one to find. For example, you would always get a <code class="literal">PATH</code> record along with the <code class="literal">SYSCALL</code> record for an <code class="command">open</code> system call.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Using multiple search options</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Any of the command line options can be combined with logical AND operators to narrow
+                           down your search.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Read audit logs from another file</span></dt>
+                  <dd>
+                     
+                     <p>When the audit logs have moved to another machine or when you want to analyze the
+                        logs of several machines on your local machine without wanting to connect to each
+                        of these individually, move the logs to a local file and have <code class="command">ausearch</code> search them locally:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ausearch -</code><em class="replaceable">option</em> -if <em class="replaceable">myfile</em></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Convert numeric results into text</span></dt>
+                  <dd>
+                     
+                     <p>Some information, such as user IDs are printed in numeric form. To convert these into
+                        human readable text format, add the <code class="option">-i</code> option to your <code class="command">ausearch</code> command.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by audit event ID</span></dt>
+                  <dd>
+                     
+                     <p>If you have previously run an audit report or done an <code class="command">autrace</code>, you should analyze the trail of a particular event in the log. Most of the report
+                        types described in <a class="xref xref-sect1" href="bk06partviich01s05.html">the section called “Understanding the audit logs and generating reports”</a> include audit event IDs in their output. An audit event ID is the second part of
+                        an audit message ID, which consists of a Unix epoch time stamp and the audit event
+                        ID separated by a colon. All events that are logged from one application's system
+                        call have the same event ID. Use this event ID with <code class="command">ausearch</code> to retrieve this event's trail from the log.</p>
+                     
+                     <p>Use a command similar to the following:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ausearch -a 5207</code></code></span></span>
+<span class="line"><span class="ld"><code>----</code></span></span>
+<span class="line"><span class="ld"><code>time-&gt;Tue Feb 17 13:43:58 2009</code></span></span>
+<span class="line"><span class="ld"><code>type=PATH msg=audit(1234874638.599:5207): item=0 name="/var/log/audit/audit.log" inode=1219041 dev=08:06 mode=0100644 ouid=0 ogid=0 rdev=00:00</code></span></span>
+<span class="line"><span class="ld"><code>type=CWD msg=audit(1234874638.599:5207):  cwd="/root"</code></span></span>
+<span class="line"><span class="ld"><code>type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2 success=yes exit=4 a0=62fb60 a1=0 a2=31 a3=0 items=1 ppid=25400 pid=25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=1164 comm="less" exe="/usr/bin/less" key="doc_log"</code></span></span></pre>
+                     </div>
+                     
+                     <p>The <code class="command">ausearch</code><code class="option">-a</code> command grabs all records in the logs that are related to the audit event ID provided
+                        and displays them. This option can be combined with any other option.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by message type</span></dt>
+                  <dd>
+                     
+                     <p>To search for audit records of a particular message type, use the <code class="command">ausearch</code><code class="option">-m <em class="replaceable">MESSAGE_TYPE</em></code> command. Examples of valid message types include <code class="literal">PATH</code>, <code class="literal">SYSCALL</code>, and <code class="literal">USER_LOGIN</code>. Running <code class="command">ausearch</code><code class="option">-m</code> without a message type displays a list of all message types.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by login ID</span></dt>
+                  <dd>
+                     
+                     <p>To view records associated with a particular login user ID, use the <code class="command">ausearch</code><code class="option">-ul</code> command. It displays any records related to the user login ID specified provided
+                        that user had been able to log in successfully.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by user ID</span></dt>
+                  <dd>
+                     
+                     <p>View records related to any of the user IDs (both user ID and effective user ID) with
+                        <code class="command">ausearch</code><code class="option">-ua</code>. View reports related to a particular user ID with <code class="command">ausearch</code><code class="option">-ui <em class="replaceable">UID</em></code>. Search for records related to a particular effective user ID, use the <code class="command">ausearch</code><code class="option">-ue <em class="replaceable">EUID</em></code>. Searching for a user ID means the user ID of the user creating a process. Searching
+                        for an effective user ID means the user ID and privileges that are required to run
+                        this process.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by group ID</span></dt>
+                  <dd>
+                     
+                     <p>View records related to any of the group IDs (both group ID and effective group ID)
+                        with the <code class="command">ausearch</code><code class="option">-ga</code> command. View reports related to a particular user ID with <code class="command">ausearch</code><code class="option">-gi <em class="replaceable">GID</em></code>. Search for records related to a particular effective group ID, use <code class="command">ausearch</code><code class="option">-ge <em class="replaceable">EGID</em></code>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by command line name</span></dt>
+                  <dd>
+                     
+                     <p>View records related to a certain command, using the <code class="command">ausearch</code><code class="option">-c <em class="replaceable">COMM_NAME</em></code> command, for example, <code class="command">ausearch</code><code class="option">-c less</code> for all records related to the <code class="command">less</code> command.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by executable name</span></dt>
+                  <dd>
+                     
+                     <p>View records related to a certain executable with the <code class="command">ausearch</code><code class="option">-x <em class="replaceable">EXE</em></code> command, for example <code class="command">ausearch</code><code class="option">-x /usr/bin/less</code> for all records related to the <code class="command">/usr/bin/less</code> executable.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by system call name</span></dt>
+                  <dd>
+                     
+                     <p>View records related to a certain system call with the <code class="command">ausearch</code><code class="option">-sc <em class="replaceable">SYSCALL</em></code> command, for example, <code class="command">ausearch -sc open</code> for all records related to the <code class="command">open</code> system call.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by process ID</span></dt>
+                  <dd>
+                     
+                     <p>View records related to a certain process ID with the <code class="command">ausearch</code><code class="option">-p <em class="replaceable">PID</em></code> command, for example <code class="command">ausearch</code><code class="option">-p 13368</code> for all records related to this process ID.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by event or system call success value</span></dt>
+                  <dd>
+                     
+                     <p>View records containing a certain system call success value with <code class="command">ausearch</code><code class="option">-sv <em class="replaceable">SUCCESS_VALUE</em></code>, for example, <code class="command">ausearch</code><code class="option">-sv yes</code> for all successful system calls.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by file name</span></dt>
+                  <dd>
+                     
+                     <p>View records containing a certain file name with <code class="command">ausearch</code><code class="option">-f <em class="replaceable">FILE_NAME</em></code>, for example, <code class="command">ausearch</code><code class="option">-f /foo/bar</code> for all records related to the <code class="filename">/foo/bar</code> file. Using the file name alone would work as well, but using relative paths does
+                        not work.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by terminal</span></dt>
+                  <dd>
+                     
+                     <p>View records of events related to a certain terminal with <code class="command">ausearch</code><code class="option">-tm <em class="replaceable">TERM</em></code>, for example, <code class="command">ausearch</code><code class="option">-tm ssh</code> to view all records related to events on the SSH terminal and <code class="command">ausearch</code><code class="option">-tm tty</code> to view all events related to the console.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by host name</span></dt>
+                  <dd>
+                     
+                     <p>View records related to a certain remote host name with <code class="command">ausearch</code><code class="option">-hn <em class="replaceable">HOSTNAME</em></code>, for example, <code class="command">ausearch</code><code class="option">-hn jupiter.example.com</code>. You can use a host name, fully qualified domain name, or numeric network address.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by key field</span></dt>
+                  <dd>
+                     
+                     <p>View records that contain a certain key assigned in the audit rule set to identify
+                        events of a particular type. Use the <code class="command">ausearch</code><code class="option">-k <em class="replaceable">KEY_FIELD</em></code>, for example, <code class="command">ausearch</code><code class="option">-k CFG_etc</code> to display any records containing the <code class="literal">CFG_etc</code> key.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Search by word</span></dt>
+                  <dd>
+                     
+                     <p>View records that contain a certain string assigned in the audit rule set to identify
+                        events of a particular type. The whole string is matched on file name, host name,
+                        and terminal. Use the <code class="command">ausearch</code><code class="option">-w <em class="replaceable">WORD</em></code>.</p>
+                     
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Limit a search to a certain time frame</span></dt>
+                  <dd>
+                     
+                     <p>Use <code class="option">-ts</code> and <code class="option">-te</code> to limit the scope of your searches to a certain time frame. The <code class="option">-ts</code> option is used to specify the start date and time and the <code class="option">-te</code> option is used to specify the end date and time. These options can be combined with
+                        any of the above. The use of these options is similar to use with <code class="command">aureport</code>.</p>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partviich01s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partviich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partviich01s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">44<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Understanding the audit logs and generating reports</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">44<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Analyzing processes with <code class="command">autrace</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

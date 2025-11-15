@@ -1,0 +1,644 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>29.6.&nbsp;Influencing kernel device event handling with udev rules</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich10s05.html" rel="prev">
+      <link href="bk01partiiich10s07.html" rel="next">
+      <link href="bk01partiiich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich10.html">Up</a> <a href="bk01partiiich10s07.html">Next</a> <a href="bk01partiiich10s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich10s06.html" db-id="d616951e48290" id="sec-udev-rules">
+            <header>
+               <h2><span class="label">29<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Influencing kernel device event handling with <code class="service systemitem">udev</code> rules</h2>
+            </header>
+            
+            
+            <p>A <code class="service systemitem">udev</code> rule can match any property the kernel adds to the event itself or any information
+               that the kernel exports to <code class="filename">sysfs</code>. The rule can also request additional information from external programs. Events
+               are matched against all rules provided in the directories <code class="filename">/usr/lib/udev/rules.d/</code> (for default rules) and <code class="filename">/etc/udev/rules.d</code> (system-specific configuration).</p>
+            
+            <p>Every line in the rules file contains at least one key value pair. There are two kinds
+               of keys, match and assignment keys. If all match keys match their values, the rule
+               is applied and the assignment keys are assigned the specified value. A matching rule
+               may specify the name of the device node, add symbolic links pointing to the node or
+               run a specified program as part of the event handling. If no matching rule is found,
+               the default device node name is used to create the device node. Detailed information
+               about the rule syntax and the provided keys to match or import data are described
+               in the <code class="service systemitem">udev</code> man page. The following example rules provide a basic introduction to <code class="service systemitem">udev</code> rule syntax. The example rules are all taken from the <code class="service systemitem">udev</code> default rule set <code class="filename">/usr/lib/udev/rules.d/50-udev-default.rules</code>.</p>
+            
+            <div class="example formalobject" id="ex-rules">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># console</code></span></span>
+<span class="line"><span class="ld"><code>KERNEL=="console", MODE="0600", OPTIONS="last_rule"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># serial devices</code></span></span>
+<span class="line"><span class="ld"><code>KERNEL=="ttyUSB*", ATTRS{product}=="[Pp]alm*Handheld*", SYMLINK+="pilot"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># printer</code></span></span>
+<span class="line"><span class="ld"><code>SUBSYSTEM=="usb", KERNEL=="lp*", NAME="usb/%k", SYMLINK+="usb%k", GROUP="lp"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># kernel firmware loader</code></span></span>
+<span class="line"><span class="ld"><code>SUBSYSTEM=="firmware", ACTION=="add", RUN+="firmware.sh"</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">29<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Example <code class="service systemitem">udev</code> rules</div>
+               </header>
+            </div>
+            
+            <p>The <code class="systemitem">console</code> rule consists of three keys: one match key (<code class="literal">KERNEL</code>) and two assign keys (<code class="literal">MODE</code>, <code class="literal">OPTIONS</code>). The <code class="literal">KERNEL</code> match rule searches the device list for any items of the type <code class="literal">console</code>. Only exact matches are valid and trigger this rule to be executed. The <code class="literal">MODE</code> key assigns special permissions to the device node, in this case, read and write
+               permissions to the owner of this device only. The <code class="literal">OPTIONS</code> key makes this rule the last rule to be applied to any device of this type. Any later
+               rule matching this particular device type does not have any effect.</p>
+            
+            <p>The <code class="systemitem">serial devices</code> rule is not available in <code class="filename">50-udev-default.rules</code> anymore, but it is still worth considering. It consists of two match keys (<code class="literal">KERNEL</code> and <code class="literal">ATTRS</code>) and one assign key (<code class="literal">SYMLINK</code>). The <code class="literal">KERNEL</code> key searches for all devices of the <code class="literal">ttyUSB</code> type. Using the <code class="literal">*</code> wild card, this key matches several of these devices. The second match key, <code class="literal">ATTRS</code>, checks whether the <code class="filename">product</code> attribute file in <code class="literal">sysfs</code> for any <code class="literal">ttyUSB</code> device contains a certain string. The assign key (<code class="literal">SYMLINK</code>) triggers the addition of a symbolic link to this device under <code class="filename">/dev/pilot</code>. The operator used in this key (<code class="literal">+=</code>) tells <code class="service systemitem">udev</code> to additionally perform this action, even if previous or later rules add other symbolic
+               links. As this rule contains two match keys, it is only applied if both conditions
+               are met.</p>
+            
+            <p>The <code class="systemitem">printer</code> rule deals with USB printers and contains two match keys which must both apply to
+               get the entire rule applied (<code class="literal">SUBSYSTEM</code> and <code class="literal">KERNEL</code>). Three assign keys deal with the naming for this device type (<code class="literal">NAME</code>), the creation of symbolic device links (<code class="literal">SYMLINK</code>) and the group membership for this device type (<code class="literal">GROUP</code>). Using the <code class="literal">*</code> wild card in the <code class="literal">KERNEL</code> key makes it match several <code class="literal">lp</code> printer devices. Substitutions are used in both, the <code class="literal">NAME</code> and the <code class="literal">SYMLINK</code> keys to extend these strings by the internal device name. For example, the symbolic
+               link to the first <code class="literal">lp</code> USB printer would read <code class="filename">/dev/usblp0</code>.</p>
+            
+            <p>The <code class="systemitem">kernel firmware loader</code> rule makes <code class="service systemitem">udev</code> load additional firmware by an external helper script during runtime. The <code class="literal">SUBSYSTEM</code> match key searches for the <code class="literal">firmware</code> subsystem. The <code class="literal">ACTION</code> key checks whether any device belonging to the <code class="literal">firmware</code> subsystem has been added. The <code class="literal">RUN+=</code> key triggers the execution of the <code class="literal">firmware.sh</code> script to locate the firmware that is to be loaded.</p>
+            
+            <p>General characteristics are common to all rules:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>Each rule consists of one or more key value pairs separated by a comma.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>A key's operation is determined by the operator. <code class="service systemitem">udev</code> rules support several operators.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Each given value must be enclosed by quotation marks.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Each line of the rules file represents one rule. If a rule is longer than one line,
+                     use <code class="literal">\</code> to join the different lines as you would do in shell syntax.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="service systemitem">udev</code> rules support a shell-style pattern that matches the <code class="literal">*</code>, <code class="literal">?</code>, and <code class="literal">[]</code> patterns.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p><code class="service systemitem">udev</code> rules support substitutions.</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="sec-udev-rules-ops">
+               <header>
+                  <h3><span class="label">29<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Using operators in <code class="service systemitem">udev</code> rules</h3>
+               </header>
+               
+               
+               <p>Creating keys you can choose from several operators, depending on the type of key
+                  you want to create. Match keys will normally be used to find a value that either matches
+                  or explicitly mismatches the search value. Match keys contain either of the following
+                  operators:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">==</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Compare for equality. If the key contains a search pattern, all results matching this
+                           pattern are valid.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">!=</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Compare for non-equality. If the key contains a search pattern, all results matching
+                           this pattern are valid.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Any of the following operators can be used with assign keys:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">=</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Assign a value to a key. If the key previously consisted of a list of values, the
+                           key resets and only the single value is assigned.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">+=</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Add a value to a key that contains a list of entries.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">:=</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Assign a final value. Disallow any later change by later rules.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-udev-rules-subst">
+               <header>
+                  <h3><span class="label">29<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using substitutions in <code class="service systemitem">udev</code> rules</h3>
+               </header>
+               
+               
+               <p><code class="service systemitem">udev</code> rules support the use of placeholders and substitutions. Use them in a similar fashion
+                  as you would do in any other scripts. The following substitutions can be used with
+                  <code class="service systemitem">udev</code> rules:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%r</code>, <code class="literal">$root</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The device directory, <code class="filename">/dev</code> by default.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%p</code>, <code class="literal">$devpath</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The value of <code class="envar">DEVPATH</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%k</code>, <code class="literal">$kernel</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The value of <code class="envar">KERNEL</code> or the internal device name.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%n</code>, <code class="literal">$number</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The device number.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%N</code>, <code class="literal">$tempnode</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The temporary name of the device file.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%M</code>, <code class="literal">$major</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The major number of the device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%m</code>, <code class="literal">$minor</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The minor number of the device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%s{<em class="replaceable">ATTRIBUTE</em>}</code>, <code class="literal">$attr{<em class="replaceable">ATTRIBUTE</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The value of a <code class="filename">sysfs</code> attribute (specified by <em class="replaceable">ATTRIBUTE</em>).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%E{<em class="replaceable">VARIABLE</em>}</code>, <code class="literal">$env{<em class="replaceable">VARIABLE</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The value of an environment variable (specified by <em class="replaceable">VARIABLE</em>).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%c</code>, <code class="literal">$result</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The output of <code class="envar">PROGRAM</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">%%</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">%</code> character.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">$$</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">$</code> character.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-udev-rules-match">
+               <header>
+                  <h3><span class="label">29<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using <code class="service systemitem">udev</code> match keys</h3>
+               </header>
+               
+               
+               <p>Match keys describe conditions that must be met before a <code class="service systemitem">udev</code> rule can be applied. The following match keys are available:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">ACTION</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The name of the event action, for example, <code class="literal">add</code> or <code class="literal">remove</code> when adding or removing a device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">DEVPATH</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The device path of the event device, for example, <code class="literal">DEVPATH=/bus/pci/drivers/ipw3945</code> to search for all events related to the ipw3945 driver.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">KERNEL</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The internal (kernel) name of the event device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">SUBSYSTEM</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The subsystem of the event device, for example, <code class="literal">SUBSYSTEM=usb</code> for all events related to USB devices.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">ATTR{<em class="replaceable">FILENAME</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p><code class="filesystem systemitem">sysfs</code> attributes of the event device. To match a string contained in the <code class="filename">vendor</code> attribute file name, you could use <code class="literal">ATTR{vendor}=="On[sS]tream"</code>, for example.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">KERNELS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Let <code class="service systemitem">udev</code> search the device path upward for a matching device name.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">SUBSYSTEMS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Let <code class="service systemitem">udev</code> search the device path upward for a matching device subsystem name.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">DRIVERS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Let <code class="service systemitem">udev</code> search the device path upward for a matching device driver name.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">ATTRS{<em class="replaceable">FILENAME</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Let <code class="service systemitem">udev</code> search the device path upward for a device with matching <code class="filesystem systemitem">sysfs</code> attribute values.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">ENV{<em class="replaceable">KEY</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The value of an environment variable, for example, <code class="literal">ENV{ID_BUS}="ieee1394</code> to search for all events related to the FireWire bus ID.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">PROGRAM</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Let <code class="service systemitem">udev</code> execute an external program. To be successful, the program must return with exit
+                           code zero. The program's output, printed to STDOUT, is available to the <code class="literal">RESULT</code> key.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">RESULT</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Match the output string of the last <code class="literal">PROGRAM</code> call. Either include this key in the same rule as the <code class="literal">PROGRAM</code> key or in a later one.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-udev-rules-assign">
+               <header>
+                  <h3><span class="label">29<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using <code class="service systemitem">udev</code> assign keys</h3>
+               </header>
+               
+               
+               <p>In contrast to the match keys described above, assign keys do not describe conditions
+                  that must be met. They assign values, names and actions to the device nodes maintained
+                  by <code class="service systemitem">udev</code>.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">NAME</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The name of the device node to be created. After a rule has set a node name, all other
+                           rules with a <code class="literal">NAME</code> key for this node are ignored.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">SYMLINK</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The name of a symbolic link related to the node to be created. Multiple matching rules
+                           can add symbolic links to be created with the device node. You can also specify multiple
+                           symbolic links for one node in one rule using the space character to separate the
+                           symbolic link names.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">OWNER, GROUP, MODE</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The permissions for the new device node. Values specified here overwrite anything
+                           that has been compiled in.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">ATTR{<em class="replaceable">KEY</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Specify a value to be written to a <code class="filesystem systemitem">sysfs</code> attribute of the event device. If the <code class="literal">==</code> operator is used, this key is also used to match against the value of a <code class="filesystem systemitem">sysfs</code> attribute.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">ENV{<em class="replaceable">KEY</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Tell <code class="service systemitem">udev</code> to export a variable to the environment. If the <code class="literal">==</code> operator is used, this key is also used to match against an environment variable.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">RUN</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Tell <code class="service systemitem">udev</code> to add a program to the list of programs to be executed for this device. Keep in
+                           mind to restrict this to short tasks to avoid blocking further events for this device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">LABEL</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Add a label where a <code class="literal">GOTO</code> can jump to.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">GOTO</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Tell <code class="service systemitem">udev</code> to skip several rules and continue with the one that carries the label referenced
+                           by the <code class="literal">GOTO</code> key.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">IMPORT{<em class="replaceable">TYPE</em>}</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Load variables into the event environment such as the output of an external program.
+                           <code class="service systemitem">udev</code> imports variables of several types. If no type is specified, <code class="service systemitem">udev</code> tries to determine the type itself based on the executable bit of the file permissions.</p>
+                        
+                        <ul class="itemizedlist" db-mark="bullet">
+                           
+                           <li>
+                              
+                              <p><code class="literal">program</code> tells <code class="service systemitem">udev</code> to execute an external program and import its output.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">file</code> tells <code class="service systemitem">udev</code> to import a text file.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">parent</code> tells <code class="service systemitem">udev</code> to import the stored keys from the parent device.</p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">WAIT_FOR_SYSFS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Tells <code class="service systemitem">udev</code> to wait for the specified <code class="filesystem systemitem">sysfs</code> file to be created for a certain device. For example, <code class="literal">WAIT_FOR_SYSFS="ioerr_cnt"</code> informs <code class="service systemitem">udev</code> to wait until the <code class="filename">ioerr_cnt</code> file has been created.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">OPTIONS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">OPTION</code> key may have several values:</p>
+                        
+                        <ul class="itemizedlist" db-mark="bullet">
+                           
+                           <li>
+                              
+                              <p><code class="literal">last_rule</code> tells <code class="service systemitem">udev</code> to ignore all later rules.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">ignore_device</code> tells <code class="service systemitem">udev</code> to ignore this event.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">ignore_remove</code> tells <code class="service systemitem">udev</code> to ignore all later remove events for the device.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">all_partitions</code> tells <code class="service systemitem">udev</code> to create device nodes for all available partitions on a block device.</p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich10s05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich10s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">29<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Monitoring the running <code class="service systemitem">udev</code> daemon</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">29<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Persistent device naming</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

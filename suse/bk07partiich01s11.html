@@ -1,0 +1,391 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.11.&nbsp;Graph your data: RRDtool</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiich01s10.html" rel="prev">
+      <link href="bk07partiich02.html" rel="next">
+      <link href="bk07partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiich01.html">Up</a> <a href="bk07partiich02.html">Next</a> <a href="bk07partiich01s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partiich01s11.html" db-id="d616951e205520" id="sec-util-rrdtool">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Graph your data: RRDtool</h2>
+            </header>
+            
+            
+            <p>There are a lot of data in the world around you, which can be easily measured in time.
+               For example, changes in the temperature, or the number of data sent or received by
+               your computer's network interface. RRDtool can help you store and visualize such data
+               in detailed and customizable graphs.</p>
+            
+            <p>RRDtool is available for most Unix platforms and Linux distributions. <span class="phrase productname">SUSE® Linux Enterprise Server</span> ships RRDtool as well. Install it either with YaST or by entering</p>
+            
+            <p><code class="command">zypper</code><code class="option">install</code><em class="replaceable">rrdtool</em> in the command line as <code class="systemitem username">root</code>.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Bindings</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>There are Perl, Python, Ruby, and PHP bindings available for RRDtool, so that you
+                           can write your own monitoring scripts in your preferred scripting language.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-util-rrdtool-howitworks">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>How RRDtool works</h3>
+               </header>
+               
+               
+               <p>RRDtool is an abbreviation of <em>Round Robin Database tool</em>. <em>Round Robin</em> is a method for manipulating with a constant amount of data. It uses the principle
+                  of a circular buffer, where there is no end nor beginning to the data row which is
+                  being read. RRDtool uses Round Robin Databases to store and read its data.</p>
+               
+               <p>As mentioned above, RRDtool is designed to work with data that change in time. The
+                  ideal case is a sensor which repeatedly reads measured data (like temperature, speed
+                  etc.) in constant periods of time, and then exports them in a given format. Such data
+                  is perfectly ready for RRDtool, and it is easy to process them and create the desired
+                  output.</p>
+               
+               <p>Sometimes it is not possible to obtain the data automatically and regularly. Their
+                  format needs to be pre-processed before it is supplied to RRDtool, and often you need
+                  to manipulate RRDtool even manually.</p>
+               
+               <p>The following is a simple example of basic RRDtool usage. It illustrates all three
+                  important phases of the usual RRDtool workflow: <em>creating</em> a database, <em>updating</em> measured values, and <em>viewing</em> the output.</p>
+               </section>
+            
+            <section class="sect2" id="sec-util-rrdtool-example">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>A practical example</h3>
+               </header>
+               
+               
+               <p>Suppose we want to collect and view information about the memory usage in the Linux
+                  system as it changes in time. To make the example more vivid, we measure the currently
+                  free memory over a period of 40 seconds in 4-second intervals. Three applications
+                  that generally consume a lot of system memory are started and closed: the Firefox
+                  Web browser, the Evolution e-mail client, and the Eclipse development framework.</p>
+               
+               <section class="sect3" id="sec-util-rrdtool-example-collect">
+                  <header>
+                     <h4><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Collecting data</h4>
+                  </header>
+                  
+                  
+                  <p>RRDtool is frequently used to measure and visualize network traffic. In such case,
+                     the Simple Network Management Protocol (SNMP) is used. This protocol can query network
+                     devices for relevant values of their internal counters. Exactly these values are to
+                     be stored with RRDtool. For more information on SNMP, see <a class="link" href="http://www.net-snmp.org/">http://www.net-snmp.org/</a>.</p>
+                  
+                  <p>Our situation is different—we need to obtain the data manually. A helper script <code class="command">free_mem.sh</code> repetitively reads the current state of free memory and writes it to the standard
+                     output.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat free_mem.sh</code></span></span>
+<span class="line"><span class="ld"><code>INTERVAL=4</code></span></span>
+<span class="line"><span class="ld"><code>for steps in {1..10}</code></span></span>
+<span class="line"><span class="ld"><code>do</code></span></span>
+<span class="line"><span class="ld"><code>    DATE=`date +%s`</code></span></span>
+<span class="line"><span class="ld"><code>    FREEMEM=`free -b | grep "Mem" | awk '{ print $4 }'`</code></span></span>
+<span class="line"><span class="ld"><code>    sleep $INTERVAL</code></span></span>
+<span class="line"><span class="ld"><code>    echo "rrdtool update free_mem.rrd $DATE:$FREEMEM"</code></span></span>
+<span class="line"><span class="ld"><code>done</code></span></span></pre>
+                  </div>
+                  
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>The time interval is set to 4 seconds, and is implemented with the <code class="command">sleep</code> command.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>RRDtool accepts time information in a special format - so called <em>Unix time</em>. It is defined as the number of seconds since the midnight of January 1, 1970 (UTC).
+                           For example, 1272907114 represents 2010-05-03 17:18:34.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The free memory information is reported in bytes with <code class="command">free</code><code class="option">-b</code>. Prefer to supply basic units (bytes) instead of multiple units (like kilobytes).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The line with the <code class="command">echo ...</code> command contains the future name of the database file (<code class="literal">free_mem.rrd</code>), and together creates a command line for updating RRDtool values.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>After running <code class="command">free_mem.sh</code>, you see an output similar to this:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>sh free_mem.sh</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974835:1182994432</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974839:1162817536</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974843:1096269824</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974847:1034219520</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974851:909438976</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974855:832454656</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974859:829120512</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974863:1180377088</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974867:1179369472</code></span></span>
+<span class="line"><span class="ld"><code>rrdtool update free_mem.rrd 1272974871:1181806592</code></span></span></pre>
+                  </div>
+                  
+                  <p>It is convenient to redirect the command's output to a file with</p>
+                  
+                  <p><code class="command">sh free_mem.sh &gt; free_mem_updates.log</code></p>
+                  
+                  <p>to simplify its future execution.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-util-rrdtool-example-create">
+                  <header>
+                     <h4><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating the database</h4>
+                  </header>
+                  
+                  
+                  <p>Create the initial Robin Round database for our example with the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rrdtool create free_mem.rrd --start 1272974834 --step=4 \</code></span></span>
+<span class="line"><span class="ld"><code>DS:memory:GAUGE:600:U:U RRA:AVERAGE:0.5:1:24</code></span></span></pre>
+                  </div>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Points to notice</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p>This command creates a file called <code class="filename">free_mem.rrd</code> for storing our measured values in a Round Robin type database.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The <code class="option">--start</code> option specifies the time (in Unix time) when the first value is added to the database.
+                              In this example, it is one less than the first time value of the <code class="command">free_mem.sh</code> output (1272974835).</p>
+                           </li>
+                        <li>
+                           
+                           <p>The <code class="option">--step</code> specifies the time interval in seconds with which the measured data is supplied to
+                              the database.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The <code class="literal">DS:memory:GAUGE:600:U:U</code> part introduces a new data source for the database. It is called <em>memory</em>, its type is <em>gauge</em>, the maximum number between two updates is 600 seconds, and the <em>minimal</em> and <em>maximal</em> value in the measured range are unknown (U).</p>
+                           </li>
+                        <li>
+                           
+                           <p><code class="literal">RRA:AVERAGE:0.5:1:24</code> creates Round Robin archive (RRA) whose stored data is processed with the <em>consolidation functions</em> (CF) that calculates the <em>average</em> of data points. 3 arguments of the consolidation function are appended to the end
+                              of the line.</p>
+                           </li>
+                     </ul>
+                  </div>
+                  
+                  <p>If no error message is displayed, then <code class="filename">free_mem.rrd</code> database is created in the current directory:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -l free_mem.rrd</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r-- 1 tux users 776 May  5 12:50 free_mem.rrd</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-util-rrdtool-example-update">
+                  <header>
+                     <h4><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Updating database values</h4>
+                  </header>
+                  
+                  
+                  <p>After the database is created, you need to fill it with the measured data. In <a class="xref xref-sect3" href="#sec-util-rrdtool-example-collect">the section called “Collecting data”</a>, we already prepared the file <code class="filename">free_mem_updates.log</code> which consists of <code class="command">rrdtool update</code> commands. These commands do the update of database values for us.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>sh free_mem_updates.log; ls -l free_mem.rrd</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r--  1 tux users  776 May  5 13:29 free_mem.rrd</code></span></span></pre>
+                  </div>
+                  
+                  <p>As you can see, the size of <code class="filename">free_mem.rrd</code> remained the same even after updating its data.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-util-rrdtool-example-view">
+                  <header>
+                     <h4><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Viewing measured values</h4>
+                  </header>
+                  
+                  
+                  <p>We have already measured the values, created the database, and stored the measured
+                     value in it. Now we can play with the database, and retrieve or view its values.</p>
+                  
+                  <p>To retrieve all the values from our database, enter the following on the command line:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rrdtool fetch free_mem.rrd AVERAGE --start 1272974830 \</code></span></span>
+<span class="line"><span class="ld"><code>--end 1272974871</code></span></span>
+<span class="line"><span class="ld"><code>          memory</code></span></span>
+<span class="line"><span class="ld"><code>1272974832: nan</code></span></span>
+<span class="line"><span class="ld"><code>1272974836: 1.1729059840e+09</code></span></span>
+<span class="line"><span class="ld"><code>1272974840: 1.1461806080e+09</code></span></span>
+<span class="line"><span class="ld"><code>1272974844: 1.0807572480e+09</code></span></span>
+<span class="line"><span class="ld"><code>1272974848: 1.0030243840e+09</code></span></span>
+<span class="line"><span class="ld"><code>1272974852: 8.9019289600e+08</code></span></span>
+<span class="line"><span class="ld"><code>1272974856: 8.3162112000e+08</code></span></span>
+<span class="line"><span class="ld"><code>1272974860: 9.1693465600e+08</code></span></span>
+<span class="line"><span class="ld"><code>1272974864: 1.1801251840e+09</code></span></span>
+<span class="line"><span class="ld"><code>1272974868: 1.1799787520e+09</code></span></span>
+<span class="line"><span class="ld"><code>1272974872: nan</code></span></span></pre>
+                  </div>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Points to notice</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p><code class="literal">AVERAGE</code> fetches the average value points from the database, because only one data source
+                              is defined (<a class="xref xref-sect3" href="#sec-util-rrdtool-example-create">the section called “Creating the database”</a>) with <code class="literal">AVERAGE</code> processing and no other function is available.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The first line of the output prints the name of the data source as defined in <a class="xref xref-sect3" href="#sec-util-rrdtool-example-create">the section called “Creating the database”</a>.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The left results column represents individual points in time, while the right one
+                              represents corresponding measured average values in scientific notation.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The <code class="literal">nan</code> in the last line stands for <q>not a number</q>.</p>
+                           </li>
+                     </ul>
+                  </div>
+                  
+                  <p>Now a graph representing the values stored in the database is drawn:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rrdtool graph free_mem.png \</code></span></span>
+<span class="line"><span class="ld"><code>--start 1272974830 \</code></span></span>
+<span class="line"><span class="ld"><code>--end 1272974871 \</code></span></span>
+<span class="line"><span class="ld"><code>--step=4 \</code></span></span>
+<span class="line"><span class="ld"><code>DEF:free_memory=free_mem.rrd:memory:AVERAGE \</code></span></span>
+<span class="line"><span class="ld"><code>LINE2:free_memory#FF0000 \</code></span></span>
+<span class="line"><span class="ld"><code>--vertical-label "GB" \</code></span></span>
+<span class="line"><span class="ld"><code>--title "Free System Memory in Time" \</code></span></span>
+<span class="line"><span class="ld"><code>--zoom 1.5 \</code></span></span>
+<span class="line"><span class="ld"><code>--x-grid SECOND:1:SECOND:4:SECOND:10:0:%X</code></span></span></pre>
+                  </div>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Points to notice</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p><code class="filename">free_mem.png</code> is the file name of the graph to be created.</p>
+                           </li>
+                        <li>
+                           
+                           <p><code class="option">--start</code> and <code class="option">--end</code> limit the time range within which the graph is drawn.</p>
+                           </li>
+                        <li>
+                           
+                           <p><code class="option">--step</code> specifies the time resolution (in seconds) of the graph.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The <code class="literal">DEF:...</code> part is a data definition called <em>free_memory</em>. Its data is read from the <code class="filename">free_mem.rrd</code> database and its data source called <em>memory</em>. The <em>average</em> value points are calculated, because no others were defined in <a class="xref xref-sect3" href="#sec-util-rrdtool-example-create">the section called “Creating the database”</a>.</p>
+                           </li>
+                        <li>
+                           
+                           <p>The <code class="literal">LINE...</code> part specifies properties of the line to be drawn into the graph. It is 2 pixels
+                              wide, its data come from the <em>free_memory</em> definition, and its color is red.</p>
+                           </li>
+                        <li>
+                           
+                           <p><code class="option">--vertical-label</code> sets the label to be printed along the <em>y</em> axis, and <code class="option">--title</code> sets the main label for the whole graph.</p>
+                           </li>
+                        <li>
+                           
+                           <p><code class="option">--zoom</code> specifies the zoom factor for the graph. This value must be greater than zero.</p>
+                           </li>
+                        <li>
+                           
+                           <p><code class="option">--x-grid</code> specifies how to draw grid lines and their labels into the graph. Our example places
+                              them every second, while major grid lines are placed every 4 seconds. Labels are placed
+                              every 10 seconds under the major grid lines.</p>
+                           </li>
+                     </ul>
+                  </div>
+                  
+                  <div class="figure formalobject" id="util-rrdtool-example-create-graph1">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><span class="viewport-table" style="width:302px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/rrdtool_graph1.png" style="width:302px;"></picture></span></span></span></span></span></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Example graph created with RRDtool</div>
+                     </header>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-util-rrdtool-moreinfo">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>More information</h3>
+               </header>
+               
+               
+               <p>RRDtool is a complex tool with a lot of subcommands and command-line options. Some
+                  are easy to understand, but to make them produce the results you want and fine-tune
+                  them according to your liking may require a lot of effort.</p>
+               
+               <p>Apart from RRDtool's man page (<code class="command">man 1 rrdtool</code>) which gives you only basic information, you should have a look at the <a class="link" href="https://oss.oetiker.ch/rrdtool/">RRDtool home page</a>. There is a detailed <a class="link" href="https://oss.oetiker.ch/rrdtool/doc/index.en.html">documentation</a> of the <code class="command">rrdtool</code> command and all its sub-commands. There are also several <a class="link" href="https://oss.oetiker.ch/rrdtool/tut/index.en.html">tutorials</a> to help you understand the common RRDtool workflow.</p>
+               
+               <p>If you are interested in monitoring network traffic, have a look at <a class="link" href="https://oss.oetiker.ch/mrtg/">MRTG (Multi Router Traffic Grapher)</a>. MRTG can graph the activity of many network devices. It can use RRDtool.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiich01s10.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk07partiich02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">2<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Time and date</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">3</span><span class="sep">.&nbsp;</span>System log files</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>16.2.&nbsp;The Linux boot process</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiich01.html" rel="prev">
+      <link href="bk01partiich02.html" rel="next">
+      <link href="bk01partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiich01.html">Up</a> <a href="bk01partiich02.html">Next</a> <a href="bk01partiich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiich01s02.html" db-id="d616951e25386" id="sec-boot-proc">
+            <header>
+               <h2><span class="label">16<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The Linux boot process</h2>
+            </header>
+            
+            
+            <p>The Linux boot process consists of several stages, each represented by a different
+               component:</p>
+            
+            <ol class="orderedlist" type="1">
+               
+               <li>
+                  
+                  <p><a class="xref xref-sect2" href="#sec-boot-proc-initialization">the section called “The initialization and boot loader phase”</a></p>
+                  </li>
+               
+               <li>
+                  
+                  <p><a class="xref xref-sect2" href="#sec-boot-proc-kernel">the section called “The kernel phase”</a></p>
+                  </li>
+               
+               <li>
+                  
+                  <p><a class="xref xref-sect2" href="#sec-boot-initramfs">the section called “The init on initramfs phase”</a></p>
+                  </li>
+               
+               <li>
+                  
+                  <p><a class="xref xref-sect2" href="#sec-boot-systemd">the section called “The systemd phase”</a></p>
+                  </li>
+               </ol>
+            
+            <section class="sect2" id="sec-boot-proc-initialization">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The initialization and boot loader phase</h3>
+               </header>
+               
+               
+               <p>During the initialization phase, the machine's hardware is set up, and the devices
+                  are prepared. This process differs across hardware architectures.</p>
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> uses the boot loader GRUB&nbsp;2 on all architectures. Depending on the architecture and
+                  firmware, starting the GRUB&nbsp;2 boot loader can be a multi-step process. The purpose
+                  of the boot loader is to load the kernel and the initial, RAM-based file system (initramfs).
+                  For more information about GRUB&nbsp;2, refer to <a class="xref xref-chapter" href="bk01partiich03.html">Chapter&nbsp;<span class="label">18</span>, The boot loader GRUB&nbsp;2</a>.</p>
+               
+               <section class="sect3" id="sec-boot-proc-initialization-x86-aarch">
+                  <header>
+                     <h4><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Initialization and boot loader phase on AArch64 and AMD64/Intel&nbsp;64</h4>
+                  </header>
+                  
+                  
+                  <p>After turning on the computer, the BIOS or the UEFI initializes the screen and keyboard,
+                     and tests the main memory. Up to this stage, the machine does not access any mass
+                     storage media. Subsequently, the information about the current date, time and the
+                     most important peripherals are loaded from the CMOS values. When the boot media and
+                     its geometry are recognized, the system control passes from the BIOS/UEFI to the boot
+                     loader.</p>
+                  
+                  <p>On a machine equipped with a traditional BIOS, only code from the first physical 512-byte
+                     data sector (the Master Boot Record, MBR) of the boot disk can be loaded. Only a minimal
+                     GRUB&nbsp;2 fits into the MBR. Its sole purpose is to load a GRUB&nbsp;2 core image containing
+                     file system drivers from the gap between the MBR and the first partition (MBR partition
+                     table) or from the BIOS boot partition (GPT partition table). This image contains
+                     file system drivers and therefore is able to access <code class="filename">/boot</code> located on the root file system. <code class="filename">/boot</code> contains additional modules for GRUB&nbsp;2 core as well as the kernel and the initramfs
+                     image. When it has access to this partition, GRUB&nbsp;2 loads the kernel and the initramfs
+                     image into memory and hands control over to the kernel.</p>
+                  
+                  <p>When booting a BIOS system from an encrypted file system that includes an encrypted
+                     <code class="filename">/boot</code> partition, you need to enter the password for decryption twice. It is first needed
+                     by GRUB&nbsp;2 to decrypt <code class="filename">/boot</code> and then for <code class="daemon systemitem">systemd</code> to mount the encrypted volumes.</p>
+                  
+                  <p>On machines with UEFI the boot process is much simpler than on machines with a traditional
+                     BIOS. The firmware is able to read from a FAT formatted system partition of disks
+                     with a GPT partition table. This EFI system-partition (in the running system mounted
+                     as <code class="filename">/boot/efi</code>) holds enough space to host a fully fledged GRUB&nbsp;2 which is directly loaded and executed
+                     by the firmware.</p>
+                  
+                  <p>If the BIOS/UEFI supports network booting, it is also possible to configure a boot
+                     server that provides the boot loader. The system can then be booted via PXE. The BIOS/UEFI
+                     acts as the boot loader. It gets the boot image from the boot server and starts the
+                     system, independent of local hard disks.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-boot-proc-initialization-zsystems">
+                  <header>
+                     <h4><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Initialization and boot loader phase on IBM&nbsp;Z</h4>
+                  </header>
+                  
+                  
+                  <p>On IBM&nbsp;Z the boot process must be initialized by a boot loader called <code class="command">zipl</code> (z initial program load). Although <code class="command">zipl</code> supports reading from multiple file systems, it does not support the SLE default
+                     file system (Btrfs) or booting from snapshots. <span class="phrase productname">SUSE Linux Enterprise Server</span> therefore uses a two-stage boot process that ensures full Btrfs support at boot-time:</p>
+                  
+                  <div class="informalobject procedure" id="sec-boot-proc-initialization-zsystems_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p><code class="command">zipl</code> boots from the partition <code class="filename">/boot/zipl</code>, which can be formatted with the Ext2, Ext3, Ext4, or XFS file system. This partition
+                              contains a minimal kernel and an initramfs that are loaded into memory. The initramfs
+                              contains a Btrfs driver (among others) and the boot loader GRUB&nbsp;2. The kernel is started
+                              with a parameter <code class="literal">initgrub</code>, which tells it to start GRUB&nbsp;2.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>The kernel mounts the root file system, so <code class="filename">/boot</code> becomes accessible. Now GRUB&nbsp;2 is started from the initramfs. It reads its configuration
+                              from <code class="filename">/boot/grub2/grub.cfg</code> and loads the final kernel and initramfs from <code class="filename">/boot</code>. The new kernel now gets loaded via Kexec.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-boot-proc-kernel">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The kernel phase</h3>
+               </header>
+               
+               
+               <p>When the boot loader has passed on system control, the boot process is the same on
+                  all architectures. The boot loader loads both the kernel and an initial RAM-based
+                  file system (<code class="systemitem">initramfs</code>) into memory and the kernel takes over.</p>
+               
+               <p>After the kernel has set up memory management and has detected the CPU type and its
+                  features, it initializes the hardware and mounts the temporary root file system from
+                  the memory that was loaded with the <code class="systemitem">initramfs</code>.</p>
+               
+               <section class="sect3" id="sec-boot-initrd">
+                  <header>
+                     <h4><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The <code class="systemitem">initramfs</code> file</h4>
+                  </header>
+                  
+                  
+                  <p><code class="systemitem">initramfs</code> (initial RAM file system) is a small cpio archive that the kernel can load into a
+                     RAM disk. It is located at <code class="filename">/boot/initrd</code>. It can be created with a tool called <code class="command">dracut</code>—refer to <code class="command">man 8 dracut</code> for details.</p>
+                  
+                  <p>The <code class="systemitem">initramfs</code> provides a minimal Linux environment that enables the execution of programs before
+                     the actual root file system is mounted. This minimal Linux environment is loaded into
+                     memory by BIOS or UEFI routines and does not have specific hardware requirements other
+                     than sufficient memory. The <code class="systemitem">initramfs</code> archive must always provide an executable named <code class="systemitem">init</code> that executes the <code class="daemon systemitem">systemd</code> daemon on the root file system for the boot process to proceed.</p>
+                  
+                  <p>Before the root file system can be mounted and the operating system can be started,
+                     the kernel needs the corresponding drivers to access the device on which the root
+                     file system is located. These drivers may include special drivers for certain kinds
+                     of hard disks or even network drivers to access a network file system. The needed
+                     modules for the root file system are loaded by <code class="systemitem">init</code> on <code class="systemitem">initramfs</code>. After the modules are loaded, <code class="service systemitem">udev</code> provides the <code class="systemitem">initramfs</code> with the needed devices. Later in the boot process, after changing the root file
+                     system, it is necessary to regenerate the devices. This is done by the <code class="daemon systemitem">systemd</code> unit <code class="filename">systemd-udev-trigger.service</code>.</p>
+                  
+                  <section class="sect4" id="sec-boot-initrd-regenerate">
+                     <header>
+                        <h5><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Regenerating the initramfs</h5>
+                     </header>
+                     
+                     
+                     <p>Because the <code class="systemitem">initramfs</code> contains drivers, it needs to be updated whenever a new version of one of its drivers
+                        is available. This is done automatically when installing the package containing the
+                        driver update. YaST or zypper informs you about this by showing the output of the
+                        command that generates the <code class="systemitem">initramfs</code>. However, there are specific occasions when you need to regenerate an <code class="systemitem">initramfs</code> manually:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry" id="var-initrd-regenerate-drivers">
+                           <dt><span class="term">Adding drivers because of hardware changes</span></dt>
+                           <dd>
+                              
+                              <p>If you need to change hardware, for example, hard disks, and this hardware requires
+                                 different drivers to be in the kernel at boot time, you must update the <code class="systemitem">initramfs</code> file.</p>
+                              
+                              <p>Open or create <code class="filename">/etc/dracut.conf.d/10-<em class="replaceable">DRIVER</em>.conf</code> and add the following line (mind the leading blank space):</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>force_drivers+=" <em class="replaceable">DRIVER1</em> "</code></span></span></pre>
+                              </div>
+                              
+                              <p>Replace <em class="replaceable">DRIVER1</em> with the module name of the driver. If you need to add more than one driver, list
+                                 them space-separated:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>force_drivers+=" <em class="replaceable">DRIVER1</em><em class="replaceable">DRIVER2</em> "</code></span></span></pre>
+                              </div>
+                              
+                              <p>Proceed with <a class="xref xref-procedure" href="#pro-generate-initramfs">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span>, “Generate an initramfs”</a>.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry" id="var-initrd-regenerate-raidroot">
+                           <dt><span class="term">Moving system directories to a RAID or LVM</span></dt>
+                           <dd>
+                              
+                              <p>Whenever you move swap files, or system directories like <code class="filename">/usr</code> in a running system to a RAID or logical volume, you need to create an <code class="systemitem">initramfs</code> that contains support for software RAID or LVM drivers.</p>
+                              
+                              <p>To do so, create the respective entries in <code class="filename">/etc/fstab</code> and mount the new entries (for example with <code class="command">mount -a</code> and/or <code class="command">swapon -a</code>).</p>
+                              
+                              <p>Proceed with <a class="xref xref-procedure" href="#pro-generate-initramfs">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span>, “Generate an initramfs”</a>.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry" id="var-initrd-regenerate-lvmadd">
+                           <dt><span class="term">Adding disks to an LVM group or Btrfs RAID containing the root file system</span></dt>
+                           <dd>
+                              
+                              <p>Whenever you add (or remove) a disk to a logical volume group or a Btrfs RAID containing
+                                 the root file system, you need to create an <code class="systemitem">initramfs</code> that contains support for the enlarged volume. Follow the instructions at <a class="xref xref-procedure" href="#pro-generate-initramfs">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span>, “Generate an initramfs”</a>.</p>
+                              
+                              <p>Proceed with <a class="xref xref-procedure" href="#pro-generate-initramfs">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span>, “Generate an initramfs”</a>.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry" id="var-initrd-regenerate-kernelvars">
+                           <dt><span class="term">Changing kernel variables</span></dt>
+                           <dd>
+                              
+                              <p>If you change the values of kernel variables via the <code class="command">sysctl</code> interface by editing related files (<code class="filename">/etc/sysctl.conf</code> or <code class="filename">/etc/sysctl.d/*.conf</code>), the change will be lost on the next system reboot. Even if you load the values
+                                 with <code class="command">sysctl --system</code> at runtime, the changes are not saved into the <code class="systemitem">initramfs</code> file. You need to update it by proceeding as outlined in <a class="xref xref-procedure" href="#pro-generate-initramfs">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span>, “Generate an initramfs”</a>.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Adding or removing swap devices, re-creating swap area</span></dt>
+                           <dd>
+                              
+                              <p>Whenever you add or remove a swap device, or re-create a swap area with a different
+                                 UUID, update the initramfs as outlined in <a class="xref xref-procedure" href="#pro-generate-initramfs">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span>, “Generate an initramfs”</a>. You may also need to update <code class="option">GRUB_CMDLINE_*</code> variables that include the <code class="option">resume=</code> option in <code class="filename">/etc/default/grub</code>, and then regenerate <code class="filename">/boot/grub2/grub.cfg</code> as outlined in <a class="xref xref-sect2" href="bk01partiich03s02.html#sec-grub2-cfg">the section called “The file <code class="filename">/boot/grub2/grub.cfg</code>
+                                    ”</a>.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <div class="formalobject procedure" id="pro-generate-initramfs">
+                        <header>
+                           <div class="title">Procedure&nbsp;<span class="label">16<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Generate an initramfs</div>
+                        </header>
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Important</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>All commands in the following procedure need to be executed as the <code class="systemitem username">root</code> user.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Enter your <code class="filename">/boot</code> directory:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cd /boot</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Generate a new <code class="systemitem">initramfs</code> file with <code class="command">dracut</code>, replacing <em class="replaceable">MY_INITRAMFS</em> with a file name of your choice:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>dracut <em class="replaceable">MY_INITRAMFS</em></code></span></span></pre>
+                              </div>
+                              
+                              <p>Alternatively, run <code class="command">dracut -f</code><em class="replaceable">FILENAME</em> to replace an existing init file.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>(Skip this step if you ran <code class="command">dracut -f</code> in the previous step.) Create a symbolic link from the <code class="systemitem">initramfs</code> file you created in the previous step to <code class="systemitem">initrd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> ln -sf <em class="replaceable">MY_INITRAMFS</em><code class="systemitem">initrd</code></code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>On the IBM&nbsp;Z architecture, additionally run <code class="command">grub2-install</code>.</p>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-boot-initramfs">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The init on initramfs phase</h3>
+               </header>
+               
+               
+               <p>The temporary root file system mounted by the kernel from the <code class="systemitem">initramfs</code> contains the executable <code class="daemon systemitem">systemd</code> (which is called <code class="systemitem">init</code> on <code class="systemitem">initramfs</code> in the following, also see <a class="xref xref-sect1" href="bk01partiich01.html#sec-boot-terminology">the section called “Terminology”</a>. This program performs all actions needed to mount the proper root file system. It
+                  provides kernel functionality for the needed file system and device drivers for mass
+                  storage controllers with <code class="service systemitem">udev</code>.</p>
+               
+               <p>The main purpose of <code class="systemitem">init</code> on <code class="systemitem">initramfs</code> is to prepare the mounting of and access to the real root file system. Depending
+                  on your system configuration, <code class="systemitem">init</code> on <code class="systemitem">initramfs</code> is responsible for the following tasks.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Loading kernel modules</span></dt>
+                     <dd>
+                        
+                        <p>Depending on your hardware configuration, special drivers may be needed to access
+                           the hardware components of your computer (the most important component being your
+                           hard disk). To access the final root file system, the kernel needs to load the proper
+                           file system drivers.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Providing block special files</span></dt>
+                     <dd>
+                        
+                        <p>The kernel generates device events depending on loaded modules. <code class="service systemitem">udev</code> handles these events and generates the required special block files on a RAM file
+                           system in <code class="filename">/dev</code>. Without those special files, the file system and other devices would not be accessible.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Managing RAID and LVM setups</span></dt>
+                     <dd>
+                        
+                        <p>If you configured your system to hold the root file system under RAID or LVM, <code class="systemitem">init</code> on <code class="systemitem">initramfs</code> sets up LVM or RAID to enable access to the root file system later.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Managing the network configuration</span></dt>
+                     <dd>
+                        
+                        <p>If you configured your system to use a network-mounted root file system (mounted via
+                           NFS), <code class="systemitem">init</code> must make sure that the proper network drivers are loaded and that they are set up
+                           to allow access to the root file system.</p>
+                        
+                        <p>If the file system resides on a network block device like iSCSI or SAN, the connection
+                           to the storage server is also set up by <code class="systemitem">init</code> on <code class="systemitem">initramfs</code>. <span class="phrase productname">SUSE Linux Enterprise Server</span> supports booting from a secondary iSCSI target if the primary target is not available.
+                           For more details regarding configuration of the booting iSCSI target refer to <a class="xref xref-sect2" href="bk09partivch02s03.html#sec-iscsi-initiator-yast">the section called “Using YaST for the iSCSI initiator configuration”</a>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Handling of mount failures</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If the root file system fails to mount from within the boot environment, it must be
+                              checked and repaired before the boot can continue. The file system checker will be
+                              automatically started for Ext3 and Ext4 file systems. The repair process is not automated
+                              for XFS and Btrfs file systems, and the user is presented with information describing
+                              the options available to repair the file system. When the file system has been successfully
+                              repaired, exiting the boot environment will cause the system to retry mounting the
+                              root file system. If successful, the boot will continue normally.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-boot-linuxrc-initramfs">
+                  <header>
+                     <h4><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The init on initramfs phase in the installation process</h4>
+                  </header>
+                  
+                  
+                  <p>When <code class="systemitem">init</code> on <code class="systemitem">initramfs</code> is called during the initial boot as part of the installation process, its tasks
+                     differ from those mentioned above. The installation system also does not start <code class="daemon systemitem">systemd</code> from <code class="systemitem">initramfs</code>—these tasks are performed by <code class="command">linuxrc</code>.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Finding the installation medium</span></dt>
+                        <dd>
+                           
+                           <p>When starting the installation process, your machine loads an installation kernel
+                              and a special <code class="systemitem">init</code> containing the YaST installer. The YaST installer is running in a RAM file system
+                              and needs to have information about the location of the installation medium to access
+                              it for installing the operating system.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Initiating hardware recognition and loading appropriate kernel modules</span></dt>
+                        <dd>
+                           
+                           <p>As mentioned in <a class="xref xref-sect3" href="#sec-boot-initrd">the section called “The <code class="systemitem">initramfs</code> file”</a>, the boot process starts with a minimum set of drivers that can be used with most
+                              hardware configurations. On AArch64, POWER, and AMD64/Intel&nbsp;64 machines, <code class="command">linuxrc</code> starts an initial hardware scanning process that determines the set of drivers suitable
+                              for your hardware configuration. On IBM&nbsp;Z, a list of drivers and their parameters
+                              needs to be provided, for example, via linuxrc or a parmfile.</p>
+                           
+                           <p>These drivers are used to generate a custom <code class="systemitem">initramfs</code> that is needed to boot the system. If the modules are not needed for boot but for
+                              coldplug, the modules can be loaded with <code class="daemon systemitem">systemd</code>; for more information, see <a class="xref xref-sect2" href="bk01partiich04s06.html#sec-boot-systemd-advanced-kernel-modules">the section called “Loading kernel modules”</a>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Loading the installation system</span></dt>
+                        <dd>
+                           
+                           <p>When the hardware is properly recognized, the appropriate drivers are loaded. The
+                              <code class="service systemitem">udev</code> program creates the special device files and <code class="command">linuxrc</code> starts the installation system with the YaST installer.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Starting YaST</span></dt>
+                        <dd>
+                           
+                           <p>Finally, <code class="command">linuxrc</code> starts YaST, which starts the package installation and the system configuration.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd">
+               <header>
+                  <h3><span class="label">16<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>The systemd phase</h3>
+               </header>
+               
+               
+               <p>After the <q>real</q> root file system has been found, it is checked for errors and mounted. If this is
+                  successful, the <code class="systemitem">initramfs</code> is cleaned and the <code class="daemon systemitem">systemd</code> daemon on the root file system is executed. <code class="daemon systemitem">systemd</code> is Linux's system and service manager. It is the parent process that is started as
+                  PID 1 and acts as an init system which brings up and maintains user space services.
+                  See <a class="xref xref-chapter" href="bk01partiich04.html">Chapter&nbsp;<span class="label">19</span>, The <code class="daemon systemitem">systemd</code> daemon</a> for details.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiich01.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk01partiich02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">16</span><span class="sep">.&nbsp;</span>Introduction to the boot process</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">17</span><span class="sep">.&nbsp;</span>UEFI (Unified Extensible Firmware Interface)</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>23.5.&nbsp;Migrating from SuSEfirewall2</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich03s04.html" rel="prev">
+      <link href="bk06partiiich03s06.html" rel="next">
+      <link href="bk06partiiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich03.html">Up</a> <a href="bk06partiiich03s06.html">Next</a> <a href="bk06partiiich03s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich03s05.html" db-id="d616951e179785" id="sec-security-firewall-upgrade">
+            <header>
+               <h2><span class="label">23<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Migrating from SuSEfirewall2</h2>
+            </header>
+            
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Creating a <code class="daemon systemitem">firewalld</code> configuration for AutoYaST</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>See the <cite class="citetitle">Firewall Configuration</cite> section of the AutoYaST Guide to learn how to create a <code class="daemon systemitem">firewalld</code> configuration for AutoYaST.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            
+            <p>When upgrading from any service pack of <span class="phrase productname">SUSE Linux Enterprise Server</span> 12 to <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span>, SuSEfirewall2 is not changed and remains active. There is no automatic migration,
+               so you must migrate to <code class="daemon systemitem">firewalld</code> manually. <code class="daemon systemitem">firewalld</code> includes a helper migration script, <code class="command">susefirewall2-to-firewalld</code>. Depending on the complexity of your SuSEfirewall2 configuration, the script may
+               perform a perfect migration, or it may fail. Most likely it will partially succeed
+               and you have to review your new <code class="daemon systemitem">firewalld</code> configuration and make adjustments.</p>
+            
+            <p>The resulting configuration makes <code class="daemon systemitem">firewalld</code> behave somewhat like SuSEfirewall2. To take full advantage of <code class="daemon systemitem">firewalld</code>'s features, you may elect to create a new configuration, rather than trying to migrate
+               your old configuration. It is safe to run the <code class="command">susefirewall2-to-firewalld</code> script with no options, as it makes no permanent changes to your system. However,
+               if you are administering the system remotely you could get locked out.</p>
+            
+            <p>Install and run <code class="command">susefirewall2-to-firewalld</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>zypper in susefirewall2-to-firewalld</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>susefirewall2-to-firewalld</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Reading the /etc/sysconfig/SuSEfirewall2 file</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Ensuring all firewall services are in a well-known state.</code></span></span>
+<span class="line"><span class="ld"><code>INFO: This will start/stop/restart firewall services and it's likely</code></span></span>
+<span class="line"><span class="ld"><code>INFO: to cause network disruption.</code></span></span>
+<span class="line"><span class="ld"><code>INFO: If you do not wish for this to happen, please stop the script now!</code></span></span>
+<span class="line"><span class="ld"><code>5...4...3...2...1...Lets do it!</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Stopping firewalld</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Restarting SuSEfirewall2_init</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Restarting SuSEfirewall2</code></span></span>
+<span class="line"><span class="ld"><code>INFO: DIRECT: Adding direct rule="ipv4 -t filter -A INPUT -p udp -m udp --dport 5353 -m pkttype</code></span></span>
+<span class="line"><span class="ld"><code>  --pkt-type multicast -j ACCEPT"</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Enabling direct rule=ipv6 -t filter -A INPUT -p udp -m udp --dport 546 -j ACCEPT</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Enabling direct rule=ipv6 -t filter -A INPUT -p udp -m udp --dport 5353 -m pkttype</code></span></span>
+<span class="line"><span class="ld"><code>  --pkt-type multicast -j ACCEPT</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Enable logging for denied packets</code></span></span>
+<span class="line"><span class="ld"><code>INFO: ##########################################################</code></span></span>
+<span class="line"><span class="ld"><code>INFO:</code></span></span>
+<span class="line"><span class="ld"><code>INFO: The dry-run has been completed. Please check the above output to ensure</code></span></span>
+<span class="line"><span class="ld"><code>INFO: that everything looks good.</code></span></span>
+<span class="line"><span class="ld"><code>INFO:</code></span></span>
+<span class="line"><span class="ld"><code>INFO: ###########################################################</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Stopping firewalld</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Restarting SuSEfirewall2_init</code></span></span>
+<span class="line"><span class="ld"><code>INFO: Restarting SuSEfirewall2</code></span></span></pre>
+            </div>
+            
+            <p>This results in a lot of output, which you may wish to direct to a file for easier
+               review:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>susefirewall2-to-firewalld | tee newfirewallrules.txt</code></span></span></pre>
+            </div>
+            
+            <p>The script supports these options:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">-c</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Commit changes. The script makes changes to the system, so make sure you only use
+                        this option if you are really happy with the proposed changes. This <em>will</em> reset your current <code class="daemon systemitem">firewalld</code> configuration, so make sure you make backups!</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">-d</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Super noisy. Use it to file bug reports but be careful to mask sensitive information.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">-h</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>This message.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">-q</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>No output. Errors will not be printed either!</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">-v</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Verbose mode. It will print warnings and other informative messages.</p>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich03s04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich03.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich03s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">23<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                     <code class="daemon systemitem">firewalld</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">23<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

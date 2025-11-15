@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;7.&nbsp;ERB templates</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partiiich02s04.html" rel="prev">
+      <link href="bk05partiiich03s02.html" rel="next">
+      <link href="bk05partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partiii.html">Up</a> <a href="bk05partiiich03s02.html">Next</a> <a href="bk05partiiich02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk05partiiich03.html" db-id="d616951e147654" id="erb-templates" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">7</span><span class="sep">.&nbsp;</span>ERB templates</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>ERB templates are for embedding Ruby code within an AutoYaST profile to modify the
+                  profile during the installation. With this approach, you can inspect the system and
+                  adjust the profile by setting values, adding or skipping sections, and so on.</p>
+               
+               <p>To activate the ERB processing, the profile must have the extension <code class="filename">.erb</code> (for example, <code class="filename">autoyast.xml.erb</code>). Hence, it is not possible to combine rules/classes and ERB templates.</p>
+               </div>
+            <section class="sect1" id="erb">
+               <header>
+                  <h2><span class="label">7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>What is ERB?</h2>
+               </header>
+               
+               
+               <p>ERB stands for <em>Embedded Ruby</em>. ERB uses the power of the Ruby programming language to generate different kinds
+                  of content. With ERB, you can include some Ruby code in your profiles to adapt them
+                  at runtime, depending on the installation system.</p>
+               
+               <p>When using ERB, the Ruby code is enclosed between <code class="literal">&lt;%</code> and <code class="literal">%&gt;</code> signs. Use an equals sign, <code class="literal">=</code>, to include command output in the resulting profile.</p>
+               
+               <div class="example formalobject" id="simple-erb">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;bootloader&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;% require "open-uri" %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;%= URI.open("http://192.168.1.1/profiles/bootloader-common.xml").read %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/bootloader&gt; &lt;!-- this line gets replaced with the content of bootloader-common.xml --&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Including a file using ERB</div>
+                  </header>
+               </div>
+               
+               <p>You can use Ruby facilities to run arbitrary commands. If you want to get the output
+                  of a command, then enclose it between backticks. If you want to know whether a command
+                  was successful or not, run the command with the <code class="literal">system</code> function.</p>
+               
+               <div class="example formalobject" id="erb_ex2">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;% files = `ls` %&gt; &lt;!-- files contains the output of the command (for instance "file1\nfile2\nfile3") --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;% success = system("dmidecode | grep some-model") %&gt; &lt;!-- success contains true or false --&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Running commands with Ruby</div>
+                  </header>
+               </div>
+               
+               <p>Also, you can use more advanced Ruby code structures such as conditions and loops.</p>
+               
+               <div class="example formalobject" id="erb_ex3">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;% ip_forward = File.read("/proc/sys/net/ipv4/ip_forward").strip %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;% if ip_forward == "1" %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;!-- something --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;% end %&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;% files = `ls /tmp/config/*.xml` %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;% files.split.each do |file| %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;%= file.read %&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;% end %&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using Ruby structures</div>
+                  </header>
+               </div>
+               
+               <p>AutoYaST offers a small set of <em>helper functions</em> to retrieve information from the underlying system, like <code class="literal">disks</code> or <code class="literal">network_cards</code>. You can check the list of helpers and their values in the <a class="xref xref-sect1" href="bk05partiiich03s02.html">the section called “Template helpers”</a> section.</p>
+               </section>
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partiiich02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk05partiii.html">Up</a></td>
+                  <td class="next"><a href="bk05partiiich03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Merging of rules and classes</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Template helpers</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

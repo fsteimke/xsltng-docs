@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;28.&nbsp;Block devices in Xen</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch03s07.html" rel="prev">
+      <link href="bk10partivch04s02.html" rel="next">
+      <link href="bk10partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiv.html">Up</a> <a href="bk10partivch04s02.html">Next</a> <a href="bk10partivch03s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partivch04.html" db-id="d616951e292387" id="cha-xen-vbd" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">28</span><span class="sep">.&nbsp;</span>Block devices in Xen</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-xen-config-disk">
+               <header>
+                  <h2><span class="label">28<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Mapping physical storage to virtual disks</h2>
+               </header>
+               
+               
+               <p>The disk specification for a Xen domain in the domain configuration file is as straightforward
+                  as the following example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>disk = [ 'format=raw,vdev=hdc,access=ro,devtype=cdrom,target=/root/image.iso' ]</code></span></span></pre>
+               </div>
+               
+               <p>It defines a disk block device based on the <code class="filename">/root/image.iso</code> disk image file. The is seen as <code class="literal">hdc</code> by the guest, with read-only (<code class="literal">ro</code>) access. The type of the device is <code class="literal">cdrom</code> with <code class="literal">raw</code> format.</p>
+               
+               <p>The following example defines an identical device, but using simplified positional
+                  syntax:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>disk = [ '/root/image.iso,raw,hdc,ro,cdrom' ]</code></span></span></pre>
+               </div>
+               
+               <p>You can include more disk definitions in the same line, each one separated by a comma.
+                  If a parameter is not specified, then its default value is taken:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>disk = [ '/root/image.iso,raw,hdc,ro,cdrom','/dev/vg/guest-volume,,hda','...' ]</code></span></span></pre>
+               </div>
+               
+               <div class="variablelist">
+                  <header>
+                     <div class="title">List of parameters</div>
+                  </header>
+                  <dl class="variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">target</span></dt>
+                        <dd>
+                           
+                           <p>Source block device or disk image path.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">format</span></dt>
+                        <dd>
+                           
+                           <p>The format of the image file. Default is <code class="literal">raw</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">vdev</span></dt>
+                        <dd>
+                           
+                           <p>Virtual device as seen by the guest. Supported values are hd[x], xvd[x], sd[x] etc.
+                              See <code class="filename">/usr/share/doc/packages/xen/misc/vbd-interface.txt</code> for more details. This parameter is mandatory.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">access</span></dt>
+                        <dd>
+                           
+                           <p>Whether the block device is provided to the guest in read-only or read-write mode.
+                              Supported values are <code class="literal">ro</code> or <code class="literal">r</code> for read-only, and <code class="literal">rw</code> or <code class="literal">w</code> for read/write access. Default is <code class="literal">ro</code> for <code class="literal">devtype=cdrom</code>, and <code class="literal">rw</code> for other device types.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">devtype</span></dt>
+                        <dd>
+                           
+                           <p>Qualifies virtual device type. Supported value is <code class="literal">cdrom</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">backendtype</span></dt>
+                        <dd>
+                           
+                           <p>The back-end implementation to use. Supported values are <code class="literal">phy</code>, <code class="literal">tap</code>, and <code class="literal">qdisk</code>. Normally this option should not be specified as the back-end type is automatically
+                              determined.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">script</span></dt>
+                        <dd>
+                           
+                           <p>Specifies that <code class="literal">target</code> is not a normal host path, but rather information to be interpreted by the executable
+                              program. The specified script file is looked for in <code class="filename">/etc/xen/scripts</code> if it does not point to an absolute path. These scripts are normally called <code class="literal">block-&lt;script_name&gt;</code>.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <p>For more information about specifying virtual disks, see <code class="filename">/usr/share/doc/packages/xen/misc/xl-disk-configuration.txt</code>.</p>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch03s07.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiv.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">27<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Virtual machine states</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">28<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Mapping network storage to virtual disk</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

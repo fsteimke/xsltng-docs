@@ -1,0 +1,470 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.3.&nbsp;Installing 389 Directory Server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s02.html" rel="prev">
+      <link href="bk06partich04s04.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s04.html">Next</a> <a href="bk06partich04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s03.html" db-id="d616951e156984" id="sec-security-ldap-server-install" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Installing 389 Directory Server</h2>
+            </header>
+            
+            
+            <p>Install 389 Directory Server with the following command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper install 389-ds</code></code></span></span></pre>
+            </div>
+            
+            <p>After installation, set up the server as described in <a class="xref xref-sect2" href="#sec-security-ldap-server">the section called “Setting up a new 389 Directory Server instance”</a>.</p>
+            
+            <section class="sect2" id="sec-security-ldap-server">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up a new 389 Directory Server instance</h3>
+               </header>
+               
+               
+               <p>You will use the <code class="command">dscreate</code> command to create new 389 Directory Server instances, and the <code class="command">dsctl</code> command to cleanly remove them.</p>
+               
+               <p>There are two ways to configure and create a new instance: from a custom configuration
+                  file, and from an auto-generated template file. You can use the auto-generated template
+                  without changes for a test instance, though for a production system you must carefully
+                  review it and make any necessary changes.</p>
+               
+               <p>Then you will set up administration credentials, manage users and groups, and configure
+                  identity services.</p>
+               
+               
+               <p>The 389 Directory Server is controlled by three primary commands:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">dsctl</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Manages a local instance and requires <code class="systemitem username">root</code> permissions. Requires you to be connected to a terminal which is running the directory
+                           server instance. Used for starting, stopping, backing up the database, and more.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">dsconf</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The primary tool used for administration and configuration of the server. Manages
+                           an instance's configuration via its external interfaces. This allows you to make configuration
+                           changes remotely on the instance.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">dsidm</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Used for identity management (managing users, groups, passwords, etc.). The permissions
+                           are granted by access controls, so, for example, users can reset their own password
+                           or change details of their own account.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Follow these steps to set up a simple instance for testing and development, populated
+                  with a small set of sample entries.</p>
+               
+               <div class="informalobject procedure" id="sec-security-ldap-server_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect2" href="#sec-security-ldap-server-instance">Creating a 389 Directory Server instance with a custom configuration file</a></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect2" href="#sec-security-ldap-server-template">Creating a 389 Directory Server instance from a template</a></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect2" href="#sec-security-ldap-server-credentials">Configuring administrator credentials for local administration</a></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect1" href="bk06partich04s06.html">Managing LDAP users and groups</a></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect1" href="bk06partich04s08.html">Using SSSD to manage LDAP authentication</a></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect1" href="bk06partich04s07.html">Managing plug-ins</a></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p><a class="xref xref-sect1" href="bk06partich04s10.html">Importing TLS server certificates and keys</a></p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-server-instance">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating a 389 Directory Server instance with a custom configuration file</h3>
+               </header>
+               
+               
+               <p>You can create a new 389 Directory Server instance from a simple custom configuration
+                  file. This file must be in the INF format, and you can name it anything you like.</p>
+               
+               <p>The default instance name is <code class="literal">localhost</code>. The instance name cannot be changed after it has been created. It is better to create
+                  your own instance name, rather than using the default, to avoid confusion and to enable
+                  a better understanding of how it all works. The following examples use the <em class="replaceable">LDAP1</em> instance name, and a suffix of dc=<em class="replaceable">LDAP1</em>,dc=<em class="replaceable">COM</em>.</p>
+               
+               <p><a class="xref xref-example" href="#ex-ldap-389-ds-inf">Example&nbsp;<span class="label">5<span class="sep">.</span>2</span></a> shows an example configuration file that you can use to create a new 389 Directory
+                  Server instance. You can copy and use this file without changes.</p>
+               
+               <div class="informalobject procedure" id="sec-security-ldap-server-instance_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Copy the following example file, <code class="filename">LDAP1.inf</code>, to your home directory:</p>
+                        
+                        <div class="example formalobject" id="ex-ldap-389-ds-inf">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># <em class="replaceable">LDAP1.inf</em></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[general]</code></span></span>
+<span class="line"><span class="ld"><code>config_version = 2 <span class="co" id="co-ldap-389-ds-config-version">⠙</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[slapd]</code></span></span>
+<span class="line"><span class="ld"><code>root_password = <em class="replaceable">PASSWORD</em><span class="co" id="co-ldap-389-ds-rootpasswd">⠚</span></code></span></span>
+<span class="line"><span class="ld"><code>self_sign_cert = True <span class="co" id="co-ldap-389-ds-cert">⠛</span></code></span></span>
+<span class="line"><span class="ld"><code>instance_name = <em class="replaceable">LDAP1</em></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[backend-userroot]</code></span></span>
+<span class="line"><span class="ld"><code>sample_entries = yes <span class="co" id="co-ldap-389-ds-sample-entries">⠜</span></code></span></span>
+<span class="line"><span class="ld"><code>suffix = dc=<em class="replaceable">LDAP1</em>,dc=<em class="replaceable">COM</em></code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#co-ldap-389-ds-config-version">⠙</a></dt>
+                                 <dd>
+                                    
+                                    <p>This line is required, indicating that this is a version 2 setup INF file.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-ldap-389-ds-rootpasswd">⠚</a></dt>
+                                 <dd>
+                                    
+                                    <p>Create a strong <code class="varname">root_password</code> for the ldap user <code class="literal">cn=Directory Manager</code>. This user is for connecting (binding) to the directory.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-ldap-389-ds-cert">⠛</a></dt>
+                                 <dd>
+                                    
+                                    <p>Create self-signed server certificates in <code class="filename">/etc/dirsrv/slapd-<em class="replaceable">LDAP1</em></code>.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-ldap-389-ds-sample-entries">⠜</a></dt>
+                                 <dd>
+                                    
+                                    <p>Populate the new instance with sample user and group entries.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Minimal 389 Directory Server instance configuration file</div>
+                           </header>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To create the 389 Directory Server instance from <a class="xref xref-example" href="#ex-ldap-389-ds-inf">Example&nbsp;<span class="label">5<span class="sep">.</span>2</span></a>, run the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dscreate -v from-file <em class="replaceable">LDAP1.inf</em> |</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">tee <em class="replaceable">LDAP1-OUTPUT.txt</em></code></code></span></span></pre>
+                        </div>
+                        
+                        <p>This shows all activity during the instance creation, stores all the messages in <code class="filename"><em class="replaceable">LDAP1-OUTPUT.txt</em></code>, and creates a working LDAP server in about a minute. The verbose output contains
+                           a lot of useful information. If you do not want to save it, then delete the <code class="literal">| tee <em class="replaceable">LDAP1-OUTPUT.txt</em></code> portion of the command.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the <code class="command">dscreate</code> command should fail, the messages will tell you why. After correcting any issues,
+                           remove the instance (see <a class="xref xref-step" href="#sec-security-ldap-server-remove">step <span class="label">5</span></a>) and create a new instance.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>A successful installation reports <code class="literal">Completed installation for <em class="replaceable">LDAP1</em></code>. Check the status of your new server:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> status</code></code></span></span>
+<span class="line"><span class="ld"><code>Instance "LDAP1" is running</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step" id="sec-security-ldap-server-remove">
+                        
+                        <p>The following commands are for cleanly removing the instance. The first command performs
+                           a dry run and does not remove the instance. When you are sure you want to remove it,
+                           use the second command with the <code class="command">--do-it</code> option:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> remove</code></code></span></span>
+<span class="line"><span class="ld"><code>Not removing: if you are sure, add --do-it</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl<em class="replaceable">LDAP1</em> remove --do-it</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>This command also removes partially installed or corrupted instances. You can reliably
+                           create and remove instances as often as you want.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>If you forget the name of your instance, use <code class="command">dsctl</code> to list all instances:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo dsctl -l</code></code></span></span>
+<span class="line"><span class="ld"><code>slapd-<em class="replaceable">LDAP1</em></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-server-template">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a 389 Directory Server instance from a template</h3>
+               </header>
+               
+               
+               <p>You can auto-create a template for a new 389 Directory Server instance with the <code class="command">dscreate</code> command. This creates a template that you can use without making any changes, for
+                  testing. For production systems, review and change it to suit your own requirements.
+                  The defaults are documented in the template file, and commented out. To make changes,
+                  uncomment the default and enter your own value. All options are well documented.</p>
+               
+               <p>The following example prints the template to stdout:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo dscreate create-template</code></code></span></span></pre>
+               </div>
+               
+               <p>This is good for a quick review of the template, but you must create a file to use
+                  in creating your new 389 Directory Server instance. You can name this file anything
+                  you want:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo dscreate create-template <em class="replaceable">TEMPLATE.txt</em></code></code></span></span></pre>
+               </div>
+               
+               <p>This is a snippet from the new file:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># full_machine_name (str)</code></span></span>
+<span class="line"><span class="ld"><code># Description: Sets the fully qualified hostname (FQDN) of this system. When</code></span></span>
+<span class="line"><span class="ld"><code># installing this instance with GSSAPI authentication behind a load balancer, set</code></span></span>
+<span class="line"><span class="ld"><code># this parameter to the FQDN of the load balancer and, additionally, set</code></span></span>
+<span class="line"><span class="ld"><code># "strict_host_checking" to "false".</code></span></span>
+<span class="line"><span class="ld"><code># Default value: ldapserver1.test.net</code></span></span>
+<span class="line"><span class="ld"><code>;full_machine_name = ldapserver1.test.net</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># selinux (bool)</code></span></span>
+<span class="line"><span class="ld"><code># Description: Enables SELinux detection and integration during the installation</code></span></span>
+<span class="line"><span class="ld"><code># of this instance. If set to "True", dscreate auto-detects whether SELinux is</code></span></span>
+<span class="line"><span class="ld"><code># enabled. Set this parameter only to "False" in a development environment.</code></span></span>
+<span class="line"><span class="ld"><code># Default value: True</code></span></span>
+<span class="line"><span class="ld"><code>;selinux = True</code></span></span></pre>
+               </div>
+               
+               <p>It automatically configures certain options from your existing environment; for example,
+                  the system's fully-qualified domain name, which is called <code class="literal">full_machine_name</code> in the template. Use this file with no changes to create a new instance:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dscreate from-file <em class="replaceable">TEMPLATE.txt</em></code></code></span></span></pre>
+               </div>
+               
+               <p>This creates a new instance named <code class="literal">localhost</code>, and automatically starts it after creation:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl localhost status</code></code></span></span>
+<span class="line"><span class="ld"><code>Instance "localhost" is running</code></span></span></pre>
+               </div>
+               
+               <p>The default values create a fully operational instance, but there are certain values
+                  you might want to change.</p>
+               
+               <p>The instance name cannot be changed after it has been created. It is better to create
+                  your own instance name, rather than using the default, to avoid confusion and to enable
+                  a better understanding of how it all works. To do this, uncomment the <code class="literal">;instance_name = localhost</code> line and change <code class="literal">localhost</code> to your chosen name. In the following examples, the instance name is <em class="replaceable">LDAP1</em>.</p>
+               
+               <p>Another useful change is to populate your new instance with sample users and groups.
+                  Uncomment <code class="literal">;sample_entries = no</code> and change <code class="literal">no</code> to <code class="literal">yes</code>. This creates the <code class="literal">demo_user</code> and <code class="literal">demo_group</code>.</p>
+               
+               <p>Set your own password by uncommenting <code class="literal">;root_password</code>, and replacing the default password with your own.</p>
+               
+               <p>The template does not create a default suffix, so you should configure your own on
+                  the <code class="literal">suffix</code> line, like the following example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>suffix = dc=<em class="replaceable">LDAP1</em>,dc=<em class="replaceable">COM</em></code></span></span></pre>
+               </div>
+               
+               <p>You can cleanly remove any instance and start over with <code class="command">dsctl</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> remove --do-it</code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-server-stop-start">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Stopping and starting 389 Directory Server</h3>
+               </header>
+               
+               
+               <p>The following examples use <code class="literal">LDAP1</code> as the instance name. Use <code class="daemon systemitem">systemd</code> to manage your 389 Directory Server instance. Get the status of your instance:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">systemctl status --no-pager --full dirsrv@LDAP1.service</code></code></span></span>
+<span class="line"><span class="ld"><code>   ● dirsrv@LDAP1.service - 389 Directory Server LDAP1.</code></span></span>
+<span class="line"><span class="ld"><code>     Loaded: loaded (/usr/lib/systemd/system/dirsrv@.service; enabled; vendor preset: disabled)</code></span></span>
+<span class="line"><span class="ld"><code>     Active: active (running) since Thu 2021-03-11 08:55:28 PST; 2h 7min ago</code></span></span>
+<span class="line"><span class="ld"><code>    Process: 4451 ExecStartPre=/usr/lib/dirsrv/ds_systemd_ask_password_acl</code></span></span>
+<span class="line"><span class="ld"><code>       /etc/dirsrv/slapd-LDAP1/dse.ldif (code=exited, status=0/SUCCESS)</code></span></span>
+<span class="line"><span class="ld"><code>   Main PID: 4456 (ns-slapd)</code></span></span>
+<span class="line"><span class="ld"><code>     Status: "slapd started: Ready to process requests"</code></span></span>
+<span class="line"><span class="ld"><code>      Tasks: 26</code></span></span>
+<span class="line"><span class="ld"><code>     CGroup: /system.slice/system-dirsrv.slice/dirsrv@LDAP1.service</code></span></span>
+<span class="line"><span class="ld"><code>             └─4456 /usr/sbin/ns-slapd -D /etc/dirsrv/slapd-LDAP1 -i /run/dirsrv/slapd-LDAP1.pid</code></span></span></pre>
+               </div>
+               
+               <p>Start, stop and restart your LDAP server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl start <em class="replaceable">dirsrv@LDAP1.service</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl stop <em class="replaceable">dirsrv@LDAP1.service</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl restart <em class="replaceable">dirsrv@LDAP1.service</em></code></code></span></span></pre>
+               </div>
+               
+               <p>See <a class="xref xref-chapter" href="bk01partiich04.html">Chapter&nbsp;<span class="label">19</span>, The <code class="daemon systemitem">systemd</code> daemon</a> for more information on using <code class="command">systemctl</code>.</p>
+               
+               <p>The <code class="command">dsctl</code> command also starts and stops your server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> status</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> stop</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> restart</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">LDAP1</em> start</code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-server-credentials">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring administrator credentials for local administration</h3>
+               </header>
+               
+               
+               <p>For local administration of the 389 Directory Server, you can create a <code class="filename">.dsrc</code> configuration file in the <code class="filename">/root</code> directory, allowing root and sudo users to administer the server without typing connection
+                  details with every command. <a class="xref xref-example" href="#ex-security-ldap-server-credentials-local">Example&nbsp;<span class="label">5<span class="sep">.</span>3</span></a> shows an example for local administration on the server, using <em class="replaceable">LDAP1</em> and <em class="replaceable">com</em> for the suffix.</p>
+               
+               <p>After creating your <code class="filename">/root/.dsrc</code> file, try a few administration commands, such as creating new users (see <a class="xref xref-sect1" href="bk06partich04s06.html">the section called “Managing LDAP users and groups”</a>).</p>
+               
+               <div class="example formalobject" id="ex-security-ldap-server-credentials-local">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># /root/.dsrc file for administering the LDAP1 instance</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[<em class="replaceable">LDAP1</em>] <span class="co" id="co-ldap-server-dsrc-instance-name">⠝</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>uri = ldapi://<em class="replaceable">%%2fvar%%2frun%%2fslapd-LDAP1.socket</em><span class="co" id="co-ldap-server-dsrc-remote-ldapi">⠞</span></code></span></span>
+<span class="line"><span class="ld"><code>basedn = dc=<em class="replaceable">LDAP1</em>,dc=<em class="replaceable">COM</em></code></span></span>
+<span class="line"><span class="ld"><code>binddn = cn=Directory Manager</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-ldap-server-dsrc-instance-name">⠝</a></dt>
+                        <dd>
+                           
+                           <p>This must specify your exact instance name.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ldap-server-dsrc-remote-ldapi">⠞</a></dt>
+                        <dd>
+                           
+                           <p><code class="literal">ldapi</code> detects the UID and GID of the user attempting to log in to the server. If the UID/GID
+                              are <code class="literal">0/0</code> or <code class="literal">dirsrv:dirsrv</code>, <code class="literal">ldapi</code> binds the user as the directory server root dn, which is <code class="literal">cn=Directory Manager</code>.</p>
+                           
+                           <p>In the URI, the slashes are replaced with <code class="literal">%%2f</code>, so in this example the path is <code class="filename">/var/run/slapd-<em class="replaceable">LDAP1</em>.socket</code>.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>A <code class="filename">.dsrc</code> file for local administration</div>
+                  </header>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">New negation feature in sudoers.ldap</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>In <code class="package">sudo</code> versions older than 1.9.9, negation in sudoers.ldap does not work for the <code class="literal">sudoUser</code>, <code class="literal">sudoRunAsUser</code>, or <code class="literal">sudoRunAsGroup</code> attributes. For example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> # does not match all but joe</code></span></span>
+<span class="line"><span class="ld"><code># instead, it does not match anyone</code></span></span>
+<span class="line"><span class="ld"><code>sudoUser: !joe</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># does not match all but joe</code></span></span>
+<span class="line"><span class="ld"><code># instead, it matches everyone including Joe</code></span></span>
+<span class="line"><span class="ld"><code>sudoUser: ALL</code></span></span>
+<span class="line"><span class="ld"><code>sudoUser: !joe</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>In <code class="command">sudo</code> version 1.9.9 and higher, negation is enabled for the <code class="literal">sudoUser</code> attribute. See <code class="command">man 5 sudoers.ldap</code> for more information.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating and managing a Docker container for 389 Directory Server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Firewall configuration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

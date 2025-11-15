@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;32.&nbsp;Xen as a high-availability virtualization host</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch07s02.html" rel="prev">
+      <link href="bk10partivch08s02.html" rel="next">
+      <link href="bk10partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiv.html">Up</a> <a href="bk10partivch08s02.html">Next</a> <a href="bk10partivch07s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partivch08.html" db-id="d616951e295260" id="cha-xen-ha" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">32</span><span class="sep">.&nbsp;</span>Xen as a high-availability virtualization host</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Setting up two Xen hosts as a failover system has several advantages compared to a
+                  setup where every server runs on dedicated hardware.</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Failure of a single server does not cause major interruption of the service.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A single big machine is normally way cheaper than multiple smaller machines.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Adding new servers as needed is a trivial task.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The usage of the server is improved, which has positive effects on the power consumption
+                        of the system.</p>
+                     </li>
+                  </ul>
+               
+               <p>The setup of migration for Xen hosts is described in <a class="xref xref-sect1" href="bk10partivch06s03.html">the section called “Migrating Xen VM Guest systems”</a>. In the following, several typical scenarios are described.</p>
+               </div>
+            <section class="sect1" id="sec-xen-ha-remote-storage">
+               <header>
+                  <h2><span class="label">32<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Xen HA with remote storage</h2>
+               </header>
+               
+               
+               
+               <p>Xen can directly provide several remote block devices to the respective Xen guest
+                  systems. These include iSCSI, NPIV and NBD. They may be used to do live migrations.
+                  When a storage system is already in place, first try to use the same device type you
+                  already used in the network.</p>
+               
+               <p>If the storage system cannot be used directly but provides a possibility to offer
+                  the needed space over NFS, it is also possible to create image files on NFS. If NFS
+                  is available on all Xen host systems, this method also allows live migrations of Xen
+                  guests.</p>
+               
+               <p>When setting up a new system, one of the main considerations is whether a dedicated
+                  storage area network should be implemented. The following possibilities are available:</p>
+               
+               
+               <div class="formalobject table" id="tab-xen-remote-storage">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">32<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Xen remote storage</div>
+                  </header>
+                  <table>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Method</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Complexity</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Comments</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p>Ethernet</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>low</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>All block device traffic goes over the same Ethernet interface as the network traffic.
+                                 This may be limiting the performance of the guest.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>Ethernet dedicated to storage.</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>medium</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Running the storage traffic over a dedicated Ethernet interface may eliminate a bottleneck
+                                 on the server side. However, planning your own network with your own IP address range
+                                 and a VLAN dedicated to storage requires certain considerations.</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>NPIV</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>high</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>NPIV is a method to virtualize Fibre channel connections. This is available with adapters
+                                 that support a data rate of at least 4 Gbit/s and allows the setup of complex storage
+                                 systems.</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <p>Typically, a 1 Gbit/s Ethernet device can fully use a typical hard disk or storage
+                  system. When using fast storage systems, such an Ethernet device may limit the speed
+                  of the system.</p>
+               </section>
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch07s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiv.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch08s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">31<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>File system interface</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">32<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Xen HA with local storage</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

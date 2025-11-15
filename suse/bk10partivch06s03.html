@@ -1,0 +1,235 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>30.3.&nbsp;Migrating Xen VM Guest systems</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch06s02.html" rel="prev">
+      <link href="bk10partivch06s04.html" rel="next">
+      <link href="bk10partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partivch06.html">Up</a> <a href="bk10partivch06s04.html">Next</a> <a href="bk10partivch06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partivch06s03.html" db-id="d616951e293914" id="sec-xen-manage-migrate">
+            <header>
+               <h2><span class="label">30<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Migrating Xen VM Guest systems</h2>
+            </header>
+            
+            
+            <p>With Xen it is possible to migrate a VM Guest system from one VM Host Server to another
+               with almost no service interruption. This could be used, for example, to move a busy
+               VM Guest to a VM Host Server that has stronger hardware or is not yet loaded. Or,
+               if a service of a VM Host Server is required, all VM Guest systems running on this
+               machine can be migrated to other machines to avoid interruption of service. These
+               are only two examples—many more reasons may apply to your personal situation.</p>
+            
+            <p>Before starting, certain preliminary considerations regarding the VM Host Server should
+               be taken into account:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>All VM Host Server systems should use a similar CPU. The frequency is not so important,
+                     but they should be using the same CPU family. To get more information about the used
+                     CPU, use <code class="command">cat /proc/cpuinfo</code>. Find more details about comparing host CPU features in <a class="xref xref-sect2" href="#sec-xen-manage-migrate-cpu">the section called “Detecting CPU features”</a>.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>All resources that are used by a specific guest system must be available on all involved
+                     VM Host Server systems—for example, all used block devices must exist on both VM Host
+                     Server systems.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>If the hosts included in the migration process run in different subnets, make sure
+                     that either DHCP relay is available to the guests, or for guests with static network
+                     configuration, set up the network manually.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Using special features like <code class="literal">PCI Pass-Through</code> may be problematic. Do not implement these when deploying for an environment that
+                     should migrate VM Guest systems between different VM Host Server systems.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>For fast migrations, a fast network is mandatory. If possible, use GB Ethernet and
+                     fast switches. Deploying VLAN may also help avoid collisions.</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="sec-xen-manage-migrate-cpu">
+               <header>
+                  <h3><span class="label">30<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Detecting CPU features</h3>
+               </header>
+               
+               
+               <p>By using the <code class="systemitem">cpuid</code> and <code class="systemitem">xen_maskcalc.py</code> tools, you can compare features of a CPU on the host from where you are migrating
+                  the source VM Guest with the features of CPUs on the target hosts. This way you can
+                  better predict if the guest migrations will be successful.</p>
+               
+               <div class="informalobject procedure" id="sec-xen-manage-migrate-cpu_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Run the <code class="command">cpuid -1r</code> command on each Dom0 that is supposed to run or receive the migrated VM Guest and
+                           capture the output in text files, for example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">tux@vm_host1 &gt;</span>sudo cpuid -1r &gt; vm_host1.txt</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">tux@vm_host2 &gt;</span>sudo cpuid -1r &gt; vm_host2.txt</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">tux@vm_host3 &gt;</span>sudo cpuid -1r &gt; vm_host3.txt</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy all the output text files on a host with the <code class="command">xen_maskcalc.py</code> script installed.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Run the <code class="command">xen_maskcalc.py</code> script on all output text files:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xen_maskcalc.py vm_host1.txt vm_host2.txt vm_host3.txt</code></span></span>
+<span class="line"><span class="ld"><code>cpuid = [</code></span></span>
+<span class="line"><span class="ld"><code>    "0x00000001:ecx=x00xxxxxx0xxxxxxxxx00xxxxxxxxxxx",</code></span></span>
+<span class="line"><span class="ld"><code>    "0x00000007,0x00:ebx=xxxxxxxxxxxxxxxxxx00x0000x0x0x00"</code></span></span>
+<span class="line"><span class="ld"><code>]</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy the output <code class="literal">cpuid=[...]</code> configuration snipped into the <code class="command">xl</code> configuration of the migrated guest<code class="filename">domU.cfg</code> or alternatively to its <code class="library systemitem">libvirt</code>'s XML configuration.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the source guest with the <em>trimmed</em> CPU configuration. The guest can now only use CPU features which are present on each
+                           of the hosts.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p><code class="library systemitem">libvirt</code> also supports calculating a baseline CPU for migration. For more details, refer to
+                              <a class="xref xref-article" href="bk11ar03.html">Virtualization Best Practices</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-xen-manage-migrate-cpu-info">
+                  <header>
+                     <h4><span class="label">30<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>More information</h4>
+                  </header>
+                  
+                  
+                  <p>You can find more details about <code class="systemitem">cpuid</code> at <a class="link" href="https://etallen.com/cpuid.html">https://etallen.com/cpuid.html</a>.</p>
+                  
+                  <p>You can download the latest version of the CPU mask calculator from <a class="link" href="https://github.com/twizted/xen_maskcalc">https://github.com/twizted/xen_maskcalc</a>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-xen-manage-migrate-block">
+               <header>
+                  <h3><span class="label">30<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Preparing block devices for migrations</h3>
+               </header>
+               
+               
+               <p>The block devices needed by the VM Guest system must be available on all involved
+                  VM Host Server systems. This is done by implementing a specific kind of shared storage
+                  that serves as a container for the root file system of the migrated VM Guest system.
+                  Common possibilities include:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><code class="literal">iSCSI</code> can be set up to give access to the same block devices from different systems at
+                        the same time. For more information about iSCSI, see <a class="xref xref-chapter" href="bk09partivch02.html">Chapter&nbsp;<span class="label">15</span>, Mass storage over IP networks: iSCSI</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">NFS</code> is a widely used root file system that can easily be accessed from different locations.
+                        For more information, see <a class="xref xref-chapter" href="bk09partivch06.html">Chapter&nbsp;<span class="label">19</span>, Sharing file systems with NFS</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">DRBD</code> can be used if only two VM Host Server systems are involved. This adds certain extra
+                        data security, because the used data is mirrored over the network. For more information,
+                        see the <cite class="citetitle">SUSE Linux Enterprise High Availability <span class="phrase productnumber">15 SP7</span></cite> documentation at <a class="link" href="https://documentation.suse.com/sle-ha-15/">https://documentation.suse.com/sle-ha-15/</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">SCSI</code> can also be used if the available hardware permits shared access to the same disks.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">NPIV</code> is a special mode to use Fibre channel disks. However, in this case, all migration
+                        hosts must be attached to the same Fibre channel switch. For more information about
+                        NPIV, see <a class="xref xref-sect1" href="bk10partivch04.html#sec-xen-config-disk">the section called “Mapping physical storage to virtual disks”</a>. Commonly, this works if the Fibre channel environment supports 4 Gbps or faster
+                        connections.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-xen-manage-migrate-xl">
+               <header>
+                  <h3><span class="label">30<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Migrating VM Guest systems</h3>
+               </header>
+               
+               
+               <p>The actual migration of the VM Guest system is done with the command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl migrate &lt;domain_name&gt; &lt;host&gt;</code></span></span></pre>
+               </div>
+               
+               <p>The speed of the migration depends on how fast the memory print can be saved to disk,
+                  sent to the new VM Host Server and loaded there. This means that small VM Guest systems
+                  can be migrated faster than big systems with a lot of memory.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch06s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">30<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Sparse image files and disk space</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">30<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Monitoring Xen</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

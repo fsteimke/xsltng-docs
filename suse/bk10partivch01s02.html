@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>25.2.&nbsp;Managing Dom0 memory</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch01.html" rel="prev">
+      <link href="bk10partivch01s03.html" rel="next">
+      <link href="bk10partivch01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partivch01.html">Up</a> <a href="bk10partivch01s03.html">Next</a> <a href="bk10partivch01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partivch01s02.html" db-id="d616951e289837" id="sec-xen-vhost-memory">
+            <header>
+               <h2><span class="label">25<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing Dom0 memory</h2>
+            </header>
+            
+            
+            <p>In previous versions of <span class="phrase productname">SUSE Linux Enterprise Server</span>, the default memory allocation scheme of a Xen host was to allocate all host physical
+               memory to Dom0 and enable auto-ballooning. Memory was automatically ballooned from
+               Dom0 when additional domains were started. This behavior has always been error prone
+               and disabling it was strongly encouraged. Starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 SP1, auto-ballooning has been disabled by default and Dom0 is given 10% of host
+               physical memory + 1&nbsp;GB. For example, on a host with 32&nbsp;GB of physical memory, 4.2&nbsp;GB
+               of memory is allocated for Dom0.</p>
+            
+            <p>The use of the <code class="option">dom0_mem</code> Xen command line option in <code class="filename">/etc/default/grub</code> is still supported and encouraged. You can restore the old behavior by setting <code class="option">dom0_mem</code> to the host physical memory size and enabling the <code class="option">autoballoon</code> setting in <code class="filename">/etc/xen/xl.conf</code>.</p>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Insufficient memory for Dom0</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>The amount of memory reserved for Dom0 is a function of the number of VM Guests running
+                           on the host since Dom0 provides back-end network and disk I/O services for each VM
+                           Guest. Other workloads running in Dom0 should also be considered when calculating
+                           Dom0 memory allocation. Memory sizing of Dom0 should be determined like any other
+                           virtual machine.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-xen-vhost-maxmem">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting Dom0 memory allocation</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="sec-xen-vhost-maxmem_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Determine memory allocation required for Dom0.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>At Dom0, type <code class="command">xl info</code> to view the amount of memory that is available on the machine. Dom0's current memory
+                           allocation can be determined with the <code class="command">xl list</code> command.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit <code class="filename">/etc/default/grub</code> and adjust the <code class="option">GRUB_CMDLINE_XEN</code> option so that it includes <code class="literal">dom0_mem=<em class="replaceable">MEM_AMOUNT</em></code>. Replace <em class="replaceable">MEM_AMOUNT</em> with the maximum amount of memory to allocate to Dom0. Add <code class="command">K</code>, <code class="command">M</code>, or <code class="command">G</code>, to specify the size unit. For example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>GRUB_CMDLINE_XEN="dom0_mem=2G"</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Restart the computer to apply the changes.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>Refer to <a class="xref xref-sect2" href="bk01partiich03s02.html#sec-grub2-etc-default-grub">the section called “The file <code class="filename">/etc/default/grub</code>
+                                 ”</a> for more details about Xen-related boot configuration options.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Xen Dom0 memory</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>When using the XL tool stack and the <code class="command">dom0_mem=</code> option for the Xen hypervisor in GRUB&nbsp;2 you need to disable xl <em>autoballoon</em> in <code class="filename">etc/xen/xl.conf</code>. Otherwise launching VMs fails with errors about not being able to balloon down Dom0.
+                              So add <em>autoballoon=0</em> to <code class="filename">xl.conf</code> if you have the <code class="command">dom0_mem=</code> option specified for Xen. Also see <a class="link" href="https://wiki.xen.org/wiki/Xen_Best_Practices#Xen_dom0_dedicated_memory_and_preventing_dom0_memory_ballooning">Xen dom0 memory</a></p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch01.html">Prev</a></td>
+                  <td class="up"><a href="bk10partivch01.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">25</span><span class="sep">.&nbsp;</span>Setting up a virtual machine host</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">25<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Network card in fully virtualized guests</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

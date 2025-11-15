@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>21.4.&nbsp;Troubleshooting</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiiich03s03.html" rel="prev">
+      <link href="bk10partiiich03s05.html" rel="next">
+      <link href="bk10partiiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiiich03.html">Up</a> <a href="bk10partiiich03s05.html">Next</a> <a href="bk10partiiich03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiiich03s04.html" db-id="d616951e288868" id="sec-guestfs-trouble">
+            <header>
+               <h2><span class="label">21<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Troubleshooting</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-guestfs-trouble-btrfs">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Btrfs-related problems</h3>
+               </header>
+               
+               
+               <p>When using the guestfs tools on an image with Btrfs root partition (the default with
+                  <span class="phrase productname">SUSE Linux Enterprise Server</span>) the following error message may be displayed:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virt-ls -a /path/to/sles12sp2.qcow2 /</code></span></span>
+<span class="line"><span class="ld"><code>virt-ls: multi-boot operating systems are not supported</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>If using guestfish '-i' option, remove this option and instead</code></span></span>
+<span class="line"><span class="ld"><code>use the commands 'run' followed by 'list-filesystems'.</code></span></span>
+<span class="line"><span class="ld"><code>You can then mount file systems you want by hand using the</code></span></span>
+<span class="line"><span class="ld"><code>'mount' or 'mount-ro' command.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>If using guestmount '-i', remove this option and choose the</code></span></span>
+<span class="line"><span class="ld"><code>filesystem(s) you want to see by manually adding '-m' option(s).</code></span></span>
+<span class="line"><span class="ld"><code>Use 'virt-filesystems' to see what file systems are available.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>If using other virt tools, multi-boot operating systems won't work</code></span></span>
+<span class="line"><span class="ld"><code>with these tools.  Use the guestfish equivalent commands</code></span></span>
+<span class="line"><span class="ld"><code>(see the virt tool manual page).</code></span></span></pre>
+               </div>
+               
+               <p>This is often caused by the presence of snapshots in the guests. In this case guestfs
+                  does not know which snapshot to bootstrap. To force the use of a snapshot, use the
+                  <code class="option">-m</code> parameter as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virt-ls -m /dev/sda2:/:subvol=@/.snapshots/2/snapshot -a /path/to/sles12sp2.qcow2 /</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-guestfs-trouble-env">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Environment</h3>
+               </header>
+               
+               
+               <p>When troubleshooting problems within a libguestfs appliance, the environment variable
+                  <em>LIBGUESTFS_DEBUG=1</em> can be used to enable debug messages. To output each command/API call in a format
+                  that is similar to guestfish commands, use the environment variable <em>LIBGUESTFS_TRACE=1</em>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-guestfs-trouble-tools">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                     <code class="command">libguestfs-test-tool</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="command">libguestfs-test-tool</code> is a test program that checks if basic libguestfs functionality is working. It prints
+                  a large amount of diagnostic messages and details of the guestfs environment, then
+                  create a test image and try to start it. If it runs to completion successfully, the
+                  following message should be seen near the end:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>===== TEST FINISHED OK =====</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiiich03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiiich03.html">Up</a></td>
+                  <td class="next"><a href="bk10partiiich03s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">21<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Guestfs tools</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">21<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

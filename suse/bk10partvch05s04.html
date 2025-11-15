@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>38.4.&nbsp;Managing devices</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvch05s03.html" rel="prev">
+      <link href="bk10partvch05s05.html" rel="next">
+      <link href="bk10partvch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partvch05.html">Up</a> <a href="bk10partvch05s05.html">Next</a> <a href="bk10partvch05s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partvch05s04.html" db-id="d616951e302365" id="sec-qemu-monitor-manage-dev">
+            <header>
+               <h2><span class="label">38<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing devices</h2>
+            </header>
+            
+            
+            <p>To add a new disk while the guest is running (hotplug), use the <code class="command">drive_add</code> and <code class="command">device_add</code> commands. First define a new drive to be added as a device to bus 0:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>(qemu) drive_add 0 if=none,file=/tmp/test.img,format=raw,id=disk1</code></span></span>
+<span class="line"><span class="ld"><code>OK</code></span></span></pre>
+            </div>
+            
+            <p>You can confirm your new device by querying the block subsystem:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>(qemu) info block</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>disk1: removable=1 locked=0 tray-open=0 file=/tmp/test.img ro=0 drv=raw \</code></span></span>
+<span class="line"><span class="ld"><code>encrypted=0 bps=0 bps_rd=0 bps_wr=0 iops=0 iops_rd=0 iops_wr=0</code></span></span></pre>
+            </div>
+            
+            <p>After the new drive is defined, it needs to be connected to a device so that the guest
+               can see it. The typical device would be a <code class="literal">virtio-blk-pci</code> or <code class="literal">scsi-disk</code>. To get the full list of available values, run:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>(qemu) device_add ?</code></span></span>
+<span class="line"><span class="ld"><code>name "VGA", bus PCI</code></span></span>
+<span class="line"><span class="ld"><code>name "usb-storage", bus usb-bus</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>name "virtio-blk-pci", bus virtio-bus</code></span></span></pre>
+            </div>
+            
+            <p>Now add the device</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>(qemu) device_add virtio-blk-pci,drive=disk1,id=myvirtio1</code></span></span></pre>
+            </div>
+            
+            <p>and confirm with</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>(qemu) info pci</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>Bus  0, device   4, function 0:</code></span></span>
+<span class="line"><span class="ld"><code>    SCSI controller: PCI device 1af4:1001</code></span></span>
+<span class="line"><span class="ld"><code>      IRQ 0.</code></span></span>
+<span class="line"><span class="ld"><code>      BAR0: I/O at 0xffffffffffffffff [0x003e].</code></span></span>
+<span class="line"><span class="ld"><code>      BAR1: 32 bit memory at 0xffffffffffffffff [0x00000ffe].</code></span></span>
+<span class="line"><span class="ld"><code>      id "myvirtio1"</code></span></span></pre>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Tip</div>
+                     </header>
+                     <div>
+                        
+                        <p>Devices added with the <code class="command">device_add</code> command can be removed from the guest with <code class="command">device_del</code>. Enter <code class="command">help device_del</code> on the QEMU monitor command line for more information.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>To release the device or file connected to the removable media device, use the <code class="command">eject</code><em class="replaceable">DEVICE</em> command. Use the optional <code class="option">-f</code> to force ejection.</p>
+            
+            <p>To change removable media (like CD-ROMs), use the <code class="command">change</code><em class="replaceable">DEVICE</em> command. The name of the removable media can be determined using the <code class="command">info block</code> command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">(qemu)</span><code class="command">info block</code></code></span></span>
+<span class="line"><span class="ld"><code>ide1-cd0: type=cdrom removable=1 locked=0 file=/dev/sr0 ro=1 drv=host_device</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">(qemu)</span><code class="command">change ide1-cd0 /path/to/image</code></code></span></span></pre>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvch05s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partvch05.html">Up</a></td>
+                  <td class="next"><a href="bk10partvch05s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">38<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Changing VNC password</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">38<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Controlling keyboard and mouse</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

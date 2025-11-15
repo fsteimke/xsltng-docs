@@ -1,0 +1,923 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.&nbsp;VM Guest images</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar03s04.html" rel="prev">
+      <link href="bk11ar03s06.html" rel="next">
+      <link href="bk11ar03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar03.html">Up</a> <a href="bk11ar03s06.html">Next</a> <a href="bk11ar03s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar03s05.html" db-id="d616951e318785" id="sec-vt-best-img">
+            <header>
+               <h2><span class="label">5</span><span class="sep">.&nbsp;</span>VM Guest images</h2>
+            </header>
+            
+            
+            <p>Images are virtual disks used to store the operating system and data of VM Guests.
+               They can be created, maintained and queried with the <code class="command">qemu-img</code> command. Refer to <a class="xref xref-sect2" href="bk10partvch03s02.html#cha-qemu-guest-inst-qemu-img-create">the section called “Creating, converting, and checking disk images”</a> for more information on the <code class="command">qemu-img</code> tool and examples.</p>
+            
+            <section class="sect2" id="sec-vt-best-img-imageformat">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VM Guest image formats</h3>
+               </header>
+               
+               
+               <p>Certain storage formats which QEMU recognizes have their origins in other virtualization
+                  technologies. By recognizing these formats, QEMU can use either data stores or entire
+                  guests that were originally targeted to run under these other virtualization technologies.
+                  Certain formats are supported only in read-only mode. To use them in read/write mode,
+                  convert them to a fully supported QEMU storage format (using <code class="command">qemu-img</code>). Otherwise they can only be used as read-only data store in a QEMU guest.</p>
+               
+               <p>Use <code class="command">qemu-img info <em class="replaceable">VMGUEST.IMG</em></code> to get information about an existing image, such as the format, the virtual size,
+                  the physical size and snapshots, if available.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Performance</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>It is recommended to convert the disk images to either raw or qcow2 to achieve good
+                              performance.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Encrypted images cannot be compressed</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>When you create an image, you cannot use compression (<code class="option">-c</code>) in the output file together with the encryption option (<code class="option">-e</code>).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-vt-best-img-imageformat-raw">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Raw format</h4>
+                  </header>
+                  
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>This format is simple and easily exportable to all other emulators/hypervisors.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>It provides the best performance (least I/O overhead).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>It occupies all allocated space on the file system.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The raw format allows to copy a VM Guest image to a physical device (<code class="command">dd if=<em class="replaceable">VMGUEST.RAW</em> of=<em class="replaceable">/dev/sda</em></code>).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>It is byte-for-byte the same as what the VM Guest sees, so this wastes a lot of space.</p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-img-imageformat-qcow2">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>qcow2 format</h4>
+                  </header>
+                  
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>Use this to have smaller images (useful if your file system does not support holes).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>It has optional AES encryption (now deprecated).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Zlib-based compression option.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Supports multiple VM snapshots (internal, external).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Improved performance and stability.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Supports changing the backing file.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Supports consistency checks.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Less performance than raw format.</p>
+                        </li>
+                     </ul>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">l2-cache-size</span></dt>
+                        <dd>
+                           
+                           <p>qcow2 can provide the same performance for random read/write access as raw format,
+                              but it needs a well-sized cache size. By default, cache size is set to 1 MB. This
+                              will give good performance up to a disk size of 8&nbsp;GB. If you need a bigger disk size,
+                              you need to adjust the cache size. For a disk size of 64&nbsp;GB (64*1024 = 65536), you
+                              need 65536 / 8192&nbsp;B = 8&nbsp;MB of cache (<code class="option">-drive format=qcow2,l2-cache-size=8M</code>).</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Cluster size</span></dt>
+                        <dd>
+                           
+                           <p>The qcow2 format offers the capability to change the cluster size. The value must
+                              be between 512&nbsp;KB and 2&nbsp;MB. Smaller cluster sizes can improve the image file size,
+                              whereas larger cluster sizes provide better performance.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Preallocation</span></dt>
+                        <dd>
+                           
+                           <p>An image with preallocated metadata is initially larger but can improve performance
+                              when the image needs to grow.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Lazy refcounts</span></dt>
+                        <dd>
+                           
+                           <p>Reference count updates are postponed with the goal of avoiding metadata I/O and improving
+                              performance. This is particularly beneficial with <code class="option">cache=writethrough</code>. This option does not batch metadata updates, but if in case of host crash, the reference
+                              count tables must be rebuilt, this is done automatically at the next open with <code class="command">qemu-img check -r all</code> and takes a certain amount of time.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-img-imageformat-qed">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>qed format</h4>
+                  </header>
+                  
+                  
+                  <p>qed is a follow-on qcow (QEMU Copy On Write) format. Because qcow2 provides all the
+                     benefits of qed and more, qed is now deprecated.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-img-imageformat-vmdk">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>VMDK format</h4>
+                  </header>
+                  
+                  
+                  <p>VMware 3, 4 or 6 image format for exchanging images with that product.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-img-overlay">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Overlay disk images</h3>
+               </header>
+               
+               
+               <p>The qcow2 and qed formats provide a way to create a base image (also called backing
+                  file) and overlay images on top of the base image. A backing file is useful for reverting
+                  to a known state and discarding the overlay. If you write to the image, the backing
+                  image will be untouched and all changes will be recorded in the overlay image file.
+                  The backing file will never be modified unless you use the <code class="option">commit</code> monitor command (or <code class="command">qemu-img commit</code>).</p>
+               
+               <p>To create an overlay image:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-img create -o<span class="co" id="co-1-minoro">⦀</span>backing_file=vmguest.raw<span class="co" id="co-1-backingfile">⦁</span>,backing_fmt=raw<span class="co" id="co-1-backingfmt">⦂</span>\</code></span></span>
+<span class="line"><span class="ld"><code>     -f<span class="co" id="co-1-minorf">⦃</span> qcow2 vmguest.cow<span class="co" id="co-1-imagename">⦄</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-1-minoro">⦀</a></dt>
+                     <dd>
+                        
+                        <p>Use <code class="option">-o ?</code> for an overview of available options.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-1-backingfile">⦁</a></dt>
+                     <dd>
+                        
+                        <p>The backing file name.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-1-backingfmt">⦂</a></dt>
+                     <dd>
+                        
+                        <p>Specify the file format for the backing file.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-1-minorf">⦃</a></dt>
+                     <dd>
+                        
+                        <p>Specify the image format for the VM Guest.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-1-imagename">⦄</a></dt>
+                     <dd>
+                        
+                        <p>Image name of the VM Guest, it will only record the differences from the backing file.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Backing image path</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>You should not change the path to the backing image, otherwise you will need to adjust
+                              it. The path is stored in the overlay image file. To update the path, make a symbolic
+                              link from the original path to the new path and then use the <code class="command">qemu-img</code><code class="option">rebase</code> option.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ln -sf /var/lib/images/<em class="replaceable">OLD_PATH</em>/vmguest.raw  \</code></span></span>
+<span class="line"><span class="ld"><code> /var/lib/images/<em class="replaceable">NEW_PATH</em>/vmguest.raw</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-img rebase<span class="co" id="co-2-rebase">⦅</span> -u<span class="co" id="co-2-unsafe">⦆</span> -b<span class="co" id="co-2-minorb">⦇</span> \</code></span></span>
+<span class="line"><span class="ld"><code> /var/lib/images/<em class="replaceable">OLD_PATH</em>/vmguest.raw /var/lib/images/<em class="replaceable">NEW_PATH</em>/vmguest.cow</code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#co-2-rebase">⦅</a></dt>
+                                 <dd>
+                                    
+                                    <p>The <code class="command">rebase</code> subcommand tells <code class="command">qemu-img</code> to change the backing file image.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-2-unsafe">⦆</a></dt>
+                                 <dd>
+                                    
+                                    <p>The <code class="option">-u</code> option activates the unsafe mode (see note below). There are two different modes
+                                       in which <code class="option">rebase</code> can operate:</p>
+                                    
+                                    <ul class="itemizedlist">
+                                       
+                                       <li>
+                                          
+                                          <p><em>Safe</em>: this is the default mode and performs a real rebase operation. The safe mode is
+                                             a time-consuming operation.</p>
+                                          </li>
+                                       
+                                       <li>
+                                          
+                                          <p><em>Unsafe</em>: the unsafe mode (<code class="option">-u</code>) only changes the backing files name and the format of the file name, making no checks
+                                             on the file's contents. Use this mode to rename or move a backing file.</p>
+                                          </li>
+                                       </ul>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-2-minorb">⦇</a></dt>
+                                 <dd>
+                                    
+                                    <p>The backing image to be used is specified with <code class="option">-b</code> and the image path is the last argument of the command.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>A common use is to initiate a new guest with the backing file. Let's assume we have
+                  a <code class="filename">sle15_base.img</code> VM Guest ready to be used (fresh installation without any modification). This will
+                  be our backing file. Now you need to test a new package, on an updated system and
+                  on a system with a different kernel. We can use <code class="filename">sle15_base.img</code> to instantiate the new SUSE Linux Enterprise VM Guest by creating a qcow2 overlay
+                  file pointing to this backing file (<code class="filename">sle15_base.img</code>).</p>
+               
+               <p>In our example, we will use <code class="filename">sle15_updated.qcow2</code> for the updated system, and <code class="filename">sle15_kernel.qcow2</code> for the system with a different kernel.</p>
+               
+               <p>To create the two thin provisioned systems, use the <code class="command">qemu-img</code> command line with the <code class="option">-b</code> option:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-img create -b /var/lib/libvirt/sle15_base.img -f qcow2 \</code></span></span>
+<span class="line"><span class="ld"><code>/var/lib/libvirt/sle15_updated.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>Formatting 'sle15_updated.qcow2', fmt=qcow2 size=17179869184</code></span></span>
+<span class="line"><span class="ld"><code>backing_file='sle15_base.img' encryption=off cluster_size=65536</code></span></span>
+<span class="line"><span class="ld"><code>lazy_refcounts=off nocow=off</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-img create -b /var/lib/libvirt/sle15_base.img -f qcow2 \</code></span></span>
+<span class="line"><span class="ld"><code>/var/lib/libvirt/sle15_kernel.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>Formatting 'sle15_kernel.qcow2', fmt=qcow2 size=17179869184</code></span></span>
+<span class="line"><span class="ld"><code>backing_file='vmguest-sle15_base.img' encryption=off cluster_size=65536</code></span></span>
+<span class="line"><span class="ld"><code>lazy_refcounts=off nocow=off</code></span></span></pre>
+               </div>
+               
+               <p>The images are now usable, and you can do your test without touching the initial <code class="filename">sle15_base.img</code> backing file. All changes will be stored in the new overlay images. You can also
+                  use these new images as a backing file and create a new overlay.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-img create -b sle15_kernel.qcow2 -f qcow2 sle15_kernel_TEST.qcow2</code></span></span></pre>
+               </div>
+               
+               <p>When using <code class="command">qemu-img info</code> with the option <code class="option">--backing-chain</code>, it will return all information about the entire backing chain recursively:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-img info --backing-chain</code></span></span>
+<span class="line"><span class="ld"><code>/var/lib/libvirt/images/sle15_kernel_TEST.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>image: sle15_kernel_TEST.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>file format: qcow2</code></span></span>
+<span class="line"><span class="ld"><code>virtual size: 16G (17179869184 bytes)</code></span></span>
+<span class="line"><span class="ld"><code>disk size: 196K</code></span></span>
+<span class="line"><span class="ld"><code>cluster_size: 65536</code></span></span>
+<span class="line"><span class="ld"><code>backing file: sle15_kernel.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>Format specific information:</code></span></span>
+<span class="line"><span class="ld"><code>compat: 1.1</code></span></span>
+<span class="line"><span class="ld"><code>lazy refcounts: false</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>image: sle15_kernel.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>file format: qcow2</code></span></span>
+<span class="line"><span class="ld"><code>virtual size: 16G (17179869184 bytes)</code></span></span>
+<span class="line"><span class="ld"><code>disk size: 196K</code></span></span>
+<span class="line"><span class="ld"><code>cluster_size: 65536</code></span></span>
+<span class="line"><span class="ld"><code>backing file: SLE15.qcow2</code></span></span>
+<span class="line"><span class="ld"><code>Format specific information:</code></span></span>
+<span class="line"><span class="ld"><code>compat: 1.1</code></span></span>
+<span class="line"><span class="ld"><code>lazy refcounts: false</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>image: sle15_base.img</code></span></span>
+<span class="line"><span class="ld"><code>file format: qcow2</code></span></span>
+<span class="line"><span class="ld"><code>virtual size: 16G (17179869184 bytes)</code></span></span>
+<span class="line"><span class="ld"><code>disk size: 16G</code></span></span>
+<span class="line"><span class="ld"><code>cluster_size: 65536</code></span></span>
+<span class="line"><span class="ld"><code>Format specific information:</code></span></span>
+<span class="line"><span class="ld"><code>compat: 1.1</code></span></span>
+<span class="line"><span class="ld"><code>lazy refcounts: true</code></span></span></pre>
+               </div>
+               
+               <div class="figure formalobject" id="fig-qemu-img-overlay">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:526px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/qemu-img-overlay.png" style="width:526px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">1</span><span class="sep">.&nbsp;</span>Understanding image overlay</div>
+                  </header>
+               </div>
+               </section>
+            
+            
+            <section class="sect2" id="sec-vt-best-img-open-img">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Opening a VM Guest image</h3>
+               </header>
+               
+               
+               <p>To access the file system of an image, use the <code class="package">guestfs-tools</code>. If you do not have this tool installed on your system, you can mount an image with
+                  other Linux tools. Avoid accessing an untrusted or unknown VM Guest's image system
+                  because this can lead to security issues (for more information, read <a class="link" href="https://www.berrange.com/posts/2013/02/20/a-reminder-why-you-should-never-mount-guest-disk-images-on-the-host-os/">D. Berrangé's post</a>).</p>
+               
+               <section class="sect3" id="sec-vt-best-img-open-img-raw">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Opening a raw image</h4>
+                  </header>
+                  
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-img-open-img-raw_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">4</span><span class="sep">.&nbsp;</span>Mounting a raw image</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>To mount the image, find a free loop device. The following command displays the first
+                              unused loop device, <code class="filename">/dev/loop1</code> in this example.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>losetup -f</code></span></span>
+<span class="line"><span class="ld"><code>/dev/loop1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Associate an image (<code class="filename">SLE15.raw</code> in this example) with the loop device:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>losetup /dev/loop1 SLE15.raw</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Check whether the image has successfully been associated with the loop device by getting
+                              detailed information about the loop device:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>losetup -l</code></span></span>
+<span class="line"><span class="ld"><code>NAME       SIZELIMIT OFFSET AUTOCLEAR RO BACK-FILE</code></span></span>
+<span class="line"><span class="ld"><code>/dev/loop1         0      0         0  0    /var/lib/libvirt/images/SLE15.raw</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Check the image's partitions with <code class="command">kpartx</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>kpartx -a<span class="co" id="co-kpartx-a">⦈</span> -v<span class="co" id="co-kpartx-v">⦉</span> /dev/loop1</code></span></span>
+<span class="line"><span class="ld"><code>add map loop1p1 (254:1): 0 29358080 linear /dev/loop1 2048</code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#co-kpartx-a">⦈</a></dt>
+                                 <dd>
+                                    
+                                    <p>Add partition device mappings.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-kpartx-v">⦉</a></dt>
+                                 <dd>
+                                    
+                                    <p>Verbose mode.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Now mount the image partitions (to <code class="filename">/mnt/sle15mount</code> in the following example):</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>mkdir /mnt/sle15mount</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>mount /dev/mapper/loop1p1 /mnt/sle15mount</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Raw image with LVM</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>If your raw image contains an LVM volume group, you should use LVM tools to mount
+                                 the partition. Refer to <a class="xref xref-sect3" href="#sec-lvm-found">the section called “Opening images containing LVM”</a>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-img-open-img-raw_proc2">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">5</span><span class="sep">.&nbsp;</span>Unmounting a raw image</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Unmount all mounted partitions of the image, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>umount /mnt/sle15mount</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step" id="st-umount-raw">
+                           
+                           <p>Delete partition device mappings with <code class="command">kpartx</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>kpartx -d /dev/loop1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Detach the devices with <code class="command">losetup</code></p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>losetup -d /dev/loop1</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-img-open-img-qcow2">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Opening a qcow2 image</h4>
+                  </header>
+                  
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-img-open-img-qcow2_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">6</span><span class="sep">.&nbsp;</span>Mounting a qcow2 image</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>First, you need to load the <code class="literal">nbd</code> (network block devices) module. The following example loads it with support for 16
+                              block devices (<code class="option">max_part=16</code>). Check with <code class="command">dmesg</code> whether the operation was successful:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>modprobe nbd max_part=16</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>dmesg | grep nbd</code></span></span>
+<span class="line"><span class="ld"><code>[89155.142425] nbd: registered device at major 43</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Connect the VM Guest image, for example, <code class="filename">SLE15.qcow2</code>, to an NBD device (<code class="filename">/debv/nbd0</code> in the following example) with the <code class="command">qemu-nbd</code> command. Use a free NBD device:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-nbd -c<span class="co" id="co-qemunbd-minusc">⦊</span> /dev/nbd0<span class="co" id="co-qemunbd-device">⦋</span> SLE15.qcow2<span class="co" id="co-qemunbd-image">⦌</span></code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#co-qemunbd-minusc">⦊</a></dt>
+                                 <dd>
+                                    
+                                    <p>Connect <code class="filename">SLE15.qcow2</code> to the local NBD device <code class="filename">/dev/nbd0</code></p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-qemunbd-device">⦋</a></dt>
+                                 <dd>
+                                    
+                                    <p>NBD device to use</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-qemunbd-image">⦌</a></dt>
+                                 <dd>
+                                    
+                                    <p>VM Guest image to use</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           
+                           <div class="admonition tip">
+                              <div>
+                                 <div class="icon">☞</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Checking for a free NBD device</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>To check whether an NBD device is free, run the following command:</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>lsof /dev/nbd0</code></span></span>
+<span class="line"><span class="ld"><code>COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF  NODE NAME</code></span></span>
+<span class="line"><span class="ld"><code>qemu-nbd 15149 root   10u   BLK   43,0      0t0 47347 /dev/nbd0</code></span></span></pre>
+                                       </div>
+                                       
+                                       <p>If the command produces an output like in the example above, the device is busy (not
+                                          free). This can also be confirmed by the presence of the <code class="filename">/sys/devices/virtual/block/nbd0/pid</code> file.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Inform the operating system about partition table changes with <code class="command">partprobe</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>partprobe /dev/nbd0 -s</code></span></span>
+<span class="line"><span class="ld"><code>/dev/nbd0: msdos partitions 1 2</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>dmesg | grep nbd0 | tail -1</code></span></span>
+<span class="line"><span class="ld"><code>[89699.082206]  nbd0: p1 p2</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In the example above, the <code class="filename">SLE15.qcow2</code> contains two partitions: <code class="filename">/dev/nbd0p1</code> and <code class="filename">/dev/nbd0p2</code>. Before mounting these partitions, use <code class="command">vgscan</code> to check whether they belong to an LVM volume:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>vgscan -v</code></span></span>
+<span class="line"><span class="ld"><code>    Wiping cache of LVM-capable devices</code></span></span>
+<span class="line"><span class="ld"><code>    Wiping internal VG cache</code></span></span>
+<span class="line"><span class="ld"><code>    Reading all physical volumes. This may take a while...</code></span></span>
+<span class="line"><span class="ld"><code>    Using volume group(s) on command line.</code></span></span>
+<span class="line"><span class="ld"><code>    No volume groups found.</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If no LVM volume has been found, you can mount the partition with <code class="command">mount</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>mkdir /mnt/nbd0p2</code></span></span>
+<span class="line"><span class="ld"><code># mount /dev/nbd0p1 /mnt/nbd0p2</code></span></span></pre>
+                           </div>
+                           
+                           <p>Refer to <a class="xref xref-sect3" href="#sec-lvm-found">the section called “Opening images containing LVM”</a> for information on how to handle LVM volumes.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-img-open-img-qcow2_proc2">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">7</span><span class="sep">.&nbsp;</span>Unmounting a qcow2 image</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Unmount all mounted partitions of the image, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>umount /mnt/nbd0p2</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step" id="st-umount-qcow2">
+                           
+                           <p>Disconnect the image from the <code class="filename">/dev/nbd0</code> device.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>qemu-nbd -d /dev/nbd0</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-lvm-found">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Opening images containing LVM</h4>
+                  </header>
+                  
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Warning</div>
+                           </header>
+                           <div>
+                              
+                              <p>If your VM Host Server uses the VG name <code class="literal">system</code>, and the guest image also uses the VG name <code class="literal">system</code>, LVM will complain during its activation. A workaround is to temporarily rename the
+                                 guest VG, while a correct approach is to use different VG names for the guests than
+                                 for the VM Host Server.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="sec-lvm-found_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">8</span><span class="sep">.&nbsp;</span>Mounting images containing LVM</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>To check images for LVM groups, use <code class="command">vgscan -v</code>. If an image contains LVM groups, the output of the command looks like the following:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>vgscan -v</code></span></span>
+<span class="line"><span class="ld"><code>Wiping cache of LVM-capable devices</code></span></span>
+<span class="line"><span class="ld"><code>Wiping internal VG cache</code></span></span>
+<span class="line"><span class="ld"><code>Reading all physical volumes.  This may take a while...</code></span></span>
+<span class="line"><span class="ld"><code>Finding all volume groups</code></span></span>
+<span class="line"><span class="ld"><code>Finding volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system" using metadata type lvm2</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>The <code class="literal">system</code> LVM volume group has been found on the system. You can get more information about
+                              this volume with <code class="command">vgdisplay <em class="replaceable">VOLUMEGROUPNAME</em></code> (in our case <em class="replaceable">VOLUMEGROUPNAME</em> is <code class="literal">system</code>). You should activate this volume group to expose LVM partitions as devices so the
+                              system can mount them. Use <code class="command">vgchange</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>vgchange -ay -v</code></span></span>
+<span class="line"><span class="ld"><code>Finding all volume groups</code></span></span>
+<span class="line"><span class="ld"><code>Finding volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>activation/volume_list configuration setting not defined: Checking only</code></span></span>
+<span class="line"><span class="ld"><code>host tags for system/home</code></span></span>
+<span class="line"><span class="ld"><code>Creating system-home</code></span></span>
+<span class="line"><span class="ld"><code>Loading system-home table (254:0)</code></span></span>
+<span class="line"><span class="ld"><code>Resuming system-home (254:0)</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>activation/volume_list configuration setting not defined: Checking only</code></span></span>
+<span class="line"><span class="ld"><code>host tags for system/root</code></span></span>
+<span class="line"><span class="ld"><code>Creating system-root</code></span></span>
+<span class="line"><span class="ld"><code>Loading system-root table (254:1)</code></span></span>
+<span class="line"><span class="ld"><code>Resuming system-root (254:1)</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>activation/volume_list configuration setting not defined: Checking only</code></span></span>
+<span class="line"><span class="ld"><code>host tags for system/swap</code></span></span>
+<span class="line"><span class="ld"><code>Creating system-swap</code></span></span>
+<span class="line"><span class="ld"><code>Loading system-swap table (254:2)</code></span></span>
+<span class="line"><span class="ld"><code>Resuming system-swap (254:2)</code></span></span>
+<span class="line"><span class="ld"><code>Activated 3 logical volumes in volume group system</code></span></span>
+<span class="line"><span class="ld"><code>    3 logical volume(s) in volume group "system" now active</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>All partitions in the volume group will be listed in the <code class="filename">/dev/mapper</code> directory. You can simply mount them now.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ls /dev/mapper/system-*</code></span></span>
+<span class="line"><span class="ld"><code>/dev/mapper/system-home  /dev/mapper/system-root /dev/mapper/system-swap</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>mkdir /mnt/system-root</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>mount  /dev/mapper/system-root /mnt/system-root</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>ls /mnt/system-root/</code></span></span>
+<span class="line"><span class="ld"><code>bin   dev  home  lib64       mnt  proc        root  sbin     srv  tmp  var</code></span></span>
+<span class="line"><span class="ld"><code>boot  etc  lib   lost+found  opt  read-write  run   selinux  sys  usr</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="sec-lvm-found_proc2">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">9</span><span class="sep">.&nbsp;</span>Unmounting images containing LVM</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Unmount all partitions (with <code class="command">umount</code>)</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>umount /mnt/system-root</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Deactivate the LVM volume group (with <code class="command">vgchange -an <em class="replaceable">VOLUMEGROUPNAME</em></code>)</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>vgchange -an -v system</code></span></span>
+<span class="line"><span class="ld"><code>Using volume group(s) on command line</code></span></span>
+<span class="line"><span class="ld"><code>Finding volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>Removing system-home (254:0)</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>Removing system-root (254:1)</code></span></span>
+<span class="line"><span class="ld"><code>Found volume group "system"</code></span></span>
+<span class="line"><span class="ld"><code>Removing system-swap (254:2)</code></span></span>
+<span class="line"><span class="ld"><code>Deactivated 3 logical volumes in volume group system</code></span></span>
+<span class="line"><span class="ld"><code>0 logical volume(s) in volume group "system" now active</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Now you have two choices:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>With a qcow2 image, proceed as described in <a class="xref xref-step" href="#st-umount-qcow2">step <span class="label">2</span></a> (<code class="command">qemu-nbd -d /dev/nbd0</code>).</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>With a raw image, proceed as described in <a class="xref xref-step" href="#st-umount-raw">step <span class="label">2</span></a> (<code class="command">kpartx -d /dev/loop1</code>; <code class="command">losetup -d /dev/loop1</code>).</p>
+                                 </li>
+                              </ul>
+                           
+                           <div class="admonition important">
+                              <div>
+                                 <div class="icon">☝</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Check for a successful unmount</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>You should double-check that unmounting succeeded by using a system command like <code class="command">losetup</code>, <code class="command">qemu-nbd</code>, <code class="command">mount</code> or <code class="command">vgscan</code>. If this is not the case, you may have trouble using the VM Guest because its system
+                                          image is used in different places.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-img-share">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>File system sharing</h3>
+               </header>
+               
+               
+               <p>You can access a host directory in the VM Guest using the <code class="tag tag-element">filesystem</code> element. In the following example we will share the <code class="filename">/data/shared</code> directory and mount it in the VM Guest. The <code class="tag tag-attribute">accessmode</code> parameter only works with <code class="tag tag-attribute">type='mount'</code> for the QEMU/KVM driver (most other values for <code class="tag tag-attribute">type</code> are exclusively used for the LXC driver).</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;filesystem type='mount'<span class="co" id="co-fs-mount">⦍</span> accessmode='mapped'<span class="co" id="co-fs-mode">⦎</span>&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;source dir='/data/shared'<span class="co" id="co-fs-sourcedir">⦏</span>&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;target dir='shared'<span class="co" id="co-fs-targetdir">⦐</span>/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/filesystem&gt;</code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-fs-mount">⦍</a></dt>
+                     <dd>
+                        
+                        <p>A host directory to mount VM Guest.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-fs-mode">⦎</a></dt>
+                     <dd>
+                        
+                        <p>Access mode (the security mode) set to <code class="literal">mapped</code> will give access with the permissions of the hypervisor. Use <code class="literal">passthrough</code> to access this share with the permissions of the user inside the VM Guest.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-fs-sourcedir">⦏</a></dt>
+                     <dd>
+                        
+                        <p>Path to share with the VM Guest.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-fs-targetdir">⦐</a></dt>
+                     <dd>
+                        
+                        <p>Name or label of the path for the mount command.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <p>To mount the <code class="literal">shared</code> directory on the VM Guest, use the following commands: under the VM Guest, now you
+                  need to mount the <code class="literal">target dir='shared'</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>mkdir /opt/mnt_shared</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>mount shared -t 9p /opt/mnt_shared -o trans=virtio</code></span></span></pre>
+               </div>
+               
+               <p>See <a class="link" href="https://libvirt.org/formatdomain.html#elementsFilesystems"><code class="library systemitem">libvirt</code> File System</a> and <a class="link" href="https://wiki.qemu.org/Documentation/9psetup">QEMU 9psetup</a> for more information.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar03s04.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar03.html">Up</a></td>
+                  <td class="next"><a href="bk11ar03s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4</span><span class="sep">.&nbsp;</span>VM Host Server configuration and resource allocation</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">6</span><span class="sep">.&nbsp;</span>VM Guest configuration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

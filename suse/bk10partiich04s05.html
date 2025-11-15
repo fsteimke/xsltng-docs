@@ -1,0 +1,405 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.5.&nbsp;Creating and managing snapshots</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich04s04.html" rel="prev">
+      <link href="bk10partiich04s06.html" rel="next">
+      <link href="bk10partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich04.html">Up</a> <a href="bk10partiich04s06.html">Next</a> <a href="bk10partiich04s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich04s05.html" db-id="d616951e275709" id="sec-libvirt-managing-snapshots">
+            <header>
+               <h2><span class="label">11<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Creating and managing snapshots</h2>
+            </header>
+            
+            
+            <p>VM Guest snapshots are snapshots of the complete virtual machine including the state
+               of CPU, RAM, devices and the content of all writable disks. To use virtual machine
+               snapshots, all the attached hard disks need to use the qcow2 disk image format, and
+               at least one of them needs to be writable.</p>
+            
+            <p>Snapshots let you restore the state of the machine at a particular point in time.
+               This is useful when undoing a faulty configuration or the installation of a lot of
+               packages. After starting a snapshot that was created while the VM Guest was shut off,
+               you need to boot it. Any changes written to the disk afterward are lost when starting
+               the snapshot.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Note</div>
+                     </header>
+                     <div>
+                        
+                        <p>Snapshots are supported on KVM VM Host Servers only.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="libvirt-snapshots-terminology">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Terminology</h3>
+               </header>
+               
+               
+               <p>There are several specific terms used to describe the types of snapshots:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Internal snapshots</span></dt>
+                     <dd>
+                        
+                        <p>Snapshots that are saved into the qcow2 file of the original VM Guest. The file holds
+                           both the saved state of the snapshot and the changes made since the snapshot was taken.
+                           The main advantage of internal snapshots is that they are all stored in one file and
+                           therefore it is easy to copy or move them across multiple machines.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">External snapshots</span></dt>
+                     <dd>
+                        
+                        <p>When creating an external snapshot, the original qcow2 file is saved and made read-only,
+                           while a new qcow2 file is created to hold the changes. The original file is sometimes
+                           called a <em>backing</em> or <em>base</em> file, while the new file with all the changes is called an <em>overlay</em> or <em>derived</em> file. External snapshots are useful when performing backups of VM Guests. However,
+                           external snapshots are not supported by Virtual Machine Manager, and cannot be deleted
+                           by <code class="command">virsh</code> directly. For more information on external snapshots in QEMU, refer to <a class="xref xref-sect2" href="bk10partvch03s02.html#cha-qemu-guest-inst-qemu-img-effect">the section called “Manipulate disk images effectively”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Live snapshots</span></dt>
+                     <dd>
+                        
+                        <p>Snapshots created when the original VM Guest is running. Internal live snapshots support
+                           saving the devices, and memory and disk states, while external live snapshots with
+                           <code class="command">virsh</code> support saving either the memory state, or the disk state, or both.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Offline snapshots</span></dt>
+                     <dd>
+                        
+                        <p>Snapshots created from a VM Guest that is shut off. This ensures data integrity as
+                           all the guest's processes are stopped and no memory is in use.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-managing-snapshots-vmm">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating and managing snapshots with Virtual Machine Manager</h3>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Internal snapshots only</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Virtual Machine Manager supports only internal snapshots, either live or offline.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>To open the snapshot management view in Virtual Machine Manager, open the VNC window
+                  as described in <a class="xref xref-sect3" href="bk10partiich04s02.html#sec-libvirt-managing-console-vnc-vmm">the section called “Opening a graphical console with Virtual Machine Manager”</a>. Now either choose <span class="menuchoice"><span class="guimenu">View</span><span class="guimenu">Snapshots</span></span> or click <span class="guimenu">Manage VM Snapshots</span> in the toolbar.</p>
+               
+               <div class="informalfigure informalobject" id="sec-libvirt-managing-snapshots-vmm_informalfigure1">
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/virt_vmm_snapshots_list.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  </div>
+               
+               <p>The list of existing snapshots for the chosen VM Guest is displayed in the left-hand
+                  part of the window. The snapshot that was last started is marked with a green tick.
+                  The right-hand part of the window shows details of the snapshot currently marked in
+                  the list. These details include the snapshot's title and time stamp, the state of
+                  the VM Guest at the time the snapshot was taken and a description. Snapshots of running
+                  guests also include a screenshot. The <span class="guimenu">Description</span> can be changed directly from this view. Other snapshot data cannot be changed.</p>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-vmm-add">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating a snapshot</h4>
+                  </header>
+                  
+                  
+                  <p>To take a new snapshot of a VM Guest, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-managing-snapshots-vmm-add_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Optionally, shut down the VM Guest to create an offline snapshot.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Click <span class="guimenu">Add</span> in the bottom left corner of the VNC window.</p>
+                           
+                           <p>The window <span class="guimenu">Create Snapshot</span> opens.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Provide a <span class="guimenu">Name</span> and, optionally, a description. The name cannot be changed after the snapshot has
+                              been taken. To be able to identify the snapshot later easily, use a <q>speaking name</q>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Confirm with <span class="guimenu">Finish</span>.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-vmm-delete">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Deleting a snapshot</h4>
+                  </header>
+                  
+                  
+                  <p>To delete a snapshot of a VM Guest, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-managing-snapshots-vmm-delete_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Click <span class="guimenu">Delete</span> in the bottom left corner of the VNC window.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Confirm the deletion with <span class="guimenu">Yes</span>.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-vmm-start">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Starting a snapshot</h4>
+                  </header>
+                  
+                  
+                  <p>To start a snapshot, proceed as follows:</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-managing-snapshots-vmm-start_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Click <span class="guimenu">Run</span> in the bottom left corner of the VNC window.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Confirm the start with <span class="guimenu">Yes</span>.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-managing-snapshots-virsh">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating and managing snapshots with <code class="command">virsh</code>
+                     </h3>
+               </header>
+               
+               
+               <p>To list all existing snapshots for a domain (<em class="replaceable">admin_server</em> in the following), run the <code class="literal">snapshot-list</code> command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-list --domain sle-ha-node1</code></span></span>
+<span class="line"><span class="ld"><code> Name                 Creation Time             State</code></span></span>
+<span class="line"><span class="ld"><code>------------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp2_b2_two_node_cluster 2016-06-06 15:04:31 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp2_b3_two_node_cluster 2016-07-04 14:01:41 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp2_b4_two_node_cluster 2016-07-14 10:44:51 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp2_rc3_two_node_cluster 2016-10-10 09:40:12 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp2_gmc_two_node_cluster 2016-10-24 17:00:14 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp3_gm_two_node_cluster 2017-08-02 12:19:37 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp3_rc1_two_node_cluster 2017-06-13 13:34:19 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_12_sp3_rc2_two_node_cluster 2017-06-30 11:51:24 +0200 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_15_b6_two_node_cluster 2018-02-07 15:08:09 +0100 shutoff</code></span></span>
+<span class="line"><span class="ld"><code> sleha_15_rc1_one-node 2018-03-09 16:32:38 +0100 shutoff</code></span></span></pre>
+               </div>
+               
+               <p>The snapshot that was last started is shown with the <code class="literal">snapshot-current command:</code></p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-current --domain admin_server</code></span></span>
+<span class="line"><span class="ld"><code>Basic installation incl. SMT for CLOUD4</code></span></span></pre>
+               </div>
+               
+               <p>Details about a particular snapshot can be obtained by running the <code class="literal">snapshot-info</code> command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-info --domain admin_server \</code></span></span>
+<span class="line"><span class="ld"><code>   -name  "Basic installation incl. SMT for CLOUD4"</code></span></span>
+<span class="line"><span class="ld"><code>Name:           Basic installation incl. SMT for CLOUD4</code></span></span>
+<span class="line"><span class="ld"><code>Domain:         admin_server</code></span></span>
+<span class="line"><span class="ld"><code>Current:        yes</code></span></span>
+<span class="line"><span class="ld"><code>State:          shutoff</code></span></span>
+<span class="line"><span class="ld"><code>Location:       internal</code></span></span>
+<span class="line"><span class="ld"><code>Parent:         Basic installation incl. SMT for CLOUD3-HA</code></span></span>
+<span class="line"><span class="ld"><code>Children:       0</code></span></span>
+<span class="line"><span class="ld"><code>Descendants:    0</code></span></span>
+<span class="line"><span class="ld"><code>Metadata:       yes</code></span></span></pre>
+               </div>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-virsh-add">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating internal snapshots</h4>
+                  </header>
+                  
+                  
+                  <p>To take an internal snapshot of a VM Guest, either a live or offline, use the <code class="literal">snapshot-create-as</code> command as follows:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-create-as --domain admin_server<span class="co" id="virsh-snapshot-add-domain">⣼</span> --name "Snapshot 1"<span class="co" id="virsh-snapshot-add-name">⣽</span> \</code></span></span>
+<span class="line"><span class="ld"><code>--description "First snapshot"<span class="co" id="virsh-snapshot-add-description">⣾</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#virsh-snapshot-add-domain">⣼</a></dt>
+                        <dd>
+                           
+                           <p>Domain name. Mandatory.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#virsh-snapshot-add-name">⣽</a></dt>
+                        <dd>
+                           
+                           <p>Name of the snapshot. It is recommended to use a <q>speaking name</q>, since that makes it easier to identify the snapshot. Mandatory.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#virsh-snapshot-add-description">⣾</a></dt>
+                        <dd>
+                           
+                           <p>Description for the snapshot. Optional.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-virsh-add-ext">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating external snapshots</h4>
+                  </header>
+                  
+                  
+                  <p>With <code class="command">virsh</code>, you can take external snapshots of the guest's memory state, disk state, or both.</p>
+                  
+                  <p>To take both live and offline external snapshots of the guest's disk, specify the
+                     <code class="option">--disk-only</code> option:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-create-as --domain admin_server --name \</code></span></span>
+<span class="line"><span class="ld"><code> "Offline external snapshot" --disk-only</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can specify the <code class="option">--diskspec</code> option to control how the external files are created:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-create-as --domain admin_server --name \</code></span></span>
+<span class="line"><span class="ld"><code> "Offline external snapshot" \</code></span></span>
+<span class="line"><span class="ld"><code> --disk-only --diskspec vda,snapshot=external,file=/path/to/snapshot_file</code></span></span></pre>
+                  </div>
+                  
+                  <p>To take a live external snapshot of the guest's memory, specify the <code class="option">--live</code> and <code class="option">--memspec</code> options:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-create-as --domain admin_server --name \</code></span></span>
+<span class="line"><span class="ld"><code> "Offline external snapshot" --live \</code></span></span>
+<span class="line"><span class="ld"><code> --memspec snapshot=external,file=/path/to/snapshot_file</code></span></span></pre>
+                  </div>
+                  
+                  <p>To take a live external snapshot of both the guest's disk and memory states, combine
+                     the <code class="option">--live</code>, <code class="option">--diskspec</code>, and <code class="option">--memspec</code> options:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-create-as --domain admin_server --name \</code></span></span>
+<span class="line"><span class="ld"><code> "Offline external snapshot" --live \</code></span></span>
+<span class="line"><span class="ld"><code> --memspec snapshot=external,file=/path/to/snapshot_file</code></span></span>
+<span class="line"><span class="ld"><code> --diskspec vda,snapshot=external,file=/path/to/snapshot_file</code></span></span></pre>
+                  </div>
+                  
+                  <p>Refer to the <cite class="citetitle">SNAPSHOT COMMANDS</cite> section in <code class="command">man 1 virsh</code> for more details.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-virsh-delete">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Deleting a snapshot</h4>
+                  </header>
+                  
+                  
+                  <p>External snapshots cannot be deleted with <code class="command">virsh</code>. To delete an internal snapshot of a VM Guest and restore the disk space it occupies,
+                     use the <code class="literal">snapshot-delete</code> command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-delete --domain admin_server --snapshotname "Snapshot 2"</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-managing-snapshots-virsh-start">
+                  <header>
+                     <h4><span class="label">11<span class="sep">.</span>5<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Starting a snapshot</h4>
+                  </header>
+                  
+                  
+                  <p>To start a snapshot, use the <code class="literal">snapshot-revert</code> command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-revert --domain admin_server --snapshotname "Snapshot 1"</code></span></span></pre>
+                  </div>
+                  
+                  <p>To start the current snapshot (the one the VM Guest was started off), it is sufficient
+                     to use <code class="option">--current</code> rather than specifying the snapshot name:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh snapshot-revert --domain admin_server --current</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich04s04.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich04s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Saving and restoring the state of a VM Guest</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Deleting a VM Guest</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

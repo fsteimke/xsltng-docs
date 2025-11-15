@@ -1,0 +1,322 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.5.&nbsp;Networking</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiich01s04.html" rel="prev">
+      <link href="bk07partiich01s06.html" rel="next">
+      <link href="bk07partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiich01.html">Up</a> <a href="bk07partiich01s06.html">Next</a> <a href="bk07partiich01s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partiich01s05.html" db-id="d616951e204249" id="sec-util-networking">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Networking</h2>
+            </header>
+            
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Traffic shaping</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>In case the network bandwidth is lower than expected, you should first check if any
+                           traffic shaping rules are active for your network segment.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-util-networking-ip">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Basic network diagnostics: <code class="command">ip</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="command">ip</code> is a powerful tool to set up and control network interfaces. You can also use it
+                  to quickly view basic statistics about network interfaces of the system. For example,
+                  whether the interface is up or how many errors, dropped packets, or packet collisions
+                  there are.</p>
+               
+               <p>If you run <code class="command">ip</code> with no additional parameter, it displays a help output. To list all network interfaces,
+                  enter <code class="command">ip addr show</code> (or abbreviated as <code class="command">ip a</code>). <code class="command">ip addr show up</code> lists only running network interfaces. <code class="command">ip -s link show</code><em class="replaceable">DEVICE</em> lists statistics for the specified interface only:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ip -s link show br0</code></span></span>
+<span class="line"><span class="ld"><code>6: br0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT</code></span></span>
+<span class="line"><span class="ld"><code>    link/ether 00:19:d1:72:d4:30 brd ff:ff:ff:ff:ff:ff</code></span></span>
+<span class="line"><span class="ld"><code>    RX: bytes  packets  errors  dropped overrun mcast</code></span></span>
+<span class="line"><span class="ld"><code>    6346104756 9265517  0       10860   0       0</code></span></span>
+<span class="line"><span class="ld"><code>    TX: bytes  packets  errors  dropped carrier collsns</code></span></span>
+<span class="line"><span class="ld"><code>    3996204683 3655523  0       0       0       0</code></span></span></pre>
+               </div>
+               
+               <p><code class="command">ip</code> can also show interfaces (<code class="option">link</code>), routing tables (<code class="option">route</code>), and much more—refer to <code class="command">man 8 ip</code> for details.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ip route</code></span></span>
+<span class="line"><span class="ld"><code>default via 192.168.2.1 dev eth1</code></span></span>
+<span class="line"><span class="ld"><code>192.168.2.0/24 dev eth0  proto kernel  scope link  src 192.168.2.100</code></span></span>
+<span class="line"><span class="ld"><code>192.168.2.0/24 dev eth1  proto kernel  scope link  src 192.168.2.101</code></span></span>
+<span class="line"><span class="ld"><code>192.168.2.0/24 dev eth2  proto kernel  scope link  src 192.168.2.102</code></span></span></pre>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ip link</code></span></span>
+<span class="line"><span class="ld"><code>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default</code></span></span>
+<span class="line"><span class="ld"><code>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</code></span></span>
+<span class="line"><span class="ld"><code>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000</code></span></span>
+<span class="line"><span class="ld"><code>    link/ether 52:54:00:44:30:51 brd ff:ff:ff:ff:ff:ff</code></span></span>
+<span class="line"><span class="ld"><code>3: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000</code></span></span>
+<span class="line"><span class="ld"><code>    link/ether 52:54:00:a3:c1:fb brd ff:ff:ff:ff:ff:ff</code></span></span>
+<span class="line"><span class="ld"><code>4: eth2: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000</code></span></span>
+<span class="line"><span class="ld"><code>    link/ether 52:54:00:32:a4:09 brd ff:ff:ff:ff:ff:ff</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-util-networking-nethogs">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Show the network usage of processes: <code class="command">nethogs</code>
+                     </h3>
+               </header>
+               
+               
+               <p>In certain cases, for example, if the network traffic suddenly becomes too high, it
+                  is desirable to quickly find out which applications are causing the traffic. <code class="command">nethogs</code>, a tool with a design similar to <code class="command">top</code>, shows incoming and outgoing traffic for all relevant processes:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>PID   USER  PROGRAM                                DEV   SENT   RECEIVED</code></span></span>
+<span class="line"><span class="ld"><code>27145 root   zypper                                eth0  5.719  391.749 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30015        0.102    2.326 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>26635 tux    /usr/lib64/firefox/firefox            eth0  0.026    0.026 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30045        0.000    0.021 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30045        0.000    0.018 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30015        0.000    0.018 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30045        0.000    0.017 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30045        0.000    0.017 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   ..0:113:80c0:8080:10:160:0:100:30045        0.069    0.000 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code>?     root   unknown TCP                                 0.000    0.000 KB/sec</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>TOTAL                                                  5.916  394.192 KB/sec</code></span></span></pre>
+               </div>
+               
+               <p>Like in <code class="command">top</code>, <code class="command">nethogs</code> features interactive commands:</p>
+               
+               <div class="simplelist simplelistvert">
+                  <div class="row"><span>
+                        <span class="keycap">M</span>: cycle between display modes (kb/s, kb, b, mb)</span></div>
+                  <div class="row"><span>
+                        <span class="keycap">R</span>: sort by <span class="guimenu">RECEIVED</span>
+                        </span></div>
+                  <div class="row"><span>
+                        <span class="keycap">S</span>: sort by <span class="guimenu">SENT</span>
+                        </span></div>
+                  <div class="row"><span>
+                        <span class="keycap">Q</span>: quit</span></div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-util-networking-cards">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Ethernet cards in detail: ethtool</h3>
+               </header>
+               
+               
+               <p><code class="command">ethtool</code> can display and change detailed aspects of your Ethernet network device. By default
+                  it prints the current setting of the specified device.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ethtool eth0</code></span></span>
+<span class="line"><span class="ld"><code>Settings for eth0:</code></span></span>
+<span class="line"><span class="ld"><code> Supported ports: [ TP ]</code></span></span>
+<span class="line"><span class="ld"><code> Supported link modes:   10baseT/Half 10baseT/Full</code></span></span>
+<span class="line"><span class="ld"><code>                         100baseT/Half 100baseT/Full</code></span></span>
+<span class="line"><span class="ld"><code>                         1000baseT/Full</code></span></span>
+<span class="line"><span class="ld"><code> Supports auto-negotiation: Yes</code></span></span>
+<span class="line"><span class="ld"><code> Advertised link modes:  10baseT/Half 10baseT/Full</code></span></span>
+<span class="line"><span class="ld"><code>                         100baseT/Half 100baseT/Full</code></span></span>
+<span class="line"><span class="ld"><code>                         1000baseT/Full</code></span></span>
+<span class="line"><span class="ld"><code> Advertised pause frame use: No</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code> Link detected: yes</code></span></span></pre>
+               </div>
+               
+               <p>The following table shows <code class="command">ethtool</code> options that you can use to query the device for specific information:</p>
+               
+               <div class="formalobject table" id="sec-util-networking-cards_tab1">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>List of query options of <code class="command">ethtool</code>
+                        </div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 50%">
+                        <col style="width: 50%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p><code class="command">ethtool</code> option</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>it queries the device for</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p>-a</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>pause parameter information</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>-c</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>interrupt coalescing information</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>-g</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Rx/Tx (receive/transmit) ring parameter information</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>-i</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>associated driver information</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>-k</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>offload information</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>-S</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>NIC and driver-specific statistics</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-util-networking-netstat">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Show the network status: <code class="command">ss</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="command">ss</code> is a tool to dump socket statistics and replaces the <code class="command">netstat</code> command. To list all connections use <code class="command">ss</code> without parameters:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ss</code></span></span>
+<span class="line"><span class="ld"><code>Netid  State      Recv-Q Send-Q   Local Address:Port       Peer Address:Port</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0                    * 14082                 * 14083</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0                    * 18582                 * 18583</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0                    * 19449                 * 19450</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0      @/tmp/dbus-gmUUwXABPV 18784           * 18783</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0      /var/run/dbus/system_bus_socket 19383 * 19382</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0      @/tmp/dbus-gmUUwXABPV 18617           * 18616</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0      @/tmp/dbus-58TPPDv8qv 19352           * 19351</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0                    * 17658                 * 17657</code></span></span>
+<span class="line"><span class="ld"><code>u_str  ESTAB      0      0                    * 17693                 * 17694</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span></pre>
+               </div>
+               
+               <p>To show all network ports currently open, use the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ss -l</code></span></span>
+<span class="line"><span class="ld"><code>Netid  State      Recv-Q Send-Q      Local Address:Port  Peer Address:Port</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0                 rtnl:4195117                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0       rtnl:wickedd-auto4/811                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0       rtnl:wickedd-dhcp4/813                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0                 rtnl:4195121                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0                 rtnl:4195115                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0       rtnl:wickedd-dhcp6/814                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0                  rtnl:kernel                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0             rtnl:wickedd/817                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0                 rtnl:4195118                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     0      0                rtnl:nscd/706                  *</code></span></span>
+<span class="line"><span class="ld"><code>nl     UNCONN     4352   0              tcpdiag:ss/2381                  *</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+               </div>
+               
+               <p>When displaying network connections, you can specify the socket type to display: TCP
+                  (<code class="option">-t</code>) or UDP (<code class="option">-u</code>) for example. The <code class="option">-p</code> option shows the PID and name of the program to which each socket belongs.</p>
+               
+               <p>The following example lists all TCP connections and the programs using these connections.
+                  The <code class="option">-a</code> option make sure all established connections (listening and non-listening) are shown.
+                  The <code class="option">-p</code> option shows the PID and name of the program to which each socket belongs.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ss -t -a -p</code></span></span>
+<span class="line"><span class="ld"><code>State    Recv-Q Send-Q  Local Address:Port   Peer Address:Port</code></span></span>
+<span class="line"><span class="ld"><code>LISTEN   0      128                  *:ssh                 *:*  users:(("sshd",1551,3))</code></span></span>
+<span class="line"><span class="ld"><code>LISTEN   0      100         127.0.0.1:smtp                 *:*  users:(("master",1704,13))</code></span></span>
+<span class="line"><span class="ld"><code>ESTAB    0      132      10.120.65.198:ssh  10.120.4.150:55715  users:(("sshd",2103,5))</code></span></span>
+<span class="line"><span class="ld"><code>LISTEN   0      128                 :::ssh                :::*  users:(("sshd",1551,4))</code></span></span>
+<span class="line"><span class="ld"><code>LISTEN   0      100               ::1:smtp                :::*  users:(("master",1704,14))</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiich01s04.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk07partiich01s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Memory</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>The <code class="filename">/proc</code> file system</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

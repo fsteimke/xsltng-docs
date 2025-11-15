@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>43.7.&nbsp;Running multiple Apache instances on the same server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch06s06.html" rel="prev">
+      <link href="bk01partvch06s08.html" rel="next">
+      <link href="bk01partvch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch06.html">Up</a> <a href="bk01partvch06s08.html">Next</a> <a href="bk01partvch06s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch06s07.html" db-id="d616951e64143" id="sec-apache2-multiple-instances">
+            <header>
+               <h2><span class="label">43<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Running multiple Apache instances on the same server</h2>
+            </header>
+            
+            
+            <p>Running multiple Apache instances on the same server has several advantages over running
+               multiple virtual hosts (see <a class="xref xref-sect3" href="bk01partvch06s02.html#sec-apache2-configuration-manually-vhost">the section called “Virtual host configuration”</a>):</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>When a virtual host needs to be disabled for a period of time, you need to change
+                     the Web server configuration and restart it so that the change takes effect.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>In case of problems with one virtual host, you need to restart them all.</p>
+                  </li>
+               </ul>
+            
+            <p>You can run the default Apache instance as usual:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start apache2.service</code></span></span></pre>
+            </div>
+            
+            <p>It reads the default <code class="filename">/etc/sysconfig/apache2</code> file. If the file is not present, or it is present but it does not set the <code class="systemitem">APACHE_HTTPD_CONF</code> variable, it reads <code class="filename">/etc/apache2/httpd.conf</code>.</p>
+            
+            <p>To activate another Apache instance, run:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start apache2@<em class="replaceable">INSTANCE_NAME</em></code></span></span></pre>
+            </div>
+            
+            <p>For example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start apache2@example_web.org</code></span></span></pre>
+            </div>
+            
+            <p>By default, the instance uses <code class="filename">/etc/apache2@example_web.org/httpd.conf</code> as a main configuration file, which can be overwritten by setting <code class="systemitem">APACHE_HTTPD_CONF</code> in <code class="filename">/etc/sysconfig/apache2@example_web.org</code>.</p>
+            
+            <p>An example to set up an additional instance of Apache follows. You need to execute
+               all the commands as <code class="systemitem username">root</code>.</p>
+            
+            <div class="formalobject procedure" id="sec-apache2-multiple-instances_proc1">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">43<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring an additional Apache instance</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Create a new configuration file based on <code class="filename">/etc/sysconfig/apache2</code>, for example <code class="filename">/etc/sysconfig/apache2@example_web.org</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cp /etc/sysconfig/apache2 /etc/sysconfig/apache2@example_web.org</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Edit the file <code class="filename">/etc/sysconfig/apache2@example_web.org</code> and change the line containing</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>APACHE_HTTPD_CONF</code></span></span></pre>
+                     </div>
+                     
+                     <p>to</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>APACHE_HTTPD_CONF="/etc/apache2/httpd@example_web.org.conf"</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create the file <code class="filename">/etc/apache2/httpd@example_web.org.conf</code> based on <code class="filename">/etc/apache2/httpd.conf</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cp /etc/apache2/httpd.conf /etc/apache2/httpd@example_web.org.conf</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Edit <code class="filename">/etc/apache2/httpd@example_web.org.conf</code> and change</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Include /etc/apache2/listen.conf</code></span></span></pre>
+                     </div>
+                     
+                     <p>to</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Include /etc/apache2/listen@example_web.org.conf</code></span></span></pre>
+                     </div>
+                     
+                     <p>Review all the directives and change them to fit your needs. You may want to change</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Include /etc/apache2/global.conf</code></span></span></pre>
+                     </div>
+                     
+                     <p>and create new <code class="filename">global@example_web.org.conf</code> for each instance. We suggest to change</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ErrorLog /var/log/apache2/error_log</code></span></span></pre>
+                     </div>
+                     
+                     <p>to</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ErrorLog /var/log/apache2/error@example_web.org_log</code></span></span></pre>
+                     </div>
+                     
+                     <p>to have separate logs for each instance.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create <code class="filename">/etc/apache2/listen@example_web.org.conf</code> based on <code class="filename">/etc/apache2/listen.conf</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cp /etc/apache2/listen.conf /etc/apache2/listen@example_web.org.conf</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Edit <code class="filename">/etc/apache2/listen@example_web.org.conf</code> and change</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Listen 80</code></span></span></pre>
+                     </div>
+                     
+                     <p>to the port number you want the new instance to run on, for example, 82:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Listen 82</code></span></span></pre>
+                     </div>
+                     
+                     <p>To run the new Apache instance over a secured protocol (see <a class="xref xref-sect1" href="bk01partvch06s06.html">the section called “Setting up a secure Web server with SSL”</a>), change also the line</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Listen 443</code></span></span></pre>
+                     </div>
+                     
+                     <p>for example, to</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Listen 445</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start the new Apache instance:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start apache2@example_web.org</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Check if the server is running by pointing your Web browser at <code class="literal">http://server_name:82</code>. If you previously changed the name of the error log file for the new instance, you
+                        can check it:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> tail -f /var/log/apache2/error@example_web.org_log</code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Here are several points to consider when setting up more Apache instances on the same
+               server:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>The file <code class="filename">/etc/sysconfig/apache2@<em class="replaceable">INSTANCE_NAME</em></code> can include the same variables as <code class="filename">/etc/sysconfig/apache2</code>, including module loading and MPM setting.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The default Apache instance does not need to be running while other instances run.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The Apache helper utilities <code class="command">a2enmod</code>, <code class="command">a2dismod</code> and <code class="command">apachectl</code> operate on the default Apache instance if not specified otherwise with the <code class="systemitem">HTTPD_INSTANCE</code> environment variable. The following example</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> export HTTPD_INSTANCE=example_web.org</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> a2enmod access_compat</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> a2enmod status</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> apachectl start</code></span></span></pre>
+                  </div>
+                  
+                  <p>will add <code class="systemitem">access_compat</code> and <code class="systemitem">status</code> modules to the <code class="systemitem">APACHE_MODULES</code> variable of <code class="filename">/etc/sysconfig/apache2@example_web.org</code>, and then start the <code class="literal">example_web.org</code> instance.</p>
+                  </li>
+               </ul>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch06s06.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch06.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch06s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">43<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Setting up a secure Web server with SSL</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">43<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Avoiding security problems</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

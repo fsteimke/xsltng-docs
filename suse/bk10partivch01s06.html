@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>25.6.&nbsp;USB pass-through</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch01s05.html" rel="prev">
+      <link href="bk10partivch02.html" rel="next">
+      <link href="bk10partivch01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partivch01.html">Up</a> <a href="bk10partivch02.html">Next</a> <a href="bk10partivch01s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partivch01s06.html" db-id="d616951e290622" id="sec-xen-vhost-usbpass">
+            <header>
+               <h2><span class="label">25<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>USB pass-through</h2>
+            </header>
+            
+            
+            <p>There are two methods for passing through individual host USB devices to a guest.
+               The first is via an emulated USB device controller, the second is using PVUSB.</p>
+            
+            <section class="sect2" id="xen-usb-identify">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Identify the USB device</h3>
+               </header>
+               
+               
+               <p>Before you can pass through a USB device to the VM Guest, you need to identify it
+                  on the VM Host Server. Use the <code class="command">lsusb</code> command to list the USB devices on the host system:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>lsusb</code></span></span>
+<span class="line"><span class="ld"><code>Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub</code></span></span>
+<span class="line"><span class="ld"><code>Bus 002 Device 003: ID 0461:4d15 Primax Electronics, Ltd Dell Optical Mouse</code></span></span>
+<span class="line"><span class="ld"><code>Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub</code></span></span></pre>
+               </div>
+               
+               <p>To pass through the Dell mouse, for example, specify either the device tag in the
+                  form <code class="literal">vendor_id:device_id</code> (0461:4d15) or the bus address in the form <code class="literal">bus.device</code> (2.3). Remember to remove leading zeros, otherwise <code class="command">xl</code> would interpret the numbers as octal values.</p>
+               </section>
+            
+            <section class="sect2" id="xen-usb-emulated">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Emulated USB device</h3>
+               </header>
+               
+               
+               <p>In emulated USB, the device model (QEMU) presents an emulated USB controller to the
+                  guest. The USB device is then controlled from Dom0 while USB commands are translated
+                  between the VM Guest and the host USB device. This method is only available to fully
+                  virtualized domains (HVM).</p>
+               
+               <p>Enable the emulated USB hub with the <code class="option">usb=1</code> option. Then specify devices among the list of devices in the configuration file
+                  along with other emulated devices by using <code class="literal">host:USBID</code>. For example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>usb=1</code></span></span>
+<span class="line"><span class="ld"><code>usbdevice=['tablet','host:2.3','host:0424:460']</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="xen-usb-pv">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Paravirtualized PVUSB</h3>
+               </header>
+               
+               
+               <p>PVUSB is a new high performance method for USB Pass-Through from dom0 to the virtualized
+                  guests. With PVUSB, there are two ways to add USB devices to a guest:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>via the configuration file at domain creation time</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>via hotplug while the VM is running</p>
+                     </li>
+                  </ul>
+               
+               <p>PVUSB uses paravirtualized front- and back-end interfaces. PVUSB supports USB 1.1
+                  and USB 2.0, and it works for both PV and HVM guests. To use PVUSB, you need usbfront
+                  in your guest OS, and usbback in dom0 or usb back-end in qemu. On <span class="phrase productname">SUSE Linux Enterprise Server</span>, the USB back-end comes with qemu. </p>
+               
+               <p>As of Xen&nbsp;4.7, <code class="command">xl</code> PVUSB support and hotplug support is introduced.</p>
+               
+               <p>In the configuration file, specify USB controllers and USB host devices with <code class="literal">usbctrl</code> and <code class="literal">usbdev</code>. For example, in case of HVM guests:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>usbctrl=['type=qusb,version=2,ports=4', 'type=qusb,version=1,ports=4', ]</code></span></span>
+<span class="line"><span class="ld"><code>usbdev=['hostbus=2, hostaddr=1, controller=0,port=1', ]</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>It is important to specify <code class="literal">type=qusb</code> for the controller of HVM guests.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>To manage hotplugging PVUSB devices, use the <code class="literal">usbctrl-attach</code>, <code class="literal">usbctrl-detach</code>, <code class="literal">usb-list</code>, <code class="literal">usbdev-attach</code> and <code class="literal">usb-detach</code> subcommands. For example:</p>
+               
+               <p>Create a USB controller which is version USB&nbsp;1.1 and has 8&nbsp;ports:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>xl usbctrl-attach test_vm version=1 ports=8 type=qusb</code></span></span></pre>
+               </div>
+               
+               <p>Find the first available controller:port in the domain, and attach USB device whose
+                  busnum:devnum is 2:3 to it; you can also specify <code class="literal">controller</code> and <code class="literal">port</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>xl usbdev-attach test_vm hostbus=2 hostaddr=3</code></span></span></pre>
+               </div>
+               
+               <p>Show all USB controllers and USB devices in the domain:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>xl usb-list test_vm</code></span></span>
+<span class="line"><span class="ld"><code>Devid  Type   BE  state usb-ver ports</code></span></span>
+<span class="line"><span class="ld"><code>0      qusb   0   1     1       8</code></span></span>
+<span class="line"><span class="ld"><code>  Port 1: Bus 002 Device 003</code></span></span>
+<span class="line"><span class="ld"><code>  Port 2:</code></span></span>
+<span class="line"><span class="ld"><code>  Port 3:</code></span></span>
+<span class="line"><span class="ld"><code>  Port 4:</code></span></span>
+<span class="line"><span class="ld"><code>  Port 5:</code></span></span>
+<span class="line"><span class="ld"><code>  Port 6:</code></span></span>
+<span class="line"><span class="ld"><code>  Port 7:</code></span></span>
+<span class="line"><span class="ld"><code>  Port 8:</code></span></span></pre>
+               </div>
+               
+               <p>Detach the USB device under controller&nbsp;0 port&nbsp;1:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>xl usbdev-detach test_vm 0 1</code></span></span></pre>
+               </div>
+               
+               <p>Remove the USB controller with the indicated <code class="literal">dev_id</code>, and all USB devices under it:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>xl usbctrl-detach test_vm dev_id</code></span></span></pre>
+               </div>
+               
+               <p>For more information, see <a class="link" href="https://wiki.xenproject.org/wiki/Xen_USB_Passthrough">https://wiki.xenproject.org/wiki/Xen_USB_Passthrough</a>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch01s05.html">Prev</a></td>
+                  <td class="up"><a href="bk10partivch01.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">25<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>PCI Pass-Through</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">26</span><span class="sep">.&nbsp;</span>Virtual networking</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

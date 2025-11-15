@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>42.2.&nbsp;Providing services via SLP</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch05.html" rel="prev">
+      <link href="bk01partvch05s03.html" rel="next">
+      <link href="bk01partvch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch05.html">Up</a> <a href="bk01partvch05s03.html">Next</a> <a href="bk01partvch05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch05s02.html" db-id="d616951e60323" id="sec-slp-sl-reg">
+            <header>
+               <h2><span class="label">42<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Providing services via SLP</h2>
+            </header>
+            
+            
+            <p>To provide SLP services, the SLP daemon (<code class="daemon systemitem">slpd</code>) must be running. Like most system services in <span class="phrase productname">SUSE Linux Enterprise Server</span>, <code class="daemon systemitem">slpd</code> is controlled by a separate start script. After the installation, the daemon is inactive
+               by default. To activate it for the current session, run <code class="command">sudo systemctl start slpd</code>. If <code class="daemon systemitem">slpd</code> should be activated on system start-up, run <code class="command">sudo systemctl enable slpd</code>.</p>
+            
+            <p>Many applications in <span class="phrase productname">SUSE Linux Enterprise Server</span> have integrated SLP support via the <code class="literal">libslp</code> library. If a service has not been compiled with SLP support, use one of the following
+               methods to make it available via SLP:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Static registration with <code class="filename">/etc/slp.reg.d</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Create a separate registration file for each new service. The following example registers
+                        a scanner service:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>## Register a saned service on this system</code></span></span>
+<span class="line"><span class="ld"><code>## en means english language</code></span></span>
+<span class="line"><span class="ld"><code>## 65535 disables the timeout, so the service registration does</code></span></span>
+<span class="line"><span class="ld"><code>## not need refreshes</code></span></span>
+<span class="line"><span class="ld"><code>service:scanner.sane://$HOSTNAME:6566,en,65535</code></span></span>
+<span class="line"><span class="ld"><code>watch-port-tcp=6566</code></span></span>
+<span class="line"><span class="ld"><code>description=SANE scanner daemon</code></span></span></pre>
+                     </div>
+                     
+                     <p>The most important line in this file is the <em>service URL</em>, which begins with <code class="literal">service:</code>. This contains the service type (<code class="literal">scanner.sane</code>) and the address under which the service is available on the server. <em class="replaceable">$HOSTNAME</em> is automatically replaced with the full host name. The name of the TCP port on which
+                        the relevant service can be found follows, separated by a colon. Then enter the language
+                        in which the service should appear and the duration of registration in seconds. These
+                        should be separated from the service URL by commas. Set the value for the duration
+                        of registration between <code class="literal">0</code> and <code class="literal">65535</code>. <code class="literal">0</code> prevents registration. <code class="literal">65535</code> removes all restrictions.</p>
+                     
+                     <p>The registration file also contains the two variables <code class="systemitem">watch-port-tcp</code> and <code class="systemitem">description</code>. <code class="systemitem">watch-port-tcp</code> links the SLP service announcement to whether the relevant service is active by having
+                        <code class="daemon systemitem">slpd</code> check the status of the service. The second variable contains a more precise description
+                        of the service that is displayed in suitable browsers.</p>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">YaST and SLP</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Specific services brokered by YaST, such as an installation server or YOU server,
+                                    perform this registration automatically when you activate SLP in the module dialogs.
+                                    YaST then creates registration files for these services.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Static registration with <code class="filename">/etc/slp.reg</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The only difference between this method and the procedure with <code class="filename">/etc/slp.reg.d</code> is that all services are grouped within a central file.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Dynamic registration with <code class="command">slptool</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>If a service needs to be registered dynamically without the need of configuration
+                        files, use the <code class="command">slptool</code> command line utility. The same utility can also be used to deregister an existing
+                        service offering without restarting <code class="daemon systemitem">slpd</code>. See <a class="xref xref-sect1" href="bk01partvch05.html#sec-slp-sl-fend">the section called “The SLP front-end <code class="command">slptool</code>
+                           ”</a> for details.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <section class="sect2" id="sec-slp-sl-reg-install">
+               <header>
+                  <h3><span class="label">42<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up an SLP installation server</h3>
+               </header>
+               
+               
+               <p>Announcing the installation data via SLP within your network makes the network installation
+                  much easier, since the installation data such as IP address of the server or the path
+                  to the installation media are automatically required via SLP query. Refer to <a class="xref xref-chapter" href="bk02partivch01.html">Chapter&nbsp;<span class="label">18</span>, Setting up a network installation source</a> for instructions.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch05.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch05s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">42</span><span class="sep">.&nbsp;</span>SLP</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">42<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

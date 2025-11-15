@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;22.&nbsp;
+      update-alternatives: managing multiple versions of commands and files</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich02s07.html" rel="prev">
+      <link href="bk01partiiich03s02.html" rel="next">
+      <link href="bk01partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiii.html">Up</a> <a href="bk01partiiich03s02.html">Next</a> <a href="bk01partiiich02s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partiiich03.html" db-id="d616951e34460" id="cha-update-alternative" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">22</span><span class="sep">.&nbsp;</span>
+                  <code class="command">update-alternatives</code>: managing multiple versions of commands and files</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-ua-concept">
+               <header>
+                  <h2><span class="label">22<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Overview</h2>
+               </header>
+               
+               
+               <p>On <span class="phrase productname">SUSE Linux Enterprise Server</span>, several programs perform the same or similar tasks. For example, if Java 1.7 and
+                  Java 1.8 are both installed on the system, the alternatives system script (<code class="command">update-alternatives</code>) is called from inside the RPM package. By default, the alternatives system will
+                  refer to version 1.8: higher versions also have a higher priority. However, the administrator
+                  can change the default and can point the generic name to version 1.7.</p>
+               
+               <p>The following terminology is used in this chapter:</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Terminology</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">Administrative directory</span></dt>
+                        <dd>
+                           
+                           <p>The default <code class="directory filename">/var/lib/rpm/alternatives</code> directory contains information about the current state of alternatives.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Alternative</span></dt>
+                        <dd>
+                           
+                           <p>The name of a specific file in the file system, which can be made accessible via a
+                              generic name using the alternatives system.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Alternatives directory</span></dt>
+                        <dd>
+                           
+                           <p>The default <code class="directory filename">/etc/alternatives</code> directory containing symbolic links.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Generic name</span></dt>
+                        <dd>
+                           
+                           <p>A name (for example, <code class="command">/usr/bin/edit</code>) that refers to one file out of several available using the alternatives system.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Link group</span></dt>
+                        <dd>
+                           
+                           <p>A set of related symbolic links that can be updated as a group.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Master link</span></dt>
+                        <dd>
+                           
+                           <p>The link in a link group that determines how the other links in the group are configured.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Slave link</span></dt>
+                        <dd>
+                           
+                           <p>A link in a link group controlled by the master link.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">Symbolic link (symlink)</span></dt>
+                        <dd>
+                           
+                           <p>A file that is a reference to another file in the same file system. The alternatives
+                              system uses symbolic links in the alternatives directory to switch between versions
+                              of a file.</p>
+                           
+                           <p>Symbolic links in the alternatives directory can be modified by the administrator
+                              through the <code class="command">update-alternatives</code> command.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <p>The alternatives system provides the <code class="command">update-alternatives</code> command to create, remove, maintain and show information about symbolic links. While
+                  these symbolic links normally point to commands, they can also point to JAR archives,
+                  man pages, and other files. Examples in this chapter use commands and man pages, but
+                  they are also applicable to other file types.</p>
+               
+               <p>The alternatives system uses the alternatives directory to collect links to possible
+                  alternatives. When a new package with an alternative is installed, the new alternative
+                  is added to the system. Whether the new package's alternative is selected as the default
+                  depends on its priority and on the mode that is set. Packages with a higher version
+                  also have a higher priority. The alternatives system can operate in two modes:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title">Automatic mode</span><span class="para">In this mode, the alternatives system ensures that the links in the group point to
+                           the highest priority alternatives appropriate for the group.</span></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p class="formalpara"><span class="title">Manual mode</span><span class="para">In this mode, the alternatives system does not make any changes to the system administrator's
+                           settings.</span></p>
+                     </li>
+                  </ul>
+               
+               <p>For example, the <code class="command">java</code> command has the following link hierarchy in the alternatives system:</p>
+               
+               <div class="example formalobject" id="sec-ua-concept_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/bin/java <span class="co" id="co-ua-java-name">➘</span></code></span></span>
+<span class="line"><span class="ld"><code> -&gt; /etc/alternatives/java <span class="co" id="co-ua-java-symbolic-link">➙</span></code></span></span>
+<span class="line"><span class="ld"><code>     -&gt; /usr/lib64/jvm/jre-10-openjdk/bin/java <span class="co" id="co-ua-java-alternatives">➚</span></code></span></span></pre>
+                  </div>
+                  
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-ua-java-name">➘</a></dt>
+                        <dd>
+                           
+                           <p>The generic name.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ua-java-symbolic-link">➙</a></dt>
+                        <dd>
+                           
+                           <p>The symbolic link in the alternatives directory.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ua-java-alternatives">➚</a></dt>
+                        <dd>
+                           
+                           <p>One of the alternatives.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">22<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Alternatives System of the <code class="command">java</code> command</div>
+                  </header>
+               </div>
+               </section>
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich02s07.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiii.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">21<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Viewing logs in GNOME</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Use cases</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

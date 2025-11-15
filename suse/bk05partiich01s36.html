@@ -1,0 +1,613 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.36.&nbsp;Kernel dumps</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partiich01s35.html" rel="prev">
+      <link href="bk05partiich01s37.html" rel="next">
+      <link href="bk05partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partiich01.html">Up</a> <a href="bk05partiich01s37.html">Next</a> <a href="bk05partiich01s35.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partiich01s36.html" db-id="d616951e144294" id="CreateProfile-kdump" lang="">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>36</span><span class="sep">.&nbsp;</span>Kernel dumps</h2>
+            </header>
+            
+            
+            
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Availability</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>This feature is not available on AArch64, or on systems with less than 1&nbsp;GB of RAM.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>With Kdump the system can create crash dump files if the whole kernel crashes. Crash
+               dump files contain the memory contents while the system crashed. Such core files can
+               be analyzed later by support or a (kernel) developer to find the reason for the system
+               crash. Kdump is mostly useful for servers where you cannot easily reproduce such crashes
+               but it is important to get the problem fixed.</p>
+            
+            <p>There is a downside to this. Enabling Kdump requires between 64 MB and 128 MB of additional
+               system RAM reserved for Kdump in case the system crashes and the dump needs to be
+               generated.</p>
+            
+            <p>This section only describes how to set up Kdump with AutoYaST. It does not describe
+               how Kdump works. For details, refer to the kdump(7) manual page.</p>
+            
+            <p>The following example shows a general Kdump configuration.</p>
+            
+            <div class="example formalobject" id="CreateProfile-kdump_ex1">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;kdump&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;!-- memory reservation --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;add_crash_kernel config:type="boolean"&gt;true&lt;/add_crash_kernel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;crash_kernel&gt;256M-:64M&lt;/crash_kernel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;general&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- dump target settings --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_SAVEDIR&gt;ftp://stravinsky.suse.de/incoming/dumps&lt;/KDUMP_SAVEDIR&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_FREE_DISK_SIZE&gt;64&lt;/KDUMP_FREE_DISK_SIZE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_KEEP_OLD_DUMPS&gt;5&lt;/KDUMP_KEEP_OLD_DUMPS&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- filtering and compression --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_DUMPFORMAT&gt;compressed&lt;/KDUMP_DUMPFORMAT&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_DUMPLEVEL&gt;1&lt;/KDUMP_DUMPLEVEL&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- notification --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_NOTIFICATION_TO&gt;tux@example.com&lt;/KDUMP_NOTIFICATION_TO&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_NOTIFICATION_CC&gt;spam@example.com devnull@example.com&lt;/KDUMP_NOTIFICATION_CC&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_SMTP_SERVER&gt;mail.example.com&lt;/KDUMP_SMTP_SERVER&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_SMTP_USER&gt;&lt;/KDUMP_SMTP_USER&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_SMTP_PASSWORD&gt;&lt;/KDUMP_SMTP_PASSWORD&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- kdump kernel --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_KERNELVER&gt;&lt;/KDUMP_KERNELVER&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_COMMANDLINE&gt;&lt;/KDUMP_COMMANDLINE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_COMMANDLINE_APPEND&gt;&lt;/KDUMP_COMMANDLINE_APPEND&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- expert settings --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_IMMEDIATE_REBOOT&gt;yes&lt;/KDUMP_IMMEDIATE_REBOOT&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KDUMP_VERBOSE&gt;15&lt;/KDUMP_VERBOSE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;KEXEC_OPTIONS&gt;&lt;/KEXEC_OPTIONS&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/general&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/kdump&gt; </code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>70</span><span class="sep">.&nbsp;</span>Kdump configuration</div>
+               </header>
+            </div>
+            
+            <p>Kdump is enabled by default. The following configuration shows how to disable it.</p>
+            
+            <div class="example formalobject" id="CreateProfile-kdump_ex2">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;kdump&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;add_crash_kernel config:type="boolean"&gt;false&lt;/add_crash_kernel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/kdump&gt; </code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>71</span><span class="sep">.&nbsp;</span>Disabled Kdump configuration</div>
+               </header>
+            </div>
+            
+            
+            <section class="sect2" id="CreateProfile-kdump-reservation">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Memory reservation</h3>
+               </header>
+               
+               
+               <p>The first step is to reserve memory for Kdump at boot-up. Because the memory must
+                  be reserved very early during the boot process, the configuration is done via a kernel
+                  command line parameter called <code class="literal">crashkernel</code>. The reserved memory will be used to load a second kernel which will be executed
+                  without rebooting if the first kernel crashes. This second kernel has a special initrd,
+                  which contains all programs necessary to save the dump over the network or to disk,
+                  send a notification e-mail, and finally reboot.</p>
+               
+               <p>To reserve memory for Kdump, specify the <code class="literal">amount</code> (such as <code class="literal">64M</code> to reserve 64 MB of memory from the RAM) and the <code class="literal">offset</code>. The syntax is <code class="literal">crashkernel=AMOUNT@OFFSET</code>. The kernel can auto-detect the right offset (except for the Xen hypervisor, where
+                  you need to specify <code class="literal">16M</code> as offset). The amount of memory that needs to be reserved depends on architecture
+                  and main memory. Refer to <a class="xref xref-sect2" href="bk07partvich02s07.html#cha-tuning-kdump-basic-manual">the section called “Manual Kdump configuration”</a> for recommendations on the amount of memory to reserve for Kdump.</p>
+               
+               <p>You can also use the extended command line syntax to specify the amount of reserved
+                  memory depending on the System RAM. That is useful if you share one AutoYaST control
+                  file for multiple installations or if you often remove or install memory on one machine.
+                  The syntax is:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>BEGIN_RANGE_1-END_RANGE_1:AMOUNT_1,BEGIN_RANGE_2-END_RANGE_2:AMOUNT_2@OFFSET</code></span></span></pre>
+               </div>
+               
+               <p><code class="literal">BEGIN_RANGE_1</code> is the start of the first memory range (for example: <code class="literal">0M</code>) and <code class="literal">END_RANGE_1</code> is the end of the first memory range (can be empty in case <code class="literal">infinity</code> should be assumed) and so on. For example, <code class="literal">256M-2G:64M,2G-:128M</code> reserves 64 MB of crashkernel memory if the system has between 256 MB and 2 GB RAM,
+                  and reserves 128 MB of crashkernel memory if the system has more than 2 GB RAM.</p>
+               
+               <p>On the other hand, it is possible to specify multiple values for the <code class="literal">crashkernel</code> parameter. For example, when you need to reserve different segments of low and high
+                  memory, use values like <code class="literal">72M,low</code> and <code class="literal">256M,high</code>:</p>
+               
+               <div class="example formalobject" id="CreateProfile-kdump-reservation_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;kdump&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;!-- memory reservation (high and low) --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;add_crash_kernel config:type="boolean"&gt;true&lt;/add_crash_kernel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;crash_kernel config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;listentry&gt;72M,low&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;listentry&gt;256M,high&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/crash_kernel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/kdump&gt; </code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>72</span><span class="sep">.&nbsp;</span>Kdump memory reservation with multiple values</div>
+                  </header>
+               </div>
+               
+               <p>The following list shows the settings necessary to reserve memory:</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Kdump memory reservation settings:XML representation</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">add_crash_kernel</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Set to <code class="literal">true</code> if memory should be reserved and Kdump enabled.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;add_crash_kernel config:type="boolean"&gt;true&lt;/add_crash_kernel&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>required</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">crash_kernel</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Use the syntax of the crashkernel command line as discussed above.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crash_kernel&gt;256M:64M&lt;/crash_kernel&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>A list of values is also supported.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crash_kernel config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;72M,low&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;256M,high&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/crash_kernel&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>required</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-kdump-saving">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Dump saving</h3>
+               </header>
+               
+               
+               <p>This section describes where and how crash dumps will be stored.</p>
+               
+               <section class="sect3" id="CreateProfile-kdump-saving-target">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Target</h4>
+                  </header>
+                  
+                  
+                  <p>The element <code class="literal">KDUMP_SAVEDIR</code> specifies the URL to where the dump is saved. The following methods are possible:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p><code class="literal">file</code> to save to the local disk,</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">ftp</code> to save to an FTP server (without encryption),</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">sftp</code> to save to an SSH2 SFTP server,</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">nfs</code> to save to an NFS location and</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">cifs</code> to save the dump to a CIFS/SMP export from Samba or Microsoft Windows.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>For details see the kdump(5) manual page. Two examples are: <code class="literal">file:///var/crash</code> (which is the default location according to FHS) and <code class="literal">ftp://user:password@host:port/incoming/dumps</code>. A subdirectory, with the time stamp contained in the name, will be created and the
+                     dumps saved there.</p>
+                  
+                  <p>When the dump is saved to the local disk, <code class="literal">KDUMP_KEEP_OLD_DUMPS</code> can be used to delete old dumps automatically. Set it to the number of old dumps
+                     that should be kept. If the target partition would end up with less free disk space
+                     than specified in <code class="literal">KDUMP_FREE_DISK_SIZE</code>, the dump is not saved.</p>
+                  </section>
+               
+               <section class="sect3" id="CreateProfile-kdump-saving-compression">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Filtering and compression</h4>
+                  </header>
+                  
+                  
+                  <p>The kernel dump is uncompressed and unfiltered. It can get as large as your system
+                     RAM. To get smaller files, compress the dump file afterward. The dump needs to be
+                     decompressed before opening.</p>
+                  
+                  <p>To use page compression, which compresses every page and allows dynamic decompression
+                     with the crash(8) debugging tool, set <code class="literal">KDUMP_DUMPFORMAT</code> to <code class="literal">compressed</code> (default).</p>
+                  
+                  <p>You may not want to save all memory pages, for example those filled with zeroes. To
+                     filter the dump, set the <code class="literal">KDUMP_DUMPLEVEL</code>. 0 produces a full dump and 31 is the smallest dump. The manual pages kdump(5) and
+                     makedumpfile(8) list for each value which pages will be saved.</p>
+                  </section>
+               
+               <section class="sect3" id="CreateProfile-kdump-saving-summary">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Summary</h4>
+                  </header>
+                  
+                  
+                  <div class="long-terms variablelist">
+                     <header>
+                        <div class="title">Dump target settings: XML representation</div>
+                     </header>
+                     <dl class="long-terms variablelist">
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">KDUMP_SAVEDIR</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>A URL that specifies the target to which the dump and related files will be saved.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_SAVEDIR&gt;file:///var/crash/&lt;/KDUMP_SAVEDIR&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>required</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">KDUMP_FREE_DISK_SIZE</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Disk space in megabytes that must remain free after saving the dump. If not enough
+                                 space is available, the dump will not be saved.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_FREE_DISK_SIZE&gt;64&lt;/KDUMP_FREE_DISK_SIZE&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>optional</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">KDUMP_KEEP_OLD_DUMPS</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>The number of dumps that are kept (not deleted) if <code class="literal">KDUMP_SAVEDIR</code> points to a local directory. Specify 0 if you do not want any dumps to be automatically
+                                 deleted, specify -1 if all dumps except the current one should be deleted.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_KEEP_OLD_DUMPS&gt;4&lt;/KDUMP_KEEP_OLD_DUMPS&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>optional</p>
+                              </dd>
+                        </div>
+                     </dl>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-kdump-notification">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>E-mail notification</h3>
+               </header>
+               
+               
+               <p>Configure e-mail notification to be informed when a machine crashes and a dump is
+                  saved.</p>
+               
+               <p>Because Kdump runs in the initrd, a local mail server cannot send the notification
+                  e-mail. An SMTP server needs to be specified (see below).</p>
+               
+               <p>You need to provide exactly one address in <code class="literal">KDUMP_NOTIFICATION_TO</code>. More addresses can be specified in <code class="literal">KDUMP_NOTIFICATION_CC</code>. Only use e-mail addresses in both cases, not a real name.</p>
+               
+               <p>Specify <code class="literal">KDUMP_SMTP_SERVER</code> and (if the server needs authentication) <code class="literal">KDUMP_SMTP_USER</code> and <code class="literal">KDUMP_SMTP_PASSWORD</code>. Support for TLS/SSL is not available but may be added in the future.</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">E-mail notification settings: XML representation</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_NOTIFICATION_TO</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Exactly one e-mail address to which the e-mail should be sent. Additional recipients
+                              can be specified in <code class="literal">KDUMP_NOTIFICATION_CC</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_NOTIFICATION_TO</code></span></span>
+<span class="line"><span class="ld"><code>&gt;tux@example.com&lt;/KDUMP_NOTIFICATION_TO&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional (notification disabled if empty)</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_NOTIFICATION_CC</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Zero, one or more recipients that are in the cc line of the notification e-mail.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_NOTIFICATION_CC</code></span></span>
+<span class="line"><span class="ld"><code>&gt;wilber@example.com suzanne@example.com&lt;/KDUMP_NOTIFICATION_CC&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_SMTP_SERVER</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Host name of the SMTP server used for mail delivery. SMTP authentication is supported
+                              (see <code class="literal">KDUMP_SMTP_USER</code> and <code class="literal">KDUMP_SMTP_PASSWORD</code>) but TLS/SSL are not.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_SMTP_SERVER&gt;email.suse.de&lt;/KDUMP_SMTP_SERVER&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional (notification disabled if empty)</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_SMTP_USER</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>User name used together with <code class="literal">KDUMP_SMTP_PASSWORD</code> for SMTP authentication.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_SMTP_USER&gt;bwalle&lt;/KDUMP_SMTP_USER&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_SMTP_PASSWORD</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Password used together with <code class="literal">KDUMP_SMTP_USER</code> for SMTP authentication.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_SMTP_PASSWORD&gt;geheim&lt;/KDUMP_SMTP_PASSWORD&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-kdump-kernel">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Kdump kernel settings</h3>
+               </header>
+               
+               
+               <p>As already mentioned, a special kernel is booted to save the dump. If you do not want
+                  to use the auto-detection mechanism to find out which kernel is used (see the kdump(5)
+                  manual page that describes the algorithm which is used to find the kernel), you can
+                  specify the version of a custom kernel in <code class="literal">KDUMP_KERNELVER</code>. If you set it to <code class="literal">foo</code>, then the kernel located in <code class="filename">/boot/vmlinuz-foo</code> or <code class="filename">/boot/vmlinux-foo</code> (in that order on platforms that have a <code class="filename">vmlinuz</code> file) will be used.</p>
+               
+               <p>You can specify the command line used to boot the Kdump kernel. Normally the boot
+                  command line is used, minus settings that are not relevant for Kdump (like the <code class="literal">crashkernel</code> parameter) plus some settings needed by Kdump (see the manual page kdump(5)). To
+                  specify additional parameters, use <code class="literal">KDUMP_COMMANDLINE_APPEND</code>. If you know what you are doing and you want to specify the entire command line,
+                  set <code class="literal">KDUMP_COMMANDLINE</code>.</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Kernel settings: XML representation</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_KERNELVER</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Version string for the kernel used for Kdump. Leave it empty to use the auto-detection
+                              mechanism (strongly recommended).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_KERNELVER&gt;6.4.0-default&lt;/KDUMP_KERNELVER&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional (auto-detection if empty)</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_COMMANDLINE_APPEND</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Additional command line parameters for the Kdump kernel.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_COMMANDLINE_APPEND&gt;console=ttyS0,57600&lt;/KDUMP_COMMANDLINE_APPEND&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_Command Line</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Overwrite the automatically generated Kdump command line. Use with care. Usually,
+                              <code class="literal">KDUMP_COMMANDLINE_APPEND</code> should suffice.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_COMMANDLINE_APPEND&gt;root=/dev/sda5 nr_cpus=1 irqpoll&lt;/KDUMP_COMMANDLINE&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-kdump-expert">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>36<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Expert settings</h3>
+               </header>
+               
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Expert settings: XML representations</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_IMMEDIATE_REBOOT</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p><code class="literal">true</code> if the system should be rebooted automatically after the dump has been saved, <code class="literal">false</code> otherwise. The default is to reboot the system automatically.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_IMMEDIATE_REBOOT&gt;true&lt;/KDUMP_IMMEDIATE_REBOOT&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KDUMP_VERBOSE</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Bitmask that specifies how verbose the Kdump process should be. Read kdump(5) for
+                              details.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KDUMP_VERBOSE&gt;3&lt;/KDUMP_VERBOSE&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">KEXEC_OPTIONS</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Additional options that are passed to kexec when loading the Kdump kernel. Normally
+                              empty.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;KEXEC_OPTIONS&gt;--noio&lt;/KEXEC_OPTIONS&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>optional</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partiich01s35.html">Prev</a></td>
+                  <td class="up"><a href="bk05partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk05partiich01s37.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>35</span><span class="sep">.&nbsp;</span>Ask the user for values during installation</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>37</span><span class="sep">.&nbsp;</span>DNS server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.15.&nbsp;IBM&nbsp;Z: Adjust zipl for UEFI Secure Boot</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk03ch03s14.html" rel="prev">
+      <link href="bk03ch03s16.html" rel="next">
+      <link href="bk03ch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk03ch03.html">Up</a> <a href="bk03ch03s16.html">Next</a> <a href="bk03ch03s14.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk03ch03s15.html" db-id="d616951e105682" id="sec-update-preparation-zipl">
+            <header>
+               <h2><span class="label">3<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>IBM&nbsp;Z: Adjust <code class="command">zipl</code> for UEFI Secure Boot</h2>
+            </header>
+            
+            
+            <p>When upgrading from SUSE Linux Enterprise Server 12, enabling UEFI Secure Boot during
+               or after the upgrade with <code class="command">yast bootloader</code> will fail with an error:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Error: Could not install Secure Boot IPL records: Missing</code></span></span>
+<span class="line"><span class="ld"><code>signature in image file /boot/zipl/image.prev</code></span></span>
+<span class="line"><span class="ld"><code>/sbin/zipl: Failed</code></span></span>
+<span class="line"><span class="ld"><code>/usr/sbin/grub2-install: error: `grub2-zipl-setup' failed.</code></span></span></pre>
+            </div>
+            
+            <p>This happens because <code class="filename">/boot/zipl</code> still contains the previous, unsigned kernel and initrd as fallback in case the new
+               kernel does not boot. To avoid this error, edit <code class="filename">/etc/default/grub</code> and change <code class="literal">SUSE_SECURE_BOOT=1</code> to <code class="literal">SUSE_SECURE_BOOT=auto</code>. This setting makes <code class="command">zipl</code> write a signature for the new kernel but not yield an error for the old kernel. Then
+               run <code class="command">grub2-install</code> to re-install the boot loader.</p>
+            
+            <p>Alternatively you can remove the obsolete kernel and initrd files from <code class="filename">/boot/zipl</code> manually. Only do so when you have already rebooted into the new kernel after the
+               upgrade.</p>
+            
+            <p>After the next SUSE Linux Enterprise 15 kernel update, you can switch back to <code class="literal">SUSE_SECURE_BOOT=1</code> to ensure all kernels are signed.</p>
+            
+            <p>For more information, refer to <code class="command">man 8 zipl</code> and the IBM documentation at <a class="link" href="https://www.ibm.com/docs/en/linux-on-systems?topic=loader-parameters">https://www.ibm.com/docs/en/linux-on-systems?topic=loader-parameters</a>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk03ch03s14.html">Prev</a></td>
+                  <td class="up"><a href="bk03ch03.html">Up</a></td>
+                  <td class="next"><a href="bk03ch03s16.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>Temporarily disabling kernel multiversion support</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">3<span class="sep">.</span>16</span><span class="sep">.&nbsp;</span>Adjust the <code class="literal">resume</code> boot parameter</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

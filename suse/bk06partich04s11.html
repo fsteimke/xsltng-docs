@@ -1,0 +1,781 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.11.&nbsp;Setting up replication</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s10.html" rel="prev">
+      <link href="bk06partich04s12.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s12.html">Next</a> <a href="bk06partich04s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s11.html" db-id="d616951e160250" id="sec-security-ldap-replication" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Setting up replication</h2>
+            </header>
+            
+            
+            <p>389 Directory Server supports replicating its database content between multiple servers.
+               According to the type of replication, this provides:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Faster performance and response times</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Fault tolerance and failover</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Load balancing</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>High availability</p>
+                  </li>
+               </ul>
+            
+            <p>A database is the smallest unit of a directory that can be replicated. You can replicate
+               an entire database, but not a subtree within a database. One database must correspond
+               to one suffix. You cannot replicate a suffix that is distributed over two or more
+               databases.</p>
+            
+            <p>A replica that sends data to another replica is a supplier. A replica that receives
+               data from a supplier is a consumer. Replication is always initiated by the supplier,
+               and a single supplier can send data to multiple consumers. The supplier is a read-write
+               replica, and the consumer is read-only, except in the case of multi-supplier replication.
+               In multi-supplier replication the suppliers are both suppliers and consumers of the
+               same data.</p>
+            
+            <section class="sect2" id="sec-security-ldap-replication-async">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Asynchronous writes</h3>
+               </header>
+               
+               
+               <p>389&nbsp;DS manages replication differently than other databases. Replication is asynchronous,
+                  and eventually consistent. This means:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Any write or change to a single server is immediately accepted.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>There is a delay between a write finishing on one server, and then replicating and
+                        being visible on other servers.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>If that write conflicts with writes on other servers, it may be rolled back at some
+                        point in the future.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Not all servers may show identical content at the same time due to replication delay.</p>
+                     </li>
+                  </ul>
+               
+               <p>As LDAP is <q>low-write,</q> these factors mean that all servers are at least up to a common baseline of a known
+                  consistent state. Small changes occur on top of this baseline, so many of these aspects
+                  of delayed replication are not perceived in day to day usage.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-topology">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Designing your topology</h3>
+               </header>
+               
+               
+               <p>Consider the following factors when you are designing your replication topology.</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>The need for replication: high availability, geo-location, read scaling, or a combination
+                        of all.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>How many replicas (nodes, servers) you plan to have in your topology.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Direction of data flows, both inside of the topology, and data flowing into the topology.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>How clients balance across nodes of the topology for their requests (multiple ldap
+                        URIs, SRV records, load balancers).</p>
+                     </li>
+                  </ul>
+               
+               <p>These factors all affect how you may create your topology. (See <a class="xref xref-sect2" href="#sec-security-ldap-replication-topologies">the section called “Example replication topologies”</a> for topology examples.)</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-topologies">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Example replication topologies</h3>
+               </header>
+               
+               
+               <p>The following sections provide examples of replication topologies, using two to six
+                  389 Directory Server nodes. The maximum number of supported supplier replicas in a
+                  topology is 20. Operational experience shows the optimal number for replication efficiency
+                  is a maximum of eight.</p>
+               
+               <section class="sect3" id="sec-security-ldap-replication-two-replicas">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Two replicas</h4>
+                  </header>
+                  
+                  
+                  <div class="example formalobject" id="ex-ldap-replication-two-replicas">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>│ S1 │◀─────▶│ S2 │</code></span></span>
+<span class="line"><span class="ld"><code>└────┘       └────┘</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Two supplier replicas</div>
+                     </header>
+                  </div>
+                  
+                  <p>In <a class="xref xref-example" href="#ex-ldap-replication-two-replicas">Example&nbsp;<span class="label">5<span class="sep">.</span>4</span>, “Two supplier replicas”</a> there are two replicas, S1 and S2, which replicate bi-directionally between each
+                     other, so they are both suppliers and consumers. S1 and S2 could be in separate data
+                     centers, or in the same data center. Clients can balance across the servers using
+                     LDAP URIs, a load balancer, or DNS SRV records. This is the simplest topology for
+                     high availability. Each server needs to be able to provide 100% of client load, in
+                     case the other server is offline for any reason. A two-node replication is generally
+                     not adequate for horizontal read scaling, as a single node handles all read requests
+                     if the other node is offline.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Default topology</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The two-node topology should be considered the default topology, because it is the
+                                 simplest to manage. You can expand your topology over time, as necessary.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-ldap-replication-four-replicas">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Four supplier replicas</h4>
+                  </header>
+                  
+                  
+                  <div class="example formalobject" id="ex-ldap-replication-four-replicas">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>│ S1 │◀─────▶│ S2 │</code></span></span>
+<span class="line"><span class="ld"><code>└────┘       └────┘</code></span></span>
+<span class="line"><span class="ld"><code>   ▲            ▲</code></span></span>
+<span class="line"><span class="ld"><code>   │            │</code></span></span>
+<span class="line"><span class="ld"><code>   ▼            ▼</code></span></span>
+<span class="line"><span class="ld"><code>┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>│ S3 │◀─────▶│ S4 │</code></span></span>
+<span class="line"><span class="ld"><code>└────┘       └────┘</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Four supplier replicas</div>
+                     </header>
+                  </div>
+                  
+                  <p><a class="xref xref-example" href="#ex-ldap-replication-four-replicas">Example&nbsp;<span class="label">5<span class="sep">.</span>5</span>, “Four supplier replicas”</a> has four supplier replicas, which all synchronize to each other. These could be in
+                     four datacenters, or two servers per datacenter. In the case of one node per data
+                     center, each node should be able to support 100% of client load. When there are two
+                     per datacenter, each one only needs to scale to 50% of the client load.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-security-ldap-replication-six-replicas">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Six replicas</h4>
+                  </header>
+                  
+                  
+                  <div class="example formalobject" id="ex-ldap-replication-six-replicas">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>                  ┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>                  │ S1 │◀─────▶│ S2 │</code></span></span>
+<span class="line"><span class="ld"><code>                  └────┘       └────┘</code></span></span>
+<span class="line"><span class="ld"><code>                     ▲            ▲</code></span></span>
+<span class="line"><span class="ld"><code>                     │            │</code></span></span>
+<span class="line"><span class="ld"><code>   ┌────────────┬────┴────────────┴─────┬────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>   │            │                       │            │</code></span></span>
+<span class="line"><span class="ld"><code>   ▼            ▼                       ▼            ▼</code></span></span>
+<span class="line"><span class="ld"><code>┌────┐       ┌────┐                  ┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>│ S3 │◀─────▶│ S4 │                  │ S5 │◀─────▶│ S6 │</code></span></span>
+<span class="line"><span class="ld"><code>└────┘       └────┘                  └────┘       └────┘</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Six replicas</div>
+                     </header>
+                  </div>
+                  
+                  <p>In <a class="xref xref-example" href="#ex-ldap-replication-six-replicas">Example&nbsp;<span class="label">5<span class="sep">.</span>6</span>, “Six replicas”</a>, each pair is in a separate location. S1 and S2 are the suppliers, and S3, S4, S5,
+                     and S6 are consumers of S1 and S2. Each pair of servers replicate to each other. S3,
+                     S4, S5 and S6 can accept writes, though most of the replication is done through S1
+                     and S2. This setup provides geographic separation for high availability and scaling.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-security-ldap-replication-six-replicas-read-only">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Six replicas with read-only consumers</h4>
+                  </header>
+                  
+                  
+                  <div class="example formalobject" id="ex-ldap-replication-six-replicas-read-only">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>             ┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>             │ S1 │◀─────▶│ S2 │</code></span></span>
+<span class="line"><span class="ld"><code>             └────┘       └────┘</code></span></span>
+<span class="line"><span class="ld"><code>                │            │</code></span></span>
+<span class="line"><span class="ld"><code>                │            │</code></span></span>
+<span class="line"><span class="ld"><code>   ┌────────────┼────────────┼────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>   │            │            │            │</code></span></span>
+<span class="line"><span class="ld"><code>   ▼            ▼            ▼            ▼</code></span></span>
+<span class="line"><span class="ld"><code>┌────┐       ┌────┐       ┌────┐       ┌────┐</code></span></span>
+<span class="line"><span class="ld"><code>│ S3 │       │ S4 │       │ S5 │       │ S6 │</code></span></span>
+<span class="line"><span class="ld"><code>└────┘       └────┘       └────┘       └────┘</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">5<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Six replicas with read-only consumers</div>
+                     </header>
+                  </div>
+                  
+                  <p>In <a class="xref xref-example" href="#ex-ldap-replication-six-replicas-read-only">Example&nbsp;<span class="label">5<span class="sep">.</span>7</span>, “Six replicas with read-only consumers”</a>, S1 and S2 are the suppliers, and the other four servers are read-only consumers.
+                     All changes occur on S1 and S2, and are propagated to the four replicas. Read-only
+                     consumers can be configured to store only a subset of the database, or partial entries,
+                     to limit data exposure. You could have a fractional read-only server in a DMZ, for
+                     example, so that if data is exposed, changes can not propagate back to the other replicas.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-terminology">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Terminology</h3>
+               </header>
+               
+               
+               <p>In the example topologies we have seen that 389&nbsp;DS can take on a number of roles in
+                  a topology. The following list clarifies the terminology.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Replica</span></dt>
+                     <dd>
+                        
+                        <p>An instance of 389&nbsp;DS with an attached database.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Read-write replica</span></dt>
+                     <dd>
+                        
+                        <p>A replica with a full copy of a database, that accepts read and write operations.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Read-only replica</span></dt>
+                     <dd>
+                        
+                        <p>A replica with a full copy of a database, that only accepts read operations.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Fractional read-only replica</span></dt>
+                     <dd>
+                        
+                        <p>A replica with a partial copy of a database, that only accepts read- only operations.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Supplier</span></dt>
+                     <dd>
+                        
+                        <p>A replica that supplies data from its database to another replica.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Consumer</span></dt>
+                     <dd>
+                        
+                        <p>A replica that receives data from another replica to write into its database.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Replication agreement</span></dt>
+                     <dd>
+                        
+                        <p>The configuration of a server defining its supplier and consumer relation to another
+                           replica.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Topology</span></dt>
+                     <dd>
+                        
+                        <p>A set of replicas connected via replication agreements.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Replica ID</span></dt>
+                     <dd>
+                        
+                        <p>A unique identifier of the 389 Directory Server instance within the replication topology.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Replication manager</span></dt>
+                     <dd>
+                        
+                        <p>An account with replication rights in the directory.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-configuration">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring replication</h3>
+               </header>
+               
+               
+               <p>The first example sets up a two node bi-directional replication with a single read-only
+                  server, as a minimal starting example. In the following examples, the host names of
+                  the two read-write nodes are RW1 and RW2, and the read-only server is RO1. (Use your
+                  own host names.)</p>
+               
+               <p>All servers should have a back-end with an identical suffix. Only one server, RW1,
+                  needs an initial copy of the database.</p>
+               
+               <section class="sect3" id="sec-security-ldap-replication-two-nodes">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring two-node replication</h4>
+                  </header>
+                  
+                  
+                  <p>The following commands configure the read-write replicas in a two-node setup (<a class="xref xref-example" href="#ex-ldap-replication-two-replicas">Example&nbsp;<span class="label">5<span class="sep">.</span>4</span>, “Two supplier replicas”</a>), with the host names RW1 and RW2. (Use your own host names.)</p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Create a strong replication manager password</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The replication manager should be considered equivalent to the directory manager in
+                                 terms of security and access, and should have a strong password.</p>
+                              
+                              <p>If you create different replication manager passwords for each server, be sure to
+                                 keep track of which password belongs to which server. For example, when you configure
+                                 the outbound connection in RW1's replication agreement, you need to set the replication
+                                 manager password to the RW2 replication manager password.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>First, configure RW1:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> replication create-manager</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> replication enable</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--role supplier --replica-id <em class="replaceable">1</em> --bind-dn "cn=replication manager,cn=config"</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Configure RW2:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> replication create-manager</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> replication enable</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--role supplier --replica-id <em class="replaceable">2</em> --bind-dn "cn=replication manager,cn=config"</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>This will create the replication metadata required on RW1 and RW2. Note the difference
+                     in the <code class="option">replica-id</code> between the two servers. This also creates the replication manager account, which
+                     is an account with replication rights for authenticating between the two nodes.</p>
+                  
+                  <p>RW1 and RW2 are now both configured to have replication metadata. The next step is
+                     to create the first agreement for outbound data from RW1 to RW2.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-agmt create</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--host=<em class="replaceable">RW2</em> --port=636 --conn-protocol LDAPS --bind-dn "cn=replication manager,cn=config"</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-passwd <em class="replaceable">PASSWORD</em> --bind-method SIMPLE <em class="replaceable">RW1_to_RW2</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Data does not flow from RW1 to RW2 until after a full synchronization of the database,
+                     which is called an initialization or reinit. This resets all database content on RW2
+                     to match the content of RW1. Run the following command to trigger a reinit of the
+                     data:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-agmt init</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em><em class="replaceable">RW1_to_RW2</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Check the status by running this command on RW1:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-agmt init-status</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em><em class="replaceable">RW1_to_RW2</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>When it is finished, you should see an <code class="literal">Agreement successfully initialized</code> message. If you get an error message, check the errors log. Otherwise, you should
+                     see the identical content from RW1 on RW2.</p>
+                  
+                  <p>Finally, to make this bi-directional, configure a replication agreement from RW2 outbound
+                     to RW1:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-agmt create</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--host=<em class="replaceable">RW1</em> --port=636 --conn-protocol LDAPS</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-dn "cn=replication manager,cn=config" --bind-passwd <em class="replaceable">PASSWORD</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-method SIMPLE <em class="replaceable">RW2_to_RW1</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>Changes made on either RW1 or RW2 are now replicated to the other. Check replication
+                     status on either server with the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-agmt status</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=example,dc=com</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-dn "cn=replication manager,cn=config"</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-passwd <em class="replaceable">PASSWORD</em><em class="replaceable">RW2_to_RW1</em></code></code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-ldap-replication-four-nodes">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring a read-only node</h4>
+                  </header>
+                  
+                  
+                  <p>To create a read-only node, start by creating the replication manager account and
+                     metadata. The hostname of the example server is RO3:</p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Create a strong replication manager password</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The replication manager should be considered equivalent to the directory manager in
+                                 terms of security and access, and should have a strong password.</p>
+                              
+                              <p>If you create different replication manager passwords for each server, be sure to
+                                 keep track of which password belongs to which server. For example, when you configure
+                                 the outbound connection in RW1's replication agreement, you need to set the replication
+                                 manager password to the RW2 replication manager password.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> replication create-manager</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">replication enable --suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--role consumer --bind-dn "cn=replication manager,cn=config"</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>For a read-only replica, you do not provide a replica-id, and the role is set to <code class="literal">consumer</code>. This allocates a special read-only replica-id for all read-only replicas. After
+                     the read-only replica is created, add the replication agreements from RW1 and RW2
+                     to the read-only instance. The following example is on RW1:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">repl-agmt create --suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--host=<em class="replaceable">RO3</em> --port=636 --conn-protocol LDAPS</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-dn "cn=replication manager,cn=config" --bind-passwd <em class="replaceable">PASSWORD</em></code><code class="command">--bind-method SIMPLE <em class="replaceable">RW1_to_RO3</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>The following example, on RW2, configures the replication agreement between RW2 and
+                     RO3:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt create</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--host=<em class="replaceable">RO3</em> --port=636 --conn-protocol LDAPS</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-dn "cn=replication manager,cn=config" --bind-passwd <em class="replaceable">PASSWORD</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--bind-method SIMPLE <em class="replaceable">RW2_to_RO3</em></code></code></span></span></pre>
+                  </div>
+                  
+                  <p>After these steps are completed, you can use either RW1 or RW2 to perform the initialization
+                     of the database on RO3. The following example initializes RO3 from RW2:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt init</code><code class="command">--suffix dc=<em class="replaceable">EXAMPLE,dc=COM</em><em class="replaceable">RW2_to_RO3</em></code></code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-monitoring-healthcheck">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Monitoring and healthcheck</h3>
+               </header>
+               
+               
+               <p>The <code class="command">dsconf</code> command includes a monitoring option. You can check the status of each replica status
+                  directly on the replicas, or from other hosts. The following example commands are
+                  run on RW1, checking the status on two remote replicas, and then on itself:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf -D "cn=Directory Manager" ldap://<em class="replaceable">RW2</em> replication monitor</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf -D "cn=Directory Manager" ldap://<em class="replaceable">RO3</em> replication monitor</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf -D "cn=Directory Manager" ldap://<em class="replaceable">RW1</em> replication monitor</code></code></span></span></pre>
+               </div>
+               
+               <p>The <code class="command">dsctl</code> command has a <code class="option">healthcheck</code> option. The following example runs a replication healthcheck on the local 389&nbsp;DS
+                  instance:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> healthcheck --check replication</code></code></span></span></pre>
+               </div>
+               
+               <p>Use the <code class="option">-v</code> option for verbosity, to see what the healthcheck examines:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl -v <em class="replaceable">INSTANCE_NAME</em> healthcheck --check replication</code></code></span></span></pre>
+               </div>
+               
+               <p>Run <code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> healthcheck</code> with no options for a general health check.</p>
+               
+               <p>Run the following command to see a list of the checks that healthcheck performs:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> healthcheck --list-checks</code></code></span></span>
+<span class="line"><span class="ld"><code>config:hr_timestamp</code></span></span>
+<span class="line"><span class="ld"><code>config:passwordscheme</code></span></span>
+<span class="line"><span class="ld"><code>backends:userroot:cl_trimming</code></span></span>
+<span class="line"><span class="ld"><code>backends:userroot:mappingtree</code></span></span>
+<span class="line"><span class="ld"><code>backends:userroot:search</code></span></span>
+<span class="line"><span class="ld"><code>backends:userroot:virt_attrs</code></span></span>
+<span class="line"><span class="ld"><code>encryption:check_tls_version</code></span></span>
+<span class="line"><span class="ld"><code>fschecks:file_perms</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+               </div>
+               
+               <p>You can run one or more of the individual checks:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> healthcheck</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--check monitor-disk-space:disk_space tls:certificate_expiration</code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-backups">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Making backups</h3>
+               </header>
+               
+               
+               <p>When replication is enabled, you need to adjust your 389 Directory Server backup strategy
+                  (see <a class="xref xref-sect1" href="bk06partich04s05.html">the section called “Backing up and restoring 389 Directory Server”</a> to learn about making backups). If you are using <code class="command">db2ldif</code>, you must add the <code class="option">--replication</code> flag to ensure that replication metadata is backed up. You should backup all servers
+                  in the topology. When restoring from backup, start by restoring a single node of the
+                  topology, then reinitialize all other nodes as new instances.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-pause-resume">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Pausing and resuming replication</h3>
+               </header>
+               
+               
+               <p>You can pause replication during maintenance windows, or anytime you need to stop
+                  it. A node of the topology can only be offline for a maximum of days up to the limit
+                  of the changelog (see <a class="xref xref-sect2" href="#sec-security-ldap-replication-changelog">the section called “Changelog max-age”</a>).</p>
+               
+               <p>Use the <code class="command">repl-agmt</code> command to pause replication. The following example is on RW2:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt disable</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em><em class="replaceable">RW2_to_RW1</em></code></code></span></span></pre>
+               </div>
+               
+               <p>The following example re-enables replication:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt enable</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em><em class="replaceable">RW2_to_RW1</em></code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-changelog">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Changelog max-age</h3>
+               </header>
+               
+               
+               <p>A replica can be offline for up to the length of time defined by the changelog <code class="option">max-age</code> option. <code class="option">max-age</code> defines the maximum age of any entry in the changelog. Any items older than the <code class="option">max-age</code> value are automatically removed.</p>
+               
+               <p>After the replica comes back online, it synchronizes with the other replicas. If it
+                  is offline for longer than the <code class="option">max-age</code> value, the replica needs to be re-initialized and refuses to accept or provide changes
+                  to other nodes, as they may be inconsistent. The following example sets the <code class="option">max-age</code> to seven days:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">replication set-changelog --max-age 7d</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em></code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-remove-replica">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Removing a replica</h3>
+               </header>
+               
+               
+               <p>To remove a replica, first fence the node to prevent any incoming changes or reads.
+                  Then, find all servers that have incoming replication agreements with the node you
+                  are removing, and remove them. The following example removes RW2. Start by disabling
+                  the outbound replication agreement on RW1:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt delete</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em><em class="replaceable">RW1_to_RW2</em></code></code></span></span></pre>
+               </div>
+               
+               <p>On the replica you are removing, which in the following example is RW2, remove all
+                  outbound agreements:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt delete</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em><em class="replaceable">RW2_to_RW1</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-agmt delete</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em><em class="replaceable">RW2_to_RO3</em></code></code></span></span></pre>
+               </div>
+               
+               <p>Stop the instance on RW2:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl stop dirsrv@<em class="replaceable">INSTANCE_NAME</em>.service</code></code></span></span></pre>
+               </div>
+               
+               <p>Then run the <code class="command">cleanallruv</code> command to remove the replica ID from the topology. The following example is run
+                  on RW1:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-tasks cleanallruv</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">--suffix <em class="replaceable">dc=EXAMPLE,dc=COM</em> --replica-id <em class="replaceable">2</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> repl-tasks list-cleanruv-tasks</code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-replication-limits">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>11<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Limitations on replication of 389 Directory Server</h3>
+               </header>
+               
+               
+               <p>The use of 389 Directory Server is supported within the following replication limits:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>A maximum of 8 read-write nodes</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A maximum of 20 replication hubs</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A maximum of 100 read-only servers</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A maximum of 1 Winsync Active Directory consumer as a read-write node member</p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s10.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s12.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Importing TLS server certificates and keys</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Synchronizing with Microsoft Active Directory</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

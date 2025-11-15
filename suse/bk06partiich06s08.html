@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>14.8.&nbsp;Preventing accidental denial of service</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich06s07.html" rel="prev">
+      <link href="bk06partiich06s09.html" rel="next">
+      <link href="bk06partiich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich06.html">Up</a> <a href="bk06partiich06s09.html">Next</a> <a href="bk06partiich06s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich06s08.html" db-id="d616951e171822" id="sec-sec-prot-dos">
+            <header>
+               <h2><span class="label">14<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Preventing accidental denial of service</h2>
+            </header>
+            
+            
+            <p>Linux allows you to set limits on the amount of system resources that users and groups
+               can consume. This is also useful if bugs in programs cause them to use up too many
+               resources (for example, memory leaks), slow down the machine, or even render the system
+               unusable. Incorrect settings can allow programs to use too many resources, which might
+               make the server unresponsive to new connections or even local logins (for example,
+               if a program uses up all available file handles on the host). This can also be a security
+               concern if someone is allowed to consume all system resources and therefore cause
+               a denial-of-service attack—either unplanned, or worse, planned. Setting resource limits
+               for users and groups might be an effective way to protect systems, depending on the
+               environment.</p>
+            
+            <section class="sect2" id="sec-sec-prot-dos-restrict-resources">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Example for restricting system resources</h3>
+               </header>
+               
+               
+               <p>The following example demonstrates the practical usage of setting or restricting system
+                  resource consumption for an Oracle user account. For a list of system resource settings,
+                  see <code class="filename">/etc/security/limits.conf</code> or <code class="command">man limits.conf</code>.</p>
+               
+               <p>Most shells, such as Bash, provide control over various resources (for example, the
+                  maximum allowable number of open file descriptors or the maximum number of processes)
+                  that are available on a per-user basis. To examine all current limits in the shell,
+                  execute:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ulimit -a</code></span></span></pre>
+               </div>
+               
+               <p>For more information on <code class="command">ulimit</code> for the Bash shell, examine the Bash man pages.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Setting limits for SSH sessions</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Setting <q>hard</q> and <q>soft</q> limits might not have the expected results when using an SSH session. To see valid
+                              behavior, it might be necessary to log in as root, and then <code class="command">su</code> to the ID with limits (for example, <code class="literal">Oracle</code> in these examples). Resource limits should also work assuming the application was
+                              started automatically during the boot process. It might be necessary to set <code class="option">UsePrivilegeSeparation</code> in <code class="filename">/etc/ssh/sshd_config</code> to <code class="literal">no</code> and restart the SSH daemon (<code class="command">systemctl restart sshd</code>) if it seems that the changes to resource limits are not working (via SSH). However,
+                              this is not generally recommended, as it weakens a system's security.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Disabling password logins via <code class="command">ssh</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>You can add extra security to your server by disabling password authentication for
+                              SSH. Remember that you need to have SSH keys configured, otherwise you cannot access
+                              the server. To disable password login, add the following lines to <code class="filename">/etc/ssh/sshd_config</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>UseLogin no</code></span></span>
+<span class="line"><span class="ld"><code>UsePAM no</code></span></span>
+<span class="line"><span class="ld"><code>PasswordAuthentication no</code></span></span>
+<span class="line"><span class="ld"><code>PubkeyAuthentication yes</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>In this example, a change to the number of file handles or open files that the user
+                  <code class="literal">oracle</code> can use is made by editing <code class="filename">/etc/security/limits.conf</code> as <code class="systemitem username">root</code> making the following changes:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>oracle           soft    nofile          4096</code></span></span>
+<span class="line"><span class="ld"><code>oracle           hard    nofile          63536</code></span></span></pre>
+               </div>
+               
+               <p>The soft limit in the first line defines the limit on the number of file handles (open
+                  files) that the <code class="systemitem username">oracle</code> user has after login. If the user sees error messages about running out of file handles,
+                  then the user can increase the number of file handles like in this example up to the
+                  hard limit (in this example 63536) by executing:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ulimit -n 63536</code></span></span></pre>
+               </div>
+               
+               <p>You can set the soft and hard limits higher if necessary.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Caution with using ulimits</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>It is important to be judicious with the usage of ulimits. Allowing a <q>hard</q> limit for <code class="literal">nofile</code> for a user that is equal to the kernel limit (<code class="filename">/proc/sys/fs/file-max</code>) is bad. If the user consumes all the available file handles, the system cannot initiate
+                              new logins, since it is not possible to access the PAM modules required to perform
+                              a login.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>You also need to ensure that <code class="literal">pam_limits</code> is either configured globally in <code class="filename">/etc/pam.d/common-auth</code>, or for individual services like SSH, su, login and telnet in:</p>
+               
+               <div class="simplelist simplelistvert">
+                  <div class="row"><span>
+                        <code class="filename">/etc/pam.d/sshd</code> (for SSH)</span></div>
+                  <div class="row"><span>
+                        <code class="filename">/etc/pam.d/su</code> (for su)</span></div>
+                  <div class="row"><span>
+                        <code class="filename">/etc/pam.d/login</code> (local logins and telnet)</span></div>
+               </div>
+               
+               <p>If you do not want to enable it for all logins, there is a specific PAM module that
+                  reads the <code class="filename">/etc/security/limits.conf</code> file. Entries in PAM configuration directives have entries like:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>session     required      /lib/security/pam_limits.so</code></span></span>
+<span class="line"><span class="ld"><code>session     required      /lib/security/pam_unix.so</code></span></span></pre>
+               </div>
+               
+               <p>Changes are not immediate and require a new login session:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>su - oracle</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulimit -n</code></span></span>
+<span class="line"><span class="ld"><code>4096</code></span></span></pre>
+               </div>
+               
+               <p>These examples are specific to the Bash shell; <code class="command">ulimit</code> options are different for other shells. The default limit for the user <code class="literal">oracle</code> is <code class="literal">4096</code>. To increase the number of file handles the user <code class="literal">oracle</code> can use to <code class="literal">63536</code>, execute:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>su - oracle</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulimit -n</code></span></span>
+<span class="line"><span class="ld"><code>4096</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulimit -n 63536</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ulimit -n</code></span></span>
+<span class="line"><span class="ld"><code>63536</code></span></span></pre>
+               </div>
+               
+               <p>Making this permanent requires the addition of the setting, <code class="command">ulimit -n 63536</code>, (again, for Bash) to the user's profile (<code class="filename">~/.bashrc</code> or <code class="filename">~/.profile</code> file), which is the user start-up file for the Bash shell on <span class="phrase productname">SUSE Linux Enterprise Server</span> (to verify your shell, run: <code class="command">echo $SHELL</code>). To do this you could run the following commands for the Bash shell of the user
+                  <code class="literal">oracle</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>su - oracle</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat &gt;&gt; ~oracle/.bash_profile &lt;&lt; EOF</code></span></span>
+<span class="line"><span class="ld"><code>ulimit -n 63536</code></span></span>
+<span class="line"><span class="ld"><code>EOF</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich06s07.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich06.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich06s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">14<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Setting an inactivity timeout for interactive shell sessions</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">14<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Displaying login banners</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

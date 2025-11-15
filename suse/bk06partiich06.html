@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;14.&nbsp;User management</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich05s08.html" rel="prev">
+      <link href="bk06partiich06s02.html" rel="next">
+      <link href="bk06partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="General chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partii.html">Up</a> <a href="bk06partiich06s02.html">Next</a> <a href="bk06partiich05s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="General chapter component" db-chunk="bk06partiich06.html" db-id="d616951e170316" id="sec-sec-user-management" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">14</span><span class="sep">.&nbsp;</span>User management</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-sec-prot-general-accounts">
+               <header>
+                  <h2><span class="label">14<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Various account checks</h2>
+               </header>
+               
+               
+               <section class="sect2" id="sec-sec-prot-general-accounts-unlocked">
+                  <header>
+                     <h3><span class="label">14<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Unlocked accounts</h3>
+                  </header>
+                  
+                  
+                  <p>It is important that all system and vendor accounts that are not used for logins are
+                     locked. To get a list of unlocked accounts on your system, you can check for accounts
+                     that do <em>not</em> have an encrypted password string starting with <code class="literal">!</code> or <code class="literal">*</code> in the <code class="filename">/etc/shadow</code> file. If you lock an account using either <code class="command">passwd</code><code class="option">-l</code> or <code class="command">usermod</code><code class="option">-L</code>, it puts a <code class="literal">!</code> in front of the encrypted password, effectively disabling the password. Many system
+                     and shared accounts are locked by default by having a <code class="literal">*</code> ,<code class="literal">!!</code> or <code class="literal">!*</code> as the password field which renders the encrypted password into an invalid string.
+                     Hence, to get a list of all unlocked (encryptable) accounts, run the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>egrep -v ':\*|:\!' /etc/shadow | awk -F: '{print $1}'</code></span></span></pre>
+                  </div>
+                  
+                  <p>Also make sure all accounts have an <code class="literal">x</code> in the password field in <code class="filename">/etc/passwd</code>. The following command lists all accounts that do not have a <code class="literal">x</code> in the password field:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>grep -v ':x:' /etc/passwd</code></span></span></pre>
+                  </div>
+                  
+                  <p>An <code class="literal">x</code> in the password field means that the password has been shadowed, for example, the
+                     encrypted password needs to be looked up in the <code class="filename">/etc/shadow</code> file. If the password field in <code class="filename">/etc/passwd</code> is empty, then the system does not look up the shadow file and it prompts the user
+                     for a password at the login prompt.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-sec-prot-general-accounts-unused">
+                  <header>
+                     <h3><span class="label">14<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Unused accounts</h3>
+                  </header>
+                  
+                  
+                  <p>All system or vendor accounts that are not being used by users, applications, by the
+                     system or by daemons should be removed from the system. You can use the following
+                     command to find out if there are any files owned by a specific account:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>find / -path /proc -prune -o -user <em class="replaceable">ACCOUNT</em> -ls</code></span></span></pre>
+                  </div>
+                  
+                  <p>The <code class="option">-prune</code> option in this example is used to skip the /proc file system. If you are sure that
+                     an account can be deleted, you can remove the account using the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>userdel -r <em class="replaceable">ACCOUNT</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>Without the <code class="option">-r</code> option, <code class="command">userdel</code> does not delete the user's home directory and mail spool (<code class="filename">/var/spool/mail/<em class="replaceable">USER</em></code>). Many system accounts do not have a home directory.</p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich05s08.html">Prev</a></td>
+                  <td class="up"><a href="bk06partii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich06s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">13<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">14<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Enabling password aging</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

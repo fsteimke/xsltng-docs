@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>21.5.&nbsp;Advanced topics</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch08s04.html" rel="prev">
+      <link href="bk09appa.html" rel="next">
+      <link href="bk09partivch08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch08.html">Up</a> <a href="bk09appa.html">Next</a> <a href="bk09partivch08s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch08s05.html" db-id="d616951e263885" id="sec-autofs-advanced">
+            <header>
+               <h2><span class="label">21<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Advanced topics</h2>
+            </header>
+            
+            
+            <p>This section describes topics that are beyond the basic introduction to <code class="systemitem">autofs</code>—auto-mounting of NFS shares that are available on your network, using wild cards
+               in map files, and information specific to the CIFS file system.</p>
+            
+            <section class="sect2" id="sec-autofs-advanced-net">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                     <code class="filename">/net</code> mount point</h3>
+               </header>
+               
+               
+               <p>This helper mount point is useful if you use a lot of NFS shares. <code class="filename">/net</code> auto-mounts all NFS shares on your local network on demand. The entry is already
+                  present in the <code class="filename">auto.master</code> file, so all you need to do is uncomment it and restart <code class="systemitem">autofs</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/net      -hosts</code></span></span></pre>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart autofs</code></span></span></pre>
+               </div>
+               
+               <p>For example, if you have a server named <code class="literal">jupiter</code> with an NFS share called <code class="filename">/export</code>, you can mount it by typing</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cd /net/jupiter/export</code></span></span></pre>
+               </div>
+               
+               <p>on the command line.</p>
+               </section>
+            
+            <section class="sect2" id="sec-autofs-advanced-wildcards">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using wild cards to auto-mount subdirectories</h3>
+               </header>
+               
+               
+               <p>If you have a directory with subdirectories that you need to auto-mount individually—the
+                  typical case is the <code class="filename">/home</code> directory with individual users' home directories inside—<code class="systemitem">autofs</code> offers a clever solution.</p>
+               
+               <p>In case of home directories, add the following line in <code class="filename">auto.master</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/home      /etc/auto.home</code></span></span></pre>
+               </div>
+               
+               <p>Now you need to add the correct mapping to the <code class="filename">/etc/auto.home</code> file, so that the users' home directories are mounted automatically. One solution
+                  is to create separate entries for each directory:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>wilber      jupiter.com:/home/wilber</code></span></span>
+<span class="line"><span class="ld"><code>penguin      jupiter.com:/home/penguin</code></span></span>
+<span class="line"><span class="ld"><code>tux      jupiter.com:/home/tux</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+               </div>
+               
+               <p>This is very awkward as you need to manage the list of users inside <code class="filename">auto.home</code>. You can use the asterisk '*' instead of the mount point, and the ampersand '&amp;' instead
+                  of the directory to be mounted:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>*      jupiter:/home/&amp;</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-autofs-advanced-cifs">
+               <header>
+                  <h3><span class="label">21<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Auto-mounting CIFS file system</h3>
+               </header>
+               
+               
+               <p>If you want to auto-mount an SMB/CIFS share (see <a class="xref xref-chapter" href="bk09partivch07.html">Chapter&nbsp;<span class="label">20</span>, Samba</a> for more information on the SMB/CIFS protocol), you need to modify the syntax of
+                  the map file. Add <code class="option">-fstype=cifs</code> in the option field, and prefix the share location with a colon ':'.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>mount point      -fstype=cifs      ://jupiter.com/export</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch08s04.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch08.html">Up</a></td>
+                  <td class="next"><a href="bk09appa.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">21<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Auto-mounting an NFS share</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Appendix&nbsp;<span class="label">A</span><span class="sep">.&nbsp;</span>GNU licenses</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>26.3.&nbsp;Creating a masqueraded network setup</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch02s02.html" rel="prev">
+      <link href="bk10partivch02s04.html" rel="next">
+      <link href="bk10partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partivch02.html">Up</a> <a href="bk10partivch02s04.html">Next</a> <a href="bk10partivch02s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partivch02s03.html" db-id="d616951e291296" id="sec-xen-net-masquerade">
+            <header>
+               <h2><span class="label">26<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a masqueraded network setup</h2>
+            </header>
+            
+            
+            <p>Creating a masqueraded network setup is similar to the routed setup. However, there
+               is no proxy_arp needed, and certain firewall rules are different. To create a masqueraded
+               network to a guest dolly with the IP address 192.168.100.1 where the host has its
+               external interface on <code class="literal">br0</code>, proceed as follows. For easier configuration, only the already installed guest is
+               modified to use a masqueraded network:</p>
+            
+            <div class="formalobject procedure" id="sec-xen-net-masquerade_proc1">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">26<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring a masqueraded IPv4 VM guest</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Shut down the VM Guest system with <code class="command">xl shutdown</code><em class="replaceable">DOMAIN</em>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Prepare the network configuration on the VM Host Server:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Create a hotplug interface to route the traffic. To accomplish this, create a file
+                                 named <code class="filename">/etc/sysconfig/network/ifcfg-dolly.0</code> with the following content:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>NAME="Xen guest dolly"</code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO="static"</code></span></span>
+<span class="line"><span class="ld"><code>STARTMODE="hotplug"</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Edit the file <code class="filename">/etc/sysconfig/SuSEfirewall2</code> and add the following configurations:</p>
+                              
+                              <ul class="itemizedlist" db-mark="bullet">
+                                 
+                                 <li>
+                                    
+                                    <p>Add dolly.0 to the devices in FW_DEV_DMZ:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>FW_DEV_DMZ="dolly.0"</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Switch on the routing in the firewall:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>FW_ROUTE="yes"</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Switch on masquerading in the firewall:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>FW_MASQUERADE="yes"</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Tell the firewall which network should be masqueraded:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>FW_MASQ_NETS="192.168.100.1/32"</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Remove the networks from the masquerading exceptions:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>FW_NOMASQ_NETS=""</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>Finally, restart the firewall with the command:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart SuSEfirewall2</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 </ul>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Add a static route to the interface of dolly. To accomplish this, add the following
+                                 line to the end of <code class="filename">/etc/sysconfig/network/routes</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>192.168.100.1 - - dolly.0</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Activate all changes with the command:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart wicked</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Proceed with configuring the Xen configuration of the VM Guest.</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Change the vif interface configuration for dolly as described in <a class="xref xref-sect1" href="bk10partivch03.html#sec-xen-manage-xl">the section called “XL—Xen management tool”</a>.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Remove the entry:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>bridge=br0</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>And add the following one:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vifname=vifdolly.0</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Change the script that is used to set up the interface to the following:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>script=/etc/xen/scripts/vif-route-ifup</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Activate the new configuration and start the VM Guest.</p>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>The remaining configuration tasks need to be accomplished from inside the VM Guest.</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Open a console to the VM Guest with <code class="command">xl console</code><em class="replaceable">DOMAIN</em> and log in.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Check whether the guest IP is set to 192.168.100.1.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Provide VM Guest with a host route and a default gateway to the VM Host Server. Do
+                                 this by adding the following lines to <code class="filename">/etc/sysconfig/network/routes</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>192.168.1.20 - - eth0</code></span></span>
+<span class="line"><span class="ld"><code>default 192.168.1.20 - -</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Finally, test the network connection from the VM Guest to the outside world.</p>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch02s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch02s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">26<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Host-based routing in Xen</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">26<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Special configurations</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

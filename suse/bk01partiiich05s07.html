@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>24.7.&nbsp;Special features in SUSE Linux Enterprise Server
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich05s06.html" rel="prev">
+      <link href="bk01partiiich05s08.html" rel="next">
+      <link href="bk01partiiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich05.html">Up</a> <a href="bk01partiiich05s08.html">Next</a> <a href="bk01partiiich05s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich05s07.html" db-id="d616951e44312" id="sec-print-special">
+            <header>
+               <h2><span class="label">24<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Special features in <span class="phrase productname">SUSE Linux Enterprise Server</span>
+                  </h2>
+            </header>
+            
+            
+            <p>Several CUPS features have been adapted for <span class="phrase productname">SUSE Linux Enterprise Server</span>. The most important changes are covered here.</p>
+            
+            <section class="sect2" id="sec-print-special-cupsfire">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>CUPS and firewall</h3>
+               </header>
+               
+               
+               <p>After completing a default installation of <span class="phrase productname">SUSE Linux Enterprise Server</span>, <code class="daemon systemitem">firewalld</code> is active and the network interfaces are configured to be in the <code class="literal">public</code> zone, which blocks incoming traffic.</p>
+               
+               <p>When <code class="daemon systemitem">firewalld</code> is active, you may need to configure it to allow clients to browse network printers
+                  by allowing <code class="literal">mdns</code> and <code class="literal">ipp</code> through the internal network zone. The public zone should never expose printer queues.</p>
+               
+               <p>(More information about the <code class="daemon systemitem">firewalld</code> configuration is available in <a class="xref xref-sect1" href="bk06partiiich03s04.html">the section called “
+                     <code class="daemon systemitem">firewalld</code>
+                     ”</a> and at <a class="link" href="https://en.opensuse.org/SDB:CUPS_and_SANE_Firewall_settings">https://en.opensuse.org/SDB:CUPS_and_SANE_Firewall_settings</a>.)</p>
+               
+               <section class="sect3" id="sec-print-special-cupsfire-client">
+                  <header>
+                     <h4><span class="label">24<span class="sep">.</span>7<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>CUPS client</h4>
+                  </header>
+                  
+                  
+                  <p>Normally, a CUPS client runs on a regular workstation located in a trusted network
+                     environment behind a firewall. In this case, it is recommended to configure the network
+                     interface to be in the <code class="literal">Internal Zone</code>, so the workstation is reachable from within the network.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-print-special-cupsfire-server">
+                  <header>
+                     <h4><span class="label">24<span class="sep">.</span>7<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>CUPS server</h4>
+                  </header>
+                  
+                  
+                  <p>If the CUPS server is part of a trusted network environment protected by a firewall,
+                     the network interface should be configured to be in the <code class="literal">Internal Zone</code> of the firewall. It is not recommended to set up a CUPS server in an untrusted network
+                     environment unless you ensure that it is protected by special firewall rules and secure
+                     settings in the CUPS configuration.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-print-special-browsing">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Browsing for network printers</h3>
+               </header>
+               
+               
+               <p>CUPS servers regularly announce the availability and status information of shared
+                  printers over the network. Clients can access this information to display a list of
+                  available printers in printing dialogs, for example. This is called <q>browsing</q>.</p>
+               
+               <p>CUPS servers announce their print queues over the network either via the traditional
+                  CUPS browsing protocol, or via Bonjour/DNS-SD. To enable browsing network print queues,
+                  the service <code class="daemon systemitem">cups-browsed</code> needs to run on all clients that print via CUPS servers. <code class="daemon systemitem">cups-browsed</code> is not started by default. To start it for the active session, use <code class="command">sudo systemctl start cups-browsed</code>. To ensure it is automatically started after booting, enable it with <code class="command">sudo systemctl enable cups-browsed</code> on all clients.</p>
+               
+               <p>In case browsing does not work after having started <code class="daemon systemitem">cups-browsed</code>, the CUPS servers announce the network print queues via Bonjour/DNS-SD. In this case,
+                  you need to additionally install the package <code class="resource systemitem">avahi</code> and start the associated service with <code class="command">sudo systemctl start avahi-daemon</code> on all clients.</p>
+               
+               <p>See <a class="xref xref-sect2" href="#sec-print-special-cupsfire">the section called “CUPS and firewall”</a> for information on allowing printer browsing through <code class="daemon systemitem">firewalld</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-print-special-ppd">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>PPD files in multiple packages</h3>
+               </header>
+               
+               
+               <p>The YaST printer configuration sets up the queues for CUPS using the PPD files installed
+                  in <code class="filename">/usr/share/cups/model</code>. To find the suitable PPD files for the printer model, YaST compares the vendor and
+                  model determined during hardware detection with the vendors and models in all PPD
+                  files. For this purpose, the YaST printer configuration generates a database from
+                  the vendor and model information extracted from the PPD files.</p>
+               
+               <p>The configuration using only PPD files and no other information sources has the advantage
+                  that the PPD files in <code class="filename">/usr/share/cups/model</code> can be modified freely. For example, if you have PostScript printers the PPD files
+                  can be copied directly to <code class="filename">/usr/share/cups/model</code> (if they do not already exist in the <code class="systemitem">manufacturer-PPDs</code> or <code class="systemitem">OpenPrintingPPDs-postscript</code> packages) to achieve an optimum configuration for your printers.</p>
+               
+               <p>Additional PPD files are provided by the following packages:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">gutenprint</code>: the Gutenprint driver and its matching PPDs</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">splix</code>: the SpliX driver and its matching PPDs</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">OpenPrintingPPDs-ghostscript</code>: PPDs for Ghostscript built-in drivers</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">OpenPrintingPPDs-hpijs</code>: PPDs for the HPIJS driver for non-HP printers</p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich05s06.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich05.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich05s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">24<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Printing from the command line</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">24<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Troubleshooting</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

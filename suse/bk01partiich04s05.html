@@ -1,0 +1,414 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.5.&nbsp;Customizing systemd
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiich04s04.html" rel="prev">
+      <link href="bk01partiich04s06.html" rel="next">
+      <link href="bk01partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiich04.html">Up</a> <a href="bk01partiich04s06.html">Next</a> <a href="bk01partiich04s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiich04s05.html" db-id="d616951e31919" id="sec-boot-systemd-custom">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Customizing <code class="systemitem">systemd</code>
+                  </h2>
+            </header>
+            
+            
+            <p>The following sections describe how to customize <code class="daemon systemitem">systemd</code> unit files.</p>
+            
+            <section class="sect2" id="systemd-unit-file-placement">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Where are unit files stored?</h3>
+               </header>
+               
+               
+               <p><code class="daemon systemitem">systemd</code> unit files shipped by SUSE are stored in <code class="filename">/usr/lib/systemd/</code>. Customized unit files and unit file <em>drop-ins</em> are stored in <code class="filename">/etc/systemd/</code>.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Preventing your customization from being overwritten</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>When customizing <code class="daemon systemitem">systemd</code>, always use the directory <code class="filename">/etc/systemd/</code> instead of <code class="filename">/usr/lib/systemd/</code>. Otherwise your changes will be overwritten by the next update of <code class="daemon systemitem">systemd</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-custom-service">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Override with drop-in files</h3>
+               </header>
+               
+               
+               <p>Drop-in files (or <em>drop-ins</em>) are partial unit files that override only specific settings of the unit file. Drop-ins
+                  have higher precedence over main configuration files. The command <code class="command">systemctl edit <em class="replaceable">SERVICE</em></code> starts the default text editor and creates a directory with an empty <code class="filename">override.conf</code> file in <code class="filename">/etc/systemd/system/<em class="replaceable">NAME</em>.service.d/</code>. The command also ensures that the running <code class="daemon systemitem">systemd</code> process is notified about the changes.</p>
+               
+               <p>For example, to change the amount of time that the system waits for MariaDB to start,
+                  run <code class="command">sudo systemctl edit mariadb.service</code> and edit the opened file to include the modified lines only:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Configures the time to wait for start-up/stop</code></span></span>
+<span class="line"><span class="ld"><code>TimeoutSec=300</code></span></span></pre>
+               </div>
+               
+               <p>Adjust the <code class="literal">TimeoutSec</code> value and save the changes. To enable the changes, run <code class="command">sudo systemctl daemon-reload</code>.</p>
+               
+               <p>For further information, refer to the man pages that can be evoked with the <code class="command">man 1 systemctl</code> command.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Creating a copy of a full unit file</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you use the <code class="option">--full</code> option in the <code class="command">systemctl edit --full <em class="replaceable">SERVICE</em></code> command, a copy of the original unit file is created where you can modify specific
+                              options. We do not recommend such customization because when the unit file is updated
+                              by SUSE, its changes are overridden by the customized copy in the <code class="filename">/etc/systemd/system/</code> directory. Moreover, if SUSE provides updates to distribution drop-ins, they override
+                              the copy of the unit file created with <code class="option">--full</code>. To prevent this confusion and always have your customization valid, use drop-ins.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-custom-drop-in">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating drop-in files manually</h3>
+               </header>
+               
+               
+               <p>Apart from using the <code class="command">systemctl edit</code> command, you can create drop-ins manually to have more control over their priority.
+                  Such drop-ins let you extend both unit and daemon configuration files without having
+                  to edit or override the files themselves. They are stored in the following directories:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/etc/systemd/*.conf.d/</code>, <code class="filename">/etc/systemd/system/*.service.d/</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Drop-ins added and customized by system administrators.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/usr/lib/systemd/*.conf.d/</code>, <code class="filename">/usr/lib/systemd/system/*.service.d/</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Drop-ins installed by customization packages to override upstream settings. For example,
+                           SUSE ships <code class="package">systemd-default-settings</code>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>See the man page <code class="command">man 5 systemd.unit</code> for the full list of unit search paths.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>For example, to disable the rate limiting that is enforced by the default setting
+                  of <code class="daemon systemitem">systemd-journald</code>, follow these steps:</p>
+               
+               <div class="informalobject procedure" id="sec-boot-systemd-custom-drop-in_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create a directory called <code class="filename">/etc/systemd/journald.conf.d</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkdir /etc/systemd/journald.conf.d</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Note</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>The directory name must follow the service name that you want to patch with the drop-in
+                                       file.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In that directory, create a file <code class="filename">/etc/systemd/journald.conf.d/60-rate-limit.conf</code> with the option that you want to override, for example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">cat /etc/systemd/journald.conf.d/60-rate-limit.conf</code></code></span></span>
+<span class="line"><span class="ld"><code># Disable rate limiting</code></span></span>
+<span class="line"><span class="ld"><code>RateLimitIntervalSec=0</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Save your changes and restart the service of the corresponding <code class="daemon systemitem">systemd</code> daemon.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart systemd-journald</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Avoiding name conflicts</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>To avoid name conflicts between your drop-ins and files shipped by SUSE, it is recommended
+                              to prefix all drop-ins with a two-digit number and a dash, for example, <code class="filename">80-override.conf</code>.</p>
+                           
+                           <p>The following ranges are reserved:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">0-19</code> is reserved for <code class="daemon systemitem">systemd</code> upstream.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">20-29</code> is reserved for <code class="daemon systemitem">systemd</code> shipped by SUSE.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">30-39</code> is reserved for SUSE packages other than <code class="daemon systemitem">systemd</code>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">40-49</code> is reserved for third-party packages.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">50</code> is reserved for unit drop-in files created with <code class="command">systemctl set-property</code>.</p>
+                                 </li>
+                              </ul>
+                           
+                           <p>Use a two-digit number above this range to ensure that none of the drop-ins shipped
+                              by SUSE can override your own drop-ins.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>You can use <code class="command">systemctl cat $UNIT</code> to list and verify which files are taken into account in the units configuration.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>Because the configuration of <code class="daemon systemitem">systemd</code> components can be scattered across different places on the file system, it might
+                              be hard to get a global overview. To inspect the configuration of a <code class="daemon systemitem">systemd</code> component, use the following commands:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p><code class="command">systemctl cat <em class="replaceable">UNIT_PATTERN</em></code> prints configuration files related to one or more <code class="daemon systemitem">systemd</code> units, for example:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>systemctl cat atd.service</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="command">systemd-analyze cat-config <em class="replaceable">DAEMON_NAME_OR_PATH</em></code> copies the contents of a configuration file and drop-ins for a <code class="daemon systemitem">systemd</code> daemon, for example:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>systemd-analyze cat-config systemd/journald.conf</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ul>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="systemd-xinetd-conversion">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Converting <code class="systemitem">xinetd</code> services to <code class="daemon systemitem">systemd</code>
+                     </h3>
+               </header>
+               
+               
+               <p>Since the release of <span class="phrase productname">SUSE Linux Enterprise Server</span> 15, the <code class="systemitem">xinetd</code> infrastructure has been removed. This section outlines how to convert existing custom
+                  <code class="systemitem">xinetd</code> service files to <code class="daemon systemitem">systemd</code> sockets.</p>
+               
+               <p>For each <code class="systemitem">xinetd</code> service file, you need at least two <code class="daemon systemitem">systemd</code> unit files: the socket file (<code class="filename">*.socket</code>) and an associated service file (<code class="filename">*.service</code>). The socket file tells <code class="daemon systemitem">systemd</code> which socket to create, and the service file tells <code class="daemon systemitem">systemd</code> which executable to start.</p>
+               
+               <p>Consider the following example <code class="systemitem">xinetd</code> service file:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /etc/xinetd.d/example</code></span></span>
+<span class="line"><span class="ld"><code>service example</code></span></span>
+<span class="line"><span class="ld"><code>{</code></span></span>
+<span class="line"><span class="ld"><code>  socket_type = stream</code></span></span>
+<span class="line"><span class="ld"><code>  protocol = tcp</code></span></span>
+<span class="line"><span class="ld"><code>  port = 10085</code></span></span>
+<span class="line"><span class="ld"><code>  wait = no</code></span></span>
+<span class="line"><span class="ld"><code>  user = user</code></span></span>
+<span class="line"><span class="ld"><code>  group = users</code></span></span>
+<span class="line"><span class="ld"><code>  groups = yes</code></span></span>
+<span class="line"><span class="ld"><code>  server = /usr/libexec/example/exampled</code></span></span>
+<span class="line"><span class="ld"><code>  server_args = -auth=bsdtcp exampledump</code></span></span>
+<span class="line"><span class="ld"><code>  disable = no</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>To convert it to <code class="daemon systemitem">systemd</code>, you need the following two matching files:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /usr/lib/systemd/system/example.socket</code></span></span>
+<span class="line"><span class="ld"><code>[Socket]</code></span></span>
+<span class="line"><span class="ld"><code>ListenStream=0.0.0.0:10085</code></span></span>
+<span class="line"><span class="ld"><code>Accept=false</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=sockets.target</code></span></span></pre>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /usr/lib/systemd/system/example.service</code></span></span>
+<span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Description=example</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>ExecStart=/usr/libexec/example/exampled -auth=bsdtcp exampledump</code></span></span>
+<span class="line"><span class="ld"><code>User=user</code></span></span>
+<span class="line"><span class="ld"><code>Group=users</code></span></span>
+<span class="line"><span class="ld"><code>StandardInput=socket</code></span></span></pre>
+               </div>
+               
+               <p>For a complete list of the <code class="daemon systemitem">systemd</code><q>socket</q> and <q>service</q> file options, refer to the systemd.socket and systemd.service manual pages (<code class="command">man 5 systemd.socket</code>, <code class="command">man 5 systemd.service</code>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-boot-systemd-custom-targets">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>5<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Creating custom targets</h3>
+               </header>
+               
+               
+               <p>On System V init SUSE systems, runlevel 4 is unused to allow administrators to create
+                  their own runlevel configuration. <code class="daemon systemitem">systemd</code> allows you to create any number of custom targets. It is suggested to start by adapting
+                  an existing target such as <code class="systemitem">graphical.target</code>.</p>
+               
+               <div class="informalobject procedure" id="sec-boot-systemd-custom-targets_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Copy the configuration file <code class="filename">/usr/lib/systemd/system/graphical.target</code> to <code class="filename">/etc/systemd/system/<em class="replaceable">MY_TARGET</em>.target</code> and adjust it according to your needs.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>The configuration file copied in the previous step already covers the required (<q>hard</q>) dependencies for the target. To also cover the wanted (<q>soft</q>) dependencies, create a directory <code class="filename">/etc/systemd/system/<em class="replaceable">MY_TARGET</em>.target.wants</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>For each wanted service, create a symbolic link from <code class="filename">/usr/lib/systemd/system</code> into <code class="filename">/etc/systemd/system/<em class="replaceable">MY_TARGET</em>.target.wants</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>When you have finished setting up the target, reload the <code class="daemon systemitem">systemd</code> configuration to make the new target available:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl daemon-reload</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiich04s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk01partiich04s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing services with YaST</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Advanced usage</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

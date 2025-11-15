@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>1.5.&nbsp;Ext3</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich01s04.html" rel="prev">
+      <link href="bk09partich01s06.html" rel="next">
+      <link href="bk09partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich01.html">Up</a> <a href="bk09partich01s06.html">Next</a> <a href="bk09partich01s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich01s05.html" db-id="d616951e235248" id="sec-filesystems-major-ext3">
+            <header>
+               <h2><span class="label">1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Ext3</h2>
+            </header>
+            
+            
+            <p>Ext3 was designed by Stephen Tweedie. Unlike all other next-generation file systems,
+               Ext3 does not follow a completely new design principle. It is based on Ext2. These
+               two file systems are very closely related to each other. An Ext3 file system can be
+               easily built on top of an Ext2 file system. The most important difference between
+               Ext2 and Ext3 is that Ext3 supports journaling. In summary, Ext3 has three major advantages
+               to offer:</p>
+            
+            <section class="sect2" id="sec-filesystems-major-ext3-upgrade">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Easy and highly reliable upgrades from ext2</h3>
+               </header>
+               
+               
+               <p>The code for Ext2 is the strong foundation on which Ext3 could become a highly acclaimed
+                  next-generation file system. Its reliability and solidity are elegantly combined in
+                  Ext3 with the advantages of a journaling file system. Unlike transitions to other
+                  journaling file systems, such as XFS, which can be quite tedious (making backups of
+                  the entire file system and re-creating it from scratch), a transition to Ext3 is a
+                  matter of minutes. It is also very safe, because re-creating an entire file system
+                  from scratch might not work flawlessly. Considering the number of existing Ext2 systems
+                  that await an upgrade to a journaling file system, you can easily see why Ext3 might
+                  be of some importance to many system administrators. Downgrading from Ext3 to Ext2
+                  is as easy as the upgrade. Perform a clean unmount of the Ext3 file system and remount
+                  it as an Ext2 file system.</p>
+               </section>
+            
+            
+            <section class="sect2" id="sec-filesystems-major-ext3-ext22ext3a">
+               <header>
+                  <h3><span class="label">1<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Converting an ext2 file system into ext3</h3>
+               </header>
+               
+               
+               <p>To convert an Ext2 file system to Ext3:</p>
+               
+               <div class="informalobject procedure" id="sec-filesystems-major-ext3-ext22ext3a_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create an Ext3 journal by running <code class="command">tune2fs -j</code> as the <code class="systemitem username">root</code> user.</p>
+                        
+                        <p>This creates an Ext3 journal with the default parameters.</p>
+                        
+                        <p>To specify how large the journal should be and on which device it should reside, run
+                           <code class="command">tune2fs</code><code class="option">-J</code> instead together with the desired journal options <code class="option">size=</code> and <code class="option">device=</code>. More information about the <code class="command">tune2fs</code> program is available in the <code class="command">tune2fs</code> man page.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit the file <code class="filename">/etc/fstab</code> as the <code class="systemitem username">root</code> user to change the file system type specified for the corresponding partition from
+                           <code class="literal">ext2</code> to <code class="literal">ext3</code>, then save the changes.</p>
+                        
+                        <p>This ensures that the Ext3 file system is recognized as such. The change takes effect
+                           after the next reboot.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To boot a root file system that is set up as an Ext3 partition, add the modules <code class="literal">ext3</code> and <code class="literal">jbd</code> in the <code class="filename">initrd</code>. Do so by</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>opening or creating <code class="filename">/etc/dracut.conf.d/filesystem.conf</code> and adding the following line (mind the leading blank space):</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>force_drivers+=" ext3 jbd"</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>and running the <code class="command">dracut</code><code class="option">-f</code> command.</p>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot the system.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich01s04.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partich01s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Ext2</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">1<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Ext4</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

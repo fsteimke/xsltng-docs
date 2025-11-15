@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>25.3.&nbsp;GNOME configuration for administrators</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich06s02.html" rel="prev">
+      <link href="bk01partiiich06s04.html" rel="next">
+      <link href="bk01partiiich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich06.html">Up</a> <a href="bk01partiiich06s04.html">Next</a> <a href="bk01partiiich06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich06s03.html" db-id="d616951e46668" id="sec-gui-desktop-gnome">
+            <header>
+               <h2><span class="label">25<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>GNOME configuration for administrators</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-gui-desktop-gnome-dconf">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The <code class="literal">dconf</code> system</h3>
+               </header>
+               
+               
+               <p>Configuration of the GNOME desktop is managed with <code class="literal">dconf</code>. It is a hierarchically structured database or registry that allows users to modify
+                  their personal settings, and system administrators to set default or mandatory values
+                  for all users. <code class="literal">dconf</code> replaces the <code class="literal">gconf</code> system of GNOME 2.</p>
+               
+               <p>Use <code class="command">dconf-editor</code> to view the <code class="literal">dconf</code> options with a graphical user interface. Use <code class="command">dconf</code> to access and modify configuration options with the command line.</p>
+               
+               <p>The GNOME <code class="literal">Tweaks</code> tool provides an easy-to-use user interface for additional configuration options
+                  beyond the normal GNOME configuration. The tool can be started from the GNOME application
+                  menu or from the command line with <code class="command">gnome-tweak-tool</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-gui-desktop-gnome-global">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>System-wide configuration</h3>
+               </header>
+               
+               
+               <p>Global <code class="literal">dconf</code> configuration parameters can be set in the <code class="filename">/etc/dconf/db/</code> directory. This includes the configuration for GDM or locking certain configuration
+                  options for users.</p>
+               
+               <p>Use the following procedure as an example to create a system-wide configuration:</p>
+               
+               <div class="informalobject procedure" id="sec-gui-desktop-gnome-global_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Create a new directory that ends with a <code class="literal">.d</code> in <code class="filename">/etc/dconf/db/</code>. This directory can contain an arbitrary amount of text files with configuration
+                           options. For this example, create the file <code class="filename">/etc/dconf/db/network.d/00-proxy</code> with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># This is a comment</code></span></span>
+<span class="line"><span class="ld"><code>[system/proxy/http]</code></span></span>
+<span class="line"><span class="ld"><code>host='10.0.0.1'</code></span></span>
+<span class="line"><span class="ld"><code>enabled=true</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Parse the new configuration directives into the dconf database format:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dconf update</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Add the new <code class="literal">network</code> configuration database to the default user profile, by creating the file <code class="filename">/etc/dconf/profile/user</code>. Then add the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>system-db:network</code></span></span></pre>
+                        </div>
+                        
+                        <p>The file <code class="filename">/etc/dconf/profile/user</code> is a GNOME default. Other profiles can be defined in the environment variable <code class="literal">DCONF_PROFILE</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Optional: to lock the proxy configuration for users, create the file <code class="filename">/etc/dconf/db/network/locks/proxy</code>. Then add a line to this file with the keys that may not be changed:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/system/proxy/http/host</code></span></span>
+<span class="line"><span class="ld"><code>/system/proxy/http/enabled</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>You can use the graphical <code class="command">dconf-editor</code> to create a profile with one user and then use <code class="command">dconf dump /</code> to list all configuration options. The configuration options can then be stored in
+                  a global profile.</p>
+               
+               <p>A detailed description of the global configuration is available at <a class="link" href="https://wiki.gnome.org/Projects/dconf/SystemAdministrators">https://wiki.gnome.org/Projects/dconf/SystemAdministrators</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-gui-desktop-gnome-more-info">
+               <header>
+                  <h3><span class="label">25<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>More information</h3>
+               </header>
+               
+               
+               <p>For more information, see <a class="link" href="https://help.gnome.org/admin/">https://help.gnome.org/admin/</a>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich06.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich06s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">25<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing and configuring fonts</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">25<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Switching between Intel and NVIDIA Optimus GPUs with SUSE Prime</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

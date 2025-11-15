@@ -1,0 +1,460 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.7.&nbsp;Automatic snapshot clean-up</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10s06.html" rel="prev">
+      <link href="bk01partich10s08.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s08.html">Next</a> <a href="bk01partich10s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s07.html" db-id="d616951e20721" id="sec-snapper-clean-up">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Automatic snapshot clean-up</h2>
+            </header>
+            
+            
+            <p>Snapshots occupy disk space and over time the amount of disk space occupied by the
+               snapshots may become large. To prevent disks from running out of space, Snapper offers
+               algorithms to automatically delete old snapshots. These algorithms differentiate between
+               timeline snapshots and numbered snapshots (administration plus installation snapshot
+               pairs). You can specify the number of snapshots to keep for each type.</p>
+            
+            <p>Additionally, you can optionally specify a disk space quota, defining the maximum
+               amount of disk space the snapshots may occupy. It is also possible to automatically
+               delete pre and post snapshots pairs that do not differ.</p>
+            
+            <p>A clean-up algorithm is always bound to a single Snapper configuration, so you need
+               to configure algorithms for each configuration. To prevent certain snapshots from
+               being automatically deleted, refer to <a class="xref xref-qandaentry" href="bk01partich10s09.html#faq-snapper-permanent">Frequently asked questions</a>.</p>
+            
+            <p>The default setup (<code class="literal">root</code>) is configured to do clean-up for numbered snapshots and empty pre and post snapshot
+               pairs. Quota support is enabled—snapshots may not occupy more than 50% of the available
+               disk space of the root partition. Timeline snapshots are disabled by default, therefore
+               the timeline clean-up algorithm is also disabled.</p>
+            
+            <section class="sect2" id="sec-snapper-clean-up-number">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Cleaning up numbered snapshots</h3>
+               </header>
+               
+               
+               <p>Cleaning up numbered snapshots—administration plus installation snapshot pairs—is
+                  controlled by the following parameters of a Snapper configuration.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">NUMBER_CLEANUP</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Enables or disables clean-up of installation and admin snapshot pairs. If enabled,
+                           snapshot pairs are deleted when the total snapshot count exceeds a number specified
+                           with <code class="literal">NUMBER_LIMIT</code> and/or <code class="literal">NUMBER_LIMIT_IMPORTANT</code><em>and</em> an age specified with <code class="literal">NUMBER_MIN_AGE</code>. Valid values: <code class="literal">yes</code> (enable), <code class="literal">no</code> (disable).</p>
+                        
+                        <p>The default value is <code class="literal">"yes"</code>.</p>
+                        
+                        <p>Example command to change or set:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> set-config "NUMBER_CLEANUP=no"</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">NUMBER_LIMIT</code> / <code class="literal">NUMBER_LIMIT_IMPORTANT</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Defines how many regular and/or important installation and administration snapshot
+                           pairs to keep. Ignored if <code class="literal">NUMBER_CLEANUP</code> is set to <code class="literal">"no"</code>.</p>
+                        
+                        <p>The default value is <code class="literal">"2-10"</code> for <code class="literal">NUMBER_LIMIT</code> and <code class="literal">"4-10"</code> for <code class="literal">NUMBER_LIMIT_IMPORTANT</code>. The cleaning algorithms delete snapshots above the specified maximum value, without
+                           taking the snapshot and file system space into account. The algorithms also delete
+                           snapshots above the minimum value until the limits for the snapshot and file system
+                           are reached.</p>
+                        
+                        <p>Example command to change or set:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> set-config "NUMBER_LIMIT=10"</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Ranged compared to constant values</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>If quota support is enabled (see <a class="xref xref-sect2" href="#sec-snapper-clean-up-quota">the section called “Adding disk quota support”</a>), the limit needs to be specified as a minimum-maximum range, for example, <code class="literal">2-10</code>. If quota support is disabled, a constant value, for example, <code class="literal">10</code>, needs to be provided, otherwise cleaning up fails with an error.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">NUMBER_MIN_AGE</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Defines the minimum age in seconds a snapshot must have before it can automatically
+                           be deleted. Snapshots younger than the value specified here will not be deleted, regardless
+                           of how many exist.</p>
+                        
+                        <p>The default value is <code class="literal">"1800"</code>.</p>
+                        
+                        <p>Example command to change or set:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> set-config "NUMBER_MIN_AGE=864000"</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Limit and age</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><code class="literal">NUMBER_LIMIT</code>, <code class="literal">NUMBER_LIMIT_IMPORTANT</code> and <code class="literal">NUMBER_MIN_AGE</code> are always evaluated. Snapshots are only deleted when <em>all</em> conditions are met.</p>
+                           
+                           <p>If you always want to keep the number of snapshots defined with <code class="literal">NUMBER_LIMIT*</code> regardless of their age, set <code class="literal">NUMBER_MIN_AGE</code> to <code class="literal">0</code>.</p>
+                           
+                           <p>The following example shows a configuration to keep the last 10 important and regular
+                              snapshots regardless of age:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>NUMBER_CLEANUP=yes</code></span></span>
+<span class="line"><span class="ld"><code>NUMBER_LIMIT_IMPORTANT=10</code></span></span>
+<span class="line"><span class="ld"><code>NUMBER_LIMIT=10</code></span></span>
+<span class="line"><span class="ld"><code>NUMBER_MIN_AGE=0</code></span></span></pre>
+                           </div>
+                           
+                           <p>If you do not want to keep snapshots beyond a certain age, set <code class="literal">NUMBER_LIMIT*</code> to <code class="literal">0</code> and provide the age with <code class="literal">NUMBER_MIN_AGE</code>.</p>
+                           
+                           <p>The following example shows a configuration to only keep snapshots younger than ten
+                              days:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>NUMBER_CLEANUP=yes</code></span></span>
+<span class="line"><span class="ld"><code>NUMBER_LIMIT_IMPORTANT=0</code></span></span>
+<span class="line"><span class="ld"><code>NUMBER_LIMIT=0</code></span></span>
+<span class="line"><span class="ld"><code>NUMBER_MIN_AGE=864000</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-clean-up-timeline">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Cleaning up timeline snapshots</h3>
+               </header>
+               
+               
+               <p>Cleaning up timeline snapshots is controlled by the following parameters of a Snapper
+                  configuration.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">TIMELINE_CLEANUP</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Enables or disables clean-up of timeline snapshots. If enabled, snapshots are deleted
+                           when the total snapshot count exceeds a number specified with <code class="literal">TIMELINE_LIMIT_*</code><em>and</em> an age specified with <code class="literal">TIMELINE_MIN_AGE</code>. Valid values: <code class="literal">yes</code>, <code class="literal">no</code>.</p>
+                        
+                        <p>The default value is <code class="literal">"yes"</code>.</p>
+                        
+                        <p>Example command to change or set:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> set-config "TIMELINE_CLEANUP=yes"</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">TIMELINE_LIMIT_DAILY</code>, <code class="literal">TIMELINE_LIMIT_HOURLY</code>, <code class="literal">TIMELINE_LIMIT_MONTHLY</code>, <code class="literal">TIMELINE_LIMIT_WEEKLY</code>, <code class="literal">TIMELINE_LIMIT_YEARLY</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Number of snapshots to keep for hour, day, month, week and year.</p>
+                        
+                        <p>The default value for each entry is <code class="literal">"10"</code>, except for <code class="literal">TIMELINE_LIMIT_WEEKLY</code>, which is set to <code class="literal">"0"</code> by default.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">TIMELINE_MIN_AGE</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Defines the minimum age in seconds a snapshot must have before it can automatically
+                           be deleted.</p>
+                        
+                        <p>The default value is <code class="literal">"1800"</code>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="example formalobject" id="ex-snapper-config-timeline">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>TIMELINE_CLEANUP="yes"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_CREATE="yes"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_LIMIT_DAILY="7"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_LIMIT_HOURLY="24"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_LIMIT_MONTHLY="12"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_LIMIT_WEEKLY="4"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_LIMIT_YEARLY="2"</code></span></span>
+<span class="line"><span class="ld"><code>TIMELINE_MIN_AGE="1800"</code></span></span></pre>
+                  </div>
+                  
+                  <p>This example configuration enables hourly snapshots which are automatically cleaned
+                     up. <code class="literal">TIMELINE_MIN_AGE</code> and <code class="literal">TIMELINE_LIMIT_*</code> are always both evaluated. In this example, the minimum age of a snapshot before
+                     it can be deleted is set to 30 minutes (1800 seconds). Since we create hourly snapshots,
+                     this ensures that only the latest snapshots are kept. If <code class="literal">TIMELINE_LIMIT_DAILY</code> is set to not zero, this means that the first snapshot of the day is kept, too.</p>
+                  
+                  <div class="itemizedlist">
+                     <header>
+                        <div class="title">Snapshots to be kept</div>
+                     </header>
+                     <ul db-mark="bullet">
+                        <li>
+                           
+                           <p>Hourly: the last 24 snapshots that have been made.</p>
+                           </li>
+                        <li>
+                           
+                           <p>Daily: the first daily snapshot that has been made is kept from the last seven days.</p>
+                           </li>
+                        <li>
+                           
+                           <p>Monthly: the first snapshot made on the last day of the month is kept for the last
+                              twelve months.</p>
+                           </li>
+                        <li>
+                           
+                           <p>Weekly: the first snapshot made on the last day of the week is kept from the last
+                              four weeks.</p>
+                           </li>
+                        <li>
+                           
+                           <p>Yearly: the first snapshot made on the last day of the year is kept for the last two
+                              years.</p>
+                           </li>
+                     </ul>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">10<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Example timeline configuration</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-clean-up-empty">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Cleaning up snapshot pairs that do not differ</h3>
+               </header>
+               
+               
+               <p>As explained in <a class="xref xref-sect2" href="bk01partich10.html#snapper-snapshot-type">the section called “Types of snapshots”</a>, whenever you run a YaST module or execute Zypper, a pre snapshot is created on start-up
+                  and a post snapshot is created when exiting. In case you have not made any changes
+                  there will be no difference between the pre and post snapshots. Such <q>empty</q> snapshot pairs can be automatically be deleted by setting the following parameters
+                  in a Snapper configuration:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">EMPTY_PRE_POST_CLEANUP</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>If set to <code class="literal">yes</code>, pre and post snapshot pairs that do not differ will be deleted.</p>
+                        
+                        <p>The default value is <code class="literal">"yes"</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">EMPTY_PRE_POST_MIN_AGE</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Defines the minimum age in seconds a pre and post snapshot pair that does not differ
+                           must have before it can automatically be deleted.</p>
+                        
+                        <p>The default value is <code class="literal">"1800"</code>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-clean-up-manual">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>7<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Cleaning up manually created snapshots</h3>
+               </header>
+               
+               
+               <p>Snapper does not offer custom clean-up algorithms for manually created snapshots.
+                  However, you can assign the number or timeline clean-up algorithm to a manually created
+                  snapshot. If you do so, the snapshot will join the <q>clean-up queue</q> for the algorithm you specified. You can specify a clean-up algorithm when creating
+                  a snapshot, or by modifying an existing snapshot:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper create --description "Test" --cleanup-algorithm number</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a stand-alone snapshot (type single) for the default (root) configuration
+                           and assigns the <code class="literal">number</code> clean-up algorithm.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper modify --cleanup-algorithm "timeline" 25</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Modifies the snapshot with the number 25 and assigns the clean-up algorithm <code class="literal">timeline</code>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-clean-up-quota">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>7<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Adding disk quota support</h3>
+               </header>
+               
+               
+               <p>In addition to the number and/or timeline clean-up algorithms described above, Snapper
+                  supports quotas. You can define what percentage of the available space snapshots are
+                  allowed to occupy. This percentage value always applies to the Btrfs subvolume defined
+                  in the respective Snapper configuration.</p>
+               
+               <p>Btrfs quotas are applied to subvolumes, not to users. You may apply disk space quotas
+                  to users and groups (for example, with the <code class="command">quota</code> command) in addition to using Btrfs quotas.</p>
+               
+               <p>If Snapper was enabled during the installation, quota support is automatically enabled.
+                  In case you manually enable Snapper at a later point in time, you can enable quota
+                  support by running <code class="command">snapper setup-quota</code>. This requires a valid configuration (see <a class="xref xref-sect1" href="bk01partich10s05.html">the section called “Creating and modifying Snapper configurations”</a> for more information).</p>
+               
+               <p>Quota support is controlled by the following parameters of a Snapper configuration.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">QGROUP</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The Btrfs quota group used by Snapper. If not set, run <code class="command">snapper setup-quota</code>. If already set, only change if you are familiar with <code class="command">man 8 btrfs-qgroup</code>. This value is set with <code class="command">snapper setup-quota</code> and should not be changed.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">SPACE_LIMIT</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Limit of space snapshots are allowed to use in fractions of 1 (100%). Valid values
+                           range from 0 to 1 (0.1 = 10%, 0.2 = 20%, ...).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>The following limitations and guidelines apply:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Quotas are only activated in <em>addition</em> to an existing number and/or timeline clean-up algorithm. If no clean-up algorithm
+                        is active, quota restrictions are not applied.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>With quota support enabled, Snapper will perform two clean-up runs if required. The
+                        first run will apply the rules specified for number and timeline snapshots. Only if
+                        the quota is exceeded after this run, the quota-specific rules will be applied in
+                        a second run.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Even if quota support is enabled, Snapper will always keep the number of snapshots
+                        specified with the <code class="literal">NUMBER_LIMIT*</code> and <code class="literal">TIMELINE_LIMIT*</code> values, even if the quota will be exceeded. It is therefore recommended to specify
+                        ranged values (<code class="literal"><em class="replaceable">MIN</em>-<em class="replaceable">MAX</em></code>) for <code class="literal">NUMBER_LIMIT*</code> and <code class="literal">TIMELINE_LIMIT*</code> to ensure the quota can be applied.</p>
+                     
+                     <p>If, for example, <code class="literal">NUMBER_LIMIT=5-20</code> is set, Snapper will perform a first clean-up run and reduce the number of regular
+                        numbered snapshots to 20. In case these 20 snapshots exceed the quota, Snapper will
+                        delete the oldest ones in a second run until the quota is met. A minimum of five snapshots
+                        will always be kept, regardless of the amount of space they occupy.</p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10s06.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Manually creating and managing snapshots</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Showing exclusive disk space used by snapshots</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

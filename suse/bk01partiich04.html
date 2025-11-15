@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;19.&nbsp;The systemd daemon</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiich03s07.html" rel="prev">
+      <link href="bk01partiich04s02.html" rel="next">
+      <link href="bk01partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partii.html">Up</a> <a href="bk01partiich04s02.html">Next</a> <a href="bk01partiich03s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partiich04.html" db-id="d616951e29943" id="cha-systemd" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">19</span><span class="sep">.&nbsp;</span>The <code class="daemon systemitem">systemd</code> daemon</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p><code class="daemon systemitem">systemd</code> initializes the system. It has the process ID 1. <code class="daemon systemitem">systemd</code> is started directly by the kernel and resists signal&nbsp;9, which normally terminates
+                  processes. All other programs are started directly by <code class="daemon systemitem">systemd</code> or by one of its child processes. <code class="daemon systemitem">systemd</code> is a replacement for the System V init daemon and is fully compatible with System
+                  V init (by supporting init scripts).</p>
+               
+               <p>The main advantage of <code class="daemon systemitem">systemd</code> is that it considerably speeds up boot time by parallelizing service starts. Furthermore,
+                  <code class="daemon systemitem">systemd</code> only starts a service when it is really needed. Daemons are not started unconditionally
+                  at boot time, but when being required for the first time. <code class="daemon systemitem">systemd</code> also supports Kernel Control Groups (cgroups), creating snapshots, and restoring
+                  the system state. For more details see <a class="link" href="https://www.freedesktop.org/wiki/Software/systemd/">https://www.freedesktop.org/wiki/Software/systemd/</a>.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">
+                              <code class="daemon systemitem">systemd</code> inside WSL</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Windows Subsystem for Linux (WSL) enables running Linux applications and distributions
+                              under the Microsoft Windows operating system. WSL uses its init process instead of
+                              <code class="daemon systemitem">systemd</code>. To enable <code class="daemon systemitem">systemd</code> in <span class="phrase productname">SLES</span> running in WSL, install the <code class="literal">wsl_systemd</code> pattern that automates the process:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in -t pattern wsl_systemd</code></span></span></pre>
+                           </div>
+                           
+                           <p>Alternatively, you can edit <code class="filename">/etc/wsl.conf</code> and add the following lines manually:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[boot]</code></span></span>
+<span class="line"><span class="ld"><code>systemd=true</code></span></span></pre>
+                           </div>
+                           
+                           <p>Keep in mind that the support for <code class="daemon systemitem">systemd</code> in WSL is partial—<code class="daemon systemitem">systemd</code> unit files must have reasonable process management behavior.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="sec-boot-systemd-concept">
+               <header>
+                  <h2><span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The <code class="daemon systemitem">systemd</code> concept</h2>
+               </header>
+               
+               
+               <p>The following section explains the concept behind <code class="daemon systemitem">systemd</code>.</p>
+               
+               <p><code class="daemon systemitem">systemd</code> is a system and session manager for Linux, compatible with System V and LSB init
+                  scripts. The main features of <code class="daemon systemitem">systemd</code> include:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>parallelization capabilities</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>socket and D-Bus activation for starting services</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>on-demand starting of daemons</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>tracking of processes using Linux cgroups</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>creating snapshots and restoring of the system state</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>maintains mount and automount points</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>implements an elaborate transactional dependency-based service control logic</p>
+                     </li>
+                  </ul>
+               
+               <section class="sect2" id="sec-boot-systemd-unitfile">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Unit file</h3>
+                  </header>
+                  
+                  
+                  <p>A unit configuration file contains information about a service, a socket, a device,
+                     a mount point, an automount point, a swap file or partition, a start-up target, a
+                     watched file system path, a timer controlled and supervised by <code class="daemon systemitem">systemd</code>, a temporary system state snapshot, a resource management slice or a group of externally
+                     created processes.</p>
+                  
+                  <p><q>Unit file</q> is a generic term used by <code class="daemon systemitem">systemd</code> for the following:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Service</span><span class="para">Information about a process (for example, running a daemon); file ends with .service</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Targets</span><span class="para">Used for grouping units and as synchronization points during start-up; file ends with
+                              .target</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Sockets</span><span class="para">Information about an IPC or network socket or a file system FIFO, for socket-based
+                              activation (like <code class="daemon systemitem">inetd</code>); file ends with .socket</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Path</span><span class="para">Used to trigger other units (for example, running a service when files change); file
+                              ends with .path</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Timer</span><span class="para">Information about a timer controlled, for timer-based activation; file ends with .timer</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Mount point</span><span class="para">Normally auto-generated by the fstab generator; file ends with .mount</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Automount point</span><span class="para">Information about a file system automount point; file ends with .automount</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Swap</span><span class="para">Information about a swap device or file for memory paging; file ends with .swap</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Device</span><span class="para">Information about a device unit as exposed in the sysfs/udev(7) device tree; file
+                              ends with .device</span></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p class="formalpara"><span class="title">Scope / slice</span><span class="para">A concept for hierarchically managing resources of a group of processes; file ends
+                              with .scope/.slice</span></p>
+                        </li>
+                     </ul>
+                  
+                  <p>For more information about <code class="daemon systemitem">systemd</code> unit files, see <a class="link" href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html">https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html</a></p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiich03s07.html">Prev</a></td>
+                  <td class="up"><a href="bk01partii.html">Up</a></td>
+                  <td class="next"><a href="bk01partiich04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Basic usage</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

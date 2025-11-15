@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>38.11.&nbsp;QMP - QEMU machine protocol</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvch05s10.html" rel="prev">
+      <link href="bk10partvi.html" rel="next">
+      <link href="bk10partvch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partvch05.html">Up</a> <a href="bk10partvi.html">Next</a> <a href="bk10partvch05s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partvch05s11.html" db-id="d616951e303286" id="qemu-monitor-qmp">
+            <header>
+               <h2><span class="label">38<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>QMP - QEMU machine protocol</h2>
+            </header>
+            
+            
+            <p>QMP is a JSON-based protocol that allows applications—such as <code class="library systemitem">libvirt</code>—to communicate with a running QEMU instance. There are several ways you can access
+               the QEMU monitor using QMP commands.</p>
+            
+            <section class="sect2" id="sec-qemu-monitor-qmp-io">
+               <header>
+                  <h3><span class="label">38<span class="sep">.</span>11<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Access QMP via standard input/output</h3>
+               </header>
+               
+               
+               <p>The most flexible way to use QMP is by specifying the <code class="option">-mon</code> option. The following example creates a QMP instance using standard input/output.
+                  In the following examples, <code class="literal">-&gt;</code> marks lines with commands sent from client to the running QEMU instance, while <code class="literal">&lt;-</code> marks lines with the output returned from QEMU.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-chardev stdio,id=mon0 \</code></span></span>
+<span class="line"><span class="ld"><code>-mon chardev=mon0,mode=control,pretty=on</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;- {</code></span></span>
+<span class="line"><span class="ld"><code>    "QMP": {</code></span></span>
+<span class="line"><span class="ld"><code>        "version": {</code></span></span>
+<span class="line"><span class="ld"><code>            "qemu": {</code></span></span>
+<span class="line"><span class="ld"><code>                "micro": 0,</code></span></span>
+<span class="line"><span class="ld"><code>                "minor": 0,</code></span></span>
+<span class="line"><span class="ld"><code>                "major": 2</code></span></span>
+<span class="line"><span class="ld"><code>            },</code></span></span>
+<span class="line"><span class="ld"><code>            "package": ""</code></span></span>
+<span class="line"><span class="ld"><code>        },</code></span></span>
+<span class="line"><span class="ld"><code>        "capabilities": [</code></span></span>
+<span class="line"><span class="ld"><code>        ]</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>When a new QMP connection is established, QMP sends its greeting message and enters
+                  capabilities negotiation mode. In this mode, only the <code class="command">qmp_capabilities</code> command works. To exit capabilities negotiation mode and enter command mode, the
+                  <code class="command">qmp_capabilities</code> command must be issued first:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-&gt; { "execute": "qmp_capabilities" }</code></span></span>
+<span class="line"><span class="ld"><code>&lt;- {</code></span></span>
+<span class="line"><span class="ld"><code>    "return": {</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p><code class="literal">"return": {}</code> is a QMP's success response.</p>
+               
+               <p>QMP's commands can have arguments. For example, to eject a CD-ROM drive, enter the
+                  following:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-&gt;{ "execute": "eject", "arguments": { "device": "ide1-cd0" } }</code></span></span>
+<span class="line"><span class="ld"><code>&lt;- {</code></span></span>
+<span class="line"><span class="ld"><code>    "timestamp": {</code></span></span>
+<span class="line"><span class="ld"><code>        "seconds": 1410353381,</code></span></span>
+<span class="line"><span class="ld"><code>        "microseconds": 763480</code></span></span>
+<span class="line"><span class="ld"><code>    },</code></span></span>
+<span class="line"><span class="ld"><code>    "event": "DEVICE_TRAY_MOVED",</code></span></span>
+<span class="line"><span class="ld"><code>    "data": {</code></span></span>
+<span class="line"><span class="ld"><code>        "device": "ide1-cd0",</code></span></span>
+<span class="line"><span class="ld"><code>        "tray-open": true</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span>
+<span class="line"><span class="ld"><code>{</code></span></span>
+<span class="line"><span class="ld"><code>    "return": {</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-qemu-monitor-qmp-telnet">
+               <header>
+                  <h3><span class="label">38<span class="sep">.</span>11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Access QMP via telnet</h3>
+               </header>
+               
+               
+               <p>Instead of the standard input/output, you can connect the QMP interface to a network
+                  socket and communicate with it via a specified port:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-chardev socket,id=mon0,host=localhost,port=4444,server,nowait \</code></span></span>
+<span class="line"><span class="ld"><code>-mon chardev=mon0,mode=control,pretty=on</code></span></span></pre>
+               </div>
+               
+               <p>And then run telnet to connect to port 4444:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>telnet localhost 4444</code></span></span>
+<span class="line"><span class="ld"><code>Trying ::1...</code></span></span>
+<span class="line"><span class="ld"><code>Connected to localhost.</code></span></span>
+<span class="line"><span class="ld"><code>Escape character is '^]'.</code></span></span>
+<span class="line"><span class="ld"><code>&lt;- {</code></span></span>
+<span class="line"><span class="ld"><code>    "QMP": {</code></span></span>
+<span class="line"><span class="ld"><code>        "version": {</code></span></span>
+<span class="line"><span class="ld"><code>            "qemu": {</code></span></span>
+<span class="line"><span class="ld"><code>                "micro": 0,</code></span></span>
+<span class="line"><span class="ld"><code>                "minor": 0,</code></span></span>
+<span class="line"><span class="ld"><code>                "major": 2</code></span></span>
+<span class="line"><span class="ld"><code>            },</code></span></span>
+<span class="line"><span class="ld"><code>            "package": ""</code></span></span>
+<span class="line"><span class="ld"><code>        },</code></span></span>
+<span class="line"><span class="ld"><code>        "capabilities": [</code></span></span>
+<span class="line"><span class="ld"><code>        ]</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>You can create several monitor interfaces at the same time. The following example
+                  creates one HMP instance—human monitor which understands <q>normal</q> QEMU monitor's commands—on the standard input/output, and one QMP instance on localhost
+                  port 4444:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-chardev stdio,id=mon0 -mon chardev=mon0,mode=readline \</code></span></span>
+<span class="line"><span class="ld"><code>-chardev socket,id=mon1,host=localhost,port=4444,server,nowait \</code></span></span>
+<span class="line"><span class="ld"><code>  -mon chardev=mon1,mode=control,pretty=on</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-qemu-monitor-qmp-socket">
+               <header>
+                  <h3><span class="label">38<span class="sep">.</span>11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Access QMP via Unix socket</h3>
+               </header>
+               
+               
+               <p>Invoke QEMU using the <code class="option">-qmp</code> option, and create a Unix socket:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-qmp unix:/tmp/qmp-sock,server --monitor stdio</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>QEMU waiting for connection on: unix:./qmp-sock,server</code></span></span></pre>
+               </div>
+               
+               <p>To communicate with the QEMU instance via the <code class="literal">/tmp/qmp-sock</code> socket, use <code class="command">nc</code> (see <code class="command">man 1 nc</code> for more information) from another terminal on the same host:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nc -U /tmp/qmp-sock</code></span></span>
+<span class="line"><span class="ld"><code>&lt;- {"QMP": {"version": {"qemu": {"micro": 0, "minor": 0, "major": 2} [...]</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-qemu-monitor-qmp-virsh">
+               <header>
+                  <h3><span class="label">38<span class="sep">.</span>11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Access QMP via <code class="library systemitem">libvirt</code>'s <code class="command">virsh</code> command</h3>
+               </header>
+               
+               
+               <p>If you run your virtual machines under <code class="library systemitem">libvirt</code> (see <a class="xref xref-part" href="bk10partii.html">Part&nbsp;<span class="label">II</span>, “Managing virtual machines with <code class="library systemitem">libvirt</code>
+                     ”</a>), you can communicate with its running guests by running the <code class="command">virsh qemu-monitor-command</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh qemu-monitor-command vm_guest1 \</code></span></span>
+<span class="line"><span class="ld"><code>--pretty '{"execute":"query-kvm"}'</code></span></span>
+<span class="line"><span class="ld"><code>&lt;- {</code></span></span>
+<span class="line"><span class="ld"><code>    "return": {</code></span></span>
+<span class="line"><span class="ld"><code>        "enabled": true,</code></span></span>
+<span class="line"><span class="ld"><code>        "present": true</code></span></span>
+<span class="line"><span class="ld"><code>    },</code></span></span>
+<span class="line"><span class="ld"><code>    "id": "libvirt-8"</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>In the above example, we ran the simple command <code class="command">query-kvm</code> which checks if the host is capable of running KVM and if KVM is enabled.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Generating human-readable output</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>To use the standard human-readable output format of QEMU instead of the JSON format,
+                              use the <code class="option">--hmp</code> option:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh qemu-monitor-command vm_guest1 --hmp "query-kvm"</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvch05s10.html">Prev</a></td>
+                  <td class="up"><a href="bk10partvch05.html">Up</a></td>
+                  <td class="next"><a href="bk10partvi.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">38<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Live migration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">VI</span><span class="sep">.&nbsp;</span>Troubleshooting</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.3.&nbsp;File systems and disk access</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partivch01s02.html" rel="prev">
+      <link href="bk07partivch02.html" rel="next">
+      <link href="bk07partivch01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partivch01.html">Up</a> <a href="bk07partivch02.html">Next</a> <a href="bk07partivch01s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partivch01s03.html" db-id="d616951e211388" id="cha-tuning-resources-disk">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>File systems and disk access</h2>
+            </header>
+            
+            
+            <p>Hard disks are the slowest components in a computer system and therefore often the
+               cause for a bottleneck. Using the file system that best suits your workload helps
+               to improve performance. Using special mount options or prioritizing a process's I/O
+               priority are further means to speed up the system.</p>
+            
+            <section class="sect2" id="cha-tuning-resources-disk-filesystems">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>File systems</h3>
+               </header>
+               
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> ships with several file systems, including Btrfs, Ext4, Ext3, Ext2, and XFS. Each
+                  file system has its own advantages and disadvantages. Refer to <a class="xref xref-chapter" href="bk09partich01.html">Chapter&nbsp;<span class="label">1</span>, Overview of file systems in Linux</a> for detailed information.</p>
+               
+               <section class="sect3" id="cha-tuning-resources-disk-filesystems-nfs">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NFS</h4>
+                  </header>
+                  
+                  
+                  <p>NFS (Version 3) tuning is covered in detail in the NFS Howto at <a class="link" href="https://nfs.sourceforge.net/nfs-howto/">https://nfs.sourceforge.net/nfs-howto/</a>. When mounting NFS shares, start with the experiment of increasing the size of the
+                     read-write blocks to <code class="literal">32768</code>, by using the mount options <code class="option">wsize</code> and <code class="option">rsize</code>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-resources-disk-mount">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Time stamp update policy</h3>
+               </header>
+               
+               
+               <p>Each file and directory in a file system has three time stamps associated with it:
+                  a time when the file was last read called <em>access time</em>, a time when the file data was last modified called <em>modification time</em>, and a time when the file metadata was last modified called <em>change time</em>. Keeping access time always up to date has significant performance overhead since
+                  every read-only access incurs a write operation. By default, every file system updates
+                  access time only if current file access time is older than a day, or older than file
+                  modification or change time. This feature is called <em>relative access time</em> and the corresponding mount option is <code class="option">relatime</code>. Updates of access time can be disabled using the <code class="option">noatime</code> mount option. However, you need to verify your applications do not use it. This can
+                  be true for file and Web servers or for network storage. If the default relative access
+                  time update policy is not suitable for your applications, use the <code class="option">strictatime</code> mount option.</p>
+               
+               <p>Some file systems (for example Ext4) also support lazy time stamp updates. When this
+                  feature is enabled using the <code class="option">lazytime</code> mount option, updates of all time stamps happen in memory but they are not written
+                  to disk. That happens only in response to <code class="systemitem">fsync</code> or <code class="systemitem">sync</code> system calls, when the file information is written due to another reason such as
+                  file size update, when time stamps are older than 24 hours, or when cached file information
+                  needs to be evicted from memory.</p>
+               
+               <p>To update mount options used for a file system, either edit <code class="filename">/etc/fstab</code> directly, or use the <span class="guimenu">Fstab Options</span> dialog when editing or adding a partition with the YaST Partitioner.</p>
+               </section>
+            
+            <section class="sect2" id="cha-tuning-resources-disk-ionice">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Prioritizing disk access with <code class="command">ionice</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The <code class="command">ionice</code> command lets you prioritize disk access for single processes. This enables you to
+                  give less I/O priority to background processes with heavy disk access that are not
+                  time-critical, such as backup jobs. <code class="command">ionice</code> also lets you raise the I/O priority for a specific process to make sure this process
+                  always has immediate access to the disk. The caveat of this feature is that standard
+                  writes are cached in the page cache and are written back to persistent storage only
+                  later by an independent kernel process. Thus the I/O priority setting generally does
+                  not apply for these writes. Also be aware that I/O class and priority setting are
+                  obeyed only by <em>BFQ</em> I/O scheduler for blk-mq I/O path (refer to <a class="xref xref-sect1" href="bk07partvch01s02.html">the section called “Available I/O elevators with blk-mq I/O path”</a>). You can set the following three scheduling classes:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Idle</span></dt>
+                     <dd>
+                        
+                        <p>A process from the idle scheduling class is only granted disk access when no other
+                           process has asked for disk I/O.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Best effort</span></dt>
+                     <dd>
+                        
+                        <p>The default scheduling class used for any process that has not asked for a specific
+                           I/O priority. Priority within this class can be adjusted to a level from <code class="literal">0</code> to <code class="literal">7</code> (with <code class="literal">0</code> being the highest priority). Programs running at the same best-effort priority are
+                           served in a round-robin fashion. Some kernel versions treat priority within the best-effort
+                           class differently—for details, refer to the <code class="systemitem">ionice(1)</code> man page.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Real-time</span></dt>
+                     <dd>
+                        
+                        <p>Processes in this class are always granted disk access first. Fine-tune the priority
+                           level from <code class="literal">0</code> to <code class="literal">7</code> (with <code class="literal">0</code> being the highest priority). Use with care, since it can starve other processes.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>For more details and the exact command syntax refer to the <code class="systemitem">ionice(1)</code> man page. If you need more reliable control over bandwidth available to each application,
+                  use Kernel Control Groups as described in <a class="xref xref-chapter" href="bk07partivch02.html">Chapter&nbsp;<span class="label">10</span>, Kernel control groups</a>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partivch01s02.html">Prev</a></td>
+                  <td class="up"><a href="bk07partivch01.html">Up</a></td>
+                  <td class="next"><a href="bk07partivch02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Disabling unnecessary services</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>Kernel control groups</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

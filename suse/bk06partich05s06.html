@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.6.&nbsp;Kerberos and NFS</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich05s05.html" rel="prev">
+      <link href="bk06partich05s07.html" rel="next">
+      <link href="bk06partich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich05.html">Up</a> <a href="bk06partich05s07.html">Next</a> <a href="bk06partich05s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich05s06.html" db-id="d616951e163785" id="sec-security-kerberos-nfs">
+            <header>
+               <h2><span class="label">6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Kerberos and NFS</h2>
+            </header>
+            
+            
+            <p>Most NFS servers can export file systems using any combination of the default <q>trust the network</q> form of security, known as <code class="option">sec=sys</code>, and three different levels of Kerberos-based security, <code class="option">sec=krb5</code>, <code class="option">sec=krb5i</code>, and <code class="option">sec=krb5p</code>. The <code class="option">sec</code> option is set as a mount option on the client. It is often the case that the NFS
+               service is configured first and used with <code class="option">sec=sys</code>, and then Kerberos can be imposed afterwards. In this case it is likely that the
+               server is configured to support both <code class="option">sec=sys</code> and one of the Kerberos levels, and then after all clients have transitioned, the
+               <code class="option">sec=sys</code> support is removed, thus achieving true security. The transition to Kerberos should
+               be transparent if done in an orderly manner. However there is one subtle detail of
+               NFS behavior that works differently when Kerberos is used, and the implications of
+               this need to be understood and addressed. See <a class="xref xref-sect2" href="#sec-security-kerberos-overview-group">the section called “Group membership”</a>.</p>
+            
+            <p>The three Kerberos levels indicate different levels of security. With more security
+               comes a need for more processor power to encrypt and decrypt messages. Choosing the
+               right balance is an important consideration when planning a roll-out of Kerberos for
+               NFS.</p>
+            
+            <p><code class="literal">krb5</code> provides only authentication. The server can know who sent a request, and the client
+               can know that the server sent a reply. No security is provided for the content of
+               the request or reply, so an attacker with physical network access could transform
+               the request or reply, or both, in various ways to deceive either server or client.
+               They cannot directly read or change any file that the authenticated user could not
+               read or change, but almost anything is theoretically possible.</p>
+            
+            <p><code class="literal">krb5i</code> adds integrity checks to all messages. With <code class="literal">krb5i</code>, an attacker cannot modify any request or reply, but they can view all the data exchanged,
+               and so could discover the content of any file that is read.</p>
+            
+            <p><code class="literal">krb5p</code> adds privacy to the protocol. As well as reliable authentication and integrity checking,
+               messages are fully encrypted so an attacker can only know that messages were exchanged
+               between client and server, and cannot extract other information directly from the
+               message. Whether information can be extracted from message timing is a separate question
+               that Kerberos does not address.</p>
+            
+            <section class="sect2" id="sec-security-kerberos-overview-group">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Group membership</h3>
+               </header>
+               
+               
+               <p>The one behavioral difference between <code class="option">sec=sys</code> and the Kerberos security levels that might be visible is related to group membership.
+                  In Unix and Linux, each file system access comes from a process that is owned by a
+                  particular user and has a particular group owner and several supplemental groups.
+                  Access rights to files can vary based on the owner and the groups.</p>
+               
+               <p>With <code class="option">sec=sys</code>, the user-id, group-id, and a list of up to 16 supplementary groups are sent to the
+                  server in each request.</p>
+               
+               <p>If a user is a member of more than 16 supplementary groups, the extra groups are lost
+                  and files may not be accessible over NFS that the user would normally expect to have
+                  access to. For this reason, most sites that use NFS find a way to limit all users
+                  to at most 16 supplementary groups.</p>
+               
+               <p>If the user runs the <code class="command">newgrp</code> command or runs a set-group-id program, either of which can change the list of groups
+                  they are a member of, these changes take effect immediately and provide different
+                  accesses over NFS.</p>
+               
+               <p>With Kerberos, group information is not sent in requests. Only the user is identified
+                  (using a Kerberos <q>principal</q>), and the server performs a lookup to determine the user ID and group list for that
+                  principal. This means that if the user is a member of more than 16 groups, these group
+                  memberships are used in determining file access permissions. However it also means
+                  that if the user changes a group-id on the client, the server does not notice the
+                  change and does not take it into account in determining access rights.</p>
+               
+               <p>The improvement of having access to more groups brings a real benefit, and the loss
+                  of not being able to change groups is not noticed as it is not widely used. A site
+                  administrator considering the use of Kerberos should be aware of the difference though
+                  and ensure that it does not cause problems.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-kerberos-overview-performance">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Performance and scalability</h3>
+               </header>
+               
+               
+               <p>Using Kerberos for security requires extra CPU power for encrypting and decrypting
+                  messages. How much extra CPU power is required and whether the difference is noticeable
+                  varies with different hardware and different applications. If the server or client
+                  are already saturating the available CPU power, it is likely that a performance drop
+                  is measurable when switching from <code class="literal">sec=sys</code> to Kerberos. If there is spare CPU capacity available, it is possible that the transition
+                  does not result in any throughput change. The only way to be sure how much impact
+                  the use of Kerberos has is to test your load on your hardware.</p>
+               
+               <p>The only configuration options that might reduce the load also reduce the quality
+                  of the protection offered. <code class="option">sec=krb5</code> should produce noticeably less load than <code class="option">sec=krb5p</code> but, as discussed above, it does not produce strong security. Similarly it is possible
+                  to adjust the list of ciphers that Kerberos can choose from, and this might change
+                  the CPU requirement. However the defaults are carefully chosen and should not be changed
+                  without similar careful consideration.</p>
+               
+               <p>The other possible performance issue when configuring NFS to use Kerberos involves
+                  availability of the Kerberos authentication servers, known as the KDC or Key Distribution
+                  Center.</p>
+               
+               <p>The use of NFS adds load to such servers to the same degree that adding the use of
+                  Kerberos for any other services adds some load. Every time a given user (Kerberos
+                  principal) establishes a session with a service, for example by accessing files exported
+                  by a particular NFS server, the client needs to negotiate with the KDC. Once a session
+                  key has been negotiated, the client server can communicate without further help for
+                  many hours, depending on details of the Kerberos configuration, particularly the <code class="option">ticket_lifetime</code> setting.</p>
+               
+               <p>The concerns most likely to affect the provisioning of Kerberos KDC servers are availability
+                  and peak usage.</p>
+               
+               <p>As with other core services such as DNS, LDAP or similar name-lookup services, having
+                  two servers that are reasonably <q>close</q> to every client provides good availability for modest resources. Kerberos allows
+                  for multiple KDC servers with flexible models for database propagation, so distributing
+                  servers as needed around campuses, buildings and even cabinets is straightforward.
+                  The best mechanism to ensure each client finds a nearby Kerberos server is to use
+                  split-horizon DNS with each building (or similar) getting different details from the
+                  DNS server. If this is not possible, then managing the <code class="filename">/etc/krb5.conf</code> file to be different at different locations is a suitable alternative.</p>
+               
+               <p>As access to the Kerberos KDC is infrequent, load is only likely to be a problem at
+                  peak times. If thousands of people all log in between 9:00 and 9:05, then the servers
+                  receive many more requests-per-minute than they might in the middle of the night.
+                  The load on the Kerberos server is likely to be more than that on an LDAP server,
+                  but not orders of magnitude more. A sensible guideline is to provision Kerberos replicas
+                  in the same manner that you provision LDAP replicas, and then monitor performance
+                  to determine if demand ever exceeds capacity.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-kerberos-overview-kdc">
+               <header>
+                  <h3><span class="label">6<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Master KDC, multiple domains, and trust relationships</h3>
+               </header>
+               
+               
+               <p>One service of the Kerberos KDC that is not easily distributed is the handling of
+                  updates, such as password changes and new user creation. These must happen at a single
+                  master KDC.</p>
+               
+               <p>These updates are not likely to happen with such frequency that any significant load
+                  is generated, but availability could be an issue. It can be annoying to create a new
+                  user or change a password, and the master KDC on the other side of the world is temporarily
+                  unavailable.</p>
+               
+               <p>When an organization is geographically distributed and has a policy of handling administration
+                  tasks locally at each site, it can be beneficial to create multiple Kerberos domains,
+                  one for each administrative center. Each domain would then have its own master KDC
+                  which would be geographically local. Users in one domain can still get access to resources
+                  in another domain by setting up trust relationships between domains.</p>
+               
+               <p>The easiest arrangement for multiple domains is to have a global domain (for example,
+                  EXAMPLE.COM) and local domains (for example, ASIA.EXAMPLE.COM, EUROPE.EXAMPLE.COM).
+                  If the global domain is configured to trust each local domain, and each local domain
+                  is configured to trust the global domain, then fully transitive trust is available
+                  between any pair of domains, and any principal can establish a secure connection with
+                  any service. Ensuring appropriate access rights to resources, for example files provided
+                  by that service, depends on the user name lookup service used, and the functionality
+                  of the NFS file server, and is beyond the scope of this document.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich05s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich05.html">Up</a></td>
+                  <td class="next"><a href="bk06partich05s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Installing and administering Kerberos</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">6<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

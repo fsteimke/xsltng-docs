@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.2.&nbsp;Modifying permissions of certain system files</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich03.html" rel="prev">
+      <link href="bk06partiich03s03.html" rel="next">
+      <link href="bk06partiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich03.html">Up</a> <a href="bk06partiich03s03.html">Next</a> <a href="bk06partiich03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich03s02.html" db-id="d616951e167623" id="sec-sec-prot-general-file-permissions">
+            <header>
+               <h2><span class="label">11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Modifying permissions of certain system files</h2>
+            </header>
+            
+            
+            <p>Many files—especially in the <code class="filename">/etc</code> directory—are world-readable, which means that unprivileged users can read their
+               contents. Normally this is not a problem, but to take extra care, you can remove the
+               world-readable or group-readable bits for sensitive files.</p>
+            
+            <p><span class="phrase productname">SUSE Linux Enterprise Server</span> provides the <code class="package">permissions</code> package to easily apply file permissions. The package comes with three pre-defined
+               system profiles:</p>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">easy</span></dt>
+                  <dd>
+                     
+                     <p>Profile for systems that require user-friendly graphical user interaction. This is
+                        the default profile.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">secure</span></dt>
+                  <dd>
+                     
+                     <p>Profile for server systems without fully fledged graphical user interfaces.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">paranoid</span></dt>
+                  <dd>
+                     
+                     <p>Profile for maximum security. In addition to the <code class="literal">secure</code> profile, it removes <em>all</em> special permissions like setuid/setgid and capability bits.</p>
+                     
+                     <div class="admonition warning">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Unusable system for non-privileged users</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Except for simple tasks like changing passwords, a system without special permissions
+                                    may be unusable for non-privileged users.</p>
+                                 
+                                 <p>Do not use the <code class="literal">paranoid</code> profile is as-is, but as a template for custom permissions. More information can
+                                    be found in the <code class="filename">permissions.paranoid</code> file.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>To define custom file permissions, edit <code class="filename">/etc/permissions.local</code> or create a drop-in file in the <code class="filename">/etc/permissions.d/</code> directory.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># Additional custom hardening</code></span></span>
+<span class="line"><span class="ld"><code>/etc/security/access.conf       root:root       0400</code></span></span>
+<span class="line"><span class="ld"><code>/etc/sysctl.conf                root:root       0400</code></span></span>
+<span class="line"><span class="ld"><code>/root/                          root:root       0700</code></span></span></pre>
+            </div>
+            
+            <p>The first column specifies the file name. The directory names must end with a slash.
+               The second column specifies the owner and group, and the third column specifies the
+               mode. For more information about the configuration file format, refer to <code class="command">man permissions</code>.</p>
+            
+            <p>Select the profile in <code class="filename">/etc/sysconfig/security</code>. To use the <code class="literal">easy</code> profile and custom permissions from <code class="filename">/etc/permissions.local</code>, set:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>PERMISSION_SECURITY="<em class="replaceable">easy local</em>"</code></span></span></pre>
+            </div>
+            
+            <p>To apply the setting, run <code class="command">chkstat --system --set</code>.</p>
+            
+            <p>The permissions are also applied during package updates via <code class="command">zypper</code>. You could also call <code class="command">chkstat</code> regularly via <code class="daemon systemitem">cron</code> or a <code class="daemon systemitem">systemd</code> timer.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Custom file permissions</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>While the system profiles are well tested, custom permissions can break standard applications.
+                           SUSE cannot provide support for such scenarios.</p>
+                        
+                        <p>Always test custom file permissions before applying them with <code class="command">chkstat</code> to make sure everything works as desired.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich03.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich03s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">11</span><span class="sep">.&nbsp;</span>File management</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Changing home directory permissions from 755 to 700</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

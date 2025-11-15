@@ -1,0 +1,621 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>12.3.&nbsp;Configuring remote connections</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich05s02.html" rel="prev">
+      <link href="bk10partiich06.html" rel="next">
+      <link href="bk10partiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich05.html">Up</a> <a href="bk10partiich06.html">Next</a> <a href="bk10partiich05s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich05s03.html" db-id="d616951e278118" id="sec-libvirt-connect-remote">
+            <header>
+               <h2><span class="label">12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring remote connections</h2>
+            </header>
+            
+            
+            <p>A major benefit of <code class="library systemitem">libvirt</code> is the ability to manage VM Guests on different remote hosts from a central location.
+               This section gives detailed instructions on how to configure server and client to
+               allow remote connections.</p>
+            
+            <section class="sect2" id="sec-libvirt-connect-remote-ssh">
+               <header>
+                  <h3><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Remote tunnel over SSH (<code class="literal">qemu+ssh</code> or <code class="literal">xen+ssh</code>)</h3>
+               </header>
+               
+               
+               <p>Enabling a remote connection that is tunneled over SSH on the VM Host Server only
+                  requires the ability to accept SSH connections. Make sure the SSH daemon is started
+                  (<code class="command">systemctl status sshd</code>) and that the ports for service <code class="service systemitem">SSH</code> are opened in the firewall.</p>
+               
+               <p>User authentication for SSH connections can be done using traditional file user/group
+                  ownership and permissions as described in <a class="xref xref-sect3" href="bk10partiich05.html#sec-libvirt-connect-auth-libvirt-traditional">the section called “Access control for Unix sockets with permissions and group ownership”</a>. Connecting as user tux (<code class="literal">qemu+ssh://tuxsIVname;/system</code> or <code class="literal">xen+ssh://tuxsIVname;/system</code>) works out of the box and does not require additional configuration on the <code class="library systemitem">libvirt</code> side.</p>
+               
+               <p>When connecting via SSH <code class="literal">qemu+ssh://<em class="replaceable">USER</em>@<em class="replaceable">SYSTEM</em></code> or <code class="literal">xen+ssh://<em class="replaceable">USER</em>@<em class="replaceable">SYSTEM</em></code> you need to provide the password for <em class="replaceable">USER</em>. This can be avoided by copying your public key to <code class="filename">~<em class="replaceable">USER</em>/.ssh/authorized_keys</code> on the VM Host Server as explained in <a class="xref xref-sect1" href="bk06partiiich02s06.html">the section called “Public key authentication”</a>. Using <code class="command">gnome-keyring</code> on the machine from which you are connecting adds even more convenience. For more
+                  information, see <a class="xref xref-sect1" href="bk06partiiich02s09.html">the section called “Automated public key logins with gnome-keyring”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-connect-remote-tls">
+               <header>
+                  <h3><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Remote TLS/SSL connection with x509 certificate (<code class="literal">qemu+tls</code> or <code class="literal">xen+tls</code>)</h3>
+               </header>
+               
+               
+               <p>Using TCP connections with TLS/SSL encryption and authentication via x509 certificates
+                  is much more complicated to set up than SSH, but it is a lot more scalable. Use this
+                  method if you need to manage several VM Host Servers with a varying number of administrators.</p>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-concept">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Basic concept</h4>
+                  </header>
+                  
+                  
+                  <p>TLS (Transport Layer Security) encrypts the communication between two computers by
+                     using certificates. The computer starting the connection is always considered the
+                     <q>client</q>, using a <q>client certificate</q>, while the receiving computer is always considered the <q>server</q>, using a <q>server certificate</q>. This scenario applies, for example, if you manage your VM Host Servers from a central
+                     desktop.</p>
+                  
+                  <p>If connections are initiated from both computers, each needs to have a client <em>and</em> a server certificate. This is the case, for example, if you migrate a VM Guest from
+                     one host to another.</p>
+                  
+                  <p>Each x509 certificate has a matching private key file. Only the combination of certificate
+                     and private key file can identify itself correctly. To assure that a certificate was
+                     issued by the assumed owner, it is signed and issued by a central certificate called
+                     certificate authority (CA). Both the client and the server certificates must be issued
+                     by the same CA.</p>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">User authentication</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Using a remote TLS/SSL connection only ensures that two computers are allowed to communicate
+                                 in a certain direction. Restricting access to certain users can indirectly be achieved
+                                 on the client side by restricting access to the certificates. For more information,
+                                 see <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-security">the section called “Restricting access (security considerations)”</a>.</p>
+                              
+                              <p><code class="library systemitem">libvirt</code> also supports user authentication on the server with SASL. For more information,
+                                 see <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-sasl">the section called “Central user authentication with SASL for TLS sockets”</a>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-server">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the VM Host Server</h4>
+                  </header>
+                  
+                  
+                  <p>The VM Host Server is the machine receiving connections. Therefore, the <em>server</em> certificates need to be installed. The CA certificate needs to be installed, too.
+                     When the certificates are in place, TLS support can be turned on for <code class="library systemitem">libvirt</code>.</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-connect-remote-tls-server_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create the server certificate and export it together with the respective CA certificate.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Create the following directories on the VM Host Server:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkdir -p /etc/pki/CA/ /etc/pki/libvirt/private/</code></span></span></pre>
+                           </div>
+                           
+                           <p>Install the certificates as follows:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /etc/pki/CA/cacert.pem</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /etc/pki/libvirt/servercert.pem</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /etc/pki/libvirt/private/serverkey.pem</code></span></span></pre>
+                           </div>
+                           
+                           <div class="admonition important">
+                              <div>
+                                 <div class="icon">☝</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Restrict access to certificates</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>Make sure to restrict access to certificates, as explained in <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-security">the section called “Restricting access (security considerations)”</a>.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Enable TLS support by enabling the relevant socket and restarting <code class="daemon systemitem">libvirtd</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl stop libvirtd.service</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable --now libvirtd-tls.socket</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start libvirtd.service</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>By default, <code class="library systemitem">libvirt</code> uses the TCP port 16514 for accepting secure TLS connections. Open this port in the
+                              firewall.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Restarting <code class="daemon systemitem">libvirtd</code> with TLS enabled</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>If you enable TLS for <code class="library systemitem">libvirt</code>, the server certificates need to be in place, otherwise restarting <code class="daemon systemitem">libvirtd</code> fails. You also need to restart <code class="daemon systemitem">libvirtd</code> in case you change the certificates.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-client">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring the client and testing the setup</h4>
+                  </header>
+                  
+                  
+                  <p>The client is the machine initiating connections. Therefore the <em>client</em> certificates need to be installed. The CA certificate needs to be installed, too.</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-connect-remote-tls-client_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create the client certificate and export it together with the respective CA certificate.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Create the following directories on the client:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkdir -p /etc/pki/CA/ /etc/pki/libvirt/private/</code></span></span></pre>
+                           </div>
+                           
+                           <p>Install the certificates as follows:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /etc/pki/CA/cacert.pem</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /etc/pki/libvirt/clientcert.pem</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> /etc/pki/libvirt/private/clientkey.pem</code></span></span></pre>
+                           </div>
+                           
+                           <div class="admonition important">
+                              <div>
+                                 <div class="icon">☝</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Restrict access to certificates</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>Make sure to restrict access to certificates, as explained in <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-security">the section called “Restricting access (security considerations)”</a>.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Test the client/server setup by issuing the following command. Replace <em class="replaceable">mercury.example.com</em> with the name of your VM Host Server. Specify the same fully qualified host name
+                              as used when creating the server certificate.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#QEMU/KVM</code></span></span>
+<span class="line"><span class="ld"><code>virsh -c qemu+tls://<em class="replaceable">mercury.example.com</em>/system list --all</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>#Xen</code></span></span>
+<span class="line"><span class="ld"><code>virsh -c xen+tls://<em class="replaceable">mercury.example.com</em>/system list --all</code></span></span></pre>
+                           </div>
+                           
+                           <p>If your setup is correct, you can see a list of all VM Guests registered with <code class="library systemitem">libvirt</code> on the VM Host Server.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-vnc">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Enabling VNC for TLS/SSL connections</h4>
+                  </header>
+                  
+                  
+                  <p>Currently, VNC communication over TLS is only supported by a few tools. Common VNC
+                     viewers such as <code class="command">tightvnc</code> or <code class="command">tigervnc</code> do not support TLS/SSL. The only supported alternative to Virtual Machine Manager
+                     and <code class="command">virt-viewer</code> is <code class="command">remmina</code> (refer to <a class="xref xref-sect1" href="bk01partich14s02.html">the section called “Remmina: the remote desktop client”</a>).</p>
+                  
+                  <section class="sect4" id="sec-libvirt-connect-remote-tls-vnc-server">
+                     <header>
+                        <h5><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VNC over TLS/SSL: VM Host Server configuration</h5>
+                     </header>
+                     
+                     
+                     <p>To access the graphical console via VNC over TLS/SSL, you need to configure the VM
+                        Host Server as follows:</p>
+                     
+                     <div class="informalobject procedure" id="sec-libvirt-connect-remote-tls-vnc-server_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Open ports for the service <code class="service systemitem">VNC</code> in your firewall.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Create a directory <code class="filename">/etc/pki/libvirt-vnc</code> and link the certificates into this directory as follows:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkdir -p /etc/pki/libvirt-vnc &amp;&amp; cd /etc/pki/libvirt-vnc</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ln -s /etc/pki/CA/cacert.pem ca-cert.pem</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ln -s /etc/pki/libvirt/servercert.pem server-cert.pem</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ln -s /etc/pki/libvirt/private/serverkey.pem server-key.pem</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Edit <code class="filename">/etc/libvirt/qemu.conf</code> and set the following parameters:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vnc_listen = "0.0.0.0"</code></span></span>
+<span class="line"><span class="ld"><code>        vnc_tls = 1</code></span></span>
+<span class="line"><span class="ld"><code>        vnc_tls_x509_verify = 1</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Restart the <code class="daemon systemitem">libvirtd</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                              </div>
+                              
+                              <div class="admonition important">
+                                 <div>
+                                    <div class="icon">☝</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">VM Guests need to be restarted</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>The VNC TLS setting is only set when starting a VM Guest. Therefore, you need to restart
+                                             all machines that have been running before making the configuration change.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-libvirt-connect-remote-tls-vnc-client">
+                     <header>
+                        <h5><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VNC over TLS/SSL: client configuration</h5>
+                     </header>
+                     
+                     
+                     <p>The only action needed on the client side is to place the x509 client certificates
+                        in a location recognized by the client of choice. However, Virtual Machine Manager
+                        and <code class="command">virt-viewer</code> expect the certificates in a different location. Virtual Machine Manager can either
+                        read from a system-wide location applying to all users, or from a per-user location.
+                        Remmina (refer to <a class="xref xref-sect1" href="bk01partich14s02.html">the section called “Remmina: the remote desktop client”</a>) asks for the location of certificates when initializing the connection to the remote
+                        VNC session.</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <strong class="bold">Virtual Machine Manager (<code class="command">virt-manager</code>)</strong>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>To connect to the remote host, Virtual Machine Manager requires the setup explained
+                                 in <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-client">the section called “Configuring the client and testing the setup”</a>. To be able to connect via VNC, the client certificates also need to be placed in
+                                 the following locations:</p>
+                              
+                              <dl class="variablelist">
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">System-wide location</span></dt>
+                                    <dd>
+                                       
+                                       <div class="simplelist simplelistvert">
+                                          <div class="row"><span>
+                                                <code class="filename">/etc/pki/CA/cacert.pem</code>
+                                                </span></div>
+                                          <div class="row"><span>
+                                                <code class="filename">/etc/pki/libvirt-vnc/clientcert.pem</code>
+                                                </span></div>
+                                          <div class="row"><span>
+                                                <code class="filename">/etc/pki/libvirt-vnc/private/clientkey.pem</code>
+                                                </span></div>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">Per-user location</span></dt>
+                                    <dd>
+                                       
+                                       <div class="simplelist simplelistvert">
+                                          <div class="row"><span>
+                                                <code class="filename">/etc/pki/CA/cacert.pem</code>
+                                                </span></div>
+                                          <div class="row"><span>
+                                                <code class="filename">~/.pki/libvirt-vnc/clientcert.pem</code>
+                                                </span></div>
+                                          <div class="row"><span>
+                                                <code class="filename">~/.pki/libvirt-vnc/private/clientkey.pem</code>
+                                                </span></div>
+                                       </div>
+                                       </dd>
+                                 </div>
+                                 </dl>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <strong class="bold">
+                                    <code class="command">virt-viewer</code>
+                                    </strong>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p><code class="command">virt-viewer</code> only accepts certificates from a system-wide location:</p>
+                              
+                              <div class="simplelist simplelistvert">
+                                 <div class="row"><span>
+                                       <code class="filename">/etc/pki/CA/cacert.pem</code>
+                                       </span></div>
+                                 <div class="row"><span>
+                                       <code class="filename">/etc/pki/libvirt-vnc/clientcert.pem</code>
+                                       </span></div>
+                                 <div class="row"><span>
+                                       <code class="filename">/etc/pki/libvirt-vnc/private/clientkey.pem</code>
+                                       </span></div>
+                              </div>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Restrict access to certificates</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Make sure to restrict access to certificates, as explained in <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-security">the section called “Restricting access (security considerations)”</a>.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-security">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Restricting access (security considerations)</h4>
+                  </header>
+                  
+                  
+                  <p>Each x509 certificate consists of two pieces: the public certificate and a private
+                     key. A client can only authenticate using both pieces. Therefore, any user that has
+                     read access to the client certificate and its private key can access your VM Host
+                     Server. On the other hand, an arbitrary machine equipped with the full server certificate
+                     can pretend to be the VM Host Server. Since this is not desirable, access to at least
+                     the private key files needs to be restricted as much as possible. The easiest way
+                     to control access to a key file is to use access permissions.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="bold">Server certificates</strong>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Server certificates need to be readable for QEMU processes. On <span class="phrase productname">SUSE Linux Enterprise Server</span> QEMU, processes started from <code class="library systemitem">libvirt</code> tools are owned by <code class="systemitem username">root</code>, so it is sufficient if the <code class="systemitem username">root</code> can read the certificates:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>chmod 700 /etc/pki/libvirt/private/</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>chmod 600 /etc/pki/libvirt/private/serverkey.pem</code></span></span></pre>
+                           </div>
+                           
+                           <p>If you change the ownership for QEMU processes in <code class="filename">/etc/libvirt/qemu.conf</code>, you also need to adjust the ownership of the key file.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="bold">System-wide client certificates</strong>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>To control access to a key file that is available system-wide, restrict read access
+                              to a certain group, so that only members of that group can read the key file. In the
+                              following example, a group <code class="groupname systemitem">libvirt</code> is created, and group ownership of the <code class="filename">clientkey.pem</code> file and its parent directory is set to <code class="groupname systemitem">libvirt</code>. Afterward, the access permissions are restricted to owner and group. Finally, the
+                              user <code class="systemitem username">tux</code> is added to the group <code class="groupname systemitem">libvirt</code>, and thus can access the key file.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>CERTPATH="/etc/pki/libvirt/"</code></span></span>
+<span class="line"><span class="ld"><code># create group libvirt</code></span></span>
+<span class="line"><span class="ld"><code>groupadd libvirt</code></span></span>
+<span class="line"><span class="ld"><code># change ownership to user root and group libvirt</code></span></span>
+<span class="line"><span class="ld"><code>chown root.libvirt $CERTPATH/private $CERTPATH/clientkey.pem</code></span></span>
+<span class="line"><span class="ld"><code># restrict permissions</code></span></span>
+<span class="line"><span class="ld"><code>chmod 750 $CERTPATH/private</code></span></span>
+<span class="line"><span class="ld"><code>chmod 640 $CERTPATH/private/clientkey.pem</code></span></span>
+<span class="line"><span class="ld"><code># add user tux to group libvirt</code></span></span>
+<span class="line"><span class="ld"><code>usermod --append --groups libvirt tux</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <strong class="bold">Per-user certificates</strong>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>User-specific client certificates for accessing the graphical console of a VM Guest
+                              via VNC need to be placed in the user's home directory in <code class="filename">~/.pki</code>. Contrary to SSH, for example, the VNC viewer using these certificates does not check
+                              the access permissions of the private key file. Therefore, it is solely the user's
+                              responsibility to make sure the key file is not readable by others.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <section class="sect4" id="sec-libvirt-connect-remote-tls-server-restrict">
+                     <header>
+                        <h5><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Restricting access from the server side</h5>
+                     </header>
+                     
+                     
+                     <p>By default, every client that is equipped with appropriate client certificates may
+                        connect to a VM Host Server accepting TLS connections. Therefore, it is possible to
+                        use additional server-side authentication with SASL as described in <a class="xref xref-sect3" href="bk10partiich05.html#sec-libvirt-connect-auth-libvirt-sasl">the section called “User name and password authentication with SASL”</a>.</p>
+                     
+                     <p>It is also possible to restrict access with a allowlist of DNs (distinguished names),
+                        so only clients with a certificate matching a DN from the list can connect.</p>
+                     
+                     <p>Add a list of allowed DNs to <code class="literal">tls_allowed_dn_list</code> in <code class="filename">/etc/libvirt/libvirtd.conf</code>. This list may contain wild cards. Do not specify an empty list, since that would
+                        result in refusing all connections.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tls_allowed_dn_list = [</code></span></span>
+<span class="line"><span class="ld"><code>   "C=US,L=Provo,O=SUSE Linux Products GmbH,OU=*,CN=venus.example.com,EMAIL=*",</code></span></span>
+<span class="line"><span class="ld"><code>   "C=DE,L=Nuremberg,O=SUSE Linux Products GmbH,OU=Documentation,CN=*"]</code></span></span></pre>
+                     </div>
+                     
+                     <p>Get the distinguished name of a certificate with the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>certtool -i --infile /etc/pki/libvirt/clientcert.pem | grep "Subject:"</code></span></span></pre>
+                     </div>
+                     
+                     <p>Restart <code class="daemon systemitem">libvirtd</code> after having changed the configuration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                     </div>
+                     </section>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-sasl">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Central user authentication with SASL for TLS sockets</h4>
+                  </header>
+                  
+                  
+                  
+                  <p>A direct user authentication via TLS is not possible—this is handled indirectly on
+                     each client via the read permissions for the certificates as explained in <a class="xref xref-sect3" href="#sec-libvirt-connect-remote-tls-security">the section called “Restricting access (security considerations)”</a>. However, if a central, server-based user authentication is needed, <code class="library systemitem">libvirt</code> also allows to use SASL (Simple Authentication and Security Layer) on top of TLS
+                     for direct user authentication. See <a class="xref xref-sect3" href="bk10partiich05.html#sec-libvirt-connect-auth-libvirt-sasl">the section called “User name and password authentication with SASL”</a> for configuration details.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-libvirt-connect-remote-tls-troubleshoot">
+                  <header>
+                     <h4><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Troubleshooting</h4>
+                  </header>
+                  
+                  
+                  <section class="sect4" id="sec-libvirt-connect-remote-tls-troubleshoot-no-connect">
+                     <header>
+                        <h5><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Virtual Machine Manager/<code class="command">virsh</code> cannot connect to server</h5>
+                     </header>
+                     
+                     
+                     <p>Check the following in the given order:</p>
+                     
+                     <div class="simplelist simplelistvert">
+                        <div class="row"><span>Is it a firewall issue (TCP port 16514 needs to be open on the server)?</span></div>
+                        <div class="row"><span>Is the client certificate (certificate and key) readable by the user that has started
+                              Virtual Machine Manager/ <code class="command">virsh</code>?</span></div>
+                        <div class="row"><span>Has the same full qualified host name as in the server certificate been specified
+                              with the connection?</span></div>
+                        <div class="row"><span>Is TLS enabled on the server (<code class="literal">listen_tls = 1</code>)?</span></div>
+                        <div class="row"><span>Has <code class="daemon systemitem">libvirtd</code> been restarted on the server?</span></div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-libvirt-connect-remote-tls-troubleshoot-vnc">
+                     <header>
+                        <h5><span class="label">12<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VNC connection fails</h5>
+                     </header>
+                     
+                     
+                     <p>Ensure that you can connect to the remote server using Virtual Machine Manager. If
+                        so, check whether the virtual machine on the server has been started with TLS support.
+                        The virtual machine's name in the following example is <code class="literal">sles</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ps ax | grep qemu | grep "\-name sles" | awk -F" -vnc " '{ print FS $2 }'</code></span></span></pre>
+                     </div>
+                     
+                     <p>If the output does not begin with a string similar to the following, the machine has
+                        not been started with TLS support and must be restarted.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> -vnc 0.0.0.0:0,tls,x509verify=/etc/pki/libvirt</code></span></span></pre>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich05s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich05.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Connecting to a VM Host Server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">13</span><span class="sep">.&nbsp;</span>Advanced storage topics</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;41.&nbsp;DHCP</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch03s10.html" rel="prev">
+      <link href="bk01partvch04s02.html" rel="next">
+      <link href="bk01partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partv.html">Up</a> <a href="bk01partvch04s02.html">Next</a> <a href="bk01partvch03s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partvch04.html" db-id="d616951e59104" id="cha-dhcp" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">41</span><span class="sep">.&nbsp;</span>DHCP</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">IBM&nbsp;Z: DHCP support</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>On IBM&nbsp;Z platforms, DHCP only works on interfaces using the OSA and OSA Express network
+                              cards. These cards are the only ones with a MAC, which is required for the DHCP autoconfiguration
+                              features.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>One way to configure a DHCP server is to identify each client using the hardware address
+                  of its network card (which should usually be fixed), then supply that client with
+                  identical settings each time it connects to the server. DHCP can also be configured
+                  to assign addresses to each relevant client dynamically from an address pool set up
+                  for this purpose. In the latter case, the DHCP server tries to assign the same address
+                  to the client each time it receives a request, even over extended periods. This works
+                  only if the network does not have more clients than addresses.</p>
+               
+               <p>DHCP makes life easier for system administrators. Any changes, even bigger ones, related
+                  to addresses and the network configuration can be implemented centrally by editing
+                  the server's configuration file. This is much more convenient than reconfiguring multiple
+                  workstations. It is also much easier to integrate machines, particularly new machines,
+                  into the network, because they can be given an IP address from the pool. Retrieving
+                  the appropriate network settings from a DHCP server is especially useful in case of
+                  laptops regularly used in different networks.</p>
+               
+               <p>In this chapter, the DHCP server runs in the same subnet as the workstations, <code class="ipaddress systemitem">192.168.2.0/24</code> with <code class="ipaddress systemitem">192.168.2.1</code> as gateway. It has the fixed IP address <code class="ipaddress systemitem">192.168.2.254</code> and serves two address ranges, <code class="ipaddress systemitem">192.168.2.10</code> to <code class="ipaddress systemitem">192.168.2.20</code> and <code class="ipaddress systemitem">192.168.2.100</code> to <code class="ipaddress systemitem">192.168.2.200</code>.</p>
+               
+               <p>A DHCP server supplies not only the IP address and the netmask, but also the host
+                  name, domain name, gateway and name server addresses for the client to use. Besides
+                  that, DHCP allows several parameters to be configured in a centralized way, for example,
+                  a time server from which clients may poll the current time or even a print server.</p>
+               </div>
+            <section class="sect1" id="sec-dhcp-yast">
+               <header>
+                  <h2><span class="label">41<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring a DHCP server with YaST</h2>
+               </header>
+               
+               
+               <p>To install a DHCP server, start YaST and select <span class="menuchoice"><span class="guimenu">Software</span><span class="guimenu">Software Management</span></span>. Choose <span class="menuchoice"><span class="guimenu">Filter</span><span class="guimenu">Patterns</span></span> and select <span class="guimenu">DHCP and DNS Server</span>. Confirm the installation of the dependent packages to finish the installation process.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">LDAP support</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The YaST DHCP module can be set up to store the server configuration locally (on the
+                              host that runs the DHCP server) or to have its configuration data managed by an LDAP
+                              server. To use LDAP, set up your LDAP environment before configuring the DHCP server.</p>
+                           
+                           <p>For more information about LDAP, see <a class="xref xref-chapter" href="bk06partich04.html">Chapter&nbsp;<span class="label">5</span>, LDAP with 389 Directory Server</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The YaST DHCP module (<code class="systemitem">yast2-dhcp-server</code>) allows you to set up your own DHCP server for the local network. The module can
+                  run in wizard mode or expert configuration mode.</p>
+               
+               <section class="sect2" id="sec-dhcp-yast-init">
+                  <header>
+                     <h3><span class="label">41<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Initial configuration (wizard)</h3>
+                  </header>
+                  
+                  
+                  <p>When the module is started for the first time, a wizard starts, prompting you to make
+                     a few basic decisions concerning server administration. Completing this initial setup
+                     produces a basic server configuration that should function in its essential aspects.
+                     The expert mode can be used to deal with more advanced configuration tasks. Proceed
+                     as follows:</p>
+                  
+                  <div class="informalobject procedure" id="pro-dhcp-yast-init">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p> Select the interface from the list to which the DHCP server should listen and click
+                              <span class="guimenu">Select</span> and then <span class="guimenu">Next</span>. See <a class="xref xref-figure" href="#fig-yast2-dhcp-wiz1">Figure&nbsp;<span class="label">41<span class="sep">.</span>1</span>, “DHCP server: card selection”</a>.</p>
+                           
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">DHCP and <code class="command">firewalld</code>
+                                          </div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>The option <span class="guimenu">Open Firewall for Selected Interfaces</span> does not (yet) support <code class="command">firewalld</code> in <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span>. To manually open the DHCP port, run</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">firewall-cmd --zone=public --permanent --add-service=dhcp</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">firewall-cmd --reload</code></code></span></span></pre>
+                                       </div>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-wiz1">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_wiz1.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>DHCP server: card selection</div>
+                              </header>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Use the check box to determine whether your DHCP settings should be automatically
+                              stored by an LDAP server. In the text boxes, provide the network specifics for all
+                              clients the DHCP server should manage. These specifics are the domain name, address
+                              of a time server, addresses of the primary and secondary name server, addresses of
+                              a print and a WINS server (for a mixed network with both Windows and Linux clients),
+                              gateway address, and lease time. See <a class="xref xref-figure" href="#fig-yast2-dhcp-wiz2">Figure&nbsp;<span class="label">41<span class="sep">.</span>2</span>, “DHCP server: global settings”</a>.</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-wiz2">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_wiz2.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>DHCP server: global settings</div>
+                              </header>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Configure how dynamic IP addresses should be assigned to clients. To do so, specify
+                              an IP range from which the server can assign addresses to DHCP clients. All these
+                              addresses must be covered by the same netmask. Also specify the lease time during
+                              which a client may keep its IP address without needing to request an extension of
+                              the lease. Optionally, specify the maximum lease time—the period during which the
+                              server reserves an IP address for a particular client. See <a class="xref xref-figure" href="#fig-yast2-dhcp-wiz3">Figure&nbsp;<span class="label">41<span class="sep">.</span>3</span>, “DHCP server: dynamic DHCP”</a>.</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-wiz3">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_wiz3.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>DHCP server: dynamic DHCP</div>
+                              </header>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Define how the DHCP server should be started. Specify whether to start the DHCP server
+                              automatically when the system is booted or manually when needed (for example, for
+                              testing purposes). Click <span class="guimenu">Finish</span> to complete the configuration of the server. See <a class="xref xref-figure" href="#fig-yast2-dhcp-start">Figure&nbsp;<span class="label">41<span class="sep">.</span>4</span>, “DHCP server: start-up”</a>. </p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-start">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_start.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>DHCP server: start-up</div>
+                              </header>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Instead of using dynamic DHCP in the way described in the preceding steps, you can
+                              also configure the server to assign addresses in quasi-static fashion. Use the text
+                              boxes provided in the lower part to specify a list of the clients to manage in this
+                              way. Specifically, provide the <span class="guimenu">Name</span> and the <span class="guimenu">IP Address</span> to give to such a client, the <span class="guimenu">Hardware Address</span>, and the <span class="guimenu">Network Type</span> (token ring or Ethernet). Modify the list of clients, which is shown in the upper
+                              part with <span class="guimenu">Add</span>, <span class="guimenu">Edit</span>, and <span class="guimenu">Delete from List</span>. See <a class="xref xref-figure" href="#fig-yast2-dhcp-statdhcp">Figure&nbsp;<span class="label">41<span class="sep">.</span>5</span>, “DHCP server: host management”</a>.</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-statdhcp">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_statdhcp.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>DHCP server: host management</div>
+                              </header>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-dhcp-yast-expert">
+                  <header>
+                     <h3><span class="label">41<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>DHCP server configuration (expert)</h3>
+                  </header>
+                  
+                  
+                  <p>Besides the configuration method discussed earlier, there is also an expert configuration
+                     mode that allows you to change the DHCP server setup in every detail. Start the expert
+                     configuration by clicking <span class="guimenu">DHCP Server Expert Configuration</span> in the <span class="guimenu">Start-Up</span> dialog (see <a class="xref xref-figure" href="#fig-yast2-dhcp-start">Figure&nbsp;<span class="label">41<span class="sep">.</span>4</span>, “DHCP server: start-up”</a>).</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Chroot environment and declarations</span></dt>
+                        <dd>
+                           
+                           <p>In this first dialog, make the existing configuration editable by selecting <span class="guimenu">Start DHCP Server</span>. An important feature of the behavior of the DHCP server is its ability to run in
+                              a chroot environment, or chroot jail, to secure the server host. If the DHCP server
+                              is compromised by an outside attack, the attacker is still in the chroot jail, which
+                              prevents them from accessing the rest of the system. The lower part of the dialog
+                              displays a tree view with the declarations that have already been defined. Modify
+                              these with <span class="guimenu">Add</span>, <span class="guimenu">Delete</span> and <span class="guimenu">Edit</span>. Selecting <span class="guimenu">Advanced</span> takes you to additional expert dialogs. See <a class="xref xref-figure" href="#fig-yast2-dhcp-chroot">Figure&nbsp;<span class="label">41<span class="sep">.</span>6</span>, “DHCP server: chroot jail and declarations”</a>. After selecting <span class="guimenu">Add</span>, define the type of declaration to add. With <span class="guimenu">Advanced</span>, view the log file of the server, configure TSIG key management, and adjust the configuration
+                              of the firewall according to the setup of the DHCP server.</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-chroot">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_chroot.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>DHCP server: chroot jail and declarations</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Selecting the declaration type</span></dt>
+                        <dd>
+                           
+                           <p>The <span class="guimenu">Global Options</span> of the DHCP server are made up of several declarations. This dialog lets you set
+                              the declaration types <span class="guimenu">Subnet</span>, <span class="guimenu">Host</span>, <span class="guimenu">Shared Network</span>, <span class="guimenu">Group</span>, <span class="guimenu">Pool of Addresses</span>, and <span class="guimenu">Class</span>. This example shows the selection of a new subnet (see <a class="xref xref-figure" href="#fig-yast2-dhcp-newdec">Figure&nbsp;<span class="label">41<span class="sep">.</span>7</span>, “DHCP server: selecting a declaration type”</a>).</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-newdec">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_newdec.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>DHCP server: selecting a declaration type</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Subnet configuration</span></dt>
+                        <dd>
+                           
+                           <p>This dialog allows you specify a new subnet with its IP address and netmask. In the
+                              middle part of the dialog, modify the DHCP server start options for the selected subnet
+                              using <span class="guimenu">Add</span>, <span class="guimenu">Edit</span>, and <span class="guimenu">Delete</span>. To set up dynamic DNS for the subnet, select <span class="guimenu">Dynamic DNS</span>.</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-sub">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_sub.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>DHCP server: configuring subnets</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">TSIG key management</span></dt>
+                        <dd>
+                           
+                           <p>If you chose to configure dynamic DNS in the previous dialog, you can now configure
+                              the key management for a secure zone transfer. Selecting <span class="guimenu">OK</span> takes you to another dialog in which to configure the interface for dynamic DNS (see
+                              <a class="xref xref-figure" href="#fig-yast2-dhcp-dyndns">Figure&nbsp;<span class="label">41<span class="sep">.</span>10</span>, “DHCP server: interface configuration for dynamic DNS”</a>).</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-tsig">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_tsig.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>DHCP server: TSIG configuration</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Dynamic DNS: interface configuration</span></dt>
+                        <dd>
+                           
+                           <p>You can now activate dynamic DNS for the subnet by selecting <span class="guimenu">Enable Dynamic DNS for This Subnet</span>. After doing so, use the drop-down box to activate the TSIG keys for forward and
+                              reverse zones, making sure that the keys are the same for the DNS and the DHCP server.
+                              With <span class="guimenu">Update Global Dynamic DNS Settings</span>, enable the automatic update and adjustment of the global DHCP server settings according
+                              to the dynamic DNS environment. Finally, define which forward and reverse zones should
+                              be updated per dynamic DNS, specifying the name of the primary name server for each
+                              of the two zones. Selecting <span class="guimenu">OK</span> returns to the subnet configuration dialog (see <a class="xref xref-figure" href="#fig-yast2-dhcp-sub">Figure&nbsp;<span class="label">41<span class="sep">.</span>8</span>, “DHCP server: configuring subnets”</a>). Selecting <span class="guimenu">OK</span> again returns to the original expert configuration dialog.</p>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-dyndns">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_dyndns.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>DHCP server: interface configuration for dynamic DNS</div>
+                              </header>
+                           </div>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">
+                                          <code class="option">ignore client-updates</code> option</div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>When enabling Dynamic DNS for a zone, YaST automatically adds the <code class="literal">ignore client-updates</code> option to improve client compatibility. The option can be disabled if it is not required.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Network interface configuration</span></dt>
+                        <dd>
+                           
+                           <p>To define the interfaces the DHCP server should listen to and to adjust the firewall
+                              configuration, select <span class="menuchoice"><span class="guimenu">Advanced</span><span class="guimenu">Interface Configuration</span></span> from the expert configuration dialog. From the list of interfaces displayed, select
+                              one or more that should be attended by the DHCP server. If clients in all subnets
+                              need to be able to communicate with the server and the server host also runs a firewall,
+                              adjust the firewall accordingly. </p>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">DHCP and <code class="command">firewalld</code>
+                                          </div>
+                                    </header>
+                                    <div>
+                                       
+                                       
+                                       <p>The option <span class="guimenu">Open Firewall for Selected Interfaces</span> does not (yet) support <code class="command">firewalld</code> in <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span>. To manually open the DHCP port, run</p>
+                                       
+                                       <div class="pre-wrap screen-wrap">
+                                          <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">firewall-cmd --zone=public --permanent --add-service=dhcp</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">firewall-cmd --reload</code></code></span></span></pre>
+                                       </div>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <div class="figure formalobject" id="fig-yast2-dhcp-fire">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_dhcp_fire.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">41<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>DHCP server: network interface and firewall</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>After completing all configuration steps, close the dialog with <span class="guimenu">OK</span>. The server is now started with its new configuration.</p>
+                  </section>
+               </section>
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch03s10.html">Prev</a></td>
+                  <td class="up"><a href="bk01partv.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">40<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">41<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>DHCP software packages</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

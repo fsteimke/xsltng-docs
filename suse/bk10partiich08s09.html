@@ -1,0 +1,586 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.9.&nbsp;Adding SR-IOV devices</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich08s08.html" rel="prev">
+      <link href="bk10partiich08s10.html" rel="next">
+      <link href="bk10partiich08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich08.html">Up</a> <a href="bk10partiich08s10.html">Next</a> <a href="bk10partiich08s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich08s09.html" db-id="d616951e282600" id="sec-libvirt-config-io">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Adding SR-IOV devices</h2>
+            </header>
+            
+            
+            <p>Single Root I/O Virtualization (<a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a>) capable <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-pcie"><span class="label">PCIe</span></a> devices can replicate their resources, so they appear as multiple devices. Each of
+               these <q>pseudo-devices</q> can be assigned to a VM Guest.</p>
+            
+            <p><a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> is an industry specification that was created by the Peripheral Component Interconnect
+               Special Interest Group (PCI-SIG) consortium. It introduces physical functions (PF)
+               and virtual functions (VF). PFs are full <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-pcie"><span class="label">PCIe</span></a> functions used to manage and configure the device. PFs also can move data. VFs lack
+               the configuration and management part—they only can move data and a reduced set of
+               configuration functions. As VFs do not have all <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-pcie"><span class="label">PCIe</span></a> functions, the host operating system or the <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-hypervisor"><span class="label">Hypervisor</span></a> must support <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> to access and initialize VFs. The theoretical maximum for VFs is 256 per device (consequently
+               the maximum for a dual-port Ethernet card would be 512). In practice, this maximum
+               is much lower, since each VF consumes resources.</p>
+            
+            <section class="sect2" id="sec-libvirt-config-io-requirements">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Requirements</h3>
+               </header>
+               
+               
+               <p>The following requirements must be met to use <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a>:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>An <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a>-capable network card (as of <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15</span>, only network cards support <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a>)</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>An AMD64/Intel&nbsp;64 host supporting hardware virtualization (AMD-V or Intel VT-x), see
+                        <a class="xref xref-sect2" href="bk10partich07.html#sec-kvm-requires-hardware">the section called “KVM hardware requirements”</a> for more information</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A chipset that supports device assignment (AMD-Vi or Intel <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-vtd"><span class="label">VT-d</span></a>)</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="library systemitem">libvirt</code> 0.9.10 or better</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> drivers must be loaded and configured on the host system</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A host configuration that meets the requirements listed at <a class="xref xref-important" href="bk10partich01s04.html#ann-vt-io-require">Requirements for VFIO and SR-IOV</a></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A list of the PCI addresses of the VFs assigned to VM Guests</p>
+                     </li>
+                  </ul>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Checking if a device is SR-IOV-capable</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The information whether a device is SR-IOV-capable can be obtained from its PCI descriptor
+                              by running <code class="command">lspci</code>. A device that supports <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> reports a capability similar to the following:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Capabilities: [160 v1] Single Root I/O Virtualization (<a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a>)</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Adding an SR-IOV device at VM Guest creation</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Before adding an SR-IOV device to a VM Guest when initially setting it up, the VM
+                              Host Server already needs to be configured as described in <a class="xref xref-sect2" href="#sec-libvirt-config-io-config">the section called “Loading and configuring the SR-IOV host drivers”</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-config-io-config">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Loading and configuring the SR-IOV host drivers</h3>
+               </header>
+               
+               
+               <p>To access and initialize VFs, an SR-IOV-capable driver needs to be loaded on the host
+                  system.</p>
+               
+               <div class="informalobject procedure" id="sec-libvirt-config-io-config_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Before loading the driver, make sure the card is properly detected by running <code class="command">lspci</code>. The following example shows the <code class="command">lspci</code> output for the dual-port Intel 82576NS network card:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">/sbin/lspci | grep 82576</code></code></span></span>
+<span class="line"><span class="ld"><code>01:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>01:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>04:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>04:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span></pre>
+                        </div>
+                        
+                        <p>In case the card is not detected, the hardware virtualization support in the BIOS/EFI
+                           may not have been enabled. To check if hardware virtualization support is enabled,
+                           look at the settings in the host's BIOS.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check whether the <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> driver is already loaded by running <code class="command">lsmod</code>. In the following example, a check for the igb driver (for the Intel 82576NS network
+                           card) returns a result. That means the driver is already loaded. If the command returns
+                           nothing, the driver is not loaded.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">/sbin/lsmod | egrep "^igb "</code></code></span></span>
+<span class="line"><span class="ld"><code>igb                   185649&nbsp; 0</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Skip the following step if the driver is already loaded. If the <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> driver is not yet loaded, the non-<a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> driver needs to be removed first, before loading the new driver. Use <code class="command">rmmod</code> to unload a driver. The following example unloads the non-<a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> driver for the Intel 82576NS network card:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">/sbin/rmmod igbvf</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Load the <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> driver subsequently using the <code class="command">modprobe</code> command—the VF parameter (<code class="literal">max_vfs</code>) is mandatory:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">/sbin/modprobe igb max_vfs=8</code></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               
+               <p>As an alternative, you can also load the driver via SYSFS:</p>
+               
+               <div class="informalobject procedure" id="sec-libvirt-config-io-config_proc2">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Find the PCI ID of the physical NIC by listing Ethernet devices:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">lspci | grep Eth</code></code></span></span>
+<span class="line"><span class="ld"><code>06:00.0 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</code></span></span>
+<span class="line"><span class="ld"><code>06:00.1 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To enable VFs, echo the number of desired VFs to load to the <code class="literal">sriov_numvfs</code> parameter:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">echo 1 &gt; /sys/bus/pci/devices/0000:06:00.1/sriov_numvfs</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify that the VF NIC was loaded:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">lspci | grep Eth</code></code></span></span>
+<span class="line"><span class="ld"><code>06:00.0 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</code></span></span>
+<span class="line"><span class="ld"><code>06:00.1 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</code></span></span>
+<span class="line"><span class="ld"><code>06:08.0 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Obtain the maximum number of VFs available:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">lspci -vvv -s 06:00.1 | grep 'Initial VFs'</code></code></span></span>
+<span class="line"><span class="ld"><code>                       Initial VFs: 32, Total VFs: 32, Number of VFs: 0,</code></span></span>
+<span class="line"><span class="ld"><code>Function Dependency Link: 01</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a <code class="filename">/etc/systemd/system/before.service</code> file which loads VF via SYSFS on boot:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Before=</code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>Type=oneshot</code></span></span>
+<span class="line"><span class="ld"><code>RemainAfterExit=true</code></span></span>
+<span class="line"><span class="ld"><code>ExecStart=/bin/bash -c "echo 1 &gt; /sys/bus/pci/devices/0000:06:00.1/sriov_numvfs"</code></span></span>
+<span class="line"><span class="ld"><code># beware, executable is run directly, not through a shell, check the man pages</code></span></span>
+<span class="line"><span class="ld"><code># systemd.service and systemd.unit for full syntax</code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code># target in which to start the service</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=multi-user.target</code></span></span>
+<span class="line"><span class="ld"><code>#WantedBy=graphical.target</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Before starting the VM, it is required to create another service file (<code class="filename">after-local.service</code>) pointing to the <code class="filename">/etc/init.d/after.local</code> script that detaches the NIC. Otherwise the VM would fail to start:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Unit]</code></span></span>
+<span class="line"><span class="ld"><code>Description=/etc/init.d/after.local Compatibility</code></span></span>
+<span class="line"><span class="ld"><code>After=libvirtd.service</code></span></span>
+<span class="line"><span class="ld"><code>Requires=libvirtd.service</code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>Type=oneshot</code></span></span>
+<span class="line"><span class="ld"><code>ExecStart=/etc/init.d/after.local</code></span></span>
+<span class="line"><span class="ld"><code>RemainAfterExit=true</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Install]</code></span></span>
+<span class="line"><span class="ld"><code>WantedBy=multi-user.target</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy it to <code class="filename">/etc/systemd/system</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#! /bin/sh</code></span></span>
+<span class="line"><span class="ld"><code># ...</code></span></span>
+<span class="line"><span class="ld"><code>virsh nodedev-detach pci_0000_06_08_0</code></span></span></pre>
+                        </div>
+                        
+                        <p>Save it as <code class="filename">/etc/init.d/after.local</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot the machine and check if the SR-IOV driver is loaded by re-running the <code class="command">lspci</code> command from the first step of this procedure. If the SR-IOV driver was loaded successfully
+                           you should see additional lines for the VFs:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>01:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>01:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>01:10.0 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>01:10.1 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>01:10.2 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>04:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>04:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>04:10.0 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>04:10.1 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>04:10.2 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-config-io-attach">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Adding a VF network device to a VM Guest</h3>
+               </header>
+               
+               
+               <p>When the <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> hardware is properly set up on the VM Host Server, you can add VFs to VM Guests.
+                  To do so, you need to collect specific data first.</p>
+               
+               <div class="formalobject procedure" id="sec-libvirt-config-io-attach_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">15<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Adding a VF network device to an existing VM Guest</div>
+                  </header>
+                  <p>The following procedure uses example data. Replace it with appropriate data from your
+                     setup.</p>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Use the <code class="command">virsh nodedev-list</code> command to get the PCI address of the VF you want to assign and its corresponding
+                           PF. Numerical values from the <code class="command">lspci</code> output shown in <a class="xref xref-sect2" href="#sec-libvirt-config-io-config">the section called “Loading and configuring the SR-IOV host drivers”</a>, for example, <code class="literal">01:00.0</code> or <code class="literal">04:00.1</code>, are transformed by adding the prefix <code class="literal">pci_0000_</code> and by replacing colons and dots with underscores. So a PCI ID listed as <code class="literal">04:00.0</code> by <code class="command">lspci</code> is listed as <code class="literal">pci_0000_04_00_0</code> by virsh. The following example lists the PCI IDs for the second port of the Intel
+                           82576NS network card:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh nodedev-list | grep 0000_04_</code><strong class="bold">pci_0000_04_00_0</strong><strong class="bold">pci_0000_04_00_1</strong></code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_0</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_1</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_2</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_3</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_4</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_5</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_6</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_10_7</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_11_0</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_11_1</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_11_2</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_11_3</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_11_4</code></span></span>
+<span class="line"><span class="ld"><code>pci_0000_04_11_5</code></span></span></pre>
+                        </div>
+                        
+                        <p>The first two entries represent the <strong class="bold">PFs</strong>, whereas the other entries represent the VFs.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Run the following <code class="command">virsh nodedev-dumpxml</code> command on the PCI ID of the VF you want to add:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh nodedev-dumpxml pci_0000_04_10_0</code></code></span></span>
+<span class="line"><span class="ld"><code>&lt;device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;name&gt;pci_0000_04_10_0&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;parent&gt;pci_0000_00_02_0&lt;/parent&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;capability type='pci'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    <strong class="bold">&lt;domain&gt;0&lt;/domain&gt; &lt;bus&gt;4&lt;/bus&gt; &lt;slot&gt;16&lt;/slot&gt; &lt;function&gt;0&lt;/function&gt;</strong></code></span></span>
+<span class="line"><span class="ld"><code>    &lt;product id='0x10ca'&gt;82576 Virtual Function&lt;/product&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;vendor id='0x8086'&gt;Intel Corporation&lt;/vendor&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;capability type='phys_function'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;address domain='0x0000' bus='0x04' slot='0x00' function='0x0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/capability&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/capability&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/device&gt;</code></span></span></pre>
+                        </div>
+                        
+                        <p>The following data is needed for the next step:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="literal">&lt;domain&gt;0&lt;/domain&gt;</code></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">&lt;bus&gt;4&lt;/bus&gt;</code></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">&lt;slot&gt;16&lt;/slot&gt;</code></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">&lt;function&gt;0&lt;/function&gt;</code></p>
+                              </li>
+                           </ul>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a temporary XML file, for example, <code class="filename">/tmp/vf-interface.xml</code>, containing the data necessary to add a VF network device to an existing VM Guest.
+                           The minimal content of the file needs to look like the following:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;interface type='hostdev'&gt;<span class="co" id="sriov-iface">⤆</span></code></span></span>
+<span class="line"><span class="ld"><code> &lt;source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;address type='pci' domain='0' bus='11' slot='16' function='0'2/&gt;<span class="co" id="sriov-data">⤇</span></code></span></span>
+<span class="line"><span class="ld"><code> &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/interface&gt;</code></span></span></pre>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#sriov-iface">⤆</a></dt>
+                              <dd>
+                                 
+                                 <p>VFs do not get a fixed MAC address; it changes every time the host reboots. When adding
+                                    network devices the <q>traditional</q> way with <code class="tag tag-attribute">hostdev</code>, it would require to reconfigure the VM Guest's network device after each reboot
+                                    of the host, because of the MAC address change. To avoid this kind of problem, <code class="library systemitem">libvirt</code> introduced the <code class="tag tag-attvalue">hostdev</code> value, which sets up network-specific data <em>before</em> assigning the device.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#sriov-data">⤇</a></dt>
+                              <dd>
+                                 
+                                 <p>Specify the data you acquired in the previous step here.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In case a device is already attached to the host, it cannot be attached to a VM Guest.
+                           To make it available for guests, detach it from the host first:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh nodedev-detach pci_0000_04_10_0</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Add the VF interface to an existing VM Guest:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh attach-device <em class="replaceable">GUEST</em> /tmp/vf-interface.xml --<em class="replaceable">OPTION</em></code></code></span></span></pre>
+                        </div>
+                        
+                        <p><em class="replaceable">GUEST</em> needs to be replaced by the domain name, ID or UUID of the VM Guest. --<em class="replaceable">OPTION</em> can be one of the following:</p>
+                        
+                        <dl class="long-terms variablelist">
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">--persistent</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>This option always adds the device to the domain's persistent XML. If the domain is
+                                    running, the device is hotplugged.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">--config</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>This option affects the persistent XML only, even if the domain is running. The device
+                                    appears in the VM Guest on next boot.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">--live</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>This option affects a running domain only. If the domain is inactive, the operation
+                                    fails. The device is not persisted in the XML and becomes available in the VM Guest
+                                    on next boot.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">
+                                    <code class="option">--current</code>
+                                    </span></dt>
+                              <dd>
+                                 
+                                 <p>This option affects the current state of the domain. If the domain is inactive, the
+                                    device is added to the persistent XML and becomes available on next boot. If the domain
+                                    is active, the device is hotplugged but not added to the persistent XML.</p>
+                                 </dd>
+                           </div>
+                           </dl>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To detach a VF interface, use the <code class="command">virsh detach-device</code> command, which also takes the options listed above.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="libvirt-config-io-pool">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>9<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Dynamic allocation of VFs from a pool</h3>
+               </header>
+               
+               
+               <p>If you define the PCI address of a VF into a VM Guest's configuration statically as
+                  described in <a class="xref xref-sect2" href="#sec-libvirt-config-io-attach">the section called “Adding a VF network device to a VM Guest”</a>, it is hard to migrate such guest to another host. The host must have identical hardware
+                  in the same location on the PCI bus, or the VM Guest configuration must be modified
+                  before each start.</p>
+               
+               <p>Another approach is to create a <code class="library systemitem">libvirt</code> network with a device pool that contains all the VFs of an <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> device. The VM Guest then references this network, and each time it is started, a
+                  single VF is dynamically allocated to it. When the VM Guest is stopped, the VF is
+                  returned to the pool, available for another guest.</p>
+               
+               <section class="sect3" id="libvirt-config-io-pool-host">
+                  <header>
+                     <h4><span class="label">15<span class="sep">.</span>9<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Defining network with pool of VFs on VM Host Server</h4>
+                  </header>
+                  
+                  
+                  <p>The following example of network definition creates a pool of all VFs for the <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> device with its physical function (PF) at the network interface <code class="literal">eth0</code> on the host:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;network&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;name&gt;passthrough&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;forward mode='hostdev' managed='yes'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;pf dev='eth0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/forward&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/network&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>To use this network on the host, save the above code to a file, for example <code class="filename">/tmp/passthrough.xml</code>, and execute the following commands. Remember to replace <code class="literal">eth0</code> with the real network interface name of your <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> device's PF:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh net-define /tmp/passthrough.xml</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh net-autostart passthrough</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh net-start passthrough</code></code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="libvirt-config-io-pool-guest">
+                  <header>
+                     <h4><span class="label">15<span class="sep">.</span>9<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring VM Guests to use VF from the pool</h4>
+                  </header>
+                  
+                  
+                  <p>The following example of VM Guest device interface definition uses a VF of the <a class="xref xref-varlistentry" href="bk10partich01s04.html#vt-io-sriov"><span class="label"><span class="term">SR-IOV</span></span></a> device from the pool created in <a class="xref xref-sect3" href="#libvirt-config-io-pool-host">the section called “Defining network with pool of VFs on VM Host Server”</a>. <code class="library systemitem">libvirt</code> automatically derives the list of all VFs associated with that PF the first time
+                     the guest is started.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;interface type='network'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;source network='passthrough'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/interface&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>After the first VM Guest starts that uses the network with the pool of VFs, verify
+                     the list of associated VFs. Do so by running <code class="command">virsh net-dumpxml passthrough</code> on the host.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;network connections='1'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;name&gt;passthrough&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;uuid&gt;a6a26429-d483-d4ed-3465-4436ac786437&lt;/uuid&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;forward mode='hostdev' managed='yes'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;pf dev='eth0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x10' function='0x1'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x10' function='0x3'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x10' function='0x5'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x10' function='0x7'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x11' function='0x1'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x11' function='0x3'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x11' function='0x5'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/forward&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/network&gt;</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich08s08.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich08.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich08s10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Adding a USB device</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Listing attached devices</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

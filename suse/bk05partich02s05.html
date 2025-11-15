@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.5.&nbsp;Checking a control file</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partich02s04.html" rel="prev">
+      <link href="bk05partii.html" rel="next">
+      <link href="bk05partich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partich02.html">Up</a> <a href="bk05partii.html">Next</a> <a href="bk05partich02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partich02s05.html" db-id="d616951e130198" id="check-profile">
+            <header>
+               <h2><span class="label">3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Checking a control file</h2>
+            </header>
+            
+            
+            <p>Depending on the use case, creating an AutoYaST profile can be difficult, especially
+               if you build a dynamic profile using rules/classes, ERB templates or pre-scripts.
+               For more information, see <a class="xref xref-part" href="bk05partiii.html">Part&nbsp;<span class="label">III</span>, “Managing mass installations with dynamic profiles”</a>.</p>
+            
+            <p>Starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 SP3, AutoYaST validates the profile during the installation, reporting any problem
+               found to the user. Although it is recommended to check whether the profile is correct
+               or not, you can disable this behavior by setting the <code class="literal">YAST_SKIP_XML_VALIDATION</code> boot parameter to <code class="literal">1</code>.</p>
+            
+            <p>Moreover, to simplify the testing and debugging process, AutoYaST offers the <code class="literal">check-profile</code> command, which takes care of fetching, building and, optionally, importing the profile
+               to detect any potential problem.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Results may vary</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Although this command uses the same approach as the installation, the results may
+                           vary depending on the differences between the current system and installation media:
+                           YaST package versions, architecture, etc.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Use only trusted profiles</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>You must be careful when running this command because pre-installation scripts and
+                           ERB code would run as the <code class="literal">root</code> user. Use only profiles that you trust.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-basic-checks">
+               <header>
+                  <h3><span class="label">3<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Basic checks</h3>
+               </header>
+               
+               
+               <p>The simplest way to use this command is just to read and validate the profile:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  yast2 autoyast check-profile filename=autoinst.xml output=result.xml</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="filename">result.xml</code> file contains the result of evaluating the profile. Bear in mind that, even if you
+                  do not use any advanced feature, the content of <code class="filename">autoinst.xml</code> and <code class="filename">result.xml</code> may differ. The reason is that AutoYaST does some cleaning up when it processes the
+                  profile.</p>
+               
+               <p><code class="literal">check-profile</code> can deal with remote files too:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  yast2 autoyast check-profile filename=http://192.168.1.100/autoinst.xml output=result.xml</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-running-pre-scripts">
+               <header>
+                  <h3><span class="label">3<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Running pre-scripts</h3>
+               </header>
+               
+               
+               <p>Optionally, AutoYaST can run the scripts that are included in the profile, reporting
+                  any error found during the execution. This is especially relevant if you are using
+                  a pre-installation script to modify the profile. To enable this feature, you need
+                  to set the <code class="literal">run-scripts</code> option to <code class="literal">true</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  yast2 autoyast check-profile filename=http://192.168.1.100/autoinst.xml output=result.xml run-scripts=true</code></span></span></pre>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Scripts run as root</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>You must be careful when enabling the <code class="literal">run-scripts</code> option, because the scripts will run as root and they may affect the current system.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-importing-profile">
+               <header>
+                  <h3><span class="label">3<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Importing the profile</h3>
+               </header>
+               
+               
+               <p>It is possible to face some problems when importing a valid profile, even if it is
+                  correct. The reason is that AutoYaST does not perform any logic check when fetching,
+                  building and validating the profile.</p>
+               
+               <p>To anticipate such problems, the <code class="literal">check-profile</code> command imports the profile and reports problems that it has detected. As it may
+                  take a while, you can disable this behavior by setting the <code class="literal">import-all</code> option to <code class="literal">false</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  yast2 autoyast check-profile filename=http://192.168.1.100/autoinst.xml output=result.xml import-all=false</code></span></span></pre>
+               </div>
+               
+               <p>Importing the profile is a safe operation and does not alter the underlying system
+                  in any way.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partich02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk05partich02.html">Up</a></td>
+                  <td class="next"><a href="bk05partii.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Creating a control file via script with XSLT</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">II</span><span class="sep">.&nbsp;</span>AutoYaST configuration examples</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

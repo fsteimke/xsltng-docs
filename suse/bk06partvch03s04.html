@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>33.4.&nbsp;Immunizing network applications</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch03s03.html" rel="prev">
+      <link href="bk06partvch04.html" rel="next">
+      <link href="bk06partvch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch03.html">Up</a> <a href="bk06partvch04.html">Next</a> <a href="bk06partvch03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch03s04.html" db-id="d616951e183553" id="sec-apparmor-concept-network">
+            <header>
+               <h2><span class="label">33<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Immunizing network applications</h2>
+            </header>
+            
+            
+            <p>An automated method for finding network server daemons that should be profiled is
+               to use the <code class="command">aa-unconfined</code> tool. </p>
+            
+            
+            <p>The <code class="command">aa-unconfined</code> tool uses the command <code class="command">netstat -nlp</code> to inspect open ports from inside your computer, detect the programs associated with
+               those ports, and inspect the set of AppArmor profiles that you have loaded. <code class="command">aa-unconfined</code> then reports these programs along with the AppArmor profile associated with each
+               program, or reports <q>none</q> (if the program is not confined).</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Note</div>
+                     </header>
+                     <div>
+                        
+                        <p>If you create a new profile, you must restart the program that has been profiled to
+                           have it be effectively confined by AppArmor.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>Below is a sample <code class="command">aa-unconfined</code> output:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>3702<span class="co" id="co-apparmor-concept-network-id">⠽</span> /usr/sbin/sshd<span class="co" id="co-apparmor-concept-network-string">⠾</span> confined</code></span></span>
+<span class="line"><span class="ld"><code>   by '/usr/sbin/sshd<span class="co" id="co-apparmor-concept-network-confine">⠿</span> (enforce)'</code></span></span>
+<span class="line"><span class="ld"><code>4040 /usr/sbin/smbd confined by '/usr/sbin/smbd (enforce)'</code></span></span>
+<span class="line"><span class="ld"><code>4373 /usr/lib/postfix/master confined by '/usr/lib/postfix/master (enforce)'</code></span></span>
+<span class="line"><span class="ld"><code>4505 /usr/sbin/httpd2-prefork confined by '/usr/sbin/httpd2-prefork (enforce)'</code></span></span>
+<span class="line"><span class="ld"><code>646 /usr/lib/wicked/bin/wickedd-dhcp4 not confined</code></span></span>
+<span class="line"><span class="ld"><code>647 /usr/lib/wicked/bin/wickedd-dhcp6 not confined</code></span></span>
+<span class="line"><span class="ld"><code>5592 /usr/bin/ssh not confined</code></span></span>
+<span class="line"><span class="ld"><code>7146 /usr/sbin/cupsd confined by '/usr/sbin/cupsd (complain)'</code></span></span></pre>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#co-apparmor-concept-network-id">⠽</a></dt>
+                  <dd>
+                     
+                     <p>The first portion is a number. This number is the process ID number (PID) of the listening
+                        program.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-apparmor-concept-network-string">⠾</a></dt>
+                  <dd>
+                     
+                     <p>The second portion is a string that represents the absolute path of the listening
+                        program</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-apparmor-concept-network-confine">⠿</a></dt>
+                  <dd>
+                     
+                     <p>The final portion indicates the profile confining the program, if any.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Note</div>
+                     </header>
+                     <div>
+                        
+                        <p><code class="command">aa-unconfined</code> requires <code class="systemitem username">root</code> privileges and should not be run from a shell that is confined by an AppArmor profile.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p><code class="command">aa-unconfined</code> does not distinguish between one network interface and another, so it reports all
+               unconfined processes, even those that might be listening to an internal LAN interface.</p>
+            
+            <p>Finding user network client applications is dependent on your user preferences. The
+               <code class="command">aa-unconfined</code> tool detects and reports network ports opened by client applications, but only those
+               client applications that are running at the time the <code class="command">aa-unconfined</code> analysis is performed. This is a problem because network services run all the time,
+               while network client applications run when the user is interested in them.</p>
+            
+            <p>Applying AppArmor profiles to user network client applications is also dependent on
+               user preferences. Therefore, we leave the profiling of user network client applications
+               as an exercise for the user.</p>
+            
+            <p>To aggressively confine desktop applications, the <code class="command">aa-unconfined</code> command supports a <code class="option">--paranoid</code> option, which reports all processes running and the corresponding AppArmor profiles
+               that might or might not be associated with each process. The user can then decide
+               whether each of these programs needs an AppArmor profile.</p>
+            
+            <p>If you have new or modified profiles, you can submit them to the <code class="email">apparmor@lists.ubuntu.com</code> mailing list along with a use case for the application behavior that you exercised.
+               The AppArmor team reviews and may submit the work into <span class="phrase productname">SUSE Linux Enterprise Server</span>. We cannot guarantee that every profile is included, but we make a sincere effort
+               to include as much as possible.</p>
+            
+            <section class="sect2" id="sec-apparmor-concept-network-web">
+               <header>
+                  <h3><span class="label">33<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Immunizing web applications</h3>
+               </header>
+               
+               
+               <p>To find Web applications, investigate your Web server configuration. The Apache Web
+                  server is highly configurable and Web applications can be stored in many directories,
+                  depending on your local configuration. <span class="phrase productname">SUSE Linux Enterprise Server</span>, by default, stores Web applications in <code class="filename">/srv/www/cgi-bin/</code>. To the maximum extent possible, each Web application should have an AppArmor profile.</p>
+               
+               <p>Once you find these programs, you can use the <code class="command">aa-genprof</code> and <code class="command">aa-logprof</code> tools to create or update their AppArmor profiles.</p>
+               
+               <p>Because CGI programs are executed by the Apache Web server, the profile for Apache
+                  itself, <code class="filename">usr.sbin.httpd2-prefork</code> for Apache2 on <span class="phrase productname">SUSE Linux Enterprise Server</span>, must be modified to add execute permissions to each of these programs. For example,
+                  adding the line <code class="literal">/srv/www/cgi-bin/my_hit_counter.pl rPx</code> grants Apache permission to execute the Perl script <code class="filename">my_hit_counter.pl</code> and requires that there be a dedicated profile for <code class="filename">my_hit_counter.pl</code>. If <code class="filename">my_hit_counter.pl</code> does not have a dedicated profile associated with it, the rule should say <code class="literal">/srv/www/cgi-bin/my_hit_counter.pl rix</code> to cause <code class="filename">my_hit_counter.pl</code> to inherit the <code class="filename">usr.sbin.httpd2-prefork</code> profile.</p>
+               
+               <p>Some users might find it inconvenient to specify execute permission for every CGI
+                  script that Apache might invoke. Instead, the administrator can grant controlled access
+                  to collections of CGI scripts. For example, adding the line <code class="literal">/srv/www/cgi-bin/*.{pl,py,pyc} rix</code> allows Apache to execute all files in <code class="literal">/srv/www/cgi-bin/</code> ending in <code class="filename">.pl</code> (Perl scripts) and <code class="filename">.py</code> or <code class="filename">.pyc</code> (Python scripts). As above, the <code class="literal">ix</code> part of the rule causes Python scripts to inherit the Apache profile, which is appropriate
+                  if you do not want to write individual profiles for each CGI script.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>If you want the subprocess confinement module (<code class="filename">apache2-mod-apparmor</code>) functionality when Web applications handle Apache modules (<code class="filename">mod_perl</code> and <code class="filename">mod_php</code>), use the ChangeHat features when you add a profile in YaST or at the command line.
+                              To take advantage of the subprocess confinement, refer to <a class="xref xref-sect1" href="bk06partvch08s02.html">the section called “Managing ChangeHat-aware applications”</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Profiling Web applications that use <code class="filename">mod_perl</code> and <code class="filename">mod_php</code> requires slightly different handling. In this case, the <q>program</q> is a script interpreted directly by the module within the Apache process, so no exec
+                  happens. Instead, the AppArmor version of Apache calls <code class="command">change_hat()</code> using a subprofile (a <q>hat</q>) corresponding to the name of the URI requested.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>The name presented for the script to execute might not be the URI, depending on how
+                              Apache has been configured for where to look for module scripts. If you have configured
+                              your Apache to place scripts in a different place, the different names appear in the
+                              log file when AppArmor complains about access violations. See <a class="xref xref-chapter" href="bk06partvch10.html">Chapter&nbsp;<span class="label">40</span>, Managing profiled applications</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>For <code class="filename">mod_perl</code> and <code class="filename">mod_php</code> scripts, this is the name of the Perl script or the PHP page requested. For example,
+                  adding this subprofile allows the <code class="filename">localtime.php</code> page to execute and access to the local system time and locale files:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/bin/httpd2-prefork {</code></span></span>
+<span class="line"><span class="ld"><code>  # ...</code></span></span>
+<span class="line"><span class="ld"><code>  ^/cgi-bin/localtime.php {</code></span></span>
+<span class="line"><span class="ld"><code>    /etc/localtime                  r,</code></span></span>
+<span class="line"><span class="ld"><code>    /srv/www/cgi-bin/localtime.php  r,</code></span></span>
+<span class="line"><span class="ld"><code>    /usr/lib/locale/**              r,</code></span></span>
+<span class="line"><span class="ld"><code>  }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>If no subprofile has been defined, the AppArmor version of Apache applies the <code class="systemitem">DEFAULT_URI</code> hat. This subprofile is sufficient to display a Web page. The <code class="systemitem">DEFAULT_URI</code> hat that AppArmor provides by default is the following:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>^DEFAULT_URI {</code></span></span>
+<span class="line"><span class="ld"><code>    /usr/sbin/suexec2                  mixr,</code></span></span>
+<span class="line"><span class="ld"><code>    /var/log/apache2/**                rwl,</code></span></span>
+<span class="line"><span class="ld"><code>    @{HOME}/public_html                r,</code></span></span>
+<span class="line"><span class="ld"><code>    @{HOME}/public_html/**             r,</code></span></span>
+<span class="line"><span class="ld"><code>    /srv/www/htdocs                    r,</code></span></span>
+<span class="line"><span class="ld"><code>    /srv/www/htdocs/**                 r,</code></span></span>
+<span class="line"><span class="ld"><code>    /srv/www/icons/*.{gif,jpg,png}     r,</code></span></span>
+<span class="line"><span class="ld"><code>    /srv/www/vhosts                    r,</code></span></span>
+<span class="line"><span class="ld"><code>    /srv/www/vhosts/**                 r,</code></span></span>
+<span class="line"><span class="ld"><code>    /usr/share/apache2/**              r,</code></span></span>
+<span class="line"><span class="ld"><code>    /var/lib/php/sess_*                rwl</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>To use a single AppArmor profile for all Web pages and CGI scripts served by Apache,
+                  a good approach is to edit the <code class="systemitem">DEFAULT_URI</code> subprofile. For more information on confining Web applications with Apache, see <a class="xref xref-chapter" href="bk06partvch08.html">Chapter&nbsp;<span class="label">38</span>, Profiling your Web applications using ChangeHat</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-concept-network-agents">
+               <header>
+                  <h3><span class="label">33<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Immunizing network agents</h3>
+               </header>
+               
+               
+               <p>To find network server daemons and network clients (such as <code class="command">fetchmail</code> or Firefox) that need to be profiled, you should inspect the open ports on your machine.
+                  Also, consider the programs that are answering on those ports, and provide profiles
+                  for as many of those programs as possible. If you provide profiles for all programs
+                  with open network ports, an attacker cannot get to the file system on your machine
+                  without passing through an AppArmor profile policy.</p>
+               
+               
+               <p>Scan your server for open network ports manually from outside the machine using a
+                  scanner (such as nmap), or from inside the machine using the <code class="command">netstat --inet -n -p</code> command as <code class="systemitem username">root</code>. Then, inspect the machine to determine which programs are answering on the discovered
+                  open ports.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>Refer to the man page of the <code class="command">netstat</code> command for a detailed reference of all possible options.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch03.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">33<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Immunizing <code class="daemon systemitem">cron</code> jobs</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">34</span><span class="sep">.&nbsp;</span>Profile components and syntax</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

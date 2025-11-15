@@ -1,0 +1,274 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>12.2.&nbsp;Device encryption</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk02partiich04.html" rel="prev">
+      <link href="bk02partiich04s03.html" rel="next">
+      <link href="bk02partiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk02partiich04.html">Up</a> <a href="bk02partiich04s03.html">Next</a> <a href="bk02partiich04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk02partiich04s02.html" db-id="d616951e94417" id="deployment-encryption" lang="">
+            <header>
+               <h2><span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Device encryption</h2>
+            </header>
+            
+            
+            
+            <p>Linux Unified Key Setup (LUKS) is the standard for Linux disk encryption. It provides
+               a standardized on-disk format and enables users to transport or migrate data seamlessly.</p>
+            
+            <p>LUKS is used to encrypt block devices. The contents of the encrypted device are arbitrary,
+               and therefore any file system can be encrypted, including swap partitions. All necessary
+               setup information, like encryption keys and parameters, such as cipher type and key
+               size, is stored in the partition header.</p>
+            
+            <p>Encryption is done with a multi-layer approach. First, the block device is encrypted
+               using a master key. Then, this master key is encrypted with each active user key.
+               User keys are derived from passphrases, FIDO2 security keys, TPMs or smart cards.
+               This multi-layer approach allows users to change their passphrase without re-encrypting
+               the whole block device.</p>
+            
+            <p>For more information about LUKS, refer to <a class="xref xref-chapter" href="bk06partiich05.html">Chapter&nbsp;<span class="label">13</span>, Storage encryption for hosted applications with cryptctl</a>.</p>
+            
+            <section class="sect2" id="deployment-encryption-methods">
+               <header>
+                  <h3><span class="label">12<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Encryption methods</h3>
+               </header>
+               
+               
+               <p>To encrypt a device, follow the instructions in <a class="xref xref-sect2" href="bk02partiich04.html#sec-expert-partitioner-options">the section called “Editing a partition”</a>.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Enabling LUKS2 support in YaST</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>LUKS2 encryption is supported by the YaST Partitioner as of SUSE Linux Enterprise
+                              15 SP4, but needs to be enabled explicitly. There are two ways to do this:</p>
+                           
+                           <ol class="orderedlist" type="1">
+                              
+                              <li>
+                                 
+                                 <p>At boot time, by adding the parameter <code class="literal">YAST_LUKS2_AVAILABLE</code> to the kernel command line. For information about boot parameters, refer to <a class="xref xref-chapter" href="bk02partiich01.html">Chapter&nbsp;<span class="label">9</span>, Boot parameters</a>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>During installation in the YaST configuration:</p>
+                                 
+                                 <ul class="itemizedlist">
+                                    
+                                    <li>
+                                       
+                                       <p>In the graphical interface, press <span class="keycombo"><span class="keycap">Ctrl</span><span class="keycap">Alt</span><span class="keycap">Shift</span><span class="keycap">C</span></span>.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p>In the text interface, press <span class="keycombo"><span class="keycap">Ctrl</span><span class="keycap">D</span></span> and then <span class="keycombo"><span class="keycap">Shift</span><span class="keycap">C</span></span>.</p>
+                                       </li>
+                                    </ul>
+                                 
+                                 <p>Check <span class="guimenu">Enable Experimental LUKS2 Encryption Support</span> and exit the configuration screen with <span class="guimenu">OK</span>.</p>
+                                 </li>
+                              </ol>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>If you do not enable LUKS2 support, the <span class="guimenu">Encryption method</span> selection is not visible and you only need to enter the encryption password.</p>
+               
+               <dl class="long-terms variablelist" id="vl-encryption-methods">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <span class="guimenu">Regular LUKS1</span>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>This method allows to encrypt the device using LUKS1. You have to provide the encryption
+                           password. Additional passwords—up to eight in total—can be added later with <code class="command">cryptsetup luksAddKey</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <span class="guimenu">Regular LUKS2</span>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>LUKS2 uses a newer version of the header format, which is resilient to corruption,
+                           and supports up to 32 user keys and device labels. You have to provide the encryption
+                           password and the password-based key derivation function (PBKDF) that will be used
+                           to protect that passphrase (see <a class="xref xref-sect2" href="#deployment-encryption-pbkdf">the section called “Password-based key derivation functions”</a>).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <span class="guimenu">Pervasive LUKS2</span> (only on IBM&nbsp;Z)</span></dt>
+                     <dd>
+                        
+                        <p>This method allows to encrypt the device using LUKS2 with a master secure key processed
+                           by a Crypto Express cryptographic coprocessor configured in CCA mode. If the cryptographic
+                           system already contains a secure key associated to this volume, that key will be used.
+                           Otherwise, a new secure key will be generated and registered in the system. You need
+                           to provide an encryption password that will be used to protect the access to that
+                           master key. Moreover, when there are several APQNs in the system, you can select which
+                           ones to use.</p>
+                        
+                        <p>For more information about pervasive encryption, refer to <a class="link" href="https://www.ibm.com/docs/en/linux-on-systems?topic=security-pervasive-encryption">https://www.ibm.com/docs/en/linux-on-systems?topic=security-pervasive-encryption</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <span class="guimenu">Encryption with Volatile Random Key</span> (only for swap devices)</span></dt>
+                     <dd>
+                        
+                        <p>This method encrypts a swap device with a randomly generated key at boot and therefore
+                           does not support hibernation to hard disk. The swap device is re-encrypted on every
+                           boot, and its previous content is destroyed. To avoid data loss, disable hibernation
+                           and configure your system to shut down instead.</p>
+                        
+                        <p>In addition to the encryption key, the device label and the UUID change every time
+                           the swap is re-encrypted, so neither is a valid option to mount a randomly encrypted
+                           swap device. Make sure the swap device is referenced by a stable name that is not
+                           subject to change on every reboot in the <code class="filename">/etc/crypttab</code> file. For example, for a swap partition it is safer to use the udev device ID or
+                           path instead of the partition device name, since that device name may be assigned
+                           to a different partition during the next boot. If that happens, a wrong device could
+                           be encrypted instead of your swap!</p>
+                        
+                        <p>YaST tries to use stable names in <code class="filename">/etc/crypttab</code>, unless it is configured to always use device names (see the <span class="guimenu">Settings</span> section of the partitioner). But for some devices, finding a fully stable name may
+                           not be possible. Only use encryption with volatile keys if you are sure about the
+                           implications.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <span class="guimenu">Protected Swap</span> (only for swap devices)</span></dt>
+                     <dd>
+                        
+                        <p>This method encrypts a swap device with a volatile protected AES key without requiring
+                           a cryptographic coprocessor. It is an improvement over the <code class="literal">Encryption with Volatile Random Key</code> method and all considerations for that method still apply.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <span class="guimenu">Secure Swap</span> (only for swap devices)</span></dt>
+                     <dd>
+                        
+                        <p>This method encrypts a swap device with a volatile secure AES key generated from a
+                           cryptographic coprocessor. It is an improvement over the <code class="literal">Encryption with Volatile Random Key</code> method and all considerations for that method still apply.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="deployment-encryption-pbkdf">
+               <header>
+                  <h3><span class="label">12<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Password-based key derivation functions</h3>
+               </header>
+               
+               
+               <p>The password-based key derivation function (PBKDF) to use depends on the context,
+                  the hardware capabilities and the needed level of compatibility with other system
+                  components:</p>
+               
+               <dl class="variablelist" id="vl-pbkdf">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">PBKDF2</span></dt>
+                     <dd>
+                        
+                        <p><code class="literal">PBKDF2</code> is the function that LUKS1 uses. It is defined in <a class="link" href="https://tools.ietf.org/html/rfc2898">RFC 2898</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Argon2i</span></dt>
+                     <dd>
+                        
+                        <p>Argon2 is a function designed to be more secure and to require a lot of memory to
+                           be computed. It is defined in <a class="link" href="https://tools.ietf.org/html/rfc9106">RFC 9106</a>. Argon2i is a variant of Argon2 optimized to resist side-channel attacks by accessing
+                           the memory array in a password-independent order.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Argon2id</span></dt>
+                     <dd>
+                        
+                        <p>Argon2id is a hybrid version of Argon2. It follows the Argon2i approach for the first
+                           half pass over memory and the Argon2d (not supported by YaST) approach to limit GPU
+                           cracking attacks for subsequent passes. RFC 9106 recommends using Argon2id if you
+                           do not know the difference between the types or you consider side-channel attacks
+                           to be a viable threat.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>While <code class="literal">Argon2</code> is more secure, there are still use cases for <code class="literal">PBKDF2</code>:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>As an intentional security feature, Argon2 requires a lot more memory to be computed.
+                        This may result in problems on some systems. If the strength of the password can be
+                        fully assured, then using PBKDF2 may still be secure and save memory.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">grub2</code> offers limited support to boot from devices encrypted with LUKS2, but only if PBKDF2
+                        is used. This means you cannot use Argon2 for a file system that contains the <code class="filename">/boot</code> directory. Note that even if PBKDF2 is used, some manual <code class="systemitem">grub2</code> configuration may be needed to boot from a LUKS2 device.</p>
+                     </li>
+                  </ul>
+               
+               
+               <p>For more information on configuring device encryption with LUKS, use the <code class="literal">Help</code> button in the installer and refer to <a class="xref xref-chapter" href="bk06partiich05.html">Chapter&nbsp;<span class="label">13</span>, Storage encryption for hosted applications with cryptctl</a>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk02partiich04.html">Prev</a></td>
+                  <td class="up"><a href="bk02partiich04.html">Up</a></td>
+                  <td class="next"><a href="bk02partiich04s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">12</span><span class="sep">.&nbsp;</span>
+                     <span class="guimenu">Expert Partitioner</span>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>LVM configuration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

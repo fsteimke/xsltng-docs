@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>34.13.&nbsp;Resource limit control</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch04s12.html" rel="prev">
+      <link href="bk06partvch04s14.html" rel="next">
+      <link href="bk06partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch04.html">Up</a> <a href="bk06partvch04s14.html">Next</a> <a href="bk06partvch04s12.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch04s13.html" db-id="d616951e186802" id="sec-apparmor-profiles-rlimit">
+            <header>
+               <h2><span class="label">34<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>Resource limit control</h2>
+            </header>
+            
+            
+            <p>AppArmor can set and control an application's resource limits (rlimits, also known
+               as ulimits). By default, AppArmor does not control an application's rlimits, and it
+               controls those limits specified in the confining profile. For more information about
+               resource limits, refer to the <code class="systemitem">setrlimit(2)</code>, <code class="systemitem">ulimit(1)</code>, or <code class="systemitem">ulimit(3)</code> man pages.</p>
+            
+            <p>AppArmor leverages the system's rlimits and as such does not provide an additional
+               auditing that would normally occur. It also cannot raise rlimits set by the system,
+               AppArmor rlimits can only reduce an application's current resource limits.</p>
+            
+            <p>The values are inherited by the children of a process and remain even if a new profile
+               is transitioned to or the application becomes unconfined. So when an application transitions
+               to a new profile, that profile can further reduce the application's rlimits.</p>
+            
+            <p>AppArmor's rlimit rules provide mediation of setting an application's hard limits,
+               should it try to raise them. The application cannot raise its hard limits any further
+               than specified in the profile. The mediation of raising hard limits is not inherited
+               as the set value is, so that when the application transitions to a new profile it
+               is free to raise its limits as specified in the profile.</p>
+            
+            <p>AppArmor's rlimit control does not affect an application's soft limits beyond ensuring
+               that they are less than or equal to the application's hard limits.</p>
+            
+            <p>AppArmor's hard limit rules have the general form of:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>set rlimit <em class="replaceable">RESOURCE</em> &lt;= <em class="replaceable">value</em>,</code></span></span></pre>
+            </div>
+            
+            <p>where <em class="replaceable">RESOURCE</em> and <em class="replaceable">VALUE</em> are to be replaced with the following values:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">cpu</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>CPU time limit in seconds.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">fsize</code>, <code class="literal">data</code>, <code class="literal">stack</code>, <code class="literal">core</code>, <code class="literal">rss</code>, <code class="literal">as</code>, <code class="literal">memlock</code>, <code class="literal">msgqueue</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>a number in bytes, or a number with a suffix where the suffix can be K/KB (kilobytes),
+                        M/MB (megabytes), G/GB (gigabytes), for example</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>rlimit data &lt;= 100M,</code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">fsize</code>, <code class="literal">nofile</code>, <code class="literal">locks</code>, <code class="literal">sigpending</code>, <code class="literal">nproc</code>, <code class="literal">rtprio</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>a number greater or equal to 0</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">nice</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>a value between -20 and 19</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Note</div>
+                     </header>
+                     <div>
+                        
+                        <p>The nproc rlimit is handled different than all the other rlimits. Instead of indicating
+                           the standard process rlimit, it controls the maximum number of processes that can
+                           be running under the profile at any time. When the limit is exceeded, the creation
+                           of new processes under the profile fails until the number of currently running processes
+                           is reduced.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Note</div>
+                     </header>
+                     <div>
+                        
+                        <p>Currently the tools cannot be used to add rlimit rules to profiles. The only way to
+                           add rlimit controls to a profile is to manually edit the profile with a text editor.
+                           The tools still work with profiles containing rlimit rules and will not remove them,
+                           so it is safe to use the tools to update profiles containing them.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch04s12.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch04s14.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">34<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Execute modes</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">34<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>Auditing rules</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

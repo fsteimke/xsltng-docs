@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>12.2.&nbsp;Connecting to a VM Host Server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich05.html" rel="prev">
+      <link href="bk10partiich05s03.html" rel="next">
+      <link href="bk10partiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich05.html">Up</a> <a href="bk10partiich05s03.html">Next</a> <a href="bk10partiich05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich05s02.html" db-id="d616951e277632" id="sec-libvirt-connect-connecting">
+            <header>
+               <h2><span class="label">12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Connecting to a VM Host Server</h2>
+            </header>
+            
+            
+            <p>To connect to a hypervisor with <code class="library systemitem">libvirt</code>, you need to specify a uniform resource identifier (URI). This URI is needed with
+               <code class="command">virsh</code> and <code class="command">virt-viewer</code> (except when working as <code class="systemitem username">root</code> on the VM Host Server) and is optional for the Virtual Machine Manager. Although
+               the latter can be called with a connection parameter (for example, <code class="command">virt-manager -c qemu:///system</code>), it also offers a graphical interface to create connection URIs. See <a class="xref xref-sect2" href="#sec-libvirt-connect-connecting-vmm">the section called “Managing connections with Virtual Machine Manager”</a> for details.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><em class="replaceable">HYPERVISOR</em><span class="co" id="co-libvirt-connect-hyperv">⤂</span><em class="replaceable">+PROTOCOL</em><span class="co" id="co-libvirt-connect-protocol">⤃</span>://<em class="replaceable">USER@REMOTE</em><span class="co" id="co-libvirt-connect-remote">⤄</span>/<em class="replaceable">CONNECTION_TYPE</em><span class="co" id="co-libvirt-connect-type">⤅</span></code></span></span></pre>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-hyperv">⤂</a></dt>
+                  <dd>
+                     
+                     <p>Specify the hypervisor. <span class="phrase productname">SUSE Linux Enterprise Server</span> currently supports the following hypervisors: <code class="option">test</code> (testing purposes), <code class="option">qemu</code> (KVM), and <code class="option">xen</code> (Xen). This parameter is mandatory.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-protocol">⤃</a></dt>
+                  <dd>
+                     
+                     <p>When connecting to a remote host, specify the protocol here. It can be one of: <code class="option">ssh</code> (connection via SSH tunnel), <code class="option">tcp</code> (TCP connection with SASL/Kerberos authentication), <code class="option">tls</code> (TLS/SSL encrypted connection with authentication via x509 certificates).</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-remote">⤄</a></dt>
+                  <dd>
+                     
+                     <p>When connecting to a remote host, specify the user name and the remote host name.
+                        If no user name is specified, the user name that has called the command (<code class="envar">$USER</code>) is used. See below for more information. For TLS connections, the host name needs
+                        to be specified exactly as in the x509 certificate.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-libvirt-connect-type">⤅</a></dt>
+                  <dd>
+                     
+                     <p>When connecting to the <code class="literal">QEMU/KVM</code> hypervisor, two connection types are accepted: <code class="option">system</code> for full access rights, or <code class="option">session</code> for restricted access. Since <code class="option">session</code> access is not supported on <span class="phrase productname">SUSE Linux Enterprise Server</span>, this documentation focuses on <code class="option">system</code> access.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <div class="long-terms variablelist">
+               <header>
+                  <div class="title">Example hypervisor connection URIs</div>
+               </header>
+               <dl class="long-terms variablelist">
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">test:///default</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Connect to the local testing hypervisor.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">qemu:///system</code> or <code class="option">xen:///system</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Connect to the QEMU/Xen hypervisor on the local host having full access (type system).</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">qemu+ssh://tux@mercury.example.com/system</code> or <code class="option">xen+ssh://tux@mercury.example.com/system</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Connect to the QEMU/Xen hypervisor on the remote host mercury.example.com. The connection
+                           is established via an SSH tunnel.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">qemu+tls://saturn.example.com/system</code> or <code class="option">xen+tls://saturn.example.com/system</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Connect to the QEMU/Xen hypervisor on the remote host mercury.example.com. The connection
+                           is established using TLS/SSL.</p>
+                        </dd>
+                  </div>
+               </dl>
+            </div>
+            
+            <p>For more details and examples, refer to the <code class="library systemitem">libvirt</code> documentation at <a class="link" href="https://libvirt.org/uri.html">https://libvirt.org/uri.html</a>.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">User names in URIs</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>A user name needs to be specified when using Unix socket authentication (regardless
+                           of whether using the user/password authentication scheme or Polkit). This applies
+                           to all SSH and local connections.</p>
+                        
+                        <p>There is no need to specify a user name when using SASL authentication (for TCP or
+                           TLS connections) or when doing no additional server-side authentication for TLS connections.
+                           With SASL, the user name is not evaluated—you are prompted for an SASL user/password
+                           combination in any case.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            
+            <section class="sect2" id="sec-libvirt-connect-connecting-dac">
+               <header>
+                  <h3><span class="label">12<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                     <q>system</q> access for non-privileged users</h3>
+               </header>
+               
+               
+               <p>As mentioned above, a connection to the QEMU hypervisor can be established using two
+                  different protocols: <code class="literal">session</code> and <code class="literal">system</code>. A <q>session</q> connection is spawned with the same privileges as the client program. Such a connection
+                  is intended for desktop virtualization, since it is restricted, for example, no USB/PCI
+                  device assignments, no virtual network setup, limited remote access to <code class="daemon systemitem">libvirtd</code>.</p>
+               
+               <p>The <q>system</q> connection intended for server virtualization has no functional restrictions but
+                  is, by default, only accessible by <code class="systemitem username">root</code>. However, with the addition of the DAC (Discretionary Access Control) driver to <code class="library systemitem">libvirt</code>, it is now possible to grant non-privileged users <q>system</q> access. To grant <q>system</q> access to the user <code class="systemitem username">tux</code>, proceed as follows:</p>
+               
+               <div class="formalobject procedure" id="sec-libvirt-connect-connecting-dac_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Granting <q>system</q> access to a regular user</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Enable access via Unix sockets, as described in <a class="xref xref-sect3" href="bk10partiich05.html#sec-libvirt-connect-auth-libvirt-traditional">the section called “Access control for Unix sockets with permissions and group ownership”</a>. In that example, access to libvirt is granted to all members of the group <code class="groupname systemitem">libvirt</code> and <code class="systemitem username">tux</code> made a member of this group. This ensures that <code class="systemitem username">tux</code> can connect using <code class="command">virsh</code> or Virtual Machine Manager.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit <code class="filename">/etc/libvirt/qemu.conf</code> and change the configuration as follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>user = "tux"</code></span></span>
+<span class="line"><span class="ld"><code>group = "libvirt"</code></span></span>
+<span class="line"><span class="ld"><code>dynamic_ownership = 1</code></span></span></pre>
+                        </div>
+                        
+                        <p>This ensures that the VM Guests are started by <code class="systemitem username">tux</code> and that resources bound to the guest, for example, virtual disks, can be accessed
+                           and modified by <code class="systemitem username">tux</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Make <code class="systemitem username">tux</code> a member of the group <code class="groupname systemitem">kvm</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> usermod --append --groups kvm tux</code></span></span></pre>
+                        </div>
+                        
+                        <p>This step is needed to grant access to <code class="filename">/dev/kvm</code>, which is required to start VM Guests.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Restart <code class="daemon systemitem">libvirtd</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-connect-connecting-vmm">
+               <header>
+                  <h3><span class="label">12<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing connections with Virtual Machine Manager</h3>
+               </header>
+               
+               
+               <p>The Virtual Machine Manager uses a <code class="literal">Connection</code> for every VM Host Server it manages. Each connection contains all VM Guests on the
+                  respective host. By default, a connection to the local host is already configured
+                  and connected.</p>
+               
+               <p>All configured connections are displayed in the Virtual Machine Manager main window.
+                  Active connections are marked with a small triangle, which you can click to fold or
+                  unfold the list of VM Guests for this connection.</p>
+               
+               <p>Inactive connections are listed gray and are marked with <code class="literal">Not Connected</code>. Either double-click or right-click it and choose <span class="guimenu">Connect</span> from the context menu. You can also <span class="guimenu">Delete</span> an existing connection from this menu.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Editing existing connections</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>It is not possible to edit an existing connection. To change a connection, create
+                              a new one with the desired parameters and delete the <q>old</q> one.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>To add a new connection in the Virtual Machine Manager, proceed as follows:</p>
+               
+               <div class="informalobject procedure" id="sec-libvirt-connect-connecting-vmm_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Choose <span class="menuchoice"><span class="guimenu">File</span><span class="guimenu">Add Connection</span></span></p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose the host's <span class="guimenu">Hypervisor</span> (<span class="guimenu">Xen</span> or <span class="guimenu">QEMU/KVM</span>)</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To set up a remote connection, choose <span class="guimenu">Connect to remote host</span>. For more information, see <a class="xref xref-sect1" href="bk10partiich05s03.html">the section called “Configuring remote connections”</a>.</p>
+                        
+                        <p>In case of a remote connection, specify the <span class="guimenu">Hostname</span> of the remote machine in the format <code class="literal"><em class="replaceable">USERNAME</em>@<em class="replaceable">REMOTE _HOST</em></code>.</p>
+                        
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Specifying a user name</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>There is no need to specify a user name for TCP and TLS connections: in these cases,
+                                       it is not evaluated. However, for SSH connections, specifying a user name is necessary
+                                       when you want to connect as a user other than <code class="systemitem username">root</code>.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If you do not want the connection to be automatically started when starting the Virtual
+                           Machine Manager, deactivate <span class="guimenu">Autoconnect</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Finish the configuration by clicking <span class="guimenu">Connect</span>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich05.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich05.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich05s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">12</span><span class="sep">.&nbsp;</span>Connecting and authorizing</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring remote connections</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

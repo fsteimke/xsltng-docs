@@ -1,0 +1,299 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.8.&nbsp;Gathering information for NFS troubleshooting</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch06s07.html" rel="prev">
+      <link href="bk09partivch07.html" rel="next">
+      <link href="bk09partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch06.html">Up</a> <a href="bk09partivch07.html">Next</a> <a href="bk09partivch06s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch06s08.html" db-id="d616951e260374" id="sec-nfs-troubleshooting">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Gathering information for NFS troubleshooting</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-nfs-common-troubleshooting">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Common troubleshooting</h3>
+               </header>
+               
+               
+               <p>In some cases, you can understand the problem in your NFS by reading the error messages
+                  produced and looking into the <code class="filename">/var/log/messages</code> file. However, in many cases, the information provided by the error messages and
+                  in <code class="filename">/var/log/messages</code> is not detailed enough. In these cases, most NFS problems can be best understood
+                  through capturing network packets while reproducing the problem.</p>
+               
+               <p>Clearly define the problem. Examine the problem by testing the system in a variety
+                  of ways and determining when the problem occurs. Isolate the simplest steps that lead
+                  to the problem. Then try to reproduce the problem as described in the procedure below.</p>
+               
+               <div class="formalobject procedure" id="sec-nfs-common-troubleshooting_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Reproducing the problem</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Capture network packets. On Linux, you can use the <code class="command">tcpdump</code> command, which is supplied by the <code class="package">tcpdump</code> package.</p>
+                        
+                        <p>An example of <code class="command">tcpdump</code> syntax follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tcpdump -s0 -i <em class="replaceable">eth0</em> -w <em class="replaceable">/tmp/nfs-demo.cap</em> host <em class="replaceable">x.x.x.x</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>Where:</p>
+                        
+                        <dl class="variablelist">
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">s0</span></dt>
+                              <dd>
+                                 
+                                 <p>Prevents packet truncation</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">eth0</span></dt>
+                              <dd>
+                                 
+                                 <p>Should be replaced with the name of the local interface which the packets will pass
+                                    through. You can use the <code class="literal">any</code> value to capture all interfaces at the same time, but usage of this attribute often
+                                    results in inferior data as well as confusion in analysis.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">w</span></dt>
+                              <dd>
+                                 
+                                 <p>Designates the name of the capture file to write.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">x.x.x.x</span></dt>
+                              <dd>
+                                 
+                                 <p>Should be replaced with the IP address of the other end of the NFS connection. For
+                                    example, when taking a <code class="command">tcpdump</code> at the NFS client side, specify the IP address of the NFS Server, and vice versa.</p>
+                                 </dd>
+                           </div>
+                           </dl>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Note</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>In some cases, capturing the data at either the NFS client or NFS server is sufficient.
+                                       However, in cases where end-to-end network integrity is in doubt, it is often necessary
+                                       to capture data at both ends.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <p>Do not shut down the <code class="command">tcpdump</code> process and proceed to the next step.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>(Optional) If the problem occurs during execution of the <code class="command">nfs mount</code> command itself, you can try to use the high-verbosity option (<code class="literal">-vvv</code>) of the <code class="command">nfs mount</code> command to get more output.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>(Optional) Get an <code class="command">strace</code> of the reproduction method. An <code class="command">strace</code> of reproduction steps records exactly what system calls were made at exactly what
+                           time. This information can be used to further determine on which events in the <code class="literal">tcpdump</code> you should focus.</p>
+                        
+                        <p>For example, if you found out that executing the command <em>mycommand --param</em> was failing on an NFS mount, then you could <code class="command">strace</code> the command with:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>strace -ttf -s128 -o/tmp/nfs-strace.out mycommand --param</code></span></span></pre>
+                        </div>
+                        
+                        <p>In case you do not get any <code class="command">strace</code> of the reproduction step, note the time when the problem was reproduced. Check the
+                           <code class="filename">/var/log/messages</code> log file to isolate the problem.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Once the problem has been reproduced, stop <code class="command">tcpdump</code> running in your terminal by pressing <span class="keycombo"><span class="keycap">CTRL</span><span class="keycap">c</span></span>. If the <code class="command">strace</code> command resulted in a hang, also terminate the <code class="command">strace</code> command.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>An administrator with experience in analyzing packet traces and <code class="command">strace</code> data can now inspect data in <code class="filename">/tmp/nfs-demo.cap</code> and <code class="filename">/tmp/nfs-strace.out</code>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-advance-debugging">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Advanced NFS debugging</h3>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Advanced debugging is for experts</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Please bear in mind that the following section is intended only for skilled NFS administrators
+                              who understand the NFS code. Therefore, perform the first steps described in <a class="xref xref-sect2" href="#sec-nfs-common-troubleshooting">the section called “Common troubleshooting”</a> to help narrow down the problem and to inform an expert about which areas of debug
+                              code (if any) might be needed to learn deeper details.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>There are various areas of debug code that can be enabled to gather additional NFS-related
+                  information. However, the debug messages are quite cryptic and the volume of them
+                  can be so large that the use of debug code can affect system performance. It may even
+                  impact the system enough to prevent the problem from occurring. In the majority of
+                  cases, the debug code output is not needed, nor is it typically useful to anyone who
+                  is not highly familiar with the NFS code.</p>
+               
+               <section class="sect3" id="sec-rpcdebug">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>8<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Activating debugging with <code class="command">rpcdebug</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="command">rpcdebug</code> tool allows you to set and clear NFS client and server debug flags. In case the <code class="command">rpcdebug</code> tool is not available in your <span class="phrase productname">SUSE Linux Enterprise Server</span> installation, you can install it from the package <code class="package">nfs-client</code> or <code class="package">nfs-kernel-server</code> for the NFS server.</p>
+                  
+                  <p>To set debug flags, run:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>rpcdebug -m <em class="replaceable">module</em> -s flags</code></span></span></pre>
+                  </div>
+                  
+                  <p>To clear the debug flags, run:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>rpcdebug -m <em class="replaceable">module</em> -c flags</code></span></span></pre>
+                  </div>
+                  
+                  <p>where <em class="replaceable">module</em> can be:</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">nfsd</span></dt>
+                        <dd>
+                           
+                           <p>Debug for the NFS server code</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">nfs</span></dt>
+                        <dd>
+                           
+                           <p>Debug for the NFS client code</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">nlm</span></dt>
+                        <dd>
+                           
+                           <p>Debug for the NFS Lock Manager, at either the NFS client or NFS server. This only
+                              applies to NFS v2/v3.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">rpc</span></dt>
+                        <dd>
+                           
+                           <p>Debug for the Remote Procedure Call module, at either the NFS client or NFS server.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>For information on detailed usage of the <code class="command">rpcdebug</code> command, refer to the manual page:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>man 8 rpcdebug</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-other-nfs-debug">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>8<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Activating debug for other code upon which NFS depends</h4>
+                  </header>
+                  
+                  
+                  <p>NFS activities may depend on other related services, such as the NFS mount daemon—<code class="command">rpc.mountd</code>. You can set options for related services within <code class="filename">/etc/sysconfig/nfs</code>.</p>
+                  
+                  <p>For example, <code class="filename">/etc/sysconfig/nfs</code> contains the parameter:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>MOUNTD_OPTIONS=""</code></span></span></pre>
+                  </div>
+                  
+                  <p>To enable the debug mode, you have to use the <code class="literal">-d</code> option followed by any of the values: <code class="literal">all</code>, <code class="literal">auth</code>, <code class="literal">call</code>, <code class="literal">general</code>, or <code class="literal">parse</code>.</p>
+                  
+                  <p>For example, the following code enables all forms of <code class="command">rpc.mountd</code> logging:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>MOUNTD_OPTIONS="-d all"</code></span></span></pre>
+                  </div>
+                  
+                  <p>For all available options refer to the manual pages:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>man 8 rpc.mountd</code></span></span></pre>
+                  </div>
+                  
+                  <p>After changing <code class="filename">/etc/sysconfig/nfs</code>, services need to be restarted:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl restart nfs-server  # for nfs server related changes</code></span></span>
+<span class="line"><span class="ld"><code>systemctl restart nfs  # for nfs client related changes</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch06s07.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">20</span><span class="sep">.&nbsp;</span>Samba</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

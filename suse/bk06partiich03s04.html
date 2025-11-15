@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.4.&nbsp;Default umask</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich03s03.html" rel="prev">
+      <link href="bk06partiich03s05.html" rel="next">
+      <link href="bk06partiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich03.html">Up</a> <a href="bk06partiich03s05.html">Next</a> <a href="bk06partiich03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich03s04.html" db-id="d616951e167861" id="sec-sec-prot-general-umask">
+            <header>
+               <h2><span class="label">11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Default umask</h2>
+            </header>
+            
+            
+            <p>The <code class="command">umask</code> (user file-creation mode mask) command is a shell built-in command that determines
+               the default file permissions for newly created files and directories. This can be
+               overwritten by system calls but many programs and utilities use <code class="command">umask</code>.</p>
+            
+            <p>By default, <code class="command">umask</code> is set to <code class="literal">022</code>. This umask is subtracted from the access mode <code class="literal">777</code> if at least one bit is set.</p>
+            
+            <p>To determine the active umask, use the <code class="command">umask</code> command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>umask</code></span></span>
+<span class="line"><span class="ld"><code>022</code></span></span></pre>
+            </div>
+            
+            <p>With the default umask, you see the behavior most users expect to see on a Linux system.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>touch a</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>mkdir b</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -on</code></span></span>
+<span class="line"><span class="ld"><code>total 16</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r--r--. 1 17086    0 Nov 29 15:05 a</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-xr-x. 2 17086 4096 Nov 29 15:05 b</code></span></span></pre>
+            </div>
+            
+            <p>You can specify arbitrary umask values, depending on your needs.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>umask 111</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>touch c</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>mkdir d</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -on</code></span></span>
+<span class="line"><span class="ld"><code>total 16</code></span></span>
+<span class="line"><span class="ld"><code>-rw-rw-rw-. 1 17086    0 Nov 29 15:05 c</code></span></span>
+<span class="line"><span class="ld"><code>drw-rw-rw-. 2 17086 4096 Nov 29 15:05 d</code></span></span></pre>
+            </div>
+            
+            <p>Based on your threat model, you can use a stricter umask such as <code class="literal">037</code> to prevent accidental data leakage.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>umask 037</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>touch e</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>mkdir f</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -on</code></span></span>
+<span class="line"><span class="ld"><code>total 16</code></span></span>
+<span class="line"><span class="ld"><code>-rw-r-----. 1 17086    0 Nov 29 15:06 e</code></span></span>
+<span class="line"><span class="ld"><code>drwxr-----. 2 17086 4096 Nov 29 15:06 f</code></span></span></pre>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Maximum security</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>For maximum security, use a umask of <code class="literal">077</code>. This forces newly created files and directories to be created with no permissions
+                           for the group and other users.</p>
+                        
+                        <p>This can be unexpected for users and software and may cause additional load for your
+                           support team.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-sec-prot-general-umask-adjust">
+               <header>
+                  <h3><span class="label">11<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Adjusting the default umask</h3>
+               </header>
+               
+               
+               <p>You can modify the umask globally for all users by changing the <code class="varname">UMASK</code> value in <code class="filename">/etc/login.defs</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># Default initial "umask" value used by login(1) on non-PAM enabled systems.</code></span></span>
+<span class="line"><span class="ld"><code># Default "umask" value for pam_umask(8) on PAM enabled systems.</code></span></span>
+<span class="line"><span class="ld"><code># UMASK is also used by useradd(8) and newusers(8) to set the mode for new</code></span></span>
+<span class="line"><span class="ld"><code># home directories.</code></span></span>
+<span class="line"><span class="ld"><code># 022 is the default value, but 027, or even 077, could be considered</code></span></span>
+<span class="line"><span class="ld"><code># for increased privacy. There is no One True Answer here: each sysadmin</code></span></span>
+<span class="line"><span class="ld"><code># must make up their mind.</code></span></span>
+<span class="line"><span class="ld"><code>UMASK           022</code></span></span></pre>
+               </div>
+               
+               <p>For individual users, add the umask to the 'gecos' field in <code class="filename">/etc/passwd</code> like this:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux:x:1000:100:Tux Linux,UMASK=<em class="replaceable">022</em>:/home/tux:/bin/bash</code></span></span></pre>
+               </div>
+               
+               <p>You can do the same with <code class="command">yast users</code> by adding <code class="literal">UMASK=<em class="replaceable">022</em></code> to a user's <span class="menuchoice"><span class="guimenu">Details</span><span class="guimenu">Additional User Information</span></span>.</p>
+               
+               <p>The settings made in <code class="filename">/etc/login.defs</code> and <code class="filename">/etc/passwd</code> are applied by the PAM module <code class="filename">pam_umask.so</code>. For additional configuration options, refer to <code class="command">man pam_umask</code>.</p>
+               
+               <p>For the changes to take effect, users need to log out and back in again. Afterwards,
+                  use the <code class="command">umask</code> command to verify the umask is set correctly.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich03.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich03s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Changing home directory permissions from 755 to 700</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>SUID/SGID files</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

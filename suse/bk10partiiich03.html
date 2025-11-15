@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;21.&nbsp;libguestfs</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiiich02s02.html" rel="prev">
+      <link href="bk10partiiich03s02.html" rel="next">
+      <link href="bk10partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiii.html">Up</a> <a href="bk10partiiich03s02.html">Next</a> <a href="bk10partiiich02s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partiiich03.html" db-id="d616951e288077" id="chap-guestfs" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">21</span><span class="sep">.&nbsp;</span>libguestfs</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Important</div>
+                        </header>
+                        <div>
+                           
+                           <p>Using libguestfs tools is fully supported on the AMD64/Intel&nbsp;64 architecture only.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="sec-guestfs-intro">
+               <header>
+                  <h2><span class="label">21<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VM Guest manipulation overview</h2>
+               </header>
+               
+               
+               <section class="sect2" id="sec-guestfs-intro-risk">
+                  <header>
+                     <h3><span class="label">21<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VM Guest manipulation risk</h3>
+                  </header>
+                  
+                  
+                  <p>As disk images and definition files are simply another type of file in a Linux environment,
+                     it is possible to use many tools to access, edit and write to these files. When used
+                     correctly, such tools can be an important part of guest administration. However, even
+                     correct usage of these tools is not without risk. Risks that should be considered
+                     when manually manipulating guest disk images include:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p><em>Data Corruption</em>: concurrently accessing images, by the host machine or another node in a cluster,
+                           can cause changes to be lost or data corruption to occur if virtualization protection
+                           layers are bypassed.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><em>Security</em>: mounting disk images as loop devices requires root access. While an image is loop
+                           mounted, other users and processes can potentially access the disk contents.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><em>Administrator Error</em>: bypassing virtualization layers correctly requires advanced understanding of virtual
+                           components and tools. Failing to isolate the images or failing to clean up properly
+                           after changes have been made can lead to further problems once back in virtualization
+                           control.</p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect2" id="sec-guestfs-intro-design">
+                  <header>
+                     <h3><span class="label">21<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>libguestfs design</h3>
+                  </header>
+                  
+                  
+                  <p>libguestfs C library has been designed to safely and securely create, access and modify
+                     virtual machine (VM Guest) disk images. It also provides additional language bindings:
+                     for <a class="link" href="https://libguestfs.org/guestfs-perl.3.html">Perl</a>, <a class="link" href="https://libguestfs.org/guestfs-python.3.html">Python</a>, and <a class="link" href="https://libguestfs.org/guestfs-ruby.3.html">Ruby</a>. libguestfs can access VM Guest disk images without needing root and with multiple
+                     layers of defense against rogue disk images.</p>
+                  
+                  <p>libguestfs provides many tools designed for accessing and modifying VM Guest disk
+                     images and contents. These tools provide such capabilities as: viewing and editing
+                     files inside guests, scripting changes to VM Guests, monitoring disk used/free statistics,
+                     creating guests, doing V2V or P2V migrations, performing backups, cloning VM Guests,
+                     formatting disks, and resizing disks.</p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Best practices</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>You must not use libguestfs tools on live virtual machines. Doing so may result in
+                                 disk corruption in the VM Guest. libguestfs tools try to stop you from doing this,
+                                 but cannot catch all cases.</p>
+                              
+                              <p>However, most commands have the <code class="option">--ro</code> (read-only) option. With this option, you can run a command on a live virtual machine.
+                                 The results may be strange or inconsistent but you do not risk disk corruption.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiiich02s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiii.html">Up</a></td>
+                  <td class="next"><a href="bk10partiiich03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">20<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Xen virtual machine clock settings</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">21<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Package installation</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

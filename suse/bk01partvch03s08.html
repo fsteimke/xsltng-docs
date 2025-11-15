@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>40.8.&nbsp;Secure transactions</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch03s07.html" rel="prev">
+      <link href="bk01partvch03s09.html" rel="next">
+      <link href="bk01partvch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch03.html">Up</a> <a href="bk01partvch03s09.html">Next</a> <a href="bk01partvch03s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch03s08.html" db-id="d616951e58912" id="sec-dns-tsig">
+            <header>
+               <h2><span class="label">40<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Secure transactions</h2>
+            </header>
+            
+            
+            <p>Secure transactions can be made with transaction signatures (TSIGs) based on shared
+               secret keys (also called TSIG keys). This section describes how to generate and use
+               such keys.</p>
+            
+            <p>Secure transactions are needed for communication between different servers and for
+               the dynamic update of zone data. Making the access control dependent on keys is much
+               more secure than merely relying on IP addresses.</p>
+            
+            <p>Generate a TSIG key with the following command (for details, see <code class="command">man</code>&nbsp;<code class="option">tsig-keygen</code>):</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> tsig-keygen -a hmac-md5 host1-host2 &gt; host1-host2.key</code></span></span></pre>
+            </div>
+            
+            <p>This creates a file with the name <code class="filename">host1-host2.key</code> with contents that may look as follows:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>key "host1-host2" {                       |</code></span></span>
+<span class="line"><span class="ld"><code>    algorithm hmac-md5;</code></span></span>
+<span class="line"><span class="ld"><code>    secret "oHpBLgtcZso6wxnRTWdJMA==";</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+            </div>
+            
+            <p>The file must be transferred to the remote host, preferably in a secure way (using
+               scp, for example). To enable a secure communication between <code class="literal">host1</code> and <code class="literal">host2</code>, the key must be included in the <code class="filename">/etc/named.conf</code> file on both the local and the remote server.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>key host1-host2 {</code></span></span>
+<span class="line"><span class="ld"><code> algorithm hmac-md5;</code></span></span>
+<span class="line"><span class="ld"><code> secret "ejIkuCyyGJwwuN3xAteKgg==";</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+            </div>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">File permissions of <code class="filename">/etc/named.conf</code>
+                           </div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Make sure that the permissions of <code class="filename">/etc/named.conf</code> are properly restricted. The default for this file is <code class="literal">0640</code>, with the owner being <code class="systemitem username">root</code> and the group <code class="systemitem username">named</code>. As an alternative, move the keys to an extra file with specially limited permissions,
+                           which is then included from <code class="filename">/etc/named.conf</code>. To include an external file, use:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>include  "filename"</code></span></span></pre>
+                        </div>
+                        
+                        <p>Replace <code class="option">filename</code> with an absolute path to your file with keys.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p> To enable the server <code class="literal">host1</code> to use the key for <code class="literal">host2</code> (which has the address <code class="literal">10.1.2.3</code> in this example), the server's <code class="filename">/etc/named.conf</code> must include the following rule:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>server 10.1.2.3 {</code></span></span>
+<span class="line"><span class="ld"><code>  keys { host1-host2. ;};</code></span></span>
+<span class="line"><span class="ld"><code>};</code></span></span></pre>
+            </div>
+            
+            <p>Analogous entries must be included in the configuration files of <code class="literal">host2</code>.</p>
+            
+            <p>Add TSIG keys for any ACLs (access control lists, not to be confused with file system
+               ACLs) that are defined for IP addresses and address ranges to enable transaction security.
+               The corresponding entry could look like this:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>allow-update { key host1-host2. ;};</code></span></span></pre>
+            </div>
+            
+            <p>This topic is discussed in more detail in the <em>BIND Administrator Reference Manual</em> under <code class="literal">update-policy</code>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch03s07.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch03.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch03s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">40<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Dynamic update of zone data</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">40<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>DNS security</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

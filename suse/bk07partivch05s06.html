@@ -1,0 +1,1487 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>13.6.&nbsp;TuneD plug-ins</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partivch05s05.html" rel="prev">
+      <link href="bk07partivch05s07.html" rel="next">
+      <link href="bk07partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partivch05.html">Up</a> <a href="bk07partivch05s07.html">Next</a> <a href="bk07partivch05s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partivch05s06.html" db-id="d616951e215367" id="sec-tuning-tuned-plugins">
+            <header>
+               <h2><span class="label">13<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>TuneD plug-ins</h2>
+            </header>
+            
+            
+            <p>TuneD plug-ins are modular components that extend the functionality of the TuneD system
+               daemon. These plug-ins allow system administrators to create custom optimization profiles
+               tailored to specific workloads or hardware configurations. By leveraging several system
+               metrics and user-defined parameters, TuneD plug-ins can dynamically adjust kernel
+               settings, CPU frequencies, disk I/O schedulers, and other low-level system parameters
+               to achieve optimal performance and energy efficiency. While the core <code class="package">tuned</code> package includes several preconfigured profiles, you can extend it through custom
+               plug-ins for fine-grained control over the system.</p>
+            
+            <p>The general syntax for including plug-ins in the TuneD profile configuration files
+               is as follows:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>[<em class="replaceable">PLUGIN-NAME</em>]</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">PARAMETER_1</em>=<em class="replaceable">VALUE_1</em><em class="replaceable">PARAMETER_2</em>=<em class="replaceable">VALUE_2</em></code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+            </div>
+            
+            <p>The supported TuneD profiles for SUSE Linux Enterprise Server have multiple plug-ins
+               and their parameters included within them. To see a list of all such plug-ins, run
+               the following command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">grep -r '\[.*\]' /usr/lib/tuned/*/tuned.conf | sort -u</code></code></span></span></pre>
+            </div>
+            
+            <section class="sect2" id="sec-tuning-tuned-supported-plugins">
+               <header>
+                  <h3><span class="label">13<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Supported TuneD plug-ins</h3>
+               </header>
+               
+               
+               <p>On SUSE Linux Enterprise Server, the following TuneD plug-ins are supported:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">main</span></dt>
+                     <dd>
+                        
+                        <p><code class="literal">main</code> is not a plug-in, but a special section in the TuneD profile configuration files
+                           that provides overall settings and metadata for the profile. The most commonly used
+                           parameters for the <code class="literal">[main]</code> section are as follows:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">summary</code>: A summary of the key functionality of the profile.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">include</code>: Provision to include other profiles as a parent, so that its configuration can be
+                                 inherited as a base. In case of conflict, the configuration of the child profile takes
+                                 precedence over the configuration of the included profile.</p>
+                              
+                              <div class="admonition note">
+                                 <div>
+                                    <div class="icon">ⓘ</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Impact of updated TuneD profile</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>When the configuration for a parent profile is updated, the child profiles that inherit
+                                             the parent profile also get impacted.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">modules</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">modules</code> plug-in manages kernel modules within the profiles. It can load or unload specific
+                           modules when a profile is activated, allowing administrators to optimize system behavior
+                           for different workloads by controlling which kernel modules are active. When this
+                           plug-in is used, TuneD writes information about the kernel modules in the <code class="filename">/etc/modprobe.d/tuned.conf</code> file.</p>
+                        
+                        <p>If you need to add a kernel module parameter that should be handled by <code class="daemon systemitem">tuned</code>, include it in the profile configuration using the following syntax:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[modules]</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">MODULE_NAME</em>=<em class="replaceable">MODULE_PARAMETERS</em><span class="co" id="module-parameters">⢺</span></code></span></span></pre>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#module-parameters">⢺</a></dt>
+                              <dd>
+                                 
+                                 <p>You can mention multiple module parameters separated by comma.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        
+                        <p>If you want the module to be reloaded automatically, use the <code class="literal">+r</code> option:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[modules]</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">MODULE_NAME</em>=+r,<em class="replaceable">MODULE_PARAMETERS</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>For example:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle2_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[modules]</code></span></span>
+<span class="line"><span class="ld"><code>cpufreq_conservative=+r,down_threshold=20,up_threshold=80,sampling_rate=20000 <span class="co" id="cpu-conservative-r">⢻</span></code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Automatic reload of kernel modules by TuneD</div>
+                           </header>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#cpu-conservative-r">⢻</a></dt>
+                              <dd>
+                                 
+                                 <ul class="itemizedlist">
+                                    
+                                    <li>
+                                       
+                                       <p><code class="parameter">cpufreq_conservative</code> is a kernel module that adjusts the CPU clock speed based on the system load. It
+                                          is more conservative in its frequency scaling compared to other governors like <code class="literal">ondemand</code>.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p>The <code class="literal">=+r</code> syntax indicates that the module should be loaded if it is not already, and TuneD
+                                          keeps track of how many profiles are using this module. When a module with <code class="literal">+r</code> is loaded, TuneD increments the reference count for this module. If the profile is
+                                          later deactivated, the reference count is decremented. The module is unloaded only
+                                          when the reference count reaches zero, which implies that no other active profile
+                                          is using it.</p>
+                                       </li>
+                                    
+                                    <li>
+                                       
+                                       <p>The parameters mean the following:</p>
+                                       
+                                       <ul class="itemizedlist">
+                                          
+                                          <li>
+                                             
+                                             <p><code class="parameter">down_threshold=20</code> indicate that when the CPU usage drops below 20%, the governor lowers the CPU frequency
+                                                to conserve power.</p>
+                                             </li>
+                                          
+                                          <li>
+                                             
+                                             <p><code class="parameter">up_threshold=80</code> indicate that when the CPU usage exceeds 80%, the governor raises the CPU frequency
+                                                to improve performance.</p>
+                                             </li>
+                                          
+                                          <li>
+                                             
+                                             <p><code class="parameter">sampling_rate=20000</code> indicate that the governor samples the CPU usage every 20,000 microseconds (or 20
+                                                milliseconds).</p>
+                                             </li>
+                                          </ul>
+                                       </li>
+                                    </ul>
+                                 </dd>
+                           </dl>
+                        </div>
+                        
+                        <p>For more information on kernel modules, refer to <a class="xref xref-chapter" href="bk01partiiich09.html">Chapter&nbsp;<span class="label">28</span>, Managing kernel modules</a>. Additionally, you can check the parameters of the installed modules on your system
+                           by looking at <code class="filename">/sys/module/<em class="replaceable">MODULE_NAME</em>/parameters/</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">cpu</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">cpu</code> plug-in manages and optimizes CPU-related settings to enhance performance, power
+                           savings, or a balance between the two. This plug-in allows fine-grained control over
+                           how the CPU operates, including setting the frequency governor, energy performance
+                           bias, and other parameters that directly influence the CPU's behavior and performance
+                           characteristics.</p>
+                        
+                        <p>Certain commonly used parameters for the <code class="literal">cpu</code> plug-in are as follows:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">priority</code>: Sets the priority of CPU tuning operations. Higher values give the tuning operation
+                                 a higher priority.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">governor</code>: Sets the CPU frequency scaling governor. Common options for this parameter include
+                                 the following:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">performance</code>: Forces the CPU to run at the maximum frequency, providing the best performance at
+                                       the cost of higher power consumption.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">ondemand</code>: Dynamically adjusts the CPU frequency based on system load, providing a balance
+                                       between performance and power saving.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">conservative</code>: Similar to the <code class="literal">ondemand</code> governor, but increases or decreases the CPU frequency more gradually. It is suitable
+                                       for systems where power saving is important but performance should still be maintained.</p>
+                                    </li>
+                                 </ul>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">energy_perf_bias</code>: Hints to the CPU how to balance between power consumption and performance. Common
+                                 options for this parameter include the following:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">performance</code>: Bias towards maximum performance, possibly increasing power consumption.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">powersave</code>: Bias towards power saving, possibly reducing performance.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">power</code>: A more aggressive power-saving setting compared to <code class="literal">powersave</code>, but potentially less demanding compared to <code class="literal">performance</code>.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">normal</code>: A balanced setting between performance and power saving.</p>
+                                    </li>
+                                 </ul>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">force_latency</code>: Controls the forced latency setting for the CPU. Lower values mean the system aggressively
+                                 applies power-saving measures, possibly at the cost of increased latency. Higher values
+                                 reduce the aggressiveness of power-saving measures, possibly improving responsiveness.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">min_perf_pct</code>: Specifies the minimum performance level as a percentage of the CPU's maximum performance.
+                                 For example, a value of 100 means the CPU always runs at its maximum performance level.
+                                 Lower values allow the CPU to run at lower performance levels when full performance
+                                 is not needed, which can save power.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>For example, a profile created for CPU-intensive workload, such as high-performance
+                           computing, can configure the plug-in for maximum CPU usage:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle3_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[cpu]</code></span></span>
+<span class="line"><span class="ld"><code>priority=1</code></span></span>
+<span class="line"><span class="ld"><code>governor=performance</code></span></span>
+<span class="line"><span class="ld"><code>energy_perf_bias=performance</code></span></span>
+<span class="line"><span class="ld"><code>force_latency=10</code></span></span>
+<span class="line"><span class="ld"><code>min_perf_pct=100</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>TuneD plug-in configuration for CPU-intensive workload</div>
+                           </header>
+                        </div>
+                        
+                        <p>For more information on CPU performance scaling, refer to <a class="link" href="https://www.kernel.org/doc/Documentation/admin-guide/pm/cpufreq.rst">https://www.kernel.org/doc/Documentation/admin-guide/pm/cpufreq.rst</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">audio</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">audio</code> plug-in tunes the system to optimize audio performance. This can involve adjusting
+                           CPU scheduling policies, setting CPU affinity, and configuring other system parameters
+                           to minimize audio latency, ensure smooth audio playback, and record real-time audio
+                           activities. For example:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle4_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[audio]</code></span></span>
+<span class="line"><span class="ld"><code>timeout=10 <span class="co" id="audio-plugin-timeout-parameter">⢼</span></code></span></span>
+<span class="line"><span class="ld"><code>reset_controller=False <span class="co" id="audio-plugin-reset-controller-parameter">⢽</span></code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>TuneD plug-in configuration for optimal audio performance</div>
+                           </header>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#audio-plugin-timeout-parameter">⢼</a></dt>
+                              <dd>
+                                 
+                                 <p>The <code class="parameter">timeout</code> parameter specifies the time period (in seconds) for which the system should remain
+                                    in the optimized state after the last audio activity is detected. This is intended
+                                    to prevent the system from frequently switching back and forth between optimized and
+                                    non-optimized states, which can cause instability or glitches in audio performance.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#audio-plugin-reset-controller-parameter">⢽</a></dt>
+                              <dd>
+                                 
+                                 <p>The <code class="parameter">reset_controller</code> parameter manages the behavior of the audio module's power-saving controller. It
+                                    allows you to enable or disable the resetting of the controller, which can influence
+                                    how the system handles power management for audio devices. The parameter interacts
+                                    with a system file located at <code class="filename">/sys/module/<em class="replaceable">AUDIO_MODULE_NAME</em>/parameters/power_save_controller</code> (for example, <code class="filename">snd_hda_intel</code>). By default, it is set to <code class="literal">False</code>.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">video</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">video</code> plug-in provides options for tuning power-saving settings for certain graphics cards,
+                           particularly AMD Radeon cards. For example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[video]</code></span></span>
+<span class="line"><span class="ld"><code>radeon_powersave=dpm-balanced</code></span></span></pre>
+                        </div>
+                        
+                        <p>Common parameters used with this plug-in are as follows:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">radeon_powersave</code>: This parameter controls the power-saving mode of AMD Radeon graphics cards. It determines
+                                 how the GPU handles power management, impacting performance and energy consumption.
+                                 Configuration options used with this parameter include the following:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">default</code>: The default power-saving profile, which is the default setting provided by the graphics
+                                       driver.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">auto</code>: Automatically adjusts power-saving settings based on current system usage.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">low</code>: A low-power profile that reduces performance to save energy.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">mid</code>: A medium-power profile that balances performance and power savings.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">high</code>: A high-power profile that maximizes performance at the cost of higher power consumption.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">dynpm</code>: Dynamic Power Management (DPM)—a mode that allows for dynamic adjustments based
+                                       on the workload.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">dpm-battery</code>: A DPM profile optimized for battery usage.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">dpm-balanced</code>: A DPM profile that balances performance and power efficiency.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">dpm-performance</code>: A DPM profile optimized for maximum performance.</p>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">disk</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">disk</code> plug-in tunes and optimizes the performance and power consumption of disk drives.</p>
+                        
+                        <p>Common parameters and their possible values are as follows:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">devices</code>: Specifies on which disk devices the tuning parameters should be applied. By default,
+                                 all devices are included. You can specify devices separated by comma.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">dynamic</code>: Boolean values that enable or disable dynamic tuning based on disk load. By default,
+                                 it is set to <code class="literal">True</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">elevator</code>: Configures the I/O scheduler (elevator) for the disk. Depending on the system's
+                                 available schedulers, the possible options include <code class="literal">noop</code>, <code class="literal">deadline</code> or <code class="literal">cfq</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">apm</code>: An integer (1–254) that sets the Advanced Power Management (APM) level of the disk.
+                                 Higher values typically mean better performance, but higher power consumption.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">spindown</code>: The integer value for the <code class="parameter">spindown</code> parameter is a special encoding used by the <code class="package">hdparm</code> utility to set the spin-down timeout for a disk. For an explanation of the acceptable
+                                 spin-down values, read about the <code class="option">-S</code> option in the man page of <code class="package">hdparm</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">readahead</code>: An integer that sets the readahead value for the disk in kilobytes. You can change
+                                 this to sectors by adding the appropriate suffix. For example, <code class="literal">readahead = 8192 s</code>. Ensure there is at least one space between the number and the suffix.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">readahead_multiply</code>: A float value that indicates the factor by which the value of the <code class="parameter">readahead</code> parameter is multiplied.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">scheduler_quantum</code>: An integer that sets the number of I/O requests the scheduler handles simultaneously.
+                                 Setting a higher quantum can improve throughput for sequential I/O operations by allowing
+                                 more requests to be processed before switching. Conversely, a lower quantum can improve
+                                 responsiveness for random I/O operations by reducing latency.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>As an example, consider the following <code class="literal">disk</code> plug-in configuration in a TuneD profile:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle6_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[disk]</code></span></span>
+<span class="line"><span class="ld"><code># Comma separated list of devices, all devices if commented out.</code></span></span>
+<span class="line"><span class="ld"><code>devices=sda,sdb</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>dynamic=True</code></span></span>
+<span class="line"><span class="ld"><code>elevator=deadline</code></span></span>
+<span class="line"><span class="ld"><code>apm=128</code></span></span>
+<span class="line"><span class="ld"><code>spindown=60</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Readahead adjusted to sectors by specifying relevant suffix.</code></span></span>
+<span class="line"><span class="ld"><code># There must be at least one space between the number and suffix.</code></span></span>
+<span class="line"><span class="ld"><code>readahead=8192 s</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>readahead_multiply=1.5</code></span></span>
+<span class="line"><span class="ld"><code>scheduler_quantum=64</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">disk</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">scsi_host</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">scsi_host</code> plug-in is used to manage power-saving settings for SCSI (Small Computer System Interface)
+                           host adapters on Linux systems. Commonly used parameters for this plug-in include
+                           the following:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">alpm</code>: The Aggressive Link Power Management (ALPM) setting controls the power management
+                                 policy for Serial ATA (SATA) links. It can take different values to balance between
+                                 power savings and performance. The possible options for this parameter include the
+                                 following:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">min_power</code>: This setting is more aggressive in terms of power savings. It puts the system into
+                                       a lower power state when the SATA links are idle, which can save more power but may
+                                       increase latency when accessing the disks.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">medium_power</code>: This setting provides a balance between power savings and performance. It aims to
+                                       reduce power consumption without impacting system performance too much.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">max_performance</code>: This setting keeps SCSI hosts and devices in their highest power state. It prioritizes
+                                       speed and responsiveness over energy efficiency, disabling power-saving features to
+                                       minimize latency and maximize throughput.</p>
+                                    </li>
+                                 </ul>
+                              
+                              <p>For example, consider the following configuration that is appropriate for battery-powered
+                                 devices, low-usage servers, and systems with long idle periods:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[scsi_host]</code></span></span>
+<span class="line"><span class="ld"><code>alpm=min_power</code></span></span></pre>
+                              </div>
+                              
+                              <div class="admonition note">
+                                 <div>
+                                    <div class="icon">ⓘ</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Read/write of link power management policy by TuneD</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>The possible values are typically read from or written to the <code class="filename">/sys/class/scsi_host/<em class="replaceable">SCSI_HOST_NAME</em>/link_power_management_policy</code> file. The exact values may depend on what the kernel and the hardware support.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">variables</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">variables</code> plug-in allows for the definition of variables that you can use across different
+                           TuneD profiles. This is particularly useful for setting parameters that may change
+                           based on the system environment or user preferences. By centralizing variable definitions,
+                           you can simplify profile management and enhance the flexibility of your tuning configurations.</p>
+                        
+                        <p>Within the <code class="literal">[variables]</code> section of your profile configuration, you can specify variables using the following
+                           methods:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[variables]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>include=<em class="replaceable">PATH/TO/VARIABLE/CONFIGURATION/FILE</em><span class="co" id="variable-include">⢾</span><em class="replaceable">VAR_NAME</em>=<em class="replaceable">value</em><span class="co" id="variable-value">⢿</span><em class="replaceable">VAR_ANOTHER</em>=${<em class="replaceable">VAR_NAME_suffix</em>} <span class="co" id="variable-variable">⣀</span><em class="replaceable">VAR_DYNAMIC</em>=$(uname -r) <span class="co" id="variable-command">⣁</span></code></span></span></pre>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#variable-include">⢾</a></dt>
+                              <dd>
+                                 
+                                 <p>Include a configuration file that already contains variable definitions for a certain
+                                    context. For example, you can include the <code class="filename">/etc/tuned/cpu-partitioning-variables.conf</code> file to make variables such as <code class="literal">isolated_cores</code> and its values available for the ongoing profile configuration.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#variable-value">⢿</a></dt>
+                              <dd>
+                                 
+                                 <p>Define a variable directly by assigning a value.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#variable-variable">⣀</a></dt>
+                              <dd>
+                                 
+                                 <p>Define a variable using another variable.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#variable-command">⣁</a></dt>
+                              <dd>
+                                 
+                                 <p>Define a variable using a command output.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        
+                        <p>For example, consider the following configuration for variables and its subsequent
+                           use in configuring other plug-ins for a profile configuration:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle8_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[variables]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>include=/etc/tuned/cpu-partitioning-variables.conf</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>SWAPPINESS_VALUE=10</code></span></span>
+<span class="line"><span class="ld"><code>NETWORK_INTERFACE=$(ip -o -4 route show to default | awk '{print $5}')</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[sysctl]</code></span></span>
+<span class="line"><span class="ld"><code>vm.swappiness=${SWAPPINESS_VALUE}</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[net]</code></span></span>
+<span class="line"><span class="ld"><code>interface=${NETWORK_INTERFACE}</code></span></span>
+<span class="line"><span class="ld"><code>disable_offload=yes</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Using dynamic variables for plug-in configurations in a TuneD profile</div>
+                           </header>
+                        </div>
+                        
+                        <p>For more technically involved variable definitions, inspect the <code class="literal">[variables]</code> plug-in configurations available in the supported profile configuration files. To
+                           get a list of such profile configuration paths where the <code class="literal">[variables]</code> plug-in is included, run the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">grep -r '\[.*\]' /usr/lib/tuned/*/tuned.conf | sort -u | grep variables</code></code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">sysctl</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">sysctl</code> plug-in offers a powerful way to customize several kernel parameters at runtime.
+                           This allows system administrators to optimize system performance, enhance security,
+                           and adjust network behavior without directly editing system files or running manual
+                           sysctl commands.</p>
+                        
+                        <p>The <code class="literal">sysctl</code> plug-in accepts a wide range of parameters. Certain common categories include:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>Kernel parameters (<code class="parameter">kernel.*</code>)</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Virtual Memory parameters (<code class="parameter">vm.*</code>)</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Network parameters (<code class="parameter">net.*</code>)</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>File system parameters (<code class="parameter">fs.*</code>)</p>
+                              </li>
+                           </ul>
+                        
+                        <p>where <code class="literal">*</code> is the wild card expression denoting permissible parameters for that category. When
+                           applying these parameters, TuneD might use the <code class="command">sysctl</code> under the hood. For example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sysctl -q -w <em class="replaceable">CATEGORY.PARAMETER=VALUE</em></code></code></span></span></pre>
+                        </div>
+                        
+                        <p>Common parameters and their possible values for the <code class="literal">sysctl</code> plug-in are summarized below:</p>
+                        
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Understand the impact before modifying <code class="literal">sysctl</code> parameters</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>Modifying these parameters can considerably impact system behavior. It is crucial
+                                       to understand their implications before making changes. Consult the official kernel
+                                       documentation for detailed descriptions.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.hung_task_timeout_secs</code>: Time in seconds before a task is considered hung (default: <code class="literal">120</code>).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.numa_balancing</code>: Enable (<code class="literal">1</code>) or disable (<code class="literal">0</code>) automatic NUMA balancing.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.nmi_watchdog</code>: Enable (<code class="literal">1</code>) or disable (<code class="literal">0</code>) the NMI watchdog.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.timer_migration</code>: Enable (<code class="literal">1</code>) or disable (<code class="literal">0</code>) timer migration.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.sched_autogroup_enabled</code>: Enable (<code class="literal">1</code>) or disable (<code class="literal">0</code>) scheduler autogrouping.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.sched_min_granularity_ns</code>: Minimum preemption granularity (in nanoseconds) for CPU-bound tasks.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">kernel.sched_migration_cost_ns</code>: The time (in nanoseconds) the scheduler considers a migrated process <q>cache hot</q>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">vm.stat_interval</code>: Interval between updates of virtual machine statistics (default: <code class="literal">1</code>).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">vm.dirty_ratio</code>: The percentage of system memory that can be filled with dirty pages before the processes
+                                 must write them to disk.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">vm.dirty_background_ratio</code>: The percentage of system memory that can be filled with dirty pages before the background
+                                 writeback process starts writing them to disk.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">vm.swappiness</code>: The tendency of the kernel to swap out idle processes. A swappiness of <code class="literal">0</code> instructs the kernel to keep the processes in the main memory for as long as possible.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">vm.max_map_count</code>: Maximum number of memory map areas a process may have.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">net.core.busy_read</code>: Number of busy loops for <code class="literal">recvmsg</code> (default: <code class="literal">50</code>).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">net.core.busy_poll</code>: Number of busy loops for <code class="literal">poll</code> (default: <code class="literal">50</code>).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">net.ipv4.tcp_fastopen</code>: Enable (<code class="literal">1</code>) or disable (<code class="literal">0</code>) TCP Fast Open.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">net.ipv4.tcp_rmem</code>: TCP read buffer size (minimum, default and maximum values separated by space).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">net.ipv4.tcp_wmem</code>: TCP write buffer size (minimum, default and maximum values separated by space).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">net.ipv4.udp_mem</code>: UDP buffer size (minimum, default and maximum values separated by space).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">fs.aio-max-nr</code>: Maximum number of allowed concurrent asynchronous I/O requests.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">fs.file-max</code>: Maximum number of file handles that the Linux kernel allocates.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">fs.inotify.max_user_instances</code>: Maximum number of <code class="literal">inotify</code> instances per user.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">fs.inotify.max_user_watches</code>: Maximum number of <code class="literal">inotify</code> watches per user.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">fs.nr_open</code>: Maximum number of file descriptors a process can have.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">fs.suid_dumpable</code>: Controls whether core dumps are produced for set-user-ID or set-group-ID programs.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>As an example, consider the following configuration for the <code class="literal">sysctl</code> plug-in:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle9_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[sysctl]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Kernel Parameters</code></span></span>
+<span class="line"><span class="ld"><code>kernel.hung_task_timeout_secs = 600</code></span></span>
+<span class="line"><span class="ld"><code>kernel.nmi_watchdog = 0</code></span></span>
+<span class="line"><span class="ld"><code>kernel.timer_migration = 1</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_autogroup_enabled = 1</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_min_granularity_ns = 10000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_migration_cost_ns = 5000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_latency_ns = 60000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.sched_wakeup_granularity_ns = 2000000</code></span></span>
+<span class="line"><span class="ld"><code>kernel.numa_balancing = 0</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Virtual Machine Parameters</code></span></span>
+<span class="line"><span class="ld"><code>vm.stat_interval = 10</code></span></span>
+<span class="line"><span class="ld"><code>vm.dirty_ratio = 10</code></span></span>
+<span class="line"><span class="ld"><code>vm.dirty_background_ratio = 3</code></span></span>
+<span class="line"><span class="ld"><code>vm.swappiness = 10</code></span></span>
+<span class="line"><span class="ld"><code>vm.max_map_count = 800000</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Network Parameters</code></span></span>
+<span class="line"><span class="ld"><code>net.core.busy_read = 50</code></span></span>
+<span class="line"><span class="ld"><code>net.core.busy_poll = 50</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.tcp_fastopen = 3</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.tcp_rmem = "4096 87380 16777216"</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.tcp_wmem = "4096 16384 16777216"</code></span></span>
+<span class="line"><span class="ld"><code>net.ipv4.udp_mem = "3145728 4194304 16777216"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Filesystem Parameters</code></span></span>
+<span class="line"><span class="ld"><code>fs.aio-max-nr = 1048576</code></span></span>
+<span class="line"><span class="ld"><code>fs.file-max = 2097152</code></span></span>
+<span class="line"><span class="ld"><code>fs.inotify.max_user_instances = 1024</code></span></span>
+<span class="line"><span class="ld"><code>fs.inotify.max_user_watches = 524288</code></span></span>
+<span class="line"><span class="ld"><code>fs.nr_open = 1048576</code></span></span>
+<span class="line"><span class="ld"><code>fs.suid_dumpable = 1</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Sample configuration for the <code class="literal">sysctl</code> plug-in in a TuneD profile</div>
+                           </header>
+                        </div>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Best practices for changing <code class="literal">sysctl</code> settings</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>Optimal sysctl settings can vary greatly depending on the specific use case, hardware
+                                       and workload of your system. It is recommended to test changes thoroughly and monitor
+                                       system performance after applying new sysctl configurations.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">sysfs</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">sysfs</code> plug-in accepts any valid file path under the system file system, or the <code class="filename">/sys/</code> directory. The plug-in checks whether a file path is valid and can read and write
+                           the values in the files that are part of the configuration. For example, consider
+                           the following configuration of the <code class="literal">sysfs</code> plug-in:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle10_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[sysfs]</code></span></span>
+<span class="line"><span class="ld"><code>/sys/bus/workqueue/devices/writeback/cpumask = 2,6 <span class="co" id="non-isolated-cpu-mask-value">⣂</span></code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/virtual/workqueue/cpumask = 3-5 <span class="co" id="non-isolated-cpu-mask-range">⣃</span></code></span></span>
+<span class="line"><span class="ld"><code>/sys/devices/system/machinecheck/machinecheck*/ignore_ce = 1 <span class="co" id="ignore-ce">⣄</span></code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">sysfs</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#non-isolated-cpu-mask-value">⣂</a></dt>
+                              <dd>
+                                 
+                                 <p>Single CPUs separated by comma. Only those CPUs that are not isolated using the <code class="parameter">isolcpus</code> kernel boot parameter are allowed. To check the CPUs that are already isolated, run
+                                    the <code class="command">grep isolcpus /proc/cmdline</code> command. To check the total number of CPUs in your system, run the <code class="command">lscpu | grep "^CPU(s):"</code> command.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#non-isolated-cpu-mask-range">⣃</a></dt>
+                              <dd>
+                                 
+                                 <p>Range of CPUs. Only those CPUs that are not isolated using the <code class="parameter">isolcpus</code> kernel boot parameter are allowed. To check the CPUs that are already isolated, run
+                                    the command <code class="command">grep isolcpus /proc/cmdline</code>. To check the total number of CPUs in your system, run the <code class="command">lscpu | grep "^CPU(s):"</code> command.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#ignore-ce">⣄</a></dt>
+                              <dd>
+                                 
+                                 <p>Corrected Errors (CEs) are hardware errors that the system has detected and corrected
+                                    automatically. The <code class="literal">ignore_ce</code> attribute is a sysfs setting that controls whether the system must report these corrected
+                                    errors. When <code class="literal">ignore_ce</code> is set to <code class="literal">1</code>, the system ignores corrected errors, meaning they are not logged or reported to
+                                    the operating system's error handling mechanisms. When <code class="literal">ignore_ce</code> is set to <code class="literal">0</code> (the default value), corrected errors are reported and logged by the system, allowing
+                                    administrators to monitor them.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">systemd</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">systemd</code> plug-in focuses on configuring the parameters of <code class="daemon systemitem">systemd</code>, which is the system and service manager for SUSE Linux Enterprise Server. For example,
+                           consider the plug-in configuration for CPU affinity of <code class="daemon systemitem">systemd</code> processes:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle11_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[systemd]</code></span></span>
+<span class="line"><span class="ld"><code>cpu_affinity=0,1,2 <span class="co" id="systemd-plugin-cpu-affinity">⣅</span></code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#systemd-plugin-cpu-affinity">⣅</a></dt>
+                                 <dd>
+                                    
+                                    <p>Binds the systemd services to multiple specified CPU cores. By default, it is <code class="literal">None</code>. In this example, the services are configured to run on CPU cores <code class="literal">0</code>, <code class="literal">1</code>, and <code class="literal">2</code>. Alternate ways of passing the values include passing a range of CPU cores, such
+                                       as <code class="literal">0-2</code>. However, you <em>cannot</em> pass on the CPU cores as values which you have declared as <code class="parameter">isolated_cores</code> in the file <code class="filename">/etc/tuned/cpu-partitioning-variables.conf</code>. Configuring the <code class="parameter">cpu_affinity</code> parameter in the plug-in is equivalent to configuring the <code class="parameter">CPUAffinity</code> in the <code class="daemon systemitem">systemd</code> configuration file <code class="filename">/etc/systemd/system.conf</code>.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">systemd</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">script</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">script</code> plug-in allows users to execute custom scripts that TuneD runs at different stages.
+                           System administrators can use it to automate several system configurations and optimizations
+                           by specifying paths to such scripts. Common parameters and their possible values include
+                           the following:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">priority</code>: An integer value that sets the priority level for the script. TuneD executes scripts
+                                 based on their priority, with lower numbers indicating higher priority. So, a priority
+                                 of <code class="literal">5</code> means this script has a low priority compared to scripts with a priority number lower
+                                 than <code class="literal">5</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">script</code>: This specifies the path to the script that TuneD executes. You can either provide
+                                 the absolute path to the script as its value, or use the <code class="varname">PROFILE_DIR</code> variable to pass the relative path to the script.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>For example, consider the following use of a relative script path:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle12_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[script]</code></span></span>
+<span class="line"><span class="ld"><code>priority=5</code></span></span>
+<span class="line"><span class="ld"><code>script=${i:PROFILE_DIR}/script.sh</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>Using variables for including a relative script path in a TuneD profile</div>
+                           </header>
+                        </div>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Resource for definition of variables</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>For a list of useful variables, inspect the constants defined in the source file <a class="link" href="https://github.com/redhat-performance/tuned/blob/v2.10.0/tuned/consts.py">https://github.com/redhat-performance/tuned/blob/v2.10.0/tuned/consts.py</a>.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">scheduler</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">scheduler</code> plug-in is used to manage the isolation of CPU cores and the selection of processes
+                           for management based on adding to an approved list or a blocklist. This plug-in is
+                           primarily concerned with isolating specific CPU cores and managing which processes
+                           should or should not be managed by the scheduler. Commonly used parameters and their
+                           possible values include the following:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">isolated_cores</code>: Isolates specific CPU cores from the general scheduler. Processes can be pinned
+                                 to these isolated cores to ensure they run without interference from other system
+                                 processes. To pass values to this parameter, use comma-separated integers representing
+                                 the cores, or the bitmask of the integers in the hexadecimal format. For example,
+                                 <code class="literal">isolated_cores=0,1</code> can also be represented by <code class="literal">0x3</code> in a more compact manner.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">ps_whitelist</code>: A list of allowed process names that the scheduler plug-in is empowered to manage.
+                                 Only processes matching this pattern are considered for scheduling adjustments. Pass
+                                 regular expressions of process names as values to this parameter. For example, <code class="literal">.*</code> matches all processes, and <code class="literal">^bash$</code> matches only the <code class="literal">bash</code> process.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">ps_blacklist</code>: A list of process names that the plug-in excludes from management. Processes matching
+                                 this pattern are not adjusted by the plug-in. Pass regular expressions of process
+                                 names as values to this parameter. For example, <code class="literal">.*</code> matches all processes, and <code class="literal">^idle$</code> matches only the <code class="literal">idle</code> process.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>For example, consider the following configuration for the <code class="literal">scheduler</code> plug-in:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle13_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>isolated_cores=0x3</code></span></span>
+<span class="line"><span class="ld"><code>ps_whitelist=.*</code></span></span>
+<span class="line"><span class="ld"><code>ps_blacklist=^idle$;.*pmd.*;.*PMD.*;^DPDK;.*qemu-kvm.*</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>16</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">scheduler</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">bootloader</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">bootloader</code> plug-in is used to apply performance profiles that require changes to the boot parameters
+                           of the system. These changes are made in the boot loader configuration file (typically
+                           GRUB&nbsp;2 configuration) and are applied when the system boots up. This plug-in is particularly
+                           useful for optimizing system performance by setting specific kernel parameters, such
+                           as those controlling CPU isolation or power management, as well as other boot-time
+                           settings that can affect the overall system behavior and performance.</p>
+                        
+                        <p>Common parameters and their values are summarized below:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">grub2_cfg_file</code>: Specifies the GRUB&nbsp;2 configuration file to modify. If not provided, the plug-in
+                                 uses the default GRUB2 configuration files located in the system.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">initrd_dst_img</code>: Sets the destination path for the initrd image. If specified, the initrd image is
+                                 copied to this location. The path must be absolute, and if it is not provided, the
+                                 default boot directory is used.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">initrd_add_img</code>: Adds the path to an initrd image in the GRUB&nbsp;2 configuration, so that custom initrd
+                                 images can be used during the boot process.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">initrd_add_dir</code>: Adds a directory to be included in the initrd image. This parameter specifies the
+                                 path to a directory whose contents are packaged into an initrd image and included
+                                 in the boot configuration. This is useful for adding custom modules or scripts to
+                                 the initrd.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">initrd_remove_dir</code>: A boolean option to specify whether to remove the directory specified in <code class="parameter">initrd_add_dir</code> after it has been packaged into the initrd image. If set to <code class="literal">True</code>, the source directory is deleted after the initrd image is created.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">cmdline</code>: Specifies additional kernel command-line parameters to be added to the GRUB&nbsp;2 configuration.
+                                 This allows the addition of custom kernel parameters that can optimize system performance
+                                 or behavior based on the specific needs of the workload.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>As an example, consider the following configuration for the <code class="literal">bootloader</code> plug-in:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle14_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[bootloader]</code></span></span>
+<span class="line"><span class="ld"><code>cmdline="isolcpus=1-3 nohz_full=1-3 intel_pstate=disable"</code></span></span>
+<span class="line"><span class="ld"><code>initrd_add_img="/path/to/custom-initrd.img"</code></span></span>
+<span class="line"><span class="ld"><code>initrd_add_dir="/path/to/custom-initrd-dir"</code></span></span>
+<span class="line"><span class="ld"><code>initrd_remove_dir=True</code></span></span>
+<span class="line"><span class="ld"><code>initrd_dst_img="/boot/initrd-custom.img"</code></span></span>
+<span class="line"><span class="ld"><code>grub2_cfg_file="/etc/grub2.cfg"</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>17</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">bootloader</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">net</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">net</code> plug-in is used to configure several parameters for optimizing network performance.
+                           Common parameters and their values used with this plug-in are summarized below:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">devices</code>: Specifies a comma-separated list of the network device names. For example, <code class="literal">devices=eth0,eth1</code>. By default, the settings are applied on all network devices.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">dynamic</code>: Boolean values (<code class="literal">true</code>/<code class="literal">false</code>) that enable or disable dynamic tuning based on network load.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">wake_on_lan</code>: Configure Wake-on-LAN (WoL) settings using any combination of the following characters:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">p</code>: Wake on PHY activity.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">u</code>: Wake on unicast messages.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">m</code>: Wake on multicast messages.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">b</code>: Wake on broadcast messages.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">a</code>: Wake on ARP.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">g</code>: Wake on MagicPacket<sup>TM</sup>.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">s</code>: Enable SecureOn<sup>TM</sup> for MagicPacket<sup>TM</sup>.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">d</code>: Disable WoL.</p>
+                                    </li>
+                                 </ul>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">nf_conntrack_hashsize</code>: Integer value setting the size of the connection-tracking hash table.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">features</code>: A dictionary of network device feature names and their desired states. For example,
+                                 <code class="literal">tx-checksum: off, sg: on</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">coalesce</code>: A dictionary of packet coalescing parameters.</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">adaptive-rx</code> and <code class="literal">adaptive-tx</code> have the possible values <code class="literal">on</code> or <code class="literal">off</code>.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>The following ones have integer values: <code class="literal">rx-usecs</code>, <code class="literal">rx-frames</code>, <code class="literal">rx-usecs-irq</code>, <code class="literal">rx-frames-irq</code>, <code class="literal">tx-usecs</code>, <code class="literal">tx-frames</code>, <code class="literal">tx-usecs-irq</code>, <code class="literal">tx-frames-irq</code>, <code class="literal">stats-block-usecs</code>, <code class="literal">pkt-rate-low</code>, <code class="literal">rx-usecs-low</code>, <code class="literal">rx-frames-low</code>, <code class="literal">tx-usecs-low</code>, <code class="literal">tx-frames-low</code>, <code class="literal">pkt-rate-high</code>, <code class="literal">rx-usecs-high</code>, <code class="literal">rx-frames-high</code>, <code class="literal">tx-usecs-high</code>, <code class="literal">tx-frames-high</code>, <code class="literal">sample-interval</code></p>
+                                    </li>
+                                 </ul>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">pause</code>: A dictionary of pause frame parameters. The following pause frame parameters have
+                                 <code class="literal">on</code> or <code class="literal">off</code> values: <code class="literal">autoneg</code>, <code class="literal">rx</code> and <code class="literal">tx</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">ring</code>: A dictionary of ring buffer sizes. Each of the following ring buffer size parameter
+                                 has integer values: <code class="literal">rx</code>, <code class="literal">rx-mini</code>, <code class="literal">rx-jumbo</code> and <code class="literal">tx</code>.</p>
+                              </li>
+                           </ul>
+                        
+                        <p>As an example of configuring network device parameters, consider the following:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle15_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[net]</code></span></span>
+<span class="line"><span class="ld"><code>devices=eth0,eth1</code></span></span>
+<span class="line"><span class="ld"><code>dynamic=true</code></span></span>
+<span class="line"><span class="ld"><code>wake_on_lan=g</code></span></span>
+<span class="line"><span class="ld"><code>nf_conntrack_hashsize=16384</code></span></span>
+<span class="line"><span class="ld"><code>features=tx-checksum:off, sg:on</code></span></span>
+<span class="line"><span class="ld"><code>coalesce=adaptive-rx:on, rx-usecs:50, rx-frames:32</code></span></span>
+<span class="line"><span class="ld"><code>pause=autoneg:on, rx:on, tx:off</code></span></span>
+<span class="line"><span class="ld"><code>ring=rx:2048, tx:1024</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>18</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">net</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">vm</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">vm</code> plug-in optimizes memory management in virtualized environments. It provides mechanisms
+                           for tuning memory-related parameters, specifically focusing on the management of Transparent
+                           Hugepages (THP). Commonly used parameters and their values for this plug-in include
+                           the following:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">transparent_hugepage</code> or <code class="parameter">transparent_hugepages</code>: Often used interchangeably, these parameters are aliases for each other and perform
+                                 the function of controlling the behavior of Transparent Hugepages. The common properties
+                                 and values associated with this parameter are as follows:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">enabled</code>: Controls the overall enabling of transparent hugepages. Possible values are <code class="literal">always</code>, <code class="literal">madvise</code> and <code class="literal">never</code>.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">defrag</code>: Determines when, if defragmentation should occur. Possible values are <code class="literal">always</code>, <code class="literal">defer</code>, <code class="literal">madvise</code>, <code class="literal">defer+madvise</code> and <code class="literal">never</code>.</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p><code class="literal">khugepaged</code>: Configures settings related to the khugepaged daemon, including options such as
+                                       <code class="literal">scan_sleep_millisecs</code> and <code class="literal">alloc_sleep_millisecs</code>.</p>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        
+                        <p>For example, consider the following configuration of the <code class="literal">vm</code> plug-in in a TuneD profile:</p>
+                        
+                        <div class="example formalobject" id="sec-tuning-tuned-supported-plugins_vl1_vle16_li1_ex1">
+                           
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[vm]</code></span></span>
+<span class="line"><span class="ld"><code>transparent_hugepages.enabled=always</code></span></span>
+<span class="line"><span class="ld"><code>transparent_hugepage.defrag=always</code></span></span>
+<span class="line"><span class="ld"><code>transparent_hugepages.khugepaged.scan_sleep_millisecs=10000</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">13<span class="sep">.</span>19</span><span class="sep">.&nbsp;</span>
+                                 <code class="literal">vm</code> plug-in configuration in a TuneD profile</div>
+                           </header>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">eeepc_she</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">eeepc_she</code> plug-in enhances power management on ASUS EeePC netbooks, specifically those equipped
+                           with the Super Hybrid Engine (SHE) technology. It optimizes system performance by
+                           dynamically adjusting CPU frequencies and power states to achieve a balance between
+                           energy efficiency and processing power. The commonly used parameters and their values
+                           are as follows:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="parameter">load_threshold_normal</code>: Threshold for load to switch to normal mode. Default value is <code class="literal">0.6</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">load_threshold_powersave</code>: Threshold for load to switch to powersave mode. Default value is <code class="literal">0.4</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">she_powersave</code>: Value to set SHE to power saving mode. Default value is <code class="literal">2</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="parameter">she_normal</code>: Value to set SHE to normal mode. Default value is <code class="literal">1</code>.</p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partivch05s05.html">Prev</a></td>
+                  <td class="up"><a href="bk07partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk07partivch05s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">13<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>TuneD configuration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">13<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>13.7.&nbsp;Setting up an HA environment for cryptctl-server service</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich05s06.html" rel="prev">
+      <link href="bk06partiich05s08.html" rel="next">
+      <link href="bk06partiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich05.html">Up</a> <a href="bk06partiich05s08.html">Next</a> <a href="bk06partiich05s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich05s07.html" db-id="d616951e169759" id="sec-configure-cryptctl-ha">
+            <header>
+               <h2><span class="label">13<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Setting up an HA environment for cryptctl-server service</h2>
+            </header>
+            
+            
+            <p>To avoid downtimes when the cryptctl-server needs to be stopped for maintenance or
+               suffers a damage, it is strongly recommended to set up the cryptctl-server in an HA
+               environment. You need at least a two-node High Availability cluster for this. The
+               following setup shows how to create a two-node HA cluster for cryptctl-server using
+               self-signed certificates.</p>
+            
+            <p>Make sure the following preconditions are fulfilled:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>At least two servers which have SUSE Linux Enterprise Server and the High Availability
+                     extension installed are available. All servers must also have the cryptctl package
+                     installed. All servers can reach each other via SSH.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>If you set up a new cluster, you need an additional IP address for the HA Web Console
+                     of the cluster (<em class="replaceable">AdminIP</em>).</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>A separate IP address (<em class="replaceable">CrypServerIP</em>) is reserved for the cryptctl-server.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>A separate dns-name (<em class="replaceable">CrypServerHostName</em>) is reserved for the cryptctl-server and is resolved to the above IP address.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>An HA-enabled block device or NFS share is available to store the keys.</p>
+                  
+                  <p>In our example, we use an NFS share: <code class="filename">nfs-server.example.org/data/cryptctl-keys</code>. It is mounted to the standard location <code class="filename">/var/lib/cryptctl/keydb</code>.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>It is strongly recommended to use an SBD device.</p>
+                  </li>
+               </ul>
+            
+            <div class="formalobject procedure" id="sec-configure-cryptctl-ha_proc1">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">13<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up a cryptctl two-node HA cluster</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Log in to <em class="replaceable">Node1</em> as <code class="systemitem username">root</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Set up a cryptctl-server as described in <a class="xref xref-sect1" href="bk06partiich05.html#sec-configure-cryptctl-server">the section called “Setting up a <code class="command">cryptctl</code> server”</a>. Use the following parameters:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>To create the certificate, use the dedicated hostname <em class="replaceable">CrypServerHostName</em> of the cryptctl server. Do <em>not</em> use the host name of the host.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Use the dedicated IP address <em class="replaceable">CrypServerIP</em> of the cryptctl server. Do <em>not</em> use the default IP address setting.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Do not configure a KMIP server.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>When asked whether to start the <code class="command">cryptctl</code> server, enter <code class="literal">n</code>.</p>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Set up a two-node HA cluster:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <div class="admonition important">
+                                 <div>
+                                    <div class="icon">☝</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Important</div>
+                                       </header>
+                                       <div>
+                                          
+                                          <p><em class="replaceable">Node1</em> must be the server where you have configured the cryptctl server.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              
+                              <p>On the machine where you have configured the cryptctl server, set up the first node
+                                 as follows:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">crm cluster init -i <em class="replaceable">NetDev</em> -A <em class="replaceable">AdminIP</em> -n <em class="replaceable">ClusterName</em></code></code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Log in via SSH to <em class="replaceable">Node2</em> and join the cluster from there:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ssh <em class="replaceable">Node2</em></code><span class="prompt root">#</span><code class="command">crm cluster join -y <em class="replaceable">Node1</em></code></code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>For more information, also see the <a class="link" href="https://documentation.suse.com/sle-ha/html/SLE-HA-all/article-installation.html">Installation and Setup Quick Start</a>.</p>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Set up the resource group for the cryptctl server:</p>
+                     </li>
+                  <li class="step">
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>You can set up all needed resource agents and copy all files to all nodes with the
+                                 cryptcl crm-shell-script in one step. We strongly recommend that you verify the setup
+                                 in the first step:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">crm script verify cryptctl \ cert-path=/etc/cryptctl/servertls/<em class="replaceable">CertificateFileName</em> \ cert-key-path=/etc/cryptctl/servertls/<em class="replaceable">CertificateKeyFileName</em> \ virtual-ip:ip=<em class="replaceable">CrypServerIP</em> \ filesystem:device=<em class="replaceable">DevicePath</em> filesystem:fstype=<em class="replaceable">FileSystemType</em></code></code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>If the check was successful, set up the cluster group by running the script as follows:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">crm script verify cryptctl \ cert-path=/etc/cryptctl/servertls/<em class="replaceable">CertificateFileName</em> \ cert-key-path=/etc/cryptctl/servertls/<em class="replaceable">CertificateKeyFileName</em> \ virtual-ip:ip=<em class="replaceable">CrypServerIP</em> \ filesystem:device=<em class="replaceable">DevicePath</em> filesystem:fstype=<em class="replaceable">FileSystemType</em></code></code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="formalobject table" id="tab-parameters">
+               <header>
+                  <div class="title">Table&nbsp;<span class="label">13<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>List of all parameters to define the resource group with the cryptctl crm script.</div>
+               </header>
+               <table>
+                  <thead>
+                     
+                     <tr>
+                        <th class="bleft btop colsep rowsep">
+                           <p>Name</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Mandatory</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Default Value</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Description</p>
+                        </th>
+                     </tr>
+                     </thead>
+                  <tbody>
+                     
+                     <tr>
+                        <td class="bleft btop colsep rowsep">id</td>
+                        <td class="btop colsep rowsep">no</td>
+                        <td class="btop colsep rowsep">cryptctl</td>
+                        <td class="btop colsep rowsep">Name of the resource group.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">cert-path</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep"></td>
+                        <td class="colsep rowsep">The full path to the created certificate.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">cert-key-path</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep"></td>
+                        <td class="colsep rowsep">The full path to the created certificate key.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">virtual-ip:id</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">cryptctl-vip</td>
+                        <td class="colsep rowsep">The ID of the virtual IP resource for the cryptctl server.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">virtual-ip:ip</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep"></td>
+                        <td class="colsep rowsep">The IP address of the cryptctl server.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">virtual-ip:nic</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">Detected by the virtual-ip resource agent.</td>
+                        <td class="colsep rowsep">The network device the cryptctl server should be listening on. Only required if the
+                           device cannot be detected from the IP address.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">virtual-ip:cidr_netmask</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">Detected by the virtual-ip resource agent.</td>
+                        <td class="colsep rowsep">The numeric netmask of the IP address of the cryptctl server. Only required if the
+                           netmask cannot be detected from the IP address.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">virtual-ip:broadcast</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">Detected by the virtual-ip resource agent.</td>
+                        <td class="colsep rowsep">The broadcast address of the IP address of the cryptctl server. Only required if this
+                           cannot be detected from the IP address.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">filesystem:id</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">cryptctl-filesystem</td>
+                        <td class="colsep rowsep">The ID of the file system resource containing the disk encryption keys and records.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">filesystem:device</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep"></td>
+                        <td class="colsep rowsep">The device containing the file system. This can be a block device like <code class="filename">/dev/sda<em class="replaceable">...</em></code> or an NFS share path <code class="filename">server:/path</code>.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">filesystem:directory</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">/var/lib/cryptctl/keydb</td>
+                        <td class="colsep rowsep">The directory where the device containing the file system is located. This can be
+                           a block device like <code class="filename">/dev/sda<em class="replaceable">...</em></code> or an NFS share path <code class="filename">server:/path</code>.</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">filesystem:fstype</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep"></td>
+                        <td class="colsep rowsep">The file system type (for example, NFS, XFS, EXT4).</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">filesystem:options</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">The default options of the selected file system.</td>
+                        <td class="colsep rowsep">Mount options for the file system.</td>
+                     </tr>
+                     </tbody>
+               </table>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich05s06.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich05.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich05s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">13<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Maintenance downtime procedure</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">13<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

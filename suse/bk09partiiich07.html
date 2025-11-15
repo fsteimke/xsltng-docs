@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;13.&nbsp;Troubleshooting software RAIDs</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiiich06s03.html" rel="prev">
+      <link href="bk09partiv.html" rel="next">
+      <link href="bk09partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiii.html">Up</a> <a href="bk09partiv.html">Next</a> <a href="bk09partiiich06s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk09partiiich07.html" db-id="d616951e247598" id="cha-raidtroubleshooting" lang="en">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">13</span><span class="sep">.&nbsp;</span>Troubleshooting software RAIDs</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Check the <code class="filename">/proc/mdstat</code> file to find out whether a RAID partition has been damaged. If a disk fails, replace
+                  the defective hard disk with a new one partitioned the same way. Then restart your
+                  system and enter the command <code class="command">mdadm /dev/mdX --add /dev/sdX</code>. Replace <code class="literal">X</code> with your particular device identifiers. This integrates the hard disk automatically
+                  into the RAID system and fully reconstructs it (for all RAID levels except for RAID&nbsp;0).</p>
+               
+               <p>Although you can access all data during the rebuild, you might encounter some performance
+                  issues until the RAID has been fully rebuilt.</p>
+               </div>
+            <section class="sect1" id="sec-raid-trouble-autorecovery">
+               <header>
+                  <h2><span class="label">13<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Recovery after failing disk is back again</h2>
+               </header>
+               
+               
+               <p>There are several reasons a disk included in a RAID array may fail. Here is a list
+                  of the most common ones:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Problems with the disk media.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Disk drive controller failure.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Broken connection to the disk.</p>
+                     </li>
+                  </ul>
+               
+               <p>In the case of disk media or controller failure, the device needs to be replaced or
+                  repaired. If a hot spare was not configured within the RAID, then manual intervention
+                  is required.</p>
+               
+               <p>In the last case, the failed device can be automatically re-added with the <code class="command">mdadm</code> command after the connection is repaired (which might be automatic).</p>
+               
+               <p>Because <code class="command">md</code>/<code class="command">mdadm</code> cannot reliably determine what caused the disk failure, it assumes a serious disk
+                  error and treats any failed device as faulty until it is explicitly told that the
+                  device is reliable.</p>
+               
+               <p>Under some circumstances—such as storage devices with an internal RAID array—connection
+                  problems are very often the cause of the device failure. In such case, you can tell
+                  <code class="command">mdadm</code> that it is safe to automatically <code class="option">--re-add</code> the device after it appears. You can do this by adding the following line to <code class="filename">/etc/mdadm.conf</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>POLICY action=re-add</code></span></span></pre>
+               </div>
+               
+               <p>Note that the device will be automatically re-added after re-appearing only if the
+                  <code class="systemitem">udev</code> rules cause <code class="command">mdadm -I <em class="replaceable">DISK_DEVICE_NAME</em></code> to be run on any device that spontaneously appears (default behavior), and if write-intent
+                  bitmaps are configured (they are by default).</p>
+               
+               <p>If you want this policy to only apply to some devices and not to the others, then
+                  the <code class="literal">path=</code> option can be added to the <code class="literal">POLICY</code> line in <code class="filename">/etc/mdadm.conf</code> to restrict the non-default action to only selected devices. Wild cards can be used
+                  to identify groups of devices. See <code class="command">man 5 mdadm.conf</code> for more information.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiiich06s03.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiii.html">Up</a></td>
+                  <td class="next"><a href="bk09partiv.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">IV</span><span class="sep">.&nbsp;</span>Network storage</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

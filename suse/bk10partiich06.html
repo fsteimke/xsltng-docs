@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;13.&nbsp;Advanced storage topics</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich05s03.html" rel="prev">
+      <link href="bk10partiich06s02.html" rel="next">
+      <link href="bk10partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partii.html">Up</a> <a href="bk10partiich06s02.html">Next</a> <a href="bk10partiich05s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partiich06.html" db-id="d616951e278998" id="cha-libvirt-storage" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">13</span><span class="sep">.&nbsp;</span>Advanced storage topics</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>This chapter introduces advanced topics about manipulating storage from the perspective
+                  of the VM Host Server.</p>
+               </div>
+            <section class="sect1" id="sec-libvirt-storage-locking">
+               <header>
+                  <h2><span class="label">13<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Locking disk files and block devices with <code class="daemon systemitem">virtlockd</code>
+                     </h2>
+               </header>
+               
+               
+               <p>Locking block devices and disk files prevents concurrent writes to these resources
+                  from different VM Guests. It provides protection against starting the same VM Guest
+                  twice, or adding the same disk to two different virtual machines. This reduces the
+                  risk of a virtual machine's disk image becoming corrupted because of a wrong configuration.</p>
+               
+               <p>The locking is controlled by a daemon called <code class="daemon systemitem">virtlockd</code>. Since it operates independently from the <code class="daemon systemitem">libvirtd</code> daemon, locks endure a crash or a restart of <code class="daemon systemitem">libvirtd</code>. Locks even persist during an update of the <code class="daemon systemitem">virtlockd</code> itself, since it can re-execute itself. This ensures that VM Guests do <em>not</em> need to be restarted upon a <code class="daemon systemitem">virtlockd</code> update. <code class="daemon systemitem">virtlockd</code> is supported for KVM, QEMU, and Xen.</p>
+               
+               <section class="sect2" id="sec-libvirt-storage-locking-enable">
+                  <header>
+                     <h3><span class="label">13<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Enable locking</h3>
+                  </header>
+                  
+                  
+                  <p>Locking virtual disks is not enabled by default on <span class="phrase productname">SUSE Linux Enterprise Server</span>. To enable and automatically start it upon rebooting, perform the following steps:</p>
+                  
+                  <div class="informalobject procedure" id="sec-libvirt-storage-locking-enable_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Edit <code class="filename">/etc/libvirt/qemu.conf</code> and set</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>lock_manager = "lockd"</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Start the <code class="daemon systemitem">virtlockd</code> daemon with the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start virtlockd</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Restart the <code class="daemon systemitem">libvirtd</code> daemon with:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart libvirtd</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Make sure <code class="daemon systemitem">virtlockd</code> is automatically started when booting the system:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable virtlockd</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-libvirt-storage-locking-configure">
+                  <header>
+                     <h3><span class="label">13<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configure locking</h3>
+                  </header>
+                  
+                  
+                  <p>By default <code class="daemon systemitem">virtlockd</code> is configured to automatically lock all disks configured for your VM Guests. The
+                     default setting uses a <q>direct</q> lockspace, where the locks are acquired against the actual file paths associated
+                     with the VM Guest &lt;disk&gt; devices. For example, <code class="literal">flock(2)</code> is called directly on <code class="filename">/var/lib/libvirt/images/my-server/disk0.raw</code> when the VM Guest contains the following &lt;disk&gt; device:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;disk type='file' device='disk'&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;driver name='qemu' type='raw'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;source file='/var/lib/libvirt/images/my-server/disk0.raw'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;target dev='vda' bus='virtio'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/disk&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>The <code class="daemon systemitem">virtlockd</code> configuration can be changed by editing the file <code class="filename">/etc/libvirt/qemu-lockd.conf</code>. It also contains detailed comments with further information. Make sure to activate
+                     configuration changes by reloading <code class="daemon systemitem">virtlockd</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl reload virtlockd</code></span></span></pre>
+                  </div>
+                  
+                  
+                  <section class="sect3" id="sec-libvirt-storage-locking-configure-shared-fs">
+                     <header>
+                        <h4><span class="label">13<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Enabling an indirect lockspace</h4>
+                     </header>
+                     
+                     
+                     <p>The default configuration of <code class="daemon systemitem">virtlockd</code> uses a <q>direct</q> lockspace. This means that the locks are acquired against the actual file paths associated
+                        with the &lt;disk&gt; devices.</p>
+                     
+                     <p>If the disk file paths are not accessible to all hosts, <code class="daemon systemitem">virtlockd</code> can be configured to allow an <q>indirect</q> lockspace. This means that a hash of the disk image path is used to create a file
+                        in the indirect lockspace directory. The locks are then held on these hash files instead
+                        of the actual disk file paths. Indirect lockspace is also useful if the file system
+                        containing the disk files does not support <code class="literal">fcntl()</code> locks. An indirect lockspace is specified with the <code class="option">file_lockspace_dir</code> setting:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>file_lockspace_dir = "<em class="replaceable">/MY_LOCKSPACE_DIRECTORY</em>"</code></span></span></pre>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-libvirt-storage-locking-configure-lvm-iscsi">
+                     <header>
+                        <h4><span class="label">13<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Enable locking on LVM or iSCSI volumes</h4>
+                     </header>
+                     
+                     
+                     <p>When wanting to lock virtual disks placed on LVM or iSCSI volumes shared by several
+                        hosts, locking needs to be done by UUID rather than by path (which is used by default).
+                        Furthermore, the lockspace directory needs to be placed on a shared file system accessible
+                        by all hosts sharing the volume. Set the following options for LVM and/or iSCSI:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>lvm_lockspace_dir = "<em class="replaceable">/MY_LOCKSPACE_DIRECTORY</em>"</code></span></span>
+<span class="line"><span class="ld"><code>iscsi_lockspace_dir = "<em class="replaceable">/MY_LOCKSPACE_DIRECTORY</em>"</code></span></span></pre>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich05s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partii.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich06s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring remote connections</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">13<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Online resizing of guest block devices</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

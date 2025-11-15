@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>37.2.&nbsp;Terms</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partivch06.html" rel="prev">
+      <link href="bk01partivch06s03.html" rel="next">
+      <link href="bk01partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partivch06.html">Up</a> <a href="bk01partivch06s03.html">Next</a> <a href="bk01partivch06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partivch06s02.html" db-id="d616951e54709" id="sec-nvdimm-terms">
+            <header>
+               <h2><span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Terms</h2>
+            </header>
+            
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Region</span></dt>
+                  <dd>
+                     
+                     <p>A <em>region</em> is a block of persistent memory that can be divided up into one or more <em>namespace</em>s. You cannot access the persistent memory of a region without first allocating it
+                        to a namespace.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Namespace</span></dt>
+                  <dd>
+                     
+                     <p>A single contiguously addressed range of non-volatile storage, comparable to NVM Express
+                        SSD namespaces, or to SCSI Logical Units (LUNs). Namespaces appear in the server's
+                        <code class="filename">/dev</code> directory as separate block devices. Depending on the method of access required,
+                        namespaces can either amalgamate storage from multiple NVDIMMs into larger volumes,
+                        or allow it to be partitioned into smaller volumes.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Mode</span></dt>
+                  <dd>
+                     
+                     <p>Each namespace also has a <em>mode</em> that defines which NVDIMM features are enabled for that namespace. Sibling namespaces
+                        of the same parent region always have the same type, but might be configured to have
+                        different modes. Namespace modes include:</p>
+                     
+                     <dl class="variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">devdax</span></dt>
+                           <dd>
+                              
+                              <p>Device-DAX mode. Creates a single-character device file (<code class="filename">/dev/dax<em class="replaceable">X</em>.<em class="replaceable">Y</em></code>). Does <em>not</em> require file system creation.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">fsdax</span></dt>
+                           <dd>
+                              
+                              <p>File system-DAX mode. Default if no other mode is specified. Creates a block device
+                                 (<code class="filename">/dev/pmem<em class="replaceable">X</em> [.<em class="replaceable">Y</em>]</code>) which supports DAX for <code class="literal">ext4</code> or <code class="literal">XFS</code>.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">sector</span></dt>
+                           <dd>
+                              
+                              <p>For legacy file systems which do not checksum metadata. Suitable for small boot volumes.
+                                 Compatible with other operating systems.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">raw</span></dt>
+                           <dd>
+                              
+                              <p>A memory disk without a label or metadata. Does not support DAX. Compatible with other
+                                 operating systems.</p>
+                              
+                              <div class="admonition note">
+                                 <div>
+                                    <div class="icon">ⓘ</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Note</div>
+                                       </header>
+                                       <div>
+                                          
+                                          <p><code class="literal">raw</code> mode is not supported by SUSE. It is not possible to mount file systems on <code class="literal">raw</code> namespaces.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Type</span></dt>
+                  <dd>
+                     
+                     <p>Each namespace and region has a <em>type</em> that defines how the persistent memory associated with that namespace or region can
+                        be accessed. A namespace always has the same type as its parent region. There are
+                        two different types: Persistent Memory, which can be configured in two different ways,
+                        and the deprecated Block Mode.</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Persistent memory (PMEM)</span></dt>
+                           <dd>
+                              
+                              <p>PMEM storage offers byte-level access, similar to RAM. Using PMEM, a single namespace
+                                 can include multiple interleaved NVDIMMs, allowing them all to be used as a single
+                                 device.</p>
+                              
+                              <p>There are two ways to configure a PMEM namespace.</p>
+                              
+                              <dl class="long-terms variablelist">
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">PMEM with DAX</span></dt>
+                                    <dd>
+                                       
+                                       <p>A PMEM namespace configured for Direct Access (DAX) means that accessing the memory
+                                          bypasses the kernel's page cache and goes direct to the medium. Software can directly
+                                          read or write every byte of the namespace separately.</p>
+                                       </dd>
+                                 </div>
+                                 
+                                 <div class="varlistentry">
+                                    <dt><span class="term">PMEM with block translation table (BTT)</span></dt>
+                                    <dd>
+                                       
+                                       <p>A PMEM namespace configured to operate in BTT mode is accessed on a sector-by-sector
+                                          basis, like a conventional disk drive, rather than the more RAM-like byte-addressable
+                                          model. A translation table mechanism batches accesses into sector-sized units.</p>
+                                       
+                                       <p>The advantage of BTT is data protection. The storage subsystem ensures that each sector
+                                          is completely written to the underlying medium. If a sector cannot be completely written
+                                          (that is, if the write operation fails for some reason), then the whole sector will
+                                          be rolled back to its previous state. Thus a given sector cannot be partially written.</p>
+                                       
+                                       <p>Additionally, access to BTT namespaces is cached by the kernel.</p>
+                                       
+                                       <p>The drawback is that DAX is not possible for BTT namespaces.</p>
+                                       </dd>
+                                 </div>
+                                 </dl>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">Block mode (BLK)</span></dt>
+                           <dd>
+                              
+                              <p>Block mode storage addresses each NVDIMM as a separate device. Its use is deprecated
+                                 and no longer supported.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <p>Apart from <code class="literal">devdax</code> namespaces, all other types must be formatted with a file system, just as with a
+                        conventional drive. <span class="phrase productname">SUSE Linux Enterprise Server</span> supports the <code class="literal">ext2</code>, <code class="literal">ext4</code> and <code class="literal">XFS</code> file systems for this.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Direct access (DAX)</span></dt>
+                  <dd>
+                     
+                     <p>DAX allows persistent memory to be directly mapped into a process's address space,
+                        for example, using the <code class="literal">mmap</code> system call.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">DIMM physical address (DPA)</span></dt>
+                  <dd>
+                     
+                     <p>A memory address as an offset into a single DIMM's memory; that is, starting from
+                        zero as the lowest addressable byte on that DIMM.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Label</span></dt>
+                  <dd>
+                     
+                     <p>Metadata stored on the NVDIMM, such as namespace definitions. This can be accessed
+                        using DSMs.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">Device-specific method (DSM)</span></dt>
+                  <dd>
+                     
+                     <p>ACPI method to access the firmware on an NVDIMM.</p>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partivch06.html">Prev</a></td>
+                  <td class="up"><a href="bk01partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk01partivch06s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">37</span><span class="sep">.&nbsp;</span>Persistent memory</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Use cases</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

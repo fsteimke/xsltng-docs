@@ -1,0 +1,521 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.4.&nbsp;Handling ACLs</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich11s03.html" rel="prev">
+      <link href="bk06partiich11s05.html" rel="next">
+      <link href="bk06partiich11.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich11.html">Up</a> <a href="bk06partiich11s05.html">Next</a> <a href="bk06partiich11s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich11s04.html" db-id="d616951e174379" id="sec-security-acls-handle">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Handling ACLs</h2>
+            </header>
+            
+            
+            <p><a class="xref xref-table" href="#tab-entrytype">Table&nbsp;<span class="label">19<span class="sep">.</span>1</span>, “ACL entry types”</a> summarizes the six possible types of ACL entries, each defining permissions for a
+               user or a group of users. The <em>owner</em> entry defines the permissions of the user owning the file or directory. The <em>owning group</em> entry defines the permissions of the file's owning group. The superuser can change
+               the owner or owning group with <code class="command">chown</code> or <code class="command">chgrp</code>, in which case the owner and owning group entries refer to the new owner and owning
+               group. Each <em>named user</em> entry defines the permissions of the user specified in the entry's qualifier field.
+               Each <em>named group</em> entry defines the permissions of the group specified in the entry's qualifier field.
+               Only the named user and named group entries have a qualifier field that is not empty.
+               The <em>other</em> entry defines the permissions of all other users.</p>
+            
+            <p>The <em>mask</em> entry further limits the permissions granted by named user, named group, and owning
+               group entries by defining which of the permissions in those entries are effective
+               and which are masked. If permissions exist in one of the mentioned entries and in
+               the mask, they are effective. Permissions contained only in the mask or only in the
+               actual entry are not effective—meaning the permissions are not granted. All permissions
+               defined in the owner and owning group entries are always effective. The example in
+               <a class="xref xref-table" href="#tab-mask">Table&nbsp;<span class="label">19<span class="sep">.</span>2</span>, “Masking access permissions”</a> demonstrates this mechanism.</p>
+            
+            <p>There are two basic classes of ACLs: A <em>minimum</em> ACL contains only the entries for the types owner, owning group, and other, which
+               correspond to the conventional permission bits for files and directories. An <em>extended</em> ACL goes beyond this. It must contain a mask entry and may contain several entries
+               of the named user and named group types.</p>
+            
+            <div class="formalobject table" id="tab-entrytype">
+               <header>
+                  <div class="title">Table&nbsp;<span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>ACL entry types</div>
+               </header>
+               <table>
+                  <thead>
+                     
+                     <tr>
+                        <th class="bleft btop colsep rowsep">
+                           <p>Type</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Text Form</p>
+                        </th>
+                     </tr>
+                     </thead>
+                  <tbody>
+                     
+                     <tr>
+                        <td class="bleft btop colsep rowsep">
+                           <p>owner</p>
+                        </td>
+                        <td class="btop colsep rowsep">
+                           <p><code class="literal">user::rwx</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>named user</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">user:name:rwx</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>owning group</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">group::rwx</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>named group</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">group:name:rwx</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>mask</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">mask::rwx</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>other</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">other::rwx</code></p>
+                        </td>
+                     </tr>
+                     </tbody>
+               </table>
+            </div>
+            
+            <div class="formalobject table" id="tab-mask">
+               <header>
+                  <div class="title">Table&nbsp;<span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Masking access permissions</div>
+               </header>
+               <table>
+                  <thead>
+                     
+                     <tr>
+                        <th class="bleft btop colsep rowsep">
+                           <p>Entry Type</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Text Form</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Permissions</p>
+                        </th>
+                     </tr>
+                     </thead>
+                  <tbody>
+                     
+                     <tr>
+                        <td class="bleft btop colsep rowsep">
+                           <p>named user</p>
+                        </td>
+                        <td class="btop colsep rowsep">
+                           <p><code class="literal">user:geeko:r-x</code></p>
+                        </td>
+                        <td class="btop colsep rowsep">
+                           <p><code class="literal">r-x</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>mask</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">mask::rw-</code></p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">rw-</code></p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep"></td>
+                        <td class="colsep rowsep">
+                           <p>effective permissions:</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p><code class="literal">r--</code></p>
+                        </td>
+                     </tr>
+                     </tbody>
+               </table>
+            </div>
+            
+            <section class="sect2" id="sec-security-acls-handle-fmbits">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>ACL entries and file mode permission bits</h3>
+               </header>
+               
+               
+               <p><a class="xref xref-figure" href="#fig-acls-map-mini">Figure&nbsp;<span class="label">19<span class="sep">.</span>1</span>, “Minimum ACL: ACL entries compared to permission bits”</a> and <a class="xref xref-figure" href="#fig-acls-map-ext">Figure&nbsp;<span class="label">19<span class="sep">.</span>2</span>, “Extended ACL: ACL entries compared to permission bits”</a> illustrate the two cases of a minimum ACL and an extended ACL. The figures are structured
+                  in three blocks—the left block shows the type specifications of the ACL entries, the
+                  center block displays an example ACL, and the right block shows the respective permission
+                  bits according to the conventional permission concept (for example, as displayed by
+                  <code class="command">ls</code><code class="option">-l</code>). In both cases, the <em>owner class</em> permissions are mapped to the ACL entry owner. <em>Other class</em> permissions are mapped to the respective ACL entry. However, the mapping of the <em>group class</em> permissions is different in the two cases.</p>
+               
+               <div class="figure formalobject" id="fig-acls-map-mini">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/acls_map_mini.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Minimum ACL: ACL entries compared to permission bits</div>
+                  </header>
+               </div>
+               
+               <p>For a minimum ACL—without mask—the group class permissions are mapped to the ACL entry
+                  owning group. This is shown in <a class="xref xref-figure" href="#fig-acls-map-mini">Figure&nbsp;<span class="label">19<span class="sep">.</span>1</span>, “Minimum ACL: ACL entries compared to permission bits”</a>. For an extended ACL—with mask—the group class permissions are mapped to the mask
+                  entry. This is shown in <a class="xref xref-figure" href="#fig-acls-map-ext">Figure&nbsp;<span class="label">19<span class="sep">.</span>2</span>, “Extended ACL: ACL entries compared to permission bits”</a>.</p>
+               
+               <div class="figure formalobject" id="fig-acls-map-ext">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/acls_map_ext.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Extended ACL: ACL entries compared to permission bits</div>
+                  </header>
+               </div>
+               
+               
+               <p>This mapping approach ensures the smooth interaction of applications, regardless of
+                  whether they have ACL support. The access permissions that were assigned through the
+                  permission bits represent the upper limit for all other <q>fine adjustments</q> made with an ACL. Changes made to the permission bits are reflected by the ACL and
+                  vice versa.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-acls-handle-accacl">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>A directory with an ACL</h3>
+               </header>
+               
+               
+               <p>With <code class="command">getfacl</code> and <code class="command">setfacl</code> on the command line, you can access ACLs. The usage of these commands is demonstrated
+                  in the following example.</p>
+               
+               <p>Before creating the directory, use the <code class="command">umask</code> command to define which access permissions should be masked each time a file object
+                  is created. The command <code class="command">umask</code><code class="option">027</code> sets the default permissions by giving the owner the full range of permissions (<code class="literal">0</code>), denying the group write access (<code class="literal">2</code>), and giving other users no permissions (<code class="literal">7</code>). <code class="command">umask</code> masks the corresponding permission bits or turns them off. For details, refer to
+                  <a class="xref xref-sect1" href="bk06partiich03s04.html">the section called “Default umask”</a> or the <code class="command">umask</code> man page.</p>
+               
+               <p><code class="command">mkdir mydir</code> creates the <code class="filename">mydir</code> directory with the default permissions as set by <code class="command">umask</code>. Use <code class="command">ls</code><code class="option">-dl mydir</code> to check whether all permissions were assigned correctly. The output for this example
+                  is:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>drwxr-x--- ... tux project3 ... mydir</code></span></span></pre>
+               </div>
+               
+               <p>With <code class="command">getfacl</code><code class="option">mydir</code>, check the initial state of the ACL. This gives information like:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># file: mydir</code></span></span>
+<span class="line"><span class="ld"><code># owner: tux</code></span></span>
+<span class="line"><span class="ld"><code># group: project3</code></span></span>
+<span class="line"><span class="ld"><code>user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>other::---</code></span></span></pre>
+               </div>
+               
+               <p>The first three output lines display the name, owner and owning group of the directory.
+                  The next three lines contain the three ACL entries owner, owning group, and other.
+                  Specifically for the minimum ACL, the <code class="command">getfacl</code> command does not produce any information you could not have obtained with <code class="command">ls</code>.</p>
+               
+               <p>Modify the ACL to assign read, write and execute permissions to an additional user
+                  <code class="literal">geeko</code> and an additional group <code class="literal">mascots</code> with:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>setfacl -m user:geeko:rwx,group:mascots:rwx mydir</code></span></span></pre>
+               </div>
+               
+               <p>The option <code class="option">-m</code> prompts <code class="command">setfacl</code> to modify the existing ACL. The following argument indicates the ACL entries to modify
+                  (multiple entries are separated by commas). The final part specifies the name of the
+                  directory to which these modifications should be applied. Use the <code class="command">getfacl</code> command to take a look at the resulting ACL.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># file: mydir</code></span></span>
+<span class="line"><span class="ld"><code># owner: tux</code></span></span>
+<span class="line"><span class="ld"><code># group: project3</code></span></span>
+<span class="line"><span class="ld"><code>user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>user:geeko:rwx</code></span></span>
+<span class="line"><span class="ld"><code>group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>group:mascots:rwx</code></span></span>
+<span class="line"><span class="ld"><code>mask::rwx</code></span></span>
+<span class="line"><span class="ld"><code>other::---</code></span></span></pre>
+               </div>
+               
+               <p>Besides the entries initiated for the user <code class="literal">geeko</code> and the group <code class="literal">mascots</code>, a mask entry has been generated. This mask entry is set automatically so that all
+                  permissions are effective. <code class="command">setfacl</code> automatically adapts existing mask entries to the settings modified, unless you deactivate
+                  this feature with <code class="literal">-n</code>. The mask entry defines the maximum effective access permissions for all entries
+                  in the group class. This includes named user, named group, and owning group. The group
+                  class permission bits displayed by <code class="command">ls</code><code class="option">-dl mydir</code> now correspond to the <code class="literal">mask</code> entry.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>drwxrwx---+ ... tux project3 ... mydir</code></span></span></pre>
+               </div>
+               
+               <p>The first column of the output contains an additional <code class="literal">+</code> to indicate that there is an <em>extended</em> ACL for this item.</p>
+               
+               <p>According to the output of the <code class="command">ls</code> command, the permissions for the mask entry include write access. Traditionally,
+                  such permission bits would mean that the owning group (here <code class="literal">project3</code>) also has write access to the directory <code class="filename">mydir</code>.</p>
+               
+               <p>However, the effective access permissions for the owning group correspond to the overlapping
+                  portion of the permissions defined for the owning group and for the mask—which is
+                  <code class="literal">r-x</code> in our example (see <a class="xref xref-table" href="#tab-mask">Table&nbsp;<span class="label">19<span class="sep">.</span>2</span>, “Masking access permissions”</a>). As far as the effective permissions of the owning group in this example are concerned,
+                  nothing has changed even after the addition of the ACL entries.</p>
+               
+               <p>Edit the mask entry with <code class="command">setfacl</code> or <code class="command">chmod</code>. For example, use <code class="command">chmod</code><code class="option">g-w mydir</code>. <code class="command">ls</code><code class="option">-dl mydir</code> then shows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>drwxr-x---+ ... tux project3 ... mydir</code></span></span></pre>
+               </div>
+               
+               <p><code class="command">getfacl</code><code class="option">mydir</code> provides the following output:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># file: mydir</code></span></span>
+<span class="line"><span class="ld"><code># owner: tux</code></span></span>
+<span class="line"><span class="ld"><code># group: project3</code></span></span>
+<span class="line"><span class="ld"><code>user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>user:geeko:rwx          # effective: r-x</code></span></span>
+<span class="line"><span class="ld"><code>group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>group:mascots:rwx       # effective: r-x</code></span></span>
+<span class="line"><span class="ld"><code>mask::r-x</code></span></span>
+<span class="line"><span class="ld"><code>other::---</code></span></span></pre>
+               </div>
+               
+               <p>After executing <code class="command">chmod</code> to remove the write permission from the group class bits, the output of <code class="command">ls</code> is sufficient to see that the mask bits must have changed accordingly: Write permission
+                  is again limited to the owner of <code class="filename">mydir</code>. The output of the <code class="command">getfacl</code> confirms this. This output includes a comment for all those entries in which the
+                  effective permission bits do not correspond to the original permissions, because they
+                  are filtered according to the mask entry. The original permissions can be restored
+                  at any time with <code class="command">chmod g+w mydir</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-acls-handle-defacl">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>A directory with a default ACL</h3>
+               </header>
+               
+               
+               <p>Directories can have a default ACL, which is a special kind of ACL defining the access
+                  permissions that objects in the directory inherit when they are created. A default
+                  ACL affects both subdirectories and files.</p>
+               
+               <section class="sect3" id="sec-security-acls-handle-defacl-eff">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Effects of a default ACL</h4>
+                  </header>
+                  
+                  
+                  <p>There are two ways in which the permissions of a directory's default ACL are passed
+                     to the files and subdirectories:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>A subdirectory inherits the default ACL of the parent directory both as its default
+                           ACL and as an ACL.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>A file inherits the default ACL as its ACL.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>All system calls that create file system objects use a <code class="literal">mode</code> parameter that defines the access permissions for the newly created file system object.
+                     If the parent directory does not have a default ACL, the permission bits as defined
+                     by the <code class="literal">umask</code> are subtracted from the permissions as passed by the <code class="literal">mode</code> parameter, with the result being assigned to the new object. If a default ACL exists
+                     for the parent directory, the permission bits assigned to the new object correspond
+                     to the overlapping portion of the permissions of the <code class="literal">mode</code> parameter and those that are defined in the default ACL. The <code class="literal">umask</code> is disregarded in this case.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-security-acls-handle-defacl-prac">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Application of default ACLs</h4>
+                  </header>
+                  
+                  
+                  <p>The following three examples show the main operations for directories and default
+                     ACLs:</p>
+                  
+                  <ol class="orderedlist" type="1">
+                     
+                     <li>
+                        
+                        <p>Add a default ACL to the existing directory <code class="filename">mydir</code> with:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>setfacl -d -m group:mascots:r-x mydir</code></span></span></pre>
+                        </div>
+                        
+                        <p>The option <code class="literal">-d</code> of the <code class="command">setfacl</code> command prompts <code class="command">setfacl</code> to perform the following modifications (option <code class="literal">-m</code>) in the default ACL.</p>
+                        
+                        <p>Take a closer look at the result of this command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>getfacl mydir</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># file: mydir</code></span></span>
+<span class="line"><span class="ld"><code># owner: tux</code></span></span>
+<span class="line"><span class="ld"><code># group: project3</code></span></span>
+<span class="line"><span class="ld"><code>user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>user:geeko:rwx</code></span></span>
+<span class="line"><span class="ld"><code>group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>group:mascots:rwx</code></span></span>
+<span class="line"><span class="ld"><code>mask::rwx</code></span></span>
+<span class="line"><span class="ld"><code>other::---</code></span></span>
+<span class="line"><span class="ld"><code>default:user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>default:group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>default:group:mascots:r-x</code></span></span>
+<span class="line"><span class="ld"><code>default:mask::r-x</code></span></span>
+<span class="line"><span class="ld"><code>default:other::---</code></span></span></pre>
+                        </div>
+                        
+                        <p><code class="command">getfacl</code> returns both the ACL and the default ACL. The default ACL is formed by all lines
+                           that start with <code class="literal">default</code>. Although you merely executed the <code class="command">setfacl</code> command with an entry for the <code class="literal">mascots</code> group for the default ACL, <code class="command">setfacl</code> automatically copied all other entries from the ACL to create a valid default ACL.
+                           Default ACLs do not have an immediate effect on access permissions. They only come
+                           into play when file system objects are created. These new objects inherit permissions
+                           only from the default ACL of their parent directory.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>In the next example, use <code class="command">mkdir</code> to create a subdirectory in <code class="filename">mydir</code>, which inherits the default ACL.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>mkdir mydir/mysubdir</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>getfacl mydir/mysubdir</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># file: mydir/mysubdir</code></span></span>
+<span class="line"><span class="ld"><code># owner: tux</code></span></span>
+<span class="line"><span class="ld"><code># group: project3</code></span></span>
+<span class="line"><span class="ld"><code>user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>group:mascots:r-x</code></span></span>
+<span class="line"><span class="ld"><code>mask::r-x</code></span></span>
+<span class="line"><span class="ld"><code>other::---</code></span></span>
+<span class="line"><span class="ld"><code>default:user::rwx</code></span></span>
+<span class="line"><span class="ld"><code>default:group::r-x</code></span></span>
+<span class="line"><span class="ld"><code>default:group:mascots:r-x</code></span></span>
+<span class="line"><span class="ld"><code>default:mask::r-x</code></span></span>
+<span class="line"><span class="ld"><code>default:other::---</code></span></span></pre>
+                        </div>
+                        
+                        <p>As expected, the newly created subdirectory <code class="filename">mysubdir</code> has the permissions from the default ACL of the parent directory. The ACL of <code class="filename">mysubdir</code> is an exact reflection of the default ACL of <code class="filename">mydir</code>. The default ACL that this directory hands down to its subordinate objects is also
+                           the same.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Use <code class="command">touch</code> to create a file in the <code class="filename">mydir</code> directory, for example, <code class="command">touch</code><code class="option">mydir/myfile</code>. <code class="command">ls</code><code class="option">-l mydir/myfile</code> then shows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-rw-r-----+ ... tux project3 ... mydir/myfile</code></span></span></pre>
+                        </div>
+                        
+                        <p>The output of <code class="command">getfacl</code><code class="option">mydir/myfile</code> is:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># file: mydir/myfile</code></span></span>
+<span class="line"><span class="ld"><code># owner: tux</code></span></span>
+<span class="line"><span class="ld"><code># group: project3</code></span></span>
+<span class="line"><span class="ld"><code>user::rw-</code></span></span>
+<span class="line"><span class="ld"><code>group::r-x          # effective:r--</code></span></span>
+<span class="line"><span class="ld"><code>group:mascots:r-x   # effective:r--</code></span></span>
+<span class="line"><span class="ld"><code>mask::r--</code></span></span>
+<span class="line"><span class="ld"><code>other::---</code></span></span></pre>
+                        </div>
+                        
+                        <p><code class="command">touch</code> uses a <code class="literal">mode</code> with the value <code class="literal">0666</code> when creating new files, which means that the files are created with read and write
+                           permissions for all user classes, provided no other restrictions exist in <code class="command">umask</code> or in the default ACL (see <a class="xref xref-sect3" href="#sec-security-acls-handle-defacl-eff">the section called “Effects of a default ACL”</a>). In effect, this means that all access permissions not contained in the <code class="literal">mode</code> value are removed from the respective ACL entries. Although no permissions were removed
+                           from the ACL entry of the group class, the mask entry was modified to mask permissions
+                           not set in <code class="literal">mode</code>.</p>
+                        
+                        <p>This approach ensures the smooth interaction of applications (such as compilers) with
+                           ACLs. You can create files with restricted access permissions and subsequently mark
+                           them as executable. The <code class="command">mask</code> mechanism guarantees that the right users and groups can execute them as desired.</p>
+                        </li>
+                     </ol>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-security-acls-handle-alg">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>The ACL check algorithm</h3>
+               </header>
+               
+               
+               <p>A check algorithm is applied before any process or application is granted access to
+                  an ACL-protected file system object. As a basic rule, the ACL entries are examined
+                  in the following sequence: owner, named user, owning group or named group, and other.
+                  The access is handled in accordance with the entry that best suits the process. Permissions
+                  do not accumulate.</p>
+               
+               <p>Things are more complicated if a process belongs to more than one group and would
+                  potentially suit several group entries. An entry is randomly selected from the suitable
+                  entries with the required permissions. It is irrelevant which of the entries triggers
+                  the final result <q>access granted</q>. Likewise, if none of the suitable group entries contain the required permissions,
+                  a randomly selected entry triggers the final result <q>access denied</q>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich11s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich11.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich11s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Definitions</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>ACL support in applications</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

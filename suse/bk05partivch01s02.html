@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.2.&nbsp;Choosing the right boot medium</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partivch01.html" rel="prev">
+      <link href="bk05partivch01s03.html" rel="next">
+      <link href="bk05partivch01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partivch01.html">Up</a> <a href="bk05partivch01s03.html">Next</a> <a href="bk05partivch01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partivch01s02.html" db-id="d616951e148551" id="bootmedium">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Choosing the right boot medium</h2>
+            </header>
+            
+            
+            <p>There are different methods for booting the client. The computer can boot from its
+               network interface card (NIC) to receive the boot images via DHCP or TFTP. Alternatively
+               a suitable kernel and initrd image can be loaded from a flash disk (for example, a
+               USB stick) or a bootable DVD-ROM.</p>
+            
+            <p>YaST will check for <code class="filename">autoinst.xml</code> in the root directory of the boot medium or the initrd upon start-up and switch to
+               an automated installation if it was found. In case the control file is named differently
+               or located elsewhere, specify its location on the kernel command line with the parameter
+               <code class="literal">AutoYaST=<em class="replaceable">URL</em></code>.</p>
+            
+            <p>Alternatively, you can place the <code class="filename">autoinst.xml</code> into a device, mounted either physically or virtually, that is labeled <code class="literal">OEMDRV</code>. In this case, you do not need to specify the location of the <code class="filename">autoinst.xml</code> on the kernel command line. The <code class="literal">autoinst.xml</code> must be located in the root directory of the device.</p>
+            
+            <section class="sect2" id="bootmedium-flash">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Booting from a flash disk (for example, a USB stick)</h3>
+               </header>
+               
+               
+               <p>For testing/rescue purposes or because the NIC does not have a PROM or PXE, you can
+                  build a bootable flash disk to use with AutoYaST. Flash disks can also store the control
+                  file.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Copying the installation medium image to a removable flash disk</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Use the following command to copy the contents of the installation image to a removable
+                              flash disk.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dd if=<em class="replaceable">IMAGE</em> of=<em class="replaceable">FLASH_DISK</em> bs=4M &amp;&amp; sync</code></span></span></pre>
+                           </div>
+                           
+                           <p><em class="replaceable">IMAGE</em> needs to be replaced with the path to the <code class="filename">SLE-15-SP7-Online-<em class="replaceable">ARCH</em>-GM-media1.iso</code> or <code class="filename">SLE-15-SP7-Full-<em class="replaceable">ARCH</em>-GM-media1.iso</code> image file. <em class="replaceable">FLASH_DISK</em> needs to be replaced with the flash device. To identify the device, insert it and
+                              run:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>grep -Ff &lt;(hwinfo --disk --short) &lt;(hwinfo --usb --short)</code></span></span>
+<span class="line"><span class="ld"><code>      disk:</code></span></span>
+<span class="line"><span class="ld"><code>      /dev/sdc             General USB Flash Disk</code></span></span></pre>
+                           </div>
+                           
+                           <p>Make sure the size of the device is sufficient for the desired image. You can check
+                              the size of the device with:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>fdisk -l /dev/sdc | grep -e "^/dev"</code></span></span>
+<span class="line"><span class="ld"><code>      /dev/sdc1  *     2048 31490047 31488000  15G 83 Linux</code></span></span></pre>
+                           </div>
+                           
+                           <p>In this example, the device has a capacity of 15 GB. The command to use for the <code class="filename">SLE-15-SP7-Full-<em class="replaceable">ARCH</em>-GM-media1.iso</code> would be:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>dd if=SLE-15-SP7-Full-<em class="replaceable">ARCH</em>-GM-media1.iso of=/dev/sdc bs=4M &amp;&amp; sync</code></span></span></pre>
+                           </div>
+                           
+                           <p>The device must not be mounted when running the <code class="command">dd</code> command. Note that all data on the partition will be erased!</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="bootmedium-installer">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Booting from the SUSE Linux Enterprise installation medium</h3>
+               </header>
+               
+               
+               <p>You can use the SUSE Linux Enterprise installation medium (<code class="filename">SLE-15-SP7-Online-<em class="replaceable">ARCH</em>-GM-media1.iso</code> or <code class="filename">SLE-15-SP7-Full-<em class="replaceable">ARCH</em>-GM-media1.iso</code>) in combination with other media. For example, the control file can be provided via
+                  a flash disk or a specified location on the network. Alternatively, create a customized
+                  installation media that includes the control file.</p>
+               </section>
+            
+            <section class="sect2" id="bootmedium-pxe">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Booting via PXE over the network</h3>
+               </header>
+               
+               
+               <p>Booting via PXE requires a DHCP and a TFTP server in your network. The computer will
+                  then boot without a physical medium. For instructions on setting up the required infrastructure,
+                  see <a class="xref xref-chapter" href="bk02partiich05.html">Chapter&nbsp;<span class="label">13</span>, Remote installation</a>.</p>
+               
+               <p>If you install via PXE, the installation will run in an endless loop. This happens
+                  because after the first reboot, the machine performs the PXE boot again and restarts
+                  the installation instead of booting from the hard disk for the second stage of the
+                  installation.</p>
+               
+               <p>There are several ways to solve this problem. You can use an HTTP server to provide
+                  the AutoYaST control file. Alternatively, instead of a static control file, run a
+                  CGI script on the Web server that provides the control file and changes the TFTP server
+                  configuration for your target host. This way, the next PXE boot of the machine will
+                  be from the hard disk by default.</p>
+               
+               <p>Another way is to use AutoYaST to upload a new PXE boot configuration for the target
+                  host via the control file:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;pxe&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;pxe_localboot config:type="boolean"&gt;true&lt;/pxe_localboot&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;pxelinux-config&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    DEFAULT linux</code></span></span>
+<span class="line"><span class="ld"><code>    LABEL linux</code></span></span>
+<span class="line"><span class="ld"><code>    localboot 0</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/pxelinux-config&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;tftp-server&gt;192.168.1.115&lt;/tftp-server&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;pxelinux-dir&gt;/pxelinux.cfg&lt;/pxelinux-dir&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;filename&gt;__MAC__&lt;/filename&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/pxe&gt;</code></span></span></pre>
+               </div>
+               
+               <p>This entry will upload a new configuration for the target host to the TFTP server
+                  shortly before the first reboot happens. In most installations the TFTP daemon runs
+                  as user <code class="systemitem username">nobody</code>. You need to make sure this user has write permissions to the <code class="filename">pxelinux.cfg</code> directory. You can also configure the file name that will be uploaded. If you use
+                  the <q>magic</q><code class="literal">__MAC__</code> file name, the file name will be the MAC address of your machine like, for example
+                  <code class="literal">01-08-00-27-79-49-ee</code>. If the file name setting is missing, the IP address will be used for the file name.</p>
+               
+               <p>To do another auto-installation on the same machine, you need to remove the file from
+                  the TFTP server.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partivch01.html">Prev</a></td>
+                  <td class="up"><a href="bk05partivch01.html">Up</a></td>
+                  <td class="next"><a href="bk05partivch01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">9</span><span class="sep">.&nbsp;</span>The auto-installation process</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Invoking the auto-installation process</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

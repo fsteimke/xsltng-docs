@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.12.&nbsp;Synchronizing with Microsoft Active Directory</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s11.html" rel="prev">
+      <link href="bk06partich04s13.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s13.html">Next</a> <a href="bk06partich04s11.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s12.html" db-id="d616951e161405" id="sec-security-ldap-active-directory-sync" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Synchronizing with Microsoft Active Directory</h2>
+            </header>
+            
+            
+            <p>389 Directory Server supports synchronizing certain user and group content from Microsoft's
+               Active Directory, so that Linux clients can use 389&nbsp;DS for their identity information
+               without the normally required domain join process. This also allows 389&nbsp;DS to extend
+               and use its other features with the data synchronized from Active Directory.</p>
+            
+            <section class="sect2" id="sec-security-ldap-synchronization-planning">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Planning your synchronization topology</h3>
+               </header>
+               
+               
+               <p>Due to how the synchronization works, only a single 389 Directory Server and Active
+                  Directory server are involved. The Active Directory server must be a full Domain Controller,
+                  and not a Read Only Domain Controller (RODC). The Global Catalog is not required on
+                  the DC that is synchronized, as 389&nbsp;DS only replicates the content of a single forest
+                  in a domain.</p>
+               
+               <p>You must first choose the direction of your data flow. There are three options: from
+                  AD to 389&nbsp;DS, from 389&nbsp;DS to AD, or bi- directional.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">No password synchronization</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Passwords cannot be synchronized between 389&nbsp;DS and Active Directory. This may change
+                              in the future, to support Active Directory to 389&nbsp;DS password flow.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Your topology looks like the following diagram. The 389 Directory Server and Active
+                  Directory topologies may differ, but the most important factor is to have only a single
+                  connection between 389&nbsp;DS and Active Directory. It is important to account for this
+                  in your disaster recovery and backup plans for both 389&nbsp;DS and AD, to ensure that
+                  you correctly restore only a single replication connection between these topologies.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>┌────────┐     ┌────────┐         ┌────────┐     ┌────────┐</code></span></span>
+<span class="line"><span class="ld"><code>│        │     │        │         │        │     │        │</code></span></span>
+<span class="line"><span class="ld"><code>│ 389-ds │◀───▶│ 389-ds │◀ ─ ─ ─ ▶│   AD   │◀───▶│   AD   │</code></span></span>
+<span class="line"><span class="ld"><code>│        │     │        │         │        │     │        │</code></span></span>
+<span class="line"><span class="ld"><code>└────────┘     └────────┘         └────────┘     └────────┘</code></span></span>
+<span class="line"><span class="ld"><code>    ▲               ▲                  ▲             ▲</code></span></span>
+<span class="line"><span class="ld"><code>    │               │                  │             │</code></span></span>
+<span class="line"><span class="ld"><code>    ▼               ▼                  ▼             ▼</code></span></span>
+<span class="line"><span class="ld"><code>┌────────┐     ┌────────┐         ┌────────┐     ┌────────┐</code></span></span>
+<span class="line"><span class="ld"><code>│        │     │        │         │        │     │        │</code></span></span>
+<span class="line"><span class="ld"><code>│ 389-ds │◀───▶│ 389-ds │         │   AD   │◀───▶│   AD   │</code></span></span>
+<span class="line"><span class="ld"><code>│        │     │        │         │        │     │        │</code></span></span>
+<span class="line"><span class="ld"><code>└────────┘     └────────┘         └────────┘     └────────┘</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-synchronization-ad-prerequisites">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Prerequisites for Active Directory</h3>
+               </header>
+               
+               
+               <p>A security group that is granted the <code class="literal">Replicating Directory Changes</code> permission is required. For example, you have created a group named <code class="literal">Directory Server Sync</code>. Follow the steps in the <cite class="citetitle">How to grant the 'Replicating Directory Changes' permission for the Microsoft Metadirectory
+                     Services ADMA service account</cite> (<a class="link" href="https://docs.microsoft.com/en-US/troubleshoot/windows-server/windows-security/grant-replicating-directory-changes-permission-adma-service">https://docs.microsoft.com/en-US/troubleshoot/windows-server/windows-security/grant-replicating-directory-changes-permission-adma-service</a> to set this up.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Strong security needed</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>You should consider members of this group to be of equivalent security importance
+                              to Domain Administrators. Members of this group have the ability to read sensitive
+                              content from the Active Directory environment, so you should use strong, randomly
+                              generated service account passwords for these accounts, and carefully audit membership
+                              to this group.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>You should also create a service account that is a member of this group.</p>
+               
+               <p>Your Active Directory environment must have certificates configured for LDAPS to ensure
+                  that authentication between 389&nbsp;DS and AD is secure. Authentication with Generic Security
+                  Services API/Kerberos (GSSAPI/KRB) cannot be used.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-synchronization-389ds-prerequisites">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>12<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Prerequisites for 389 Directory Server</h3>
+               </header>
+               
+               
+               <p>The 389 Directory Server must have a back-end database already configured with Organization
+                  Units (OUs) for entries to be synchronized into.</p>
+               
+               <p>The 389 Directory Server must have a replica ID configured as though the server is
+                  a read-write replica. (For details about setting up replication see <a class="xref xref-sect1" href="bk06partich04s11.html">the section called “Setting up replication”</a>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-synchronization-agreement">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>12<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Creating an agreement from Active Directory to 389 Directory Server</h3>
+               </header>
+               
+               
+               <p>The following example command, which is run on the 389 Directory Server, creates a
+                  replication agreement from Active Directory to 389 Directory Server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-winsync-agmt create --suffix <em class="replaceable">dc=example,dc=com</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code>  <code class="command">--host <em class="replaceable">AD-HOSTNAME</em> --port 636 --conn-protocol LDAPS</code> \</code></span></span>
+<span class="line"><span class="ld"><code>  --bind-dn <code class="command">"<em class="replaceable">cn=SERVICE-ACCOUNT,cn=USERS,dc=AD,dc=EXAMPLE,dc=COM</em>"</code> \</code></span></span>
+<span class="line"><span class="ld"><code>  <code class="command">--bind-passwd "<em class="replaceable">PASSWORD</em>" --win-subtree "<em class="replaceable">cn=USERS,dc=AD,dc=EXAMPLE,dc=COM</em>"</code> \</code></span></span>
+<span class="line"><span class="ld"><code>  <code class="command">--ds-subtree <em class="replaceable">ou=AD,dc=EXAMPLE,dc=COM</em> --one-way-sync fromWindows</code> \</code></span></span>
+<span class="line"><span class="ld"><code>  <code class="command">--sync-users=on --sync-groups=on --move-action delete</code> \</code></span></span>
+<span class="line"><span class="ld"><code>  <code class="command">--win-domain <em class="replaceable">AD-DOMAIN</em> adsync_agreement</code></code></span></span></pre>
+               </div>
+               
+               <p>Once the agreement has been created, you must perform an initial resynchronization:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-winsync-agmt init --suffix <em class="replaceable">dc=example,dc=com</em> adsync_agreement</code></code></span></span></pre>
+               </div>
+               
+               <p>Use the following command to check the status of the initialization:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-winsync-agmt init-status --suffix <em class="replaceable">dc=example,dc=com</em> adsync_agreement</code></code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Some entries are not synchronized</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>In some cases, an entry may not be synchronized, even if the init status reports success.
+                              Check your 389&nbsp;DS log files in <code class="filename">/var/log/dirsrv/slapd-INSTANCE-NAME/errors</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Check the status of the agreement with the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-winsync-agmt status --suffix <em class="replaceable">dc=example,dc=com</em> adsync_agreement</code></code></span></span></pre>
+               </div>
+               
+               <p>Whe you are performing maintenance on the Active Directory or 389 Directory Server
+                  topology, you can pause the agreement with the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-winsync-agmt disable --suffix <em class="replaceable">dc=example,dc=com</em> adsync_agreement</code></code></span></span></pre>
+               </div>
+               
+               <p>Resume the agreement with the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE-NAME</em> repl-winsync-agmt enable --suffix <em class="replaceable">dc=example,dc=com</em> adsync_agreement</code></code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s11.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s13.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Setting up replication</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

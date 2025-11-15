@@ -1,0 +1,455 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.&nbsp;Configuring vGPU manager in VM Host Server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar06.html" rel="prev">
+      <link href="bk11ar06s03.html" rel="next">
+      <link href="bk11ar06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar06.html">Up</a> <a href="bk11ar06s03.html">Next</a> <a href="bk11ar06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar06s02.html" db-id="d616951e323740" id="configure-nvidia-vgpu-configuring-host">
+            <header>
+               <h2><span class="label">2</span><span class="sep">.&nbsp;</span>Configuring vGPU manager in VM Host Server</h2>
+            </header>
+            
+            
+            <section class="sect2" id="configure-nvidia-vgpu-verify-host">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prepare VM Host Server environment</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="configure-nvidia-vgpu-verify-host_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Verify that you have a compatible server and GPU cards. Check specifications for details:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><a class="link" href="https://docs.nvidia.com/grid/gpus-supported-by-vgpu.html">https://docs.nvidia.com/grid/gpus-supported-by-vgpu.html</a></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><a class="link" href="https://docs.nvidia.com/grid/index.html">https://docs.nvidia.com/grid/index.html</a></p>
+                              </li>
+                           </ul>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify that VM Host Server is SUSE Linux Enterprise Server 15 SP3 or newer:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /etc/issue</code></span></span>
+<span class="line"><span class="ld"><code>Welcome to SUSE Linux Enterprise Server 15 SP3  (x86_64) - Kernel \r (\l).</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Get the vGPU drivers from NVIDIA. To get the software, please follow the steps at
+                           <a class="link" href="https://docs.nvidia.com/grid/latest/grid-software-quick-start-guide/index.html#redeeming-pak-and-downloading-grid-software">https://docs.nvidia.com/grid/latest/grid-software-quick-start-guide/index.html#redeeming-pak-and-downloading-grid-software</a>. For example, to install vGPU 13.0, you need the following files:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>NVIDIA-Linux-x86_64-470.63-vgpu-kvm.run  # vGPU manager for the VM host</code></span></span>
+<span class="line"><span class="ld"><code>NVIDIA-Linux-x86_64-470.63.01-grid.run   # vGPU driver for the VM guest</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If you are using Ampere architecture GPU cards, verify that VM Host Server supports
+                           VT-D/IOMMU and SR-IOV technologies, and that they are enabled in BIOS.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enable IOMMU. Verify that it is included in the boot command line:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>cat /proc/cmdline</code></span></span>
+<span class="line"><span class="ld"><code>BOOT_IMAGE=/boot/vmlinuz-default [...] intel_iommu=on [...]</code></span></span></pre>
+                        </div>
+                        
+                        <p>If not, add the following line to <code class="filename">/etc/default/grub</code>.</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>For Intel CPUs:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>GRUB_CMDLINE_LINUX="intel_iommu=on"</code></span></span></pre>
+                              </div>
+                              
+                              <p>For AMD CPUs:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>GRUB_CMDLINE_LINUX="amd_iommu=on"</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ul>
+                        
+                        <p>Then generate new GRUB&nbsp;2 configuration file and reboot:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> grub2-mkconfig -o /boot/grub2/grub.cfg</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl reboot</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Tip</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>You can verify that IOMMU is loaded by running the following command:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sudo dmesg | grep -e IOMMU</code></span></span></pre>
+                                    </div>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enable SR-IOV. Refer to <a class="link" href="https://docs.nvidia.com/grid/13.0/grid-vgpu-user-guide/index.html#vgpu-types-tesla-v100-pcie">https://docs.nvidia.com/grid/13.0/grid-vgpu-user-guide/index.html#vgpu-types-tesla-v100-pcie</a> for useful information.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Disable the nouveau kernel module by adding the following line it to the top of the
+                           <code class="filename">/etc/modprobe.d/50-blacklist.conf</code> file:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist nouveau</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="remove-conflicting-nvidia-drivers">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Remove conflicting and pre-installed NVIDIA drivers</h3>
+               </header>
+               
+               
+               <p>On a fresh installation of SUSE Linux Enterprise Server <span class="phrase productnumber">15 SP7</span>, the open-source NVIDIA desktop driver such as <code class="filename">nvidia-open-driver-G06-signed-kmp-default</code> is often automatically installed if an NVIDIA GPU is detected. This pre-installed
+                  driver can conflict with the installation of the proprietary NVIDIA vGPU driver. The
+                  conflict can lead to errors during the build process of the vGPU kernel modules and/or
+                  issues with the correct driver being loaded, preventing the vGPU functionality from
+                  working correctly. This section describes how to identify and remove conflicting drivers
+                  before proceeding with the NVIDIA vGPU driver installation.</p>
+               
+               <div class="informalobject procedure" id="remove-conflicting-nvidia-drivers_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Check for pre-installed NVIDIA drivers that can potentially conflict with the vGPU
+                           driver that you want to install.</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>Check for the presence of automatically installed open source NVIDIA driver.</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">zypper info nvidia-open-driver-G06-signed-kmp-default</code></code></span></span></pre>
+                                 </div>
+                                 
+                                 <div class="admonition note">
+                                    <div>
+                                       <div class="icon">ⓘ</div>
+                                       <div class="body">
+                                          <header>
+                                             <div class="title">Note</div>
+                                          </header>
+                                          <div>
+                                             
+                                             <p>If the package is <em>not installed</em>, you can skip the rest of this section and proceed to <a class="xref xref-sect2" href="#configure-nvidia-vgpu-kvm-driver">the section called “Install the NVIDIA KVM driver”</a>. However, if it is <em>installed</em>, perform the rest of the steps to uninstall conflicting drivers and clean up any
+                                                residues.</p>
+                                             </div>
+                                       </div>
+                                    </div>
+                                 </div>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>List all installed NVIDIA-related packages to identify any other potential conflicts:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">zypper search --installed-only nvidia*</code></code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>Look for any packages that might conflict with the vGPU driver, such as other desktop
+                                    driver versions.</p>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Remove the conflicting NVIDIA drivers.</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>Remove the open source NVIDIA driver that is automatically installed.</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper remove nvidia-open-driver-G06-signed-kmp-default</code></code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>If you identified other conflicting packages in the previous step, remove them similarly.</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper remove <em class="replaceable">CONFLICTING-NVIDIA-PACKAGE</em><em class="replaceable">CONFLICTING-NVIDIA-PACKAGE</em></code></code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Uninstall any manually installed proprietary NVIDIA drivers that you have installed
+                           using <code class="filename">.run</code> files downloaded from NVIDIA's Web site.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command"><em class="replaceable">/PATH/TO/NVIDIA-Linux-x86_64-XXX.XX.XX.run</em> --uninstall</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><em>OPTIONAL but RECOMMENDED:</em> Sometimes, driver installations can leave behind configuration files. To ensure a
+                           clean state, remove any potentially conflicting configuration files.</p>
+                        
+                        <div class="admonition warning">
+                           <div>
+                              <div class="icon">🛑</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Warning</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>Remove driver configuration files only when you are absolutely sure that it relates
+                                       to a potentially conflicting NVIDIA driver that you have already uninstalled.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>Search for NVIDIA-related configuration directories.</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">find /etc/ -name "*nvidia*"</code></code></span></span></pre>
+                                 </div>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>Remove the directories related to conflicting uninstalled NVIDIA drivers.</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rm -rf /etc/<em class="replaceable">CONFLICTING/NVIDIA/DIRECTORY</em></code></code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Manually load the <code class="literal">nvidia-modprobe</code> utility before attempting the vGPU driver installation:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">modprobe nvidia-modprobe</code></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="configure-nvidia-vgpu-kvm-driver">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Install the NVIDIA KVM driver</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="configure-nvidia-vgpu-kvm-driver_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Exit from the graphical mode:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> init 3</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Install <code class="package">kernel-default-devel</code> and <code class="package">gcc</code> packages and their dependencies:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in kernel-default-devel gcc</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Download the vGPU software from the NVIDIA portal. Make the NVIDIA vGPU driver executable
+                           and run it:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>chmod +x NVIDIA-Linux-x86_64-450.55-vgpu-kvm.run</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ./NVIDIA-Linux-x86_64-450.55-vgpu-kvm.run</code></span></span></pre>
+                        </div>
+                        
+                        <p>You can find detailed information about the installation process in the log file <code class="filename">/var/log/nvidia-installer.log</code></p>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Tip</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>To enable dynamic kernel-module support, and thus have the module rebuilt automatically
+                                       when a new kernel is installed, add the <code class="option">--dkms</code> option:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ./NVIDIA-Linux-x86_64-450.55-vgpu-kvm.run --dkms</code></span></span></pre>
+                                    </div>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>When the driver installation is finished, reboot the system:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl reboot</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="configure-nvidia-vgpu-verify-driver-installation">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Verify the driver installation</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="configure-nvidia-vgpu-verify-driver-installation_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Verify loaded kernel modules:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lsmod | grep nvidia</code></span></span>
+<span class="line"><span class="ld"><code>nvidia_vgpu_vfio       49152  9</code></span></span>
+<span class="line"><span class="ld"><code>nvidia              14393344  229 nvidia_vgpu_vfio</code></span></span>
+<span class="line"><span class="ld"><code>mdev                   20480  2 vfio_mdev,nvidia_vgpu_vfio</code></span></span>
+<span class="line"><span class="ld"><code>vfio                   32768  6 vfio_mdev,nvidia_vgpu_vfio,vfio_iommu_type1</code></span></span></pre>
+                        </div>
+                        
+                        <p>The modules containing the <code class="literal">vfio</code> string are required dependencies.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Print the GPU device status with the <code class="command">nvidia-smi</code> command. The output should be similar to the following one:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>nvidia-smi</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| NVIDIA-SMI 470.63       Driver Version: 470.63       CUDA Version: N/A      |</code></span></span>
+<span class="line"><span class="ld"><code>|-------------------------------+----------------------+----------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</code></span></span>
+<span class="line"><span class="ld"><code>| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</code></span></span>
+<span class="line"><span class="ld"><code>|                               |                      |               MIG M. |</code></span></span>
+<span class="line"><span class="ld"><code>|===============================+======================+======================|</code></span></span>
+<span class="line"><span class="ld"><code>|   0  NVIDIA A40          Off  | 00000000:31:00.0 Off |                    0 |</code></span></span>
+<span class="line"><span class="ld"><code>|  0%   46C    P0    39W / 300W |      0MiB / 45634MiB |      0%      Default |</code></span></span>
+<span class="line"><span class="ld"><code>|                               |                      |                  N/A |</code></span></span>
+<span class="line"><span class="ld"><code>+-------------------------------+----------------------+----------------------+</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span>
+<span class="line"><span class="ld"><code>| Processes:                                                                  |</code></span></span>
+<span class="line"><span class="ld"><code>|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</code></span></span>
+<span class="line"><span class="ld"><code>|        ID   ID                                                   Usage      |</code></span></span>
+<span class="line"><span class="ld"><code>|=============================================================================|</code></span></span>
+<span class="line"><span class="ld"><code>|  No running processes found                                                 |</code></span></span>
+<span class="line"><span class="ld"><code>+-----------------------------------------------------------------------------+</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check the sysfs file system. For Volta and earlier GPU cards, new directory <code class="filename">mdev_supported_types</code> is added, for example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>cd /sys/bus/pci/devices/00000000\:31\:00.0/mdev_supported_types</code></span></span></pre>
+                        </div>
+                        
+                        <p>For Ampere GPU cards, the directory gets created automatically for each virtual function
+                           after SR-IOV is enabled.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar06.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar06.html">Up</a></td>
+                  <td class="next"><a href="bk11ar06s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">NVIDIA Virtual GPU for KVM Guests</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">3</span><span class="sep">.&nbsp;</span>Creating a vGPU device</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

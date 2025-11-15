@@ -1,0 +1,310 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>44.4.&nbsp;Passing parameters to the audit system</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partviich01s03.html" rel="prev">
+      <link href="bk06partviich01s05.html" rel="next">
+      <link href="bk06partviich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partviich01.html">Up</a> <a href="bk06partviich01s05.html">Next</a> <a href="bk06partviich01s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partviich01s04.html" db-id="d616951e195235" id="sec-audit-rules">
+            <header>
+               <h2><span class="label">44<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Passing parameters to the audit system</h2>
+            </header>
+            
+            
+            <p>Commands to control the audit system can be invoked individually from the shell using
+               <code class="command">auditctl</code> or batch read from a file using <code class="command">auditctl -</code><code class="option">R</code>. This latter method is used by the init scripts to load rules from the file <code class="filename">/etc/audit/audit.rules</code> after the audit daemon has been started. The rules are executed in order from top
+               to bottom. Each of these rules would expand to a separate <code class="command">auditctl</code> command. The syntax used in the rules file is the same as that used for the <code class="command">auditctl</code> command.</p>
+            
+            <p>Changes made to the running audit system by executing <code class="command">auditctl</code> on the command line are not persistent across system restarts. For changes to persist,
+               add them to the <code class="filename">/etc/audit/audit.rules</code> file and, if they are not currently loaded into audit, restart the audit system to
+               load the modified rule set by using the <code class="command">systemctl restart auditd</code> command.</p>
+            
+            <div class="example formalobject" id="ex-audit-rules-sysparam">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-b 1000<span class="co" id="co-aurules-b">⡘</span></code></span></span>
+<span class="line"><span class="ld"><code>-f 1<span class="co" id="co-aurules-f">⡙</span></code></span></span>
+<span class="line"><span class="ld"><code>-r 10<span class="co" id="co-aurules-r">⡚</span></code></span></span>
+<span class="line"><span class="ld"><code>-e 1<span class="co" id="co-aurules-e">⡛</span></code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">44<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Example audit rules—audit system parameters</div>
+               </header>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-b">⡘</a></dt>
+                  <dd>
+                     
+                     <p>Specify the maximum number of outstanding audit buffers. Depending on the level of
+                        logging activity, you might need to adjust the number of buffers to avoid causing
+                        too heavy an audit load on your system.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-f">⡙</a></dt>
+                  <dd>
+                     
+                     <p>Specify the failure flag to use. See <a class="xref xref-table" href="bk06partviich01s03.html#tab-audit-auditctl">Table&nbsp;<span class="label">44<span class="sep">.</span>1</span>, “Audit status flags”</a> for possible values.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-r">⡚</a></dt>
+                  <dd>
+                     
+                     <p>Specify the maximum number of messages per second that may be issued by the kernel.
+                        See <a class="xref xref-table" href="bk06partviich01s03.html#tab-audit-auditctl">Table&nbsp;<span class="label">44<span class="sep">.</span>1</span>, “Audit status flags”</a> for details.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-e">⡛</a></dt>
+                  <dd>
+                     
+                     <p>Enable or disable the audit subsystem.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <p>Using audit, you can track any kind of file system access to important files, configurations
+               or resources. You can add watches on these and assign keys to each kind of watch for
+               better identification in the logs.</p>
+            
+            <div class="example formalobject" id="ex-audit-rules-fs">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-w /etc/shadow<span class="co" id="co-aurules-fs">⡜</span></code></span></span>
+<span class="line"><span class="ld"><code>-w /etc -p rx<span class="co" id="co-aurules-fsmode">⡝</span></code></span></span>
+<span class="line"><span class="ld"><code>-w /etc/passwd -k fk_passwd -p rwxa<span class="co" id="co-aurules-fskey">⡞</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-aurules-fs">⡜</a></dt>
+                     <dd>
+                        
+                        <p>The <code class="literal">-w</code> option tells audit to add a watch to the file specified, in this case <code class="filename">/etc/shadow</code>. All system calls requesting access permissions to this file are analyzed.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-aurules-fsmode">⡝</a></dt>
+                     <dd>
+                        
+                        <p>This rule adds a watch to the <code class="filename">/etc</code> directory and applies permission filtering for read and execute access to this directory
+                           (<code class="literal">-p rx</code>). Any system call requesting any of these two permissions is analyzed. The creation
+                           of new files and the deletion of existing ones are logged as directory-related events.
+                           To get more specific events for files located under this particular directory, you
+                           should add a separate rule for each file. A file must exist before you add a rule
+                           containing a watch on it. Auditing files as they are created is not supported.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-aurules-fskey">⡞</a></dt>
+                     <dd>
+                        
+                        <p>This rule adds a file watch to <code class="filename">/etc/passwd</code>. Permission filtering is applied for read, write, execute, and attribute change permissions.
+                           The <code class="literal">-k</code> option allows you to specify a key to use to filter the audit logs for this particular
+                           event later (for example with <code class="command">ausearch</code>). You may use the same key on different rules to be able to group rules when searching
+                           for them. It is also possible to apply multiple keys to a rule.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">44<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Example audit rules—file system auditing</div>
+               </header>
+            </div>
+            
+            <p>System call auditing lets you track your system's behavior on a level even below the
+               application level. When designing these rules, consider that auditing a great many
+               system calls may increase your system load and cause you to run out of disk space.
+               Consider carefully which events need tracking and how they can be filtered to be even
+               more specific.</p>
+            
+            <div class="example formalobject" id="ex-audit-rules-syscall">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-a exit,always -S mkdir<span class="co" id="co-aurules-scalladd">⡟</span></code></span></span>
+<span class="line"><span class="ld"><code>-a exit,always -S access -F a1=4<span class="co" id="co-aurules-scallfilter">⡠</span></code></span></span>
+<span class="line"><span class="ld"><code>-a exit,always -S ipc -F a0=2<span class="co" id="co-aurules-scallipc">⡡</span></code></span></span>
+<span class="line"><span class="ld"><code>-a exit,always -S open -F success!=0<span class="co" id="co-aurules-scalls">⡢</span></code></span></span>
+<span class="line"><span class="ld"><code>-a task,always -F auid=0<span class="co" id="co-aurules-scalltask">⡣</span></code></span></span>
+<span class="line"><span class="ld"><code>-a task,always -F uid=0 -F auid=501 -F gid=wheel<span class="co" id="co-aurules-scallsu">⡤</span></code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">44<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Example audit rules—system call auditing</div>
+               </header>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scalladd">⡟</a></dt>
+                  <dd>
+                     
+                     <p>This rule activates auditing for the <code class="systemitem">mkdir</code> system call. The <code class="literal">-a</code> option adds system call rules. This rule triggers an event whenever the <code class="systemitem">mkdir</code> system call is entered (<code class="literal">exit</code>, <code class="literal">always</code>). The <code class="literal">-S</code> option specifies the system call to which this rule should be applied.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scallfilter">⡠</a></dt>
+                  <dd>
+                     
+                     <p>This rule adds auditing to the access system call, but only if the second argument
+                        of the system call (<code class="literal">mode</code>) is <code class="literal">4</code> (<code class="literal">R_OK</code>). <code class="literal">exit,always</code> tells audit to add an audit context to this system call when entering it, and to
+                        write out a report when it gets audited.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scallipc">⡡</a></dt>
+                  <dd>
+                     
+                     <p>This rule adds an audit context to the IPC multiplexed system call. The specific <code class="literal">ipc</code> system call is passed as the first syscall argument and can be selected using <code class="option">-F a0=<em class="replaceable">IPC_CALL_NUMBER</em></code>.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scalls">⡢</a></dt>
+                  <dd>
+                     
+                     <p>This rule audits failed attempts to call open.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scalltask">⡣</a></dt>
+                  <dd>
+                     
+                     <p>This rule is an example of a task rule (keyword: <code class="literal">task</code>). It is different from the other rules above in that it applies to processes that
+                        are forked or cloned. To filter these kinds of events, you can use fields that are
+                        known at fork time, such as UID, GID, and AUID. This example rule filters for all
+                        tasks carrying an audit ID of <code class="literal">0</code>.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scallsu">⡤</a></dt>
+                  <dd>
+                     
+                     <p>This last rule makes heavy use of filters. All filter options are combined with a
+                        logical AND operator, meaning that this rule applies to all tasks that carry the audit
+                        ID of <code class="literal">501</code>, run as <code class="systemitem username">root</code>, and have <code class="literal">wheel</code> as the group. A process is given an audit ID on user login. This ID is then handed
+                        down to any child process started by the initial process of the user. Even if the
+                        user changes their identity, the audit ID stays the same and allows tracing actions
+                        to the original user.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Filtering system call arguments</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>For more details on filtering system call arguments, refer to <a class="xref xref-sect1" href="bk06partviich03s06.html">the section called “Filtering system call arguments”</a>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>You cannot only add rules to the audit system, but also remove them. There are different
+               methods for deleting the entire rule set at once or for deleting system call rules
+               or file and directory watches:</p>
+            
+            <div class="example formalobject" id="ex-audit-ruledel">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-D<span class="co" id="co-aurules-d">⡥</span></code></span></span>
+<span class="line"><span class="ld"><code>-d exit,always -S mkdir<span class="co" id="co-aurules-scalldel">⡦</span></code></span></span>
+<span class="line"><span class="ld"><code>-W /etc<span class="co" id="co-aurules-fsdel">⡧</span></code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">44<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Deleting audit rules and events</div>
+               </header>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-d">⡥</a></dt>
+                  <dd>
+                     
+                     <p>Clear the queue of audit rules and delete any preexisting rules. This rule is used
+                        as the first rule in <code class="filename">/etc/audit/audit.rules</code> files to make sure that the rules that are about to be added do not clash with any
+                        preexisting ones. The <code class="command">auditctl</code><code class="option">-D</code> command is also used before doing an <code class="command">autrace</code> to avoid having the trace rules clash with any rules present in the <code class="filename">audit.rules</code> file.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-scalldel">⡦</a></dt>
+                  <dd>
+                     
+                     <p>This rule deletes a system call rule. The <code class="literal">-d</code> option must precede any system call rule that needs to be deleted from the rule queue,
+                        and must match exactly.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-aurules-fsdel">⡧</a></dt>
+                  <dd>
+                     
+                     <p>This rule tells audit to discard the rule with the directory watch on <code class="filename">/etc</code> from the rules queue. This rule deletes any rule containing a directory watch on
+                        <code class="filename">/etc</code>, regardless of any permission filtering or key options.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <p>To get an overview of which rules are currently in use in your audit setup, run <code class="command">auditctl</code><code class="option">-l</code>. This command displays all rules with one rule per line.</p>
+            
+            <div class="example formalobject" id="sec-audit-rules_ex5">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>exit,always watch=/etc perm=rx</code></span></span>
+<span class="line"><span class="ld"><code>exit,always watch=/etc/passwd perm=rwxa key=fk_passwd</code></span></span>
+<span class="line"><span class="ld"><code>exit,always watch=/etc/shadow perm=rwxa</code></span></span>
+<span class="line"><span class="ld"><code>exit,always syscall=mkdir</code></span></span>
+<span class="line"><span class="ld"><code>exit,always a1=4 (0x4) syscall=access</code></span></span>
+<span class="line"><span class="ld"><code>exit,always a0=2 (0x2) syscall=ipc</code></span></span>
+<span class="line"><span class="ld"><code>exit,always success!=0 syscall=open</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">44<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Listing rules with <code class="command">auditctl</code>
+                     <code class="option">-l</code>
+                     </div>
+               </header>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Creating filter rules</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>You can build sophisticated audit rules by using the various filter options. Refer
+                           to the <code class="command">auditctl(8)</code> man page for more information about the options available for building audit filter
+                           rules and audit rules.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partviich01s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partviich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partviich01s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">44<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Controlling the audit system using <code class="command">auditctl</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">44<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Understanding the audit logs and generating reports</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

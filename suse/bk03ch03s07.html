@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.7.&nbsp;Migrate your PostgreSQL database</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk03ch03s06.html" rel="prev">
+      <link href="bk03ch03s08.html" rel="next">
+      <link href="bk03ch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk03ch03.html">Up</a> <a href="bk03ch03s08.html">Next</a> <a href="bk03ch03s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk03ch03s07.html" db-id="d616951e104874" id="sec-update-preparation-postgresql">
+            <header>
+               <h2><span class="label">3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Migrate your PostgreSQL database</h2>
+            </header>
+            
+            
+            <p><span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span> ships with the PostgreSQL database versions 15, 16 and 17.  While version 17 is the
+               default, versions 15 and 16 are still provided through the <code class="literal">Legacy</code> module for upgrades from earlier versions of <span class="phrase productname">SUSE Linux Enterprise Server</span>. Additional versions are available through SUSE Package Hub.</p>
+            
+            <p>Because of the required migration work of the database, there is no automatic upgrade
+               process. As such, the switch from one version to another needs to be performed manually.</p>
+            
+            <p>The migration process is conducted by the <code class="command">pg_upgrade</code> command, which is an alternative method of the classic dump and reload. In comparison
+               with the <q>dump and reload</q> method, <code class="command">pg_upgrade</code> makes the migration less time-consuming.</p>
+            
+            <p>The program files for each PostgreSQL version are stored in different, version-dependent
+               directories. For example, in <code class="filename">/usr/lib/postgresql96/</code> for version 9.6, in <code class="filename">/usr/lib/postgresql10/</code> for version 10, and in <code class="filename">/usr/lib/postgres17/</code> for version 17. Note that the versioning policy of PostgreSQL has changed between
+               the major versions 9.6 and 10. For details, see <a class="link" href="https://www.postgresql.org/support/versioning/">https://www.postgresql.org/support/versioning/</a>.</p>
+            
+            <p>The procedure below describes the database migration from version 16 to 17. When using
+               a different version as start or target, replace the version numbers accordingly.</p>
+            
+            <p>To perform the database migration, do the following:</p>
+            
+            <div class="informalobject procedure" id="sec-update-preparation-postgresql_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Make sure the following preconditions are fulfilled:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p>If not already done, upgrade any package of the old PostgreSQL version to the latest
+                              release through a maintenance update.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Create a backup of your existing database.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Install the packages for the new PostgreSQL major version. For SLE 15 SP7, this means
+                              installing <code class="package">postgresql17-server</code> and all the packages it depends on.</p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Install the package <code class="package">postgresql17-contrib</code>, which contains the command <code class="command">pg_upgrade</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">zypper in postgresql17-contrib</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Make sure you have enough free space in your PostgreSQL data volume, which is <code class="filename">/var/lib/pgsql/data</code> by default. If space is tight, try to reduce size with the following SQL command
+                              on each database (can take a long time!):</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><code class="command">VACUUM FULL</code>;</code></span></span></pre>
+                           </div>
+                           </li>
+                        </ul>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Stop the PostgreSQL server:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl</code> stop postgresql.service</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Rename your old data directory:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mv</code> /var/lib/pgsql/data /var/lib/pgsql/data.old</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Initialize your new database instance either manually with <code class="command">initdb</code> or by starting and stopping PostgreSQL, which does it automatically:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl</code> start postgresql.service</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl</code> stop postgresql.service</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>If you have changed your configuration files in the old version, consider transferring
+                        these changes to the new configuration files. This may affect the files <code class="filename">postgresql.auto.conf</code>, <code class="filename">postgresql.conf</code>,<code class="filename">pg_hba.conf</code> and <code class="filename">pg_ident.conf</code>. The old versions of these files are located in <code class="filename">/var/lib/pgsql/data.old/</code>, and the new versions can be found in <code class="filename">/var/lib/pgsql/data</code>.</p>
+                     
+                     <p>Note that copying the old configuration files is not recommended, because this may
+                        overwrite new options, new defaults and changed comments.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start the migration process as user <code class="systemitem username">postgres</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>su - postgres</code></span></span>
+<span class="line"><span class="ld"><code>postgres &gt; <code class="command">pg_upgrade</code> \</code></span></span>
+<span class="line"><span class="ld"><code> --old-datadir "/var/lib/pgsql/data.old" \</code></span></span>
+<span class="line"><span class="ld"><code> --new-datadir "/var/lib/pgsql/data" \</code></span></span>
+<span class="line"><span class="ld"><code> --old-bindir "/usr/lib/postgresql16/bin/" \</code></span></span>
+<span class="line"><span class="ld"><code> --new-bindir "/usr/lib/postgresql17/bin/"</code></span></span>
+<span class="line"><span class="ld"><code>postgres &gt; <code class="command">exit</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start your new PostgreSQL 17 database instance:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl</code> start postgresql.service</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Check if the migration was successful. The scope of the test depends on your use case,
+                        and there is no general tool to automate this step.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Remove any old PostgreSQL 16 packages and your old data directory:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">zypper</code> search -s postgresql16| xargs zypper rm -u</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">rm</code> -rf /var/lib/pgsql/data.old</code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>For more information about upgrading databases or using alternative methods such as
+               logical replication, refer to the official PostgreSQL documentation at <a class="link" href="https://www.postgresql.org/docs/17/upgrading.html">https://www.postgresql.org/docs/17/upgrading.html</a>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk03ch03s06.html">Prev</a></td>
+                  <td class="up"><a href="bk03ch03.html">Up</a></td>
+                  <td class="next"><a href="bk03ch03s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Disable the LTSS extension</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">3<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Migrate your MySQL or MariaDB database</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

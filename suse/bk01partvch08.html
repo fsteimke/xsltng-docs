@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;45.&nbsp;Squid caching proxy server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch07s06.html" rel="prev">
+      <link href="bk01partvch08s02.html" rel="next">
+      <link href="bk01partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partv.html">Up</a> <a href="bk01partvch08s02.html">Next</a> <a href="bk01partvch07s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk01partvch08.html" db-id="d616951e65326" id="cha-squid" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">45</span><span class="sep">.&nbsp;</span>Squid caching proxy server</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Squid acts as a caching proxy server. It redirects object requests from clients (in
+                  this case, from Web browsers) to the server. When the requested objects arrive from
+                  the server, it delivers the objects to the client and keeps a copy of them in the
+                  hard disk cache. An advantage of caching is that several clients requesting the same
+                  object can be served from the hard disk cache. This enables clients to receive the
+                  data much faster than from the Internet. This procedure also reduces the network traffic.</p>
+               
+               <p>Along with actual caching, Squid offers a wide range of features:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Distributing load over intercommunicating hierarchies of proxy servers</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Defining strict access control lists for all clients accessing the proxy server</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Allowing or denying access to specific Web pages using other applications</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Generating statistics about frequently visited Web pages for the assessment of surfing
+                        habits</p>
+                     </li>
+                  </ul>
+               
+               <p>Squid is not a generic proxy server. It normally proxies only HTTP connections. It
+                  supports the protocols FTP, Gopher, SSL and WAIS, but it does not support other Internet
+                  protocols, such as the news protocol, or video conferencing protocols. Because Squid
+                  only supports the UDP protocol to provide communication between different caches,
+                  many multimedia programs are not supported.</p>
+               </div>
+            <section class="sect1" id="sec-squid-cacheinfos">
+               <header>
+                  <h2><span class="label">45<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Facts about proxy servers</h2>
+               </header>
+               
+               
+               <p>As a caching proxy server, Squid can be used in several ways. When combined with a
+                  firewall, it can help with security. Multiple proxies can be used together. It can
+                  also determine what types of objects should be cached and for how long.</p>
+               
+               <section class="sect2" id="sec-squid-security">
+                  <header>
+                     <h3><span class="label">45<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Squid and security</h3>
+                  </header>
+                  
+                  
+                  <p>It is possible to use Squid together with a firewall to secure internal networks from
+                     the outside. The firewall denies all clients access to external services except Squid.
+                     All Web connections must be established by the proxy server. With this configuration,
+                     Squid fully controls Web access.</p>
+                  
+                  <p>If the firewall configuration includes a demilitarized zone (DMZ), the proxy server
+                     should operate within this zone. <a class="xref xref-sect1" href="bk01partvch08s06.html">the section called “Configuring a transparent proxy”</a> describes how to implement a <em>transparent</em> proxy. This simplifies the configuration of the clients, because in this case, they
+                     do not need any information about the proxy server.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-squid-morecaches">
+                  <header>
+                     <h3><span class="label">45<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Multiple caches</h3>
+                  </header>
+                  
+                  
+                  <p>Several instances of Squid can be configured to exchange objects between them. This
+                     reduces the total system load and increases the chances of retrieving an object from
+                     the local network. It is also possible to configure cache hierarchies, so a cache
+                     can forward object requests to sibling caches or to a parent cache—causing it to request
+                     objects from another cache in the local network, or directly from the source.</p>
+                  
+                  <p>Choosing the appropriate topology for the cache hierarchy is important, because it
+                     is not desirable to increase the overall traffic on the network. For a large network,
+                     it would make sense to configure a proxy server for every subnet and connect them
+                     to a parent proxy server, which in turn is connected to the caching proxy server of
+                     the ISP.</p>
+                  
+                  <p>All this communication is handled by ICP (Internet cache protocol) running on top
+                     of the UDP protocol. Data transfers between caches are handled using HTTP (hypertext
+                     transmission protocol) based on TCP.</p>
+                  
+                  <p>To find the most appropriate server from which to request objects, a cache sends an
+                     ICP request to all sibling proxies. The sibling proxies answer these requests via
+                     ICP responses. If the object was detected, they use the code <code class="literal">HIT</code>, if not, they use <code class="literal">MISS</code>.</p>
+                  
+                  <p>If multiple <code class="literal">HIT</code> responses were found, the proxy server decides from which server to download, depending
+                     on factors such as which cache sent the fastest answer or which one is closer. If
+                     no satisfactory responses are received, the request is sent to the parent cache. </p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">How Squid avoids duplication of objects</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>To avoid duplication of objects in different caches in the network, other ICP protocols
+                                 are used, such as CARP (cache array routing protocol) or HTCP (hypertext cache protocol).
+                                 The more objects maintained in the network, the greater the possibility of finding
+                                 the desired object.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-squid-latching">
+                  <header>
+                     <h3><span class="label">45<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Caching Internet objects</h3>
+                  </header>
+                  
+                  
+                  <p>Many objects available in the network are not static, such as dynamically generated
+                     pages and TLS/SSL-encrypted content. Objects like these are not cached because they
+                     change each time they are accessed. </p>
+                  
+                  <p>To determine how long objects should remain in the cache, objects are assigned one
+                     of several states. Web and proxy servers find out the status of an object by adding
+                     headers to these objects, such as <q>Last modified</q> or <q>Expires</q> and the corresponding date. Other headers specifying that objects must not be cached
+                     can be used as well.</p>
+                  
+                  <p>Objects in the cache are normally replaced, because of a lack of free disk space,
+                     using algorithms such as LRU (last recently used). This means that the proxy expunges
+                     those objects that have not been requested for the longest time.</p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch07s06.html">Prev</a></td>
+                  <td class="up"><a href="bk01partv.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch08s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">44<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">45<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>System requirements</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

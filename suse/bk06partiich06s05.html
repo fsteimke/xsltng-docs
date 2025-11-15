@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>14.5.&nbsp;Restricting root logins</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich06s04.html" rel="prev">
+      <link href="bk06partiich06s06.html" rel="next">
+      <link href="bk06partiich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich06.html">Up</a> <a href="bk06partiich06s06.html">Next</a> <a href="bk06partiich06s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich06s05.html" db-id="d616951e171056" id="sec-sec-prot-restrict-root">
+            <header>
+               <h2><span class="label">14<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Restricting <code class="systemitem username">root</code> logins</h2>
+            </header>
+            
+            
+            <p>By default, the <code class="systemitem username">root</code> user is assigned a password and can log in using various methods—for example, on
+               a local terminal, in a graphical session, or remotely via SSH. These methods should
+               be restricted as far as possible. Shared usage of the root account should be avoided.
+               Instead, individual administrators should use tools such as <code class="literal">su</code> or <code class="literal">sudo</code> (for more information, type <code class="command">man 1 su</code> or <code class="command">man 8 sudo</code>) to obtain elevated privileges. This allows associating <code class="systemitem username">root</code> logins with particular users. This also adds another layer of security; not only
+               the <code class="systemitem username">root</code> password, but both the <code class="systemitem username">root</code><em>and</em> the password of an administrator's regular account would need to be compromised to
+               gain full root access. This section explains how to limit direct root logins on the
+               different levels of the system.</p>
+            
+            <section class="sect2" id="sec-sec-prot-restrict-root-tty">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Restricting local text console logins</h3>
+               </header>
+               
+               
+               <p>TTY devices provide text-mode system access via the console. For desktop systems these
+                  are accessed via the local keyboard or—in case of server systems—via input devices
+                  connected to a KVM switch or a remote management card (for example, ILO and DRAC).
+                  By default, Linux offers six different consoles, which can be switched to via the
+                  key combinations <span class="keycombo"><span class="alt keycap">Alt</span><span class="keycap">F1</span></span> to <span class="keycombo"><span class="alt keycap">Alt</span><span class="keycap">F6</span></span>, when running in text mode, or <span class="keycombo"><span class="control keycap">Ctrl</span><span class="alt keycap">Alt</span><span class="keycap">F1</span></span> to <span class="keycombo"><span class="control keycap">Ctrl</span><span class="alt keycap">Alt</span><span class="keycap">F6</span></span> when running in a graphical session. The associated terminal devices are named <code class="literal">tty1</code> to <code class="literal">tty6</code>.</p>
+               
+               <p>The following steps restrict root access to the first TTY. Even this access method
+                  is only meant for emergency access to the system and should never be used for everyday
+                  system administration tasks.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>The steps shown here are tailored towards PC architectures (x86 and AMD64/Intel&nbsp;64).
+                              On architectures such as POWER, different terminal device names than <code class="literal">tty1</code> can be used. Be careful not to lock yourself out by specifying wrong terminal device
+                              names. You can determine the device name of the terminal you are currently logged
+                              in to by running the <code class="literal">tty</code> command. Be careful not to do this in a virtual terminal, such as via SSH or in a
+                              graphical session (device names <code class="filename">/dev/pts/<em class="replaceable">N</em></code>), but only from an actual login terminal reachable via <span class="keycombo"><span class="alt keycap">Alt</span><span class="keycap">F<em class="replaceable">N</em></span></span>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="formalobject procedure" id="sec-sec-prot-restrict-root-tty_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">14<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Restricting root logins on local TTYs</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Ensure that the PAM stack configuration file <code class="filename">/etc/pam.d/login</code> contains the <code class="literal">pam_securetty</code> module in the <code class="literal">auth</code> block:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>auth     requisite      pam_nologin.so</code></span></span>
+<span class="line"><span class="ld"><code> auth     [user_unknown=ignore success=ok ignore=ignore auth_err=die default=bad] pam_securetty.so noconsole</code></span></span>
+<span class="line"><span class="ld"><code> auth     include        common-auth</code></span></span></pre>
+                        </div>
+                        
+                        <p>This includes the <code class="literal">pam_securetty</code> module during the authentication process on local consoles, which restricts <code class="systemitem username">root</code> to logging in only on TTY devices that are listed in the file <code class="filename">/etc/securetty</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Remove all entries from <code class="filename">/etc/securetty</code> except one. This limits the access to TTY devices for root.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#</code></span></span>
+<span class="line"><span class="ld"><code># This file contains the device names of tty lines (one per line,</code></span></span>
+<span class="line"><span class="ld"><code># without leading /dev/) on which root is allowed to login.</code></span></span>
+<span class="line"><span class="ld"><code>#</code></span></span>
+<span class="line"><span class="ld"><code>tty1</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check whether logins to other terminals are rejected for <code class="systemitem username">root</code>. A login on <code class="literal">tty2</code>, for example, should be rejected immediately, without even querying the account password.
+                           Also make sure that you can still successfully log in to <code class="literal">tty1</code> and thus that <code class="systemitem username">root</code> is not locked out of the system.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Do not add pam_securetty module</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Do not add the <code class="literal">pam_securetty</code> module to the <code class="filename">/etc/pam.d/common-auth</code> file. This would break the <code class="command">su</code> and <code class="command">sudo</code> commands, because these tools would then also reject <code class="systemitem username">root</code> authentications.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Important</div>
+                        </header>
+                        <div>
+                           
+                           <p>These configuration changes also cause root logins on serial consoles such as <code class="filename">/dev/ttyS0</code> to be denied. In case you require such use cases, you need to list the respective
+                              TTY devices additionally in the <code class="filename">/etc/securetty</code> file.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-sec-prot-restrict-root-graphical">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Restricting graphical session logins</h3>
+               </header>
+               
+               
+               <p>To improve security on your server, avoid using graphical environments at all. Graphical
+                  programs are often not designed to be run as <code class="systemitem username">root</code> and can contain security issues than console programs. If you require a graphical
+                  login, use a non-<code class="systemitem username">root</code> login. Configure your system to disallow <code class="systemitem username">root</code> from logging in to graphical sessions.</p>
+               
+               <p>To prevent <code class="systemitem username">root</code> from logging in to graphical sessions, you can apply the same basic steps as outlined
+                  in <a class="xref xref-sect2" href="#sec-sec-prot-restrict-root-tty">the section called “Restricting local text console logins”</a>. Just add the <code class="literal">pam_securetty</code> module to the PAM stack file belonging to the display manager—for example, <code class="filename">/etc/pam.d/gdm</code> for GDM. The graphical session also runs on a TTY device: by default, <code class="literal">tty7</code>. Therefore, if you restrict <code class="systemitem username">root</code> logins to <code class="literal">tty1</code>, then <code class="systemitem username">root</code> is denied login in the graphical session.</p>
+               </section>
+            
+            <section class="sect2" id="sec-sec-prot-restrict-root-ssh">
+               <header>
+                  <h3><span class="label">14<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Restricting SSH logins</h3>
+               </header>
+               
+               
+               <p>By default, the <code class="systemitem username">root</code> user is also allowed to log in to a machine remotely via the SSH network protocol
+                  (if the SSH port is not blocked by the firewall). To restrict this, make the following
+                  change to the OpenSSH configuration:</p>
+               
+               <div class="informalobject procedure" id="sec-sec-prot-restrict-root-ssh_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Edit <code class="filename">/etc/ssh/sshd_config</code> and adjust the following parameter:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>PermitRootLogin no</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Restart the <code class="service systemitem">sshd</code> service to make the changes effective:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl restart sshd.service</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>Using the PAM <code class="literal">pam_securetty</code> module is not suitable in case of OpenSSH, because not all SSH logins go through
+                              the PAM stack during authorization (for example, when using SSH public-key authentication).
+                              Additionally, an attacker could differentiate between a wrong password and a successful
+                              login that was only rejected later on by policy.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich06s04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich06.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich06s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">14<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Password and login management with PAM</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">14<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Restricting <code class="command">sudo</code> users</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.3.&nbsp;Advanced guest installation scenarios</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich03s02.html" rel="prev">
+      <link href="bk10partiich04.html" rel="next">
+      <link href="bk10partiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich03.html">Up</a> <a href="bk10partiich04.html">Next</a> <a href="bk10partiich03s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich03s03.html" db-id="d616951e274416" id="sec-libvirt-inst-advanced">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Advanced guest installation scenarios</h2>
+            </header>
+            
+            
+            <p>This section provides instructions for operations exceeding the scope of a normal
+               installation, such as manually configuring UEFI firmware, memory ballooning and installing
+               add-on products.</p>
+            
+            <section class="sect2" id="cha-kvm-inst-virtman-advanced-uefi">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Advanced UEFI configuration</h3>
+               </header>
+               
+               
+               <p>The UEFI firmware used by virtual machines is provided by <em>OVMF</em> (<em>Open Virtual Machine Firmware</em>). The <code class="package">qemu-ovmf-x86_64</code> package contains firmwares for AMD64/Intel&nbsp;64 VM Guests. Firmwares for AArch64 VM
+                  Guests are provided by the <code class="package">qemu-uefi-aarch64</code> package. Both packages contain several firmwares, each supporting a different set
+                  of features and capabilities. The packages also include JSON firmware descriptor files,
+                  which describe the features and capabilities of individual firmwares.</p>
+               
+               <p><code class="library systemitem">libvirt</code> supports two methods of selecting virtual machine UEFI firmware: automatic and manual.
+                  With automatic selection, <code class="library systemitem">libvirt</code> will select a firmware based on an optional set of features specified by the user.
+                  If no explicit features are specified, <code class="library systemitem">libvirt</code> will select a firmware with secure boot enabled and Microsoft keys enrolled. When
+                  using manual selection, the full path of the firmware and any optional settings must
+                  be explicitly specified. Users can reference the JSON descriptor files to find a firmware
+                  that satisfies their requirements.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>The directory <code class="filename">/usr/share/qemu/firmware</code> contains all the JSON files used by <code class="library systemitem">libvirt</code>. This file gives you detailed information about the firmwares, including the capabilities
+                              of the features.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>When using <code class="command">virt-install</code>, automatic firmware selection is enabled by specifying the <em>firmware=efi</em> parameter to the <em>boot</em> option, for example, <code class="option">--boot firmware=efi</code>. The selection process can be influenced by requesting the presence or absence of
+                  firmware features. The following example illustrates automatic firmware selection
+                  with UEFI Secure Boot disabled.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virt-install --connect qemu:///system --virt-type kvm \</code></span></span>
+<span class="line"><span class="ld"><code>--name sle15sp5 --memory 1024 --disk size=10 --cdrom /dev/cdrom --graphics vnc \</code></span></span>
+<span class="line"><span class="ld"><code>--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no \</code></span></span>
+<span class="line"><span class="ld"><code>--os-variant sle15sp5</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>To ensure persistent VM Guests use the same firmware and variable store throughout
+                              their lifetime, <code class="library systemitem">libvirt</code> will record automatically selected firmware in the VM Guest XML configuration. Automatic
+                              firmware selection is a one-time activity. Once firmware has been selected, it will
+                              only change if the VM Guest administrator explicitly does so using the manual firmware
+                              selection method.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The <em>loader</em> and <em>nvram</em> parameters are used for manual firmware selection. <em>loader</em> is required, and <em>nvram</em> defines an optional UEFI variable store. The following example illustrates manual
+                  firmware selection with secure boot enabled.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virt-install --connect qemu:///system --virt-type kvm \</code></span></span>
+<span class="line"><span class="ld"><code>--name sle15sp5 --memory 1024 --disk size=10 --cdrom /dev/cdrom --graphics vnc \</code></span></span>
+<span class="line"><span class="ld"><code>--boot loader=/usr/share/qemu/ovmf-x86_64-smm-code.bin,loader.readonly=yes,loader.type=pflash,loader.secure=yes,nvram.template=/usr/share/qemu/ovmf-x86_64-smm-vars.bin \</code></span></span>
+<span class="line"><span class="ld"><code>--os-variant sle15sp5</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p><code class="library systemitem">libvirt</code> cannot modify any characteristics of the UEFI firmwares. For example, it cannot disable
+                              UEFI Secure Boot in a firmware that has UEFI Secure Boot enabled, even when specifying
+                              <em>loader.secure=no</em>. <code class="library systemitem">libvirt</code> will ensure the specified firmware can satisfy any specified features. For example,
+                              it will reject configuration that disables secure boot with <em>loader.secure=no</em>, but specifies a firmware that has UEFI Secure Boot enabled.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The <code class="package">qemu-ovmf-x86_64</code> package contains several UEFI firmware images. For example, the following subset
+                  supports SMM, UEFI Secure Boot, and has either Microsoft, openSUSE or SUSE UEFI CA
+                  keys enrolled:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">rpm -ql qemu-ovmf-x86_64</code></code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/ovmf-x86_64-smm-ms-code.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/ovmf-x86_64-smm-ms-vars.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/ovmf-x86_64-smm-opensuse-code.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/ovmf-x86_64-smm-opensuse-vars.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/ovmf-x86_64-smm-suse-code.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/ovmf-x86_64-smm-suse-vars.bin</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+               </div>
+               
+               <p>For the AArch64 architecture, the package is named <code class="package">qemu-uefi-aarch32</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">rpm -ql qemu-uefi-aarch32</code></code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/aavmf-aarch32-code.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/aavmf-aarch32-vars.bin</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/firmware</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/firmware/60-aavmf-aarch32.json</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/qemu/qemu-uefi-aarch32.bin</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="filename">*-code.bin</code> files are the UEFI firmware files. The <code class="filename">*-vars.bin</code> files are corresponding variable store images that can be used as a template for
+                  a per-VM non-volatile store. <code class="library systemitem">libvirt</code> copies the specified <code class="literal">vars</code> template to a per-VM path under <code class="filename">/var/lib/libvirt/qemu/nvram/</code> when first creating the VM. Files without <code class="literal">code</code> or <code class="literal">vars</code> in the name can be used as a single UEFI image. They are not as useful, since no
+                  UEFI variables persist across power cycles of the VM.</p>
+               
+               <p>The <code class="filename">*-ms*.bin</code> files contain UEFI CA keys as found on real hardware. Therefore, they are configured
+                  as the default in <code class="library systemitem">libvirt</code>. Likewise, the <code class="filename">*-suse*.bin</code> files contain preinstalled SUSE keys. There is also a set of files with no preinstalled
+                  keys.</p>
+               
+               <p>For more details on OVMF, see <a class="link" href="http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt">http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt</a>.</p>
+               </section>
+            
+            <section class="sect2" id="libvirt-advanced-balloon">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Memory ballooning with Windows guests</h3>
+               </header>
+               
+               
+               <p>Memory ballooning is a method to change the amount of memory used by VM Guest at runtime.
+                  Both the KVM and Xen hypervisors provide this method, but it needs to be supported
+                  by the guest as well.</p>
+               
+               <p>While openSUSE and SLE-based guests support memory ballooning, Windows guests need
+                  the <a class="link" href="https://www.suse.com/products/vmdriverpack/">Virtual Machine Driver Pack (VMDP)</a> to provide ballooning. To set the maximum memory greater than the initial memory
+                  configured for Windows guests, follow these steps:</p>
+               
+               <div class="informalobject procedure" id="libvirt-advanced-balloon_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the Windows guest with the maximum memory equal or less than the initial value.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Install the Virtual Machine Driver Pack in the Windows guest to provide required drivers.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Shut down the Windows guest.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reset the maximum memory of the Windows guest to the required value.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the Windows guest again.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="cha-kvm-inst-virtman-advanced-addons">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Including add-on products in the installation</h3>
+               </header>
+               
+               
+               <p>Certain operating systems, such as <span class="phrase productname">SUSE Linux Enterprise Server</span>, offer to include add-on products in the installation process. If the add-on product
+                  installation source is provided via SUSE Customer Center, no special VM Guest configuration
+                  is needed. If it is provided via CD/DVD or ISO image, it is necessary to provide the
+                  VM Guest installation system with both the standard installation medium image and
+                  the image of the add-on product.</p>
+               
+               <p>If you are using the GUI-based installation, select <span class="guimenu">Customize Configuration Before Install</span> in the last step of the wizard and add the add-on product ISO image via <span class="menuchoice"><span class="guimenu">Add Hardware</span><span class="guimenu">Storage</span></span>. Specify the path to the image and set the <span class="guimenu">Device Type</span> to <span class="guimenu">CD-ROM</span>.</p>
+               
+               <p>If you are installing from the command line, you need to set up the virtual CD/DVD
+                  drives with the <code class="option">--disk</code> parameter rather than with <code class="option">--cdrom</code>. The device that is specified first is used for booting. The following example installs
+                  SUSE Linux Enterprise Server 15 together with SUSE Enterprise Storage extension:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virt-install \</code></span></span>
+<span class="line"><span class="ld"><code> --name sles15+storage \</code></span></span>
+<span class="line"><span class="ld"><code> --memory 2048 --disk size=10 \</code></span></span>
+<span class="line"><span class="ld"><code> --disk /path/to/SLE-15-SP7-Full-<em class="replaceable">ARCH</em>-GM-media1.iso-x86_64-GM-DVD1.iso,device=cdrom \</code></span></span>
+<span class="line"><span class="ld"><code> --disk /path/to/SUSE-Enterprise-Storage-<em class="replaceable">VERSION</em>-DVD-<em class="replaceable">ARCH</em>-Media1.iso,device=cdrom \</code></span></span>
+<span class="line"><span class="ld"><code> --graphics vnc --os-variant sle15</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich03s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich03.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing from the command line with <code class="command">virt-install</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">11</span><span class="sep">.&nbsp;</span>Basic VM Guest management</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

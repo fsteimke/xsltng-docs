@@ -1,0 +1,531 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>37.4.&nbsp;Networking in QEMU</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvch04s03.html" rel="prev">
+      <link href="bk10partvch04s05.html" rel="next">
+      <link href="bk10partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partvch04.html">Up</a> <a href="bk10partvch04s05.html">Next</a> <a href="bk10partvch04s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partvch04s04.html" db-id="d616951e300476" id="cha-qemu-running-networking">
+            <header>
+               <h2><span class="label">37<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Networking in QEMU</h2>
+            </header>
+            
+            
+            <p>Use the <code class="literal">-netdev</code> option in combination with <code class="option">-device</code> to define a specific type of networking and a network interface card for your VM
+               Guest. The syntax for the <code class="option">-netdev</code> option is</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-netdev type[,prop[=value][,...]]</code></span></span></pre>
+            </div>
+            
+            <p>Currently, SUSE supports the following network types: <code class="literal">user</code>, <code class="literal">bridge</code>, and <code class="literal">tap</code>. For a complete list of <code class="literal">-netdev</code> sub-options, see the man page (<code class="command">man 1 qemu</code>).</p>
+            
+            <div class="long-terms variablelist">
+               <header>
+                  <div class="title">Supported <code class="literal">-netdev</code> sub-options</div>
+               </header>
+               <dl class="long-terms variablelist">
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">bridge</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Uses a specified network helper to configure the TAP interface and attach it to a
+                           specified bridge. For more information, see <a class="xref xref-sect2" href="#cha-qemu-running-networking-bridge">the section called “Bridged networking”</a>.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">user</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Specifies user-mode networking. For more information, see <a class="xref xref-sect2" href="#cha-qemu-running-networking-usermode">the section called “User-mode networking”</a>.</p>
+                        </dd>
+                  </div>
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">tap</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Specifies bridged or routed networking. For more information, see <a class="xref xref-sect2" href="#cha-qemu-running-networking-bridge">the section called “Bridged networking”</a>.</p>
+                        </dd>
+                  </div>
+               </dl>
+            </div>
+            
+            <section class="sect2" id="cha-qemu-running-networking-nic">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Defining a network interface card</h3>
+               </header>
+               
+               
+               <p>Use <code class="literal">-netdev</code> together with the related <code class="option">-device</code> option to add a new emulated network card:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-netdev tap<span class="co" id="co-qemu-running-networking-nic-tap">⤾</span>,id=hostnet0 \</code></span></span>
+<span class="line"><span class="ld"><code>-device virtio-net-pci<span class="co" id="co-qemu-running-networking-nic-drv">⤿</span>,netdev=hostnet0,vlan=1<span class="co" id="co-qemu-running-networking-nic-vlan">⥀</span>,\</code></span></span>
+<span class="line"><span class="ld"><code>macaddr=00:16:35:AF:94:4B<span class="co" id="co-qemu-running-networking-nic-mac">⥁</span>,name=ncard1</code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-running-networking-nic-tap">⤾</a></dt>
+                     <dd>
+                        
+                        <p>Specifies the network device type.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-running-networking-nic-drv">⤿</a></dt>
+                     <dd>
+                        
+                        <p>Specifies the model of the network card. Use <code class="command">qemu-system-ARCH -device help</code> and search for the <code class="literal">Network devices:</code>section to get the list of all network card models supported by QEMU on your platform.</p>
+                        
+                        
+                        <p>Currently, SUSE supports the models <code class="literal">rtl8139</code>, <code class="literal">e1000</code> and its variants <code class="literal">e1000-82540em</code>, <code class="literal">e1000-82544gc</code> and <code class="literal">e1000-82545em</code>, and <code class="literal">virtio-net-pci</code>. To view a list of options for a specific driver, add <code class="option">help</code> as a driver option:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -device e1000,help</code></span></span>
+<span class="line"><span class="ld"><code>e1000.mac=macaddr</code></span></span>
+<span class="line"><span class="ld"><code>e1000.vlan=vlan</code></span></span>
+<span class="line"><span class="ld"><code>e1000.netdev=netdev</code></span></span>
+<span class="line"><span class="ld"><code>e1000.bootindex=int32</code></span></span>
+<span class="line"><span class="ld"><code>e1000.autonegotiation=on/off</code></span></span>
+<span class="line"><span class="ld"><code>e1000.mitigation=on/off</code></span></span>
+<span class="line"><span class="ld"><code>e1000.addr=pci-devfn</code></span></span>
+<span class="line"><span class="ld"><code>e1000.romfile=str</code></span></span>
+<span class="line"><span class="ld"><code>e1000.rombar=uint32</code></span></span>
+<span class="line"><span class="ld"><code>e1000.multifunction=on/off</code></span></span>
+<span class="line"><span class="ld"><code>e1000.command_serr_enable=on/off</code></span></span></pre>
+                        </div>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-running-networking-nic-vlan">⥀</a></dt>
+                     <dd>
+                        
+                        <p>Connects the network interface to VLAN number 1. You can specify your own number—it
+                           is mainly useful for identification purpose. If you omit this suboption, QEMU uses
+                           the default 0.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-qemu-running-networking-nic-mac">⥁</a></dt>
+                     <dd>
+                        
+                        <p>Specifies the Media Access Control (MAC) address for the network card. It is a unique
+                           identifier and you are advised to always specify it. If not, QEMU supplies its own
+                           default MAC address and creates a possible MAC address conflict within the related
+                           VLAN.</p>
+                        </dd>
+                  </dl>
+               </div>
+               </section>
+            
+            <section class="sect2" id="cha-qemu-running-networking-usermode">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>User-mode networking</h3>
+               </header>
+               
+               
+               <p>The <code class="literal">-netdev user</code> option instructs QEMU to use user-mode networking. This is the default if no networking
+                  mode is selected. Therefore, these command lines are equivalent:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -hda /images/sles_base.raw</code></span></span></pre>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -hda /images/sles_base.raw -netdev user,id=hostnet0</code></span></span></pre>
+               </div>
+               
+               <p>This mode is useful to allow the VM Guest to access the external network resources,
+                  such as the Internet. By default, no incoming traffic is permitted and therefore,
+                  the VM Guest is not visible to other machines on the network. No administrator privileges
+                  are required in this networking mode. The user-mode is also useful for doing a network
+                  boot on your VM Guest from a local directory on VM Host Server.</p>
+               
+               <p>The VM Guest allocates an IP address from a virtual DHCP server. VM Host Server (the
+                  DHCP server) is reachable at 10.0.2.2, while the IP address range for allocation starts
+                  from 10.0.2.15. You can use <code class="command">ssh</code> to connect to VM Host Server at 10.0.2.2, and <code class="command">scp</code> to copy files back and forth.</p>
+               
+               <section class="sect3" id="cha-qemu-running-networking-usermode-examples">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Command line examples</h4>
+                  </header>
+                  
+                  
+                  <p>This section shows several examples on how to set up user-mode networking with QEMU.</p>
+                  
+                  <div class="example formalobject" id="ex-qemu-net-usermode-resctrict">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-netdev user<span class="co" id="co-usermode-user">⥂</span>,id=hostnet0 \</code></span></span>
+<span class="line"><span class="ld"><code>-device virtio-net-pci,netdev=hostnet0,vlan=1<span class="co" id="co-usermode-vlan">⥃</span>,name=user_net1<span class="co" id="co-usermode-name">⥄</span>,restrict=yes<span class="co" id="co-usermode-restrict">⥅</span></code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-user">⥂</a></dt>
+                           <dd>
+                              
+                              <p>Specifies user-mode networking.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-vlan">⥃</a></dt>
+                           <dd>
+                              
+                              <p>Connects to VLAN number 1. If omitted, defaults to 0.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-name">⥄</a></dt>
+                           <dd>
+                              
+                              <p>Specifies a human-readable name of the network stack. Useful when identifying it in
+                                 the QEMU monitor.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-restrict">⥅</a></dt>
+                           <dd>
+                              
+                              <p>Isolates VM Guest. It then cannot communicate with VM Host Server and no network packets
+                                 are routed to the external network.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">37<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Restricted user-mode networking</div>
+                     </header>
+                  </div>
+                  
+                  <div class="example formalobject" id="ex-qemu-net-usermode-iprange">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-netdev user,id=hostnet0 \</code></span></span>
+<span class="line"><span class="ld"><code>-device virtio-net-pci,netdev=hostnet0,net=10.2.0.0/8<span class="co" id="co-usermode-net">⥆</span>,host=10.2.0.6<span class="co" id="co-usermode-host">⥇</span>,\</code></span></span>
+<span class="line"><span class="ld"><code>dhcpstart=10.2.0.20<span class="co" id="co-usermode-dhcpstart">⥈</span>,hostname=tux_kvm_guest<span class="co" id="co-usermode-hostname">⥉</span></code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-net">⥆</a></dt>
+                           <dd>
+                              
+                              <p>Specifies the IP address of the network that VM Guest sees and optionally the netmask.
+                                 Default is 10.0.2.0/8.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-host">⥇</a></dt>
+                           <dd>
+                              
+                              <p>Specifies the VM Host Server IP address that VM Guest sees. Default is 10.0.2.2.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-dhcpstart">⥈</a></dt>
+                           <dd>
+                              
+                              <p>Specifies the first of the 16 IP addresses that the built-in DHCP server can assign
+                                 to VM Guest. Default is 10.0.2.15.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-hostname">⥉</a></dt>
+                           <dd>
+                              
+                              <p>Specifies the host name that the built-in DHCP server assigns to VM Guest.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>User-mode networking with custom IP range</div>
+                     </header>
+                  </div>
+                  
+                  <div class="example formalobject" id="ex-qemu-net-usermode-netboot-tftp">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-netdev user,id=hostnet0 \</code></span></span>
+<span class="line"><span class="ld"><code>-device virtio-net-pci,netdev=hostnet0,tftp=/images/tftp_dir<span class="co" id="co-usermode-tftp">⥊</span>,\</code></span></span>
+<span class="line"><span class="ld"><code>bootfile=/images/boot/pxelinux.0<span class="co" id="co-usermode-bootfile">⥋</span></code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-tftp">⥊</a></dt>
+                           <dd>
+                              
+                              <p>Activates a built-in TFTP (a file transfer protocol with the functionality of a basic
+                                 FTP) server. The files in the specified directory are visible to a VM Guest as the
+                                 root of a TFTP server.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-usermode-bootfile">⥋</a></dt>
+                           <dd>
+                              
+                              <p>Broadcasts the specified file as a BOOTP (a network protocol that offers an IP address
+                                 and a network location of a boot image, often used in diskless workstations) file.
+                                 When used together with <code class="literal">tftp</code>, the VM Guest can boot via the network from the local directory on the host.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">37<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>User-mode networking with network-boot and TFTP</div>
+                     </header>
+                  </div>
+                  
+                  <div class="example formalobject" id="ex-qemu-net-usermode-hostfwd">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-netdev user,id=hostnet0 \</code></span></span>
+<span class="line"><span class="ld"><code>-device virtio-net-pci,netdev=hostnet0,hostfwd=tcp::2222-:22</code></span></span></pre>
+                     </div>
+                     
+                     <p>Forwards incoming TCP connections to the port 2222 on the host to the port 22 (<code class="service systemitem">SSH</code>) on VM Guest. If <code class="daemon systemitem">sshd</code> is running on VM Guest, enter</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ssh qemu_host -p 2222</code></span></span></pre>
+                     </div>
+                     
+                     <p>where <code class="literal">qemu_host</code> is the host name or IP address of the host system, to get a <code class="daemon systemitem">SSH</code> prompt from VM Guest.</p>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">37<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>User-mode networking with host port forwarding</div>
+                     </header>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="cha-qemu-running-networking-bridge">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Bridged networking</h3>
+               </header>
+               
+               
+               <p>With the <code class="literal">-netdev tap</code> option, QEMU creates a network bridge by connecting the host TAP network device to
+                  a specified VLAN of VM Guest. Its network interface is then visible to the rest of
+                  the network. This method does not work by default and needs to be explicitly specified.</p>
+               
+               <p>First, create a network bridge and add a VM Host Server physical network interface
+                  to it, such as <code class="literal">eth0</code>:</p>
+               
+               <div class="informalobject procedure" id="cha-qemu-running-networking-bridge_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Start <span class="guimenu">YaST Control Center</span> and select <span class="menuchoice"><span class="guimenu">System</span><span class="guimenu">Network Settings</span></span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Add</span> and select <span class="guimenu">Bridge</span> from the <span class="guimenu">Device Type</span> drop-down box in the <span class="guimenu">Hardware Dialog</span> window. Click <span class="guimenu">Next</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose whether you need a dynamically or statically assigned IP address, and fill
+                           the related network settings if applicable.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In the <span class="guimenu">Bridged Devices</span> pane, select the Ethernet device to add to the bridge.</p>
+                        
+                        <p>Click <span class="guimenu">Next</span>. When asked about adapting an already configured device, click <span class="guimenu">Continue</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">OK</span> to apply the changes. Check if the bridge is created:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>bridge link</code></span></span>
+<span class="line"><span class="ld"><code>2: eth0 state UP : &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 master br0 \</code></span></span>
+<span class="line"><span class="ld"><code> state forwarding priority 32 cost 100</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <section class="sect3" id="cha-qemu-running-networking-bridge-manually">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Connecting to a bridge manually</h4>
+                  </header>
+                  
+                  
+                  <p>Use the following example script to connect VM Guest to the newly created bridge interface
+                     <code class="literal">br0</code>. Several commands in the script are run via the <code class="command">sudo</code> mechanism because they require <code class="systemitem username">root</code> privileges.</p>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Required software</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>To manage a network bridge, you need to have the <code class="package">tunctl</code> package installed.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>#!/bin/bash</code></span></span>
+<span class="line"><span class="ld"><code>bridge=br0<span class="co" id="co-qemu-net-bridge-br">⥌</span></code></span></span>
+<span class="line"><span class="ld"><code>tap=$(sudo tunctl -u $(whoami) -b)<span class="co" id="co-qemu-net-bridge-tap">⥍</span></code></span></span>
+<span class="line"><span class="ld"><code>sudo ip link set $tap up<span class="co" id="co-qemu-net-bridge-up">⥎</span></code></span></span>
+<span class="line"><span class="ld"><code>sleep 1s<span class="co" id="co-qemu-net-bridge-sleep">⥏</span></code></span></span>
+<span class="line"><span class="ld"><code>sudo ip link add name $bridge type bridge</code></span></span>
+<span class="line"><span class="ld"><code>sudo ip link set $bridge up</code></span></span>
+<span class="line"><span class="ld"><code>sudo ip link set $tap master $bridge<span class="co" id="co-qemu-net-bridge-br3">⥐</span></code></span></span>
+<span class="line"><span class="ld"><code>qemu-system-x86_64 -machine accel=kvm -m 512 -hda /images/sles_base.raw \</code></span></span>
+<span class="line"><span class="ld"><code> -netdev tap,id=hostnet0 \</code></span></span>
+<span class="line"><span class="ld"><code> -device virtio-net-pci,netdev=hostnet0,vlan=0,macaddr=00:16:35:AF:94:4B,\</code></span></span>
+<span class="line"><span class="ld"><code> ifname=$tap<span class="co" id="co-qemu-net-bridge-ifname">⥑</span>,script=no<span class="co" id="co-qemu-net-bridge-script">⥒</span>,downscript=no</code></span></span>
+<span class="line"><span class="ld"><code>sudo ip link set $tap nomaster<span class="co" id="co-qemu-net-bridge-delif">⥓</span></code></span></span>
+<span class="line"><span class="ld"><code>sudo ip link set $tap down<span class="co" id="co-qemu-net-bridge-linkdown">⥔</span></code></span></span>
+<span class="line"><span class="ld"><code>sudo tunctl -d $tap<span class="co" id="co-qemu-net-bridge-deltap">⥕</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-br">⥌</a></dt>
+                        <dd>
+                           
+                           <p>Name of the bridge device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-tap">⥍</a></dt>
+                        <dd>
+                           
+                           <p>Prepare a new TAP device and assign it to the user who runs the script. TAP devices
+                              are virtual network devices often used for virtualization and emulation setups.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-up">⥎</a></dt>
+                        <dd>
+                           
+                           <p>Bring up the newly created TAP network interface.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-sleep">⥏</a></dt>
+                        <dd>
+                           
+                           <p>Make a 1-second pause to make sure the new TAP network interface is really up.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-br3">⥐</a></dt>
+                        <dd>
+                           
+                           <p>Add the new <code class="literal">TAP</code> device to the network bridge <code class="literal">br0</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-ifname">⥑</a></dt>
+                        <dd>
+                           
+                           <p>The <code class="literal">ifname=</code> suboption specifies the name of the TAP network interface used for bridging.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-script">⥒</a></dt>
+                        <dd>
+                           
+                           <p>Before <code class="command">qemu-system-ARCH</code> connects to a network bridge, it checks the <code class="literal">script</code> and <code class="literal">downscript</code> values. If it finds the specified scripts on the VM Host Server file system, it runs
+                              the <code class="literal">script</code> before it connects to the network bridge and <code class="literal">downscript</code> after it exits the network environment. You can use these scripts to set up and tear
+                              down the bridged interfaces. By default, <code class="filename">/etc/qemu-ifup</code> and <code class="filename">/etc/qemu-ifdown</code> are examined. If <code class="literal">script=no</code> and <code class="literal">downscript=no</code> are specified, the script execution is disabled and you need to take care of it manually.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-delif">⥓</a></dt>
+                        <dd>
+                           
+                           <p>Deletes the TAP interface from a network bridge <code class="literal">br0</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-linkdown">⥔</a></dt>
+                        <dd>
+                           
+                           <p>Sets the state of the TAP device to <code class="literal">down</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-qemu-net-bridge-deltap">⥕</a></dt>
+                        <dd>
+                           
+                           <p>Tear down the TAP device.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="qemu-bridge-helper">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Connecting to a bridge with qemu-bridge-helper</h4>
+                  </header>
+                  
+                  
+                  <p>Another way to connect VM Guest to a network through a network bridge is via the <code class="filename">qemu-bridge-helper</code> helper program. It configures the TAP interface for you, and attaches it to the specified
+                     bridge. The default helper executable is <code class="filename">/usr/lib/qemu-bridge-helper</code>. The helper executable is setuid root, which is only executable by the members of
+                     the virtualization group (<code class="literal">kvm</code>). Therefore the <code class="command">qemu-system-ARCH</code> command itself does not need to be run under <code class="systemitem username">root</code> privileges.</p>
+                  
+                  <p>The helper is automatically called when you specify a network bridge:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code> -netdev bridge,id=hostnet0,vlan=0,br=br0 \</code></span></span>
+<span class="line"><span class="ld"><code> -device virtio-net-pci,netdev=hostnet0</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can specify your own custom helper script that takes care of the TAP device (de)configuration,
+                     with the <code class="option">helper=/path/to/your/helper</code> option:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code> -netdev bridge,id=hostnet0,vlan=0,br=br0,helper=/path/to/bridge-helper \</code></span></span>
+<span class="line"><span class="ld"><code> -device virtio-net-pci,netdev=hostnet0</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Tip</div>
+                           </header>
+                           <div>
+                              
+                              <p>To define access privileges to <code class="literal">qemu-bridge-helper</code>, inspect the <code class="filename">/etc/qemu/bridge.conf</code> file. For example, the following directive</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>allow br0</code></span></span></pre>
+                              </div>
+                              
+                              <p>allows the <code class="command">qemu-system-ARCH</code> command to connect its VM Guest to the network bridge <code class="literal">br0</code>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvch04s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk10partvch04s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">37<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using devices in QEMU</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Viewing a VM Guest with&nbsp;VNC</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

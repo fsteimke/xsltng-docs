@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>36.2.&nbsp;Advanced configuration and power interface (ACPI)</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partivch05.html" rel="prev">
+      <link href="bk01partivch05s03.html" rel="next">
+      <link href="bk01partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partivch05.html">Up</a> <a href="bk01partivch05s03.html">Next</a> <a href="bk01partivch05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partivch05s02.html" db-id="d616951e54196" id="sec-power-mgmt-acpi">
+            <header>
+               <h2><span class="label">36<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Advanced configuration and power interface (ACPI)</h2>
+            </header>
+            
+            
+            <p>ACPI was designed to enable the operating system to set up and control the individual
+               hardware components. ACPI supersedes both Power Management Plug and Play (PnP) and
+               Advanced Power Management (APM). It delivers information about the battery, AC adapter,
+               temperature, fan and system events, like <q>close lid</q> or <q>battery low.</q></p>
+            
+            <p>The BIOS provides tables containing information about the individual components and
+               hardware access methods. The operating system uses this information for tasks like
+               assigning interrupts or activating and deactivating components. Because the operating
+               system executes commands stored into the BIOS, the functionality depends on the BIOS
+               implementation. The tables ACPI can detect and load are reported in journald. See
+               <a class="xref xref-chapter" href="bk01partiiich02.html">Chapter&nbsp;<span class="label">21</span>, 
+                  <code class="command">journalctl</code>: query the <code class="daemon systemitem">systemd</code> journal</a> for more information on viewing the journal log messages. See <a class="xref xref-sect2" href="#sec-power-mgmt-acpi-trouble">the section called “Troubleshooting”</a> for more information about troubleshooting ACPI problems.</p>
+            
+            <section class="sect2" id="sec-power-mgmt-acpi-powernow">
+               <header>
+                  <h3><span class="label">36<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Controlling the CPU performance</h3>
+               </header>
+               
+               
+               <p>The CPU can save energy in three ways:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Frequency and Voltage Scaling</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Throttling the Clock Frequency (T-states)</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Putting the Processor to Sleep (C-states)</p>
+                     </li>
+                  </ul>
+               
+               <p>Depending on the operating mode of the computer, these methods can be combined. Saving
+                  energy also means that the system heats up less and the fans are activated less frequently.</p>
+               
+               <p>Frequency scaling and throttling are only relevant if the processor is busy, because
+                  the most economic C-state is applied anyway when the processor is idle. If the CPU
+                  is busy, frequency scaling is the recommended power saving method. Often the processor
+                  only works with a partial load. In this case, it can be run with a lower frequency.
+                  Dynamic frequency scaling controlled by the kernel on-demand governor is the best
+                  approach.</p>
+               
+               <p>Throttling should be used as the last resort, for example, to extend the battery operation
+                  time despite a high system load. However, certain systems do not run smoothly when
+                  they are throttled too much. Moreover, CPU throttling does not make sense if the CPU
+                  has little to do.</p>
+               
+               <p>For in-depth information, refer to <a class="xref xref-chapter" href="bk07partivch04.html">Chapter&nbsp;<span class="label">12</span>, Power management</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-power-mgmt-acpi-trouble">
+               <header>
+                  <h3><span class="label">36<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Troubleshooting</h3>
+               </header>
+               
+               
+               <p>There are two different types of problems. On one hand, the ACPI code of the kernel
+                  may contain bugs that were not detected in time. In this case, a solution will be
+                  made available for download. More often, the problems are caused by the BIOS. Sometimes,
+                  deviations from the ACPI specification are purposely integrated in the BIOS to circumvent
+                  errors in the ACPI implementation of other widespread operating systems. Hardware
+                  components that have serious errors in the ACPI implementation are recorded in a blacklist
+                  that prevents the Linux kernel from using ACPI for these components.</p>
+               
+               <p>The first thing to do when problems are encountered is to update the BIOS. If the
+                  computer does not boot, one of the following boot parameters may be helpful:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">pci=noacpi</span></dt>
+                     <dd>
+                        
+                        <p>Do not use ACPI for configuring the PCI devices.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">acpi=ht</span></dt>
+                     <dd>
+                        
+                        <p>Only perform a simple resource configuration. Do not use ACPI for other purposes.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">acpi=off</span></dt>
+                     <dd>
+                        
+                        <p>Disable ACPI.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Problems booting without ACPI</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Certain newer machines (especially SMP systems and AMD64 systems) need ACPI for configuring
+                              the hardware correctly. On these machines, disabling ACPI can cause problems.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Sometimes, the machine is confused by hardware that is attached over USB or FireWire.
+                  If a machine refuses to boot, unplug all unneeded hardware and try again.</p>
+               
+               <p>Monitor the boot messages of the system with the command <code class="command">dmesg -T</code><code class="option">| grep -2i acpi</code> (or all messages, because the problem may not be caused by ACPI) after booting. If
+                  an error occurs while parsing an ACPI table, the most important table—the DSDT (<em>Differentiated System Description Table</em>)—can be replaced with an improved version. In this case, the faulty DSDT of the BIOS
+                  is ignored. The procedure is described in <a class="xref xref-sect1" href="bk01partivch05s04.html">the section called “Troubleshooting”</a>.</p>
+               
+               <p>In the kernel configuration, there is a switch for activating ACPI debug messages.
+                  If a kernel with ACPI debugging is compiled and installed, detailed information is
+                  issued.</p>
+               
+               <p>If you experience BIOS or hardware problems, it is always advisable to contact the
+                  manufacturers. Especially if they do not always provide assistance for Linux, they
+                  should be confronted with the problems. Manufacturers only take the issue seriously
+                  if they realize that an adequate number of their customers use Linux.</p>
+               
+               <section class="sect3" id="sec-power-mgmt-acpi-trouble-info">
+                  <header>
+                     <h4><span class="label">36<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>More information</h4>
+                  </header>
+                  
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p><a class="link" href="https://tldp.org/HOWTO/ACPI-HOWTO/">https://tldp.org/HOWTO/ACPI-HOWTO/</a> (detailed ACPI HOWTO, contains DSDT patches)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><a class="link" href="https://uefi.org/specifications">https://uefi.org/specifications</a> (Advanced Configuration &amp; Power Interface Specification)</p>
+                        </li>
+                     </ul>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partivch05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk01partivch05s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">36</span><span class="sep">.&nbsp;</span>Power management</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">36<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Rest for the hard disk</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

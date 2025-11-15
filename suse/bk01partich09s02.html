@@ -1,0 +1,694 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.2.&nbsp;RPM—the package manager</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich09.html" rel="prev">
+      <link href="bk01partich10.html" rel="next">
+      <link href="bk01partich09.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich09.html">Up</a> <a href="bk01partich10.html">Next</a> <a href="bk01partich09.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich09s02.html" db-id="d616951e15970" id="sec-rpm" lang="">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>RPM—the package manager</h2>
+            </header>
+            
+            
+            
+            <p>RPM (RPM Package Manager) is used for managing software packages. Its main commands
+               are <code class="command">rpm</code> and <code class="command">rpmbuild</code>. The powerful RPM database can be queried by the users, system administrators and
+               package builders for detailed information about the installed software.</p>
+            
+            <p><code class="command">rpm</code> has five modes: installing, uninstalling (or updating) software packages, rebuilding
+               the RPM database, querying RPM bases or individual RPM archives, integrity checking
+               of packages and signing packages. <code class="command">rpmbuild</code> can be used to build installable packages from pristine sources.</p>
+            
+            <p>Installable RPM archives are packed in a special binary format. These archives consist
+               of the program files to install and certain meta information used during the installation
+               by <code class="command">rpm</code> to configure the software package or stored in the RPM database for documentation
+               purposes. RPM archives normally have the extension <code class="filename">.rpm</code>.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Software development packages</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>For several packages, the components needed for software development (libraries, headers,
+                           include files, etc.) have been put into separate packages. These development packages
+                           are only needed if you want to compile software yourself (for example, the most recent
+                           GNOME packages). They can be identified by the name extension <code class="literal">-devel</code>, such as the packages <code class="resource systemitem">alsa-devel</code> and <code class="resource systemitem">gimp-devel</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-rpm-package-auth">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Verifying package authenticity</h3>
+               </header>
+               
+               
+               <p>RPM packages have a GPG signature. To verify the signature of an RPM package, use
+                  the command <code class="command">rpm --checksig&nbsp;</code><em class="replaceable">PACKAGE</em>-1.2.3.rpm to determine whether the package originates from SUSE or from another trustworthy
+                  facility. This is especially recommended for update packages from the Internet.</p>
+               
+               
+               <p>While fixing issues in the operating system, you might need to install a Problem Temporary
+                  Fix (PTF) into a production system. The packages provided by SUSE are signed against
+                  a special PTF key. However, in contrast to SUSE Linux Enterprise 11, this key is not
+                  imported by default on SUSE Linux Enterprise 12 systems. To manually import the key,
+                  use the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> rpm --import \</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/doc/packages/suse-build-key/suse_ptf_key.asc</code></span></span></pre>
+               </div>
+               
+               <p>After importing the key, you can install PTF packages on your system.</p>
+               </section>
+            
+            <section class="sect2" id="sec-rpm-packages-manage">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing packages: install, update, and uninstall</h3>
+               </header>
+               
+               
+               <p>Normally, the installation of an RPM archive is quite simple: <code class="command">rpm -i</code><em class="replaceable">PACKAGE</em>.rpm. With this command the package is installed, but only if its dependencies are
+                  fulfilled and if there are no conflicts with other packages. With an error message,
+                  <code class="command">rpm</code> requests those packages that need to be installed to meet dependency requirements.
+                  In the background, the RPM database ensures that no conflicts arise—a specific file
+                  can only belong to one package. By choosing different options, you can force <code class="command">rpm</code> to ignore these defaults, but this is only for experts. Otherwise, you risk compromising
+                  the integrity of the system and possibly jeopardize the ability to update the system.</p>
+               
+               <p>The options <code class="option">-U</code> or <code class="option">--upgrade</code> and <code class="option">-F</code> or <code class="option">--freshen</code> can be used to update a package (for example, <code class="command">rpm -F</code><em class="replaceable">PACKAGE</em>.rpm). This command removes the files of the old version and immediately installs
+                  the new files. The difference between the two versions is that <code class="option">-U</code> installs packages that previously did not exist in the system, while <code class="option">-F</code> merely updates previously installed packages. When updating, <code class="command">rpm</code> updates configuration files carefully using the following strategy:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>If a configuration file was not changed by the system administrator, <code class="command">rpm</code> installs the new version of the appropriate file. No action by the system administrator
+                        is required.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>If a configuration file was changed by the system administrator before the update,
+                        <code class="command">rpm</code> saves the changed file with the extension <code class="filename">.rpmorig</code> or <code class="filename">.rpmsave</code> (backup file) and installs the version from the new package. This is done only if
+                        the originally installed file and the newer version are different. If this is the
+                        case, compare the backup file (<code class="filename">.rpmorig</code> or <code class="filename">.rpmsave</code>) with the newly installed file and make your changes again in the new file. Afterward,
+                        delete all <code class="filename">.rpmorig</code> and <code class="filename">.rpmsave</code> files to avoid problems with future updates.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="filename">.rpmnew</code> files appear if the configuration file already exists <em>and</em> if the <code class="option">noreplace</code> label was specified in the <code class="filename">.spec</code> file.</p>
+                     </li>
+                  </ul>
+               
+               <p>Following an update, <code class="filename">.rpmsave</code> and <code class="filename">.rpmnew</code> files should be removed after comparing them, so they do not obstruct future updates.
+                  The <code class="filename">.rpmorig</code> extension is assigned if the file has not previously been recognized by the RPM database.</p>
+               
+               <p>Otherwise, <code class="filename">.rpmsave</code> is used. In other words, <code class="filename">.rpmorig</code> results from updating from a foreign format to RPM. <code class="filename">.rpmsave</code> results from updating from an older RPM to a newer RPM. <code class="filename">.rpmnew</code> does not disclose any information to whether the system administrator has made any
+                  changes to the configuration file. A list of these files is available in <code class="filename">/var/adm/rpmconfigcheck</code>. Some configuration files (like <code class="filename">/etc/httpd/httpd.conf</code>) are not overwritten to allow continued operation.</p>
+               
+               <p>The <code class="option">-U</code> switch is <em>not</em> only an equivalent to uninstalling with the <code class="option">-e</code> option and installing with the <code class="option">-i</code> option. Use <code class="option">-U</code> whenever possible.</p>
+               
+               <p>To remove a package, enter <code class="command">rpm -e</code><em class="replaceable">PACKAGE</em>. This command only deletes the package if there are no unresolved dependencies. It
+                  is theoretically impossible to delete Tcl/Tk, for example, as long as another application
+                  requires it. Even in this case, RPM calls for assistance from the database. If such
+                  a deletion is, for whatever reason, impossible (even if <em>no</em> additional dependencies exist), it may be helpful to rebuild the RPM database using
+                  the option <code class="option">--rebuilddb</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-rpm-delta">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Delta RPM packages</h3>
+               </header>
+               
+               
+               <p>Delta RPM packages contain the difference between an old and a new version of an RPM
+                  package. Applying a delta RPM onto an old RPM results in a completely new RPM. It
+                  is not necessary to have a copy of the old RPM because a delta RPM can also work with
+                  an installed RPM. The delta RPM packages are even smaller in size than patch RPMs,
+                  which is an advantage when transferring update packages over the Internet. The drawback
+                  is that update operations with delta RPMs involved consume considerably more CPU cycles
+                  than plain or patch RPMs.</p>
+               
+               <p>The <code class="command">makedeltarpm</code> and <code class="command">applydelta</code> binaries are part of the delta RPM suite (package <code class="systemitem">deltarpm</code>) and help you create and apply delta RPM packages. With the following commands, you
+                  can create a delta RPM called <code class="filename">new.delta.rpm</code>. The following command assumes that <code class="filename">old.rpm</code> and <code class="filename">new.rpm</code> are present:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> makedeltarpm old.rpm new.rpm new.delta.rpm</code></span></span></pre>
+               </div>
+               
+               <p>Using <code class="command">applydeltarpm</code>, you can reconstruct the new RPM from the file system if the old package is already
+                  installed:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> applydeltarpm new.delta.rpm new.rpm</code></span></span></pre>
+               </div>
+               
+               <p>To derive it from the old RPM without accessing the file system, use the <code class="option">-r</code> option:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> applydeltarpm -r old.rpm new.delta.rpm new.rpm</code></span></span></pre>
+               </div>
+               
+               <p>See <code class="filename">/usr/share/doc/packages/deltarpm/README</code> for technical details.</p>
+               </section>
+            
+            <section class="sect2" id="sec-rpm-query">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>RPM queries</h3>
+               </header>
+               
+               
+               <p>With the <code class="option">-q</code> option <code class="command">rpm</code> initiates queries, making it possible to inspect an RPM archive (by adding the option
+                  <code class="option">-p</code>) and to query the RPM database of installed packages. Several switches are available
+                  to specify the type of information required. See <a class="xref xref-table" href="#tab-rpm-query">Table&nbsp;<span class="label">9<span class="sep">.</span>1</span>, “Essential RPM query options”</a>.</p>
+               
+               <div class="formalobject table" id="tab-rpm-query">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Essential RPM query options</div>
+                  </header>
+                  <table>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="option">-i</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>Package information</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">-l</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>File list</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">-f FILE</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Query the package that contains the file <em class="replaceable">FILE</em> (the full path must be specified with <em class="replaceable">FILE</em>)</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">-s</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>File list with status information (implies <code class="option">-l</code>)</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">-d</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>List only documentation files (implies <code class="literal">-l</code>)</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">-c</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>List only configuration files (implies <code class="option">-l</code>)</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">--dump</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>File list with complete details (to be used with <code class="option">-l</code>, <code class="option">-c</code>, or <code class="option">-d</code>)</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">--provides</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>List features of the package that another package can request with <code class="option">--requires</code></p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">--requires</code>, <code class="option">-R</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Capabilities the package requires</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">--scripts</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Installation scripts (preinstall, postinstall, uninstall)</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <p>For example, the command <code class="command">rpm -q -i wget</code> displays the information shown in <a class="xref xref-example" href="#aus-update-rpm-i">Example&nbsp;<span class="label">9<span class="sep">.</span>2</span>, “
+                     <code class="command">rpm -q -i wget</code>
+                     ”</a>.</p>
+               
+               <div class="example formalobject" id="aus-update-rpm-i">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Name        : wget</code></span></span>
+<span class="line"><span class="ld"><code>Version     : 1.14</code></span></span>
+<span class="line"><span class="ld"><code>Release     : 17.1</code></span></span>
+<span class="line"><span class="ld"><code>Architecture: x86_64</code></span></span>
+<span class="line"><span class="ld"><code>Install Date: Mon 30 Jan 2017 14:01:29 CET</code></span></span>
+<span class="line"><span class="ld"><code>Group       : Productivity/Networking/Web/Utilities</code></span></span>
+<span class="line"><span class="ld"><code>Size        : 2046483</code></span></span>
+<span class="line"><span class="ld"><code>License     : GPL-3.0+</code></span></span>
+<span class="line"><span class="ld"><code>Signature   : RSA/SHA256, Thu 08 Dec 2016 07:48:44 CET, Key ID 70af9e8139db7c82</code></span></span>
+<span class="line"><span class="ld"><code>Source RPM  : wget-1.14-17.1.src.rpm</code></span></span>
+<span class="line"><span class="ld"><code>Build Date  : Thu 08 Dec 2016 07:48:34 CET</code></span></span>
+<span class="line"><span class="ld"><code>Build Host  : sheep09</code></span></span>
+<span class="line"><span class="ld"><code>Relocations : (not relocatable)</code></span></span>
+<span class="line"><span class="ld"><code>Packager    : https://www.suse.com/</code></span></span>
+<span class="line"><span class="ld"><code>Vendor      : SUSE LLC &lt;https://www.suse.com/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>URL         : http://www.gnu.org/software/wget/</code></span></span>
+<span class="line"><span class="ld"><code>Summary     : A Tool for Mirroring FTP and HTTP Servers</code></span></span>
+<span class="line"><span class="ld"><code>Description :</code></span></span>
+<span class="line"><span class="ld"><code>Wget enables you to retrieve WWW documents or FTP files from a server.</code></span></span>
+<span class="line"><span class="ld"><code>This can be done in script files or via the command line.</code></span></span>
+<span class="line"><span class="ld"><code>Distribution: SUSE Linux Enterprise 15</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                        <code class="command">rpm -q -i wget</code>
+                        </div>
+                  </header>
+               </div>
+               
+               <p>The option <code class="option">-f</code> only works if you specify the complete file name with its full path. Provide as many
+                  file names as desired. For example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rpm -q -f /bin/rpm /usr/bin/wget</code></span></span>
+<span class="line"><span class="ld"><code>rpm-4.14.1-lp151.13.10.x86_64</code></span></span>
+<span class="line"><span class="ld"><code>wget-1.19.5-lp151.4.1.x86_64</code></span></span></pre>
+               </div>
+               
+               <p>If only part of the file name is known, use a shell script as shown in <a class="xref xref-example" href="#dat-rpm-search">Example&nbsp;<span class="label">9<span class="sep">.</span>3</span>, “Script to search for packages”</a>. Pass the partial file name to the script shown as a parameter when running it.</p>
+               
+               <div class="example formalobject" id="dat-rpm-search">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#! /bin/sh</code></span></span>
+<span class="line"><span class="ld"><code>for i in $(rpm -q -a -l | grep $1); do</code></span></span>
+<span class="line"><span class="ld"><code>    echo "\"$i\" is in package:"</code></span></span>
+<span class="line"><span class="ld"><code>    rpm -q -f $i</code></span></span>
+<span class="line"><span class="ld"><code>    echo ""</code></span></span>
+<span class="line"><span class="ld"><code>done</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Script to search for packages</div>
+                  </header>
+               </div>
+               
+               <p>The command <code class="command">rpm -q --changelog</code><em class="replaceable">PACKAGE</em> displays a detailed list of change information about a specific package, sorted by
+                  date.</p>
+               
+               <p>With the installed RPM database, verification checks can be made. Initiate these with
+                  <code class="option">-V</code>, or <code class="option">--verify</code>. With this option, <code class="command">rpm</code> shows all files in a package that have been changed since installation. <code class="command">rpm</code> uses eight character symbols to give some hints about the following changes:</p>
+               
+               <div class="formalobject table" id="tab-rpm-verify">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>RPM verify options</div>
+                  </header>
+                  <table>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="option">5</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p>MD5 check sum</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">S</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>File size</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">L</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Symbolic link</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">T</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Modification time</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">D</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Major and minor device numbers</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">U</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Owner</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">G</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Group</p>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p><code class="option">M</code></p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <p>Mode (permissions and file type)</p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <p>In the case of configuration files, the letter <code class="option">c</code> is printed. For example, for changes to <code class="filename">/etc/wgetrc</code> (<code class="resource systemitem">wget</code> package):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rpm -V wget</code></span></span>
+<span class="line"><span class="ld"><code>S.5....T c /etc/wgetrc</code></span></span></pre>
+               </div>
+               
+               <p>The files of the RPM database are placed in <code class="filename">/var/lib/rpm</code>. If the partition <code class="filename">/usr</code> has a size of 1&nbsp;GB, this database can occupy nearly 30&nbsp;MB, especially after a complete
+                  update. If the database is much larger than expected, it is useful to rebuild the
+                  database with the option <code class="option">--rebuilddb</code>. Before doing this, make a backup of the old database. The <code class="command">cron</code> script <code class="command">cron.daily</code> makes daily copies of the database (packed with gzip) and stores them in <code class="filename">/var/adm/backup/rpmdb</code>. The number of copies is controlled by the variable <code class="systemitem">MAX_RPMDB_BACKUPS</code> (default: <code class="option">5</code>) in <code class="filename">/etc/sysconfig/backup</code>. The size of a single backup is approximately 1&nbsp;MB for 1&nbsp;GB in <code class="filename">/usr</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-rpm-sources">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Installing and compiling source packages</h3>
+               </header>
+               
+               
+               <p>All source packages carry a <code class="filename">.src.rpm</code> extension (source RPM).</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Installed source packages</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Source packages can be copied from the installation medium to the hard disk and unpacked
+                              with YaST. They are not, however, marked as installed (<code class="literal">[i]</code>) in the package manager. This is because the source packages are not entered in the
+                              RPM database. Only <em>installed</em> operating system software is listed in the RPM database. When you <q>install</q> a source package, only the source code is added to the system.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The following directories must be available for <code class="command">rpm</code> and <code class="command">rpmbuild</code> in <code class="filename">/usr/src/packages</code> (unless you specified custom settings in a file like <code class="filename">/etc/rpmrc</code>):</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">SOURCES</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>for the original sources (<code class="filename">.tar.bz2</code> or <code class="filename">.tar.gz</code> files, etc.) and for distribution-specific adjustments (mostly <code class="filename">.diff</code> or <code class="filename">.patch</code> files)</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">SPECS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>for the <code class="filename">.spec</code> files, similar to a meta Makefile, which control the <em>build</em> process</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">BUILD</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>all the sources are unpacked, patched and compiled in this directory</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">RPMS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>where the completed binary packages are stored</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">SRPMS</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>here are the source RPMs</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>When you install a source package with YaST, all the necessary components are installed
+                  in <code class="filename">/usr/src/packages</code>: the sources and the adjustments in <code class="filename">SOURCES</code> and the relevant <code class="filename">.spec</code> file in <code class="filename">SPECS</code>.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">System integrity</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Do not experiment with system components (<code class="resource systemitem">glibc</code>, <code class="resource systemitem">rpm</code>, etc.), because this endangers the stability of your system.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The following example uses the <code class="filename">wget.src.rpm</code> package. After installing the source package, you should have files similar to those
+                  in the following list:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/src/packages/SOURCES/wget-1.19.5.tar.bz2</code></span></span>
+<span class="line"><span class="ld"><code>/usr/src/packages/SOURCES/wgetrc.patch</code></span></span>
+<span class="line"><span class="ld"><code>/usr/src/packages/SPECS/wget.spec</code></span></span></pre>
+               </div>
+               
+               <p><code class="command">rpmbuild</code><code class="option">-b<em class="replaceable">X</em></code><code class="filename">/usr/src/packages/SPECS/wget.spec</code> starts the compilation. <em class="replaceable">X</em> is a wild card for various stages of the build process (see the output of <code class="option">--help</code> or the RPM documentation for details). The following is merely a brief explanation:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">-bp</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Prepare sources in <code class="filename">/usr/src/packages/BUILD</code>: unpack and patch.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">-bc</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Do the same as <code class="option">-bp</code>, but with additional compilation.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">-bi</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Do the same as <code class="option">-bp</code>, but with additional installation of the built software. Caution: if the package
+                           does not support the BuildRoot feature, you might overwrite configuration files.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">-bb</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Do the same as <code class="option">-bi</code>, but with the additional creation of the binary package. If the compile was successful,
+                           the binary should be in <code class="filename">/usr/src/packages/RPMS</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">-ba</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Do the same as <code class="option">-bb</code>, but with the additional creation of the source RPM. If the compilation was successful,
+                           the binary should be in <code class="filename">/usr/src/packages/SRPMS</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">--short-circuit</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Skip some steps.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>The binary RPM created can now be installed with <code class="command">rpm</code><code class="option">-i</code> or, preferably, with <code class="command">rpm</code><code class="option">-U</code>. Installation with <code class="command">rpm</code> makes it appear in the RPM database.</p>
+               
+               <p>Keep in mind that the <code class="literal">BuildRoot</code> directive in the spec file is deprecated. If you still need this feature, use the
+                  <code class="option">--buildroot</code> option as a workaround.</p>
+               </section>
+            
+            <section class="sect2" id="sec-rpm-build">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Compiling RPM packages with build</h3>
+               </header>
+               
+               
+               <p>The danger with many packages is that unwanted files are added to the running system
+                  during the build process. To prevent this use <code class="systemitem">build</code>, which creates a defined environment in which the package is built. To establish
+                  this chroot environment, the <code class="command">build</code> script must be provided with a complete package tree. This tree can be made available
+                  on the hard disk, via NFS, or from DVD. Set the position with <code class="command">build --rpms</code><em class="replaceable">DIRECTORY</em>. Unlike <code class="command">rpm</code>, the <code class="command">build</code> command looks for the <code class="filename">.spec</code> file in the source directory. To build <code class="filename">wget</code> (like in the above example) with the DVD mounted in the system under <code class="filename">/media/dvd</code>, use the following commands as <code class="systemitem username">root</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cd /usr/src/packages/SOURCES/</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>mv ../SPECS/wget.spec .</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>build --rpms /media/dvd/suse/ wget.spec</code></span></span></pre>
+               </div>
+               
+               <p>Subsequently, a minimum environment is established at <code class="filename">/var/tmp/build-root</code>. The package is built in this environment. Upon completion, the resulting packages
+                  are located in <code class="filename">/var/tmp/build-root/usr/src/packages/RPMS</code>.</p>
+               
+               <p>The <code class="command">build</code> script offers several additional options. For example, cause the script to prefer
+                  your own RPMs, omit the initialization of the build environment or limit the <code class="command">rpm</code> command to one of the above-mentioned stages. Access additional information with
+                  <code class="command">build</code><code class="option">--help</code> and by reading the <code class="command">build</code> man page.</p>
+               </section>
+            
+            <section class="sect2" id="sec-rpm-tools">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Tools for RPM archives and the RPM database</h3>
+               </header>
+               
+               
+               <p>Midnight Commander (<code class="command">mc</code>) can display the contents of RPM archives and copy parts of them. It represents archives
+                  as virtual file systems, offering all usual menu options of Midnight Commander. Display
+                  the <code class="filename">HEADER</code> with <span class="keycap">F3</span>. View the archive structure with the cursor keys and <span class="enter keycap">↵</span>. Copy archive components with <span class="keycap">F5</span>.</p>
+               
+               <p>A full-featured package manager is available as a YaST module. For details, see <a class="xref xref-chapter" href="bk01partich08.html">Chapter&nbsp;<span class="label">8</span>, Installing or removing software</a>.</p>
+               
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich09.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich09.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">9</span><span class="sep">.&nbsp;</span>Managing software with command line tools</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>System recovery and snapshot management with Snapper</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

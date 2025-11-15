@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Appendix&nbsp;C.&nbsp;XM, XL toolstacks, and the libvirt framework</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10appbs04.html" rel="prev">
+      <link href="bk10appcs02.html" rel="next">
+      <link href="bk10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="appendix component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10.html">Up</a> <a href="bk10appcs02.html">Next</a> <a href="bk10appbs04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="appendix component" db-chunk="bk10appc.html" db-id="d616951e305527" id="cha-xmtoxl" lang="">
+            <header>
+               <h2>Appendix&nbsp;<span class="label">C</span><span class="sep">.&nbsp;</span>XM, XL toolstacks, and the <code class="library systemitem">libvirt</code> framework</h2>
+            </header>
+            <div class="db-bfs">
+               
+               
+               </div>
+            <section class="sect1" id="sec-xmtoxl-intro">
+               <header>
+                  <h2><span class="label">C<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Xen toolstacks</h2>
+               </header>
+               
+               
+               <p>Since the early Xen 2.x releases, <code class="command">xend</code> has been the de facto toolstack for managing Xen installations. In Xen 4.1, a new
+                  toolstack called libxenlight (also known as libxl) was introduced with technology
+                  preview status. libxl is a small, low-level library written in C. It has been designed
+                  to provide a simple API for all client toolstacks (<a class="link" href="https://wiki.xen.org/wiki/XAPI">XAPI</a>, <code class="library systemitem">libvirt</code>, xl). In Xen 4.2, libxl was promoted to supported status and <code class="command">xend</code> was marked deprecated. <code class="command">xend</code> has been included in the Xen 4.3 and 4.4 series to give users enough time to convert
+                  their tooling to libxl. It has been removed from the upstream Xen project and is no
+                  longer provided starting with the Xen 4.5 series and <span class="phrase productname">SUSE Linux Enterprise Server</span> 12 SP1.</p>
+               
+               <p>Although SLES 11 SP3 contains Xen 4.2, SUSE retained the <code class="command">xend</code> toolstack since making such an invasive change in a service pack would be too disruptive
+                  for SUSE Linux Enterprise customers. However, SLES 12 provides a suitable opportunity
+                  to move to the new libxl toolstack and remove the deprecated, unmaintained <code class="command">xend</code> stack. Starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 12 SP1, <code class="command">xend</code> is no longer supported.</p>
+               
+               <p>One of the major differences between <code class="command">xend</code> and libxl is that the former is stateful, while the latter is stateless. With <code class="command">xend</code>, all client applications such as <code class="command">xm</code> and <code class="library systemitem">libvirt</code> see the same system state. <code class="command">xend</code> maintains the state for the entire Xen host. In libxl, client applications such as
+                  <code class="command">xl</code> or <code class="library systemitem">libvirt</code> must maintain state. Thus domains created with <code class="command">xl</code> are not visible or known to other libxl applications such as <code class="library systemitem">libvirt</code>. Generally, it is discouraged to mix and match libxl applications and is preferred
+                  that a single libxl application be used to manage a Xen host. In <span class="phrase productname">SUSE Linux Enterprise Server</span>, we recommend using <code class="library systemitem">libvirt</code> to manage Xen hosts. This allows management of the Xen system through <code class="library systemitem">libvirt</code> applications such as <code class="command">virt-manager</code>, <code class="command">virt-install</code>, <code class="command">virt-viewer</code>, libguestfs, etc. If <code class="command">xl</code> is used to manage the Xen host, any virtual machines under its management are not
+                  accessible to <code class="library systemitem">libvirt</code>. Hence, they are not accessible to any of the <code class="library systemitem">libvirt</code> applications.</p>
+               
+               <section class="sect2" id="sec-xmtoxl-upgrade">
+                  <header>
+                     <h3><span class="label">C<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Upgrading from xend/xm to xl/libxl</h3>
+                  </header>
+                  
+                  
+                  <p>The <code class="command">xl</code> application, along with its configuration format (see <code class="command">man xl.cfg</code>), was designed to be backward-compatible with the <code class="command">xm</code> application and its configuration format (see <code class="command">man xm.cfg</code>). Existing <code class="command">xm</code> configuration should be usable with <code class="command">xl</code>. Since libxl is stateless, and <code class="command">xl</code> does not support the notion of managed domains, SUSE recommends using <code class="library systemitem">libvirt</code> to manage Xen hosts. SUSE has provided a tool called <code class="command">xen2libvirt</code>, which provides a simple mechanism to import domains previously managed by <code class="command">xend</code> into <code class="library systemitem">libvirt</code>. See <a class="xref xref-sect1" href="bk10appcs02.html">the section called “Import Xen domain configuration into <code class="library systemitem">libvirt</code>
+                        ”</a> for more information on <code class="command">xen2libvirt</code>.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-xmltoxl-design">
+                  <header>
+                     <h3><span class="label">C<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>XL design</h3>
+                  </header>
+                  
+                  
+                  <p>The basic structure of every <code class="command">xl</code> command is:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><code class="command">xl subcommand</code><code class="option">OPTIONS</code><em class="replaceable">DOMAIN</em></code></span></span></pre>
+                  </div>
+                  
+                  <p><em class="replaceable">DOMAIN</em> is the numeric domain ID, or the domain name (which is internally translated to the
+                     domain ID), and <em class="replaceable">OPTIONS</em> are subcommand specific options.</p>
+                  
+                  <p>Although xl/libxl was designed to be backward-compatible with xm/xend, there are a
+                     few differences that should be noted:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>Managed or persistent domains. <code class="library systemitem">libvirt</code> now provides this functionality.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>xl/libxl does not support Python code in the domain configuration files.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>xl/libxl does not support creating domains from SXP format configuration files (<code class="command">xm</code><code class="option">create</code> -F).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>xl/libxl does not support sharing storage across DomU's via <code class="command">w!</code> in domain configuration files.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>xl/libxl is new and under heavy development, hence a few features are still missing
+                     with regard to the xm/xend toolstack:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>SCSI LUN/Host pass-through (PVSCSI)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>USB pass-through (PVUSB)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Direct Kernel Boot for fully virtualized Linux guests for Xen</p>
+                        </li>
+                     </ul>
+                  </section>
+               
+               <section class="sect2" id="sec-xmtoxl-checklist">
+                  <header>
+                     <h3><span class="label">C<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Checklist before upgrade</h3>
+                  </header>
+                  
+                  
+                  <p>Before upgrading a SLES 11 SP4 Xen host to SLES 15:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>You must remove any Python code from your xm domain configuration files.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>It is recommended to capture the libvirt domain XML from all existing virtual machines
+                           using <code class="command">virsh</code><code class="option">dumpxml</code><em class="replaceable">DOMAIN_NAME</em><em class="replaceable">DOMAIN_NAME.xml</em>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>It is recommended to do a backup of <code class="filename">/etc/xen/xend-config.sxp</code> and <code class="filename">/boot/grub/menu.lst</code> files to keep references of previous parameters used for Xen.</p>
+                        </li>
+                     </ul>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Note</div>
+                           </header>
+                           <div>
+                              
+                              <p>Currently, live migrating virtual machines running on a SLES 11 SP4 Xen host to a
+                                 SLES 15 Xen host is not supported. The <code class="command">xend</code> and libxl toolstacks are not runtime-compatible. Virtual machine downtime is required
+                                 to move the virtual machines.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10appbs04.html">Prev</a></td>
+                  <td class="up"><a href="bk10.html">Up</a></td>
+                  <td class="next"><a href="bk10appcs02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">B<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring the guest</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">C<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Import Xen domain configuration into <code class="library systemitem">libvirt</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

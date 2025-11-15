@@ -1,0 +1,473 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>43.6.&nbsp;Setting up a secure Web server with SSL</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch06s05.html" rel="prev">
+      <link href="bk01partvch06s07.html" rel="next">
+      <link href="bk01partvch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch06.html">Up</a> <a href="bk01partvch06s07.html">Next</a> <a href="bk01partvch06s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch06s06.html" db-id="d616951e63573" id="sec-apache2-ssl">
+            <header>
+               <h2><span class="label">43<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Setting up a secure Web server with SSL</h2>
+            </header>
+            
+            
+            <p>Whenever sensitive data, such as credit card information, is transferred between Web
+               server and client, it is desirable to have a secure, encrypted connection with authentication.
+               <code class="systemitem">mod_ssl</code> provides strong encryption using the secure sockets layer (SSL) and transport layer
+               security (TLS) protocols for HTTP communication between a client and the Web server.
+               Using TLS/SSL, a private connection between Web server and client is established.
+               Data integrity is ensured and client and server can authenticate each other.</p>
+            
+            <p>For this purpose, the server sends an SSL certificate that holds information proving
+               the server's valid identity before any request to a URL is answered. In turn, this
+               guarantees that the server is the uniquely correct end point for the communication.
+               Additionally, the certificate generates an encrypted connection between client and
+               server that can transport information without the risk of exposing sensitive, plain-text
+               content.</p>
+            
+            <p><code class="systemitem">mod_ssl</code> does not implement the TLS/SSL protocols itself, but acts as an interface between
+               Apache and an SSL library. In <span class="phrase productname">SUSE Linux Enterprise Server</span>, the OpenSSL library is used. OpenSSL is automatically installed with Apache.</p>
+            
+            <p>The most visible effect of using <code class="systemitem">mod_ssl</code> with Apache is that URLs are prefixed with <code class="literal">https://</code> instead of <code class="literal">http://</code>.</p>
+            
+            <section class="sect2" id="sec-apache2-ssl-certificate">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating an SSL certificate</h3>
+               </header>
+               
+               
+               <p>To use TLS/SSL with the Web server, you need to create an SSL certificate. This certificate
+                  is needed for the authorization between Web server and client, so that each party
+                  can identify the other party. To ensure the integrity of the certificate, it must
+                  be signed by a party every user trusts.</p>
+               
+               <p>There are three types of certificates you can create: a <q>test</q> certificate for testing purposes only, a self-signed certificate for a defined circle
+                  of users that trust you, and a certificate signed by an independent, publicly known
+                  certificate authority (CA).</p>
+               
+               <p>Creating a certificate is a two step process. First, a private key for the certificate
+                  authority is generated then the server certificate is signed with this key.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">More information</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>To learn more about concepts and definitions of TLS/SSL, refer to <a class="link" href="https://httpd.apache.org/docs/2.4/ssl/ssl_intro.html">https://httpd.apache.org/docs/2.4/ssl/ssl_intro.html</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-apache2-ssl-certificate-test">
+                  <header>
+                     <h4><span class="label">43<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating a <q>test</q> certificate</h4>
+                  </header>
+                  
+                  
+                  <p>To generate a test certificate, call the script <code class="command">/usr/bin/gensslcert</code>. It creates or overwrites the files listed below. Use <code class="command">gensslcert</code>'s optional switches to fine-tune the certificate. Call <code class="command">/usr/bin/gensslcert</code><code class="option">-h</code> for more information.</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p><code class="filename">/etc/apache2/ssl.crt/ca.crt</code></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="filename">/etc/apache2/ssl.crt/server.crt</code></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="filename">/etc/apache2/ssl.key/server.key</code></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="filename">/etc/apache2/ssl.csr/server.csr</code></p>
+                        </li>
+                     </ul>
+                  
+                  <p>A copy of <code class="filename">ca.crt</code> is also placed at <code class="filename">/srv/www/htdocs/CA.crt</code> for download.</p>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">For testing purposes only</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>A test certificate should never be used on a production system. Only use it for testing
+                                 purposes.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-apache2-ssl-certificate-custom">
+                  <header>
+                     <h4><span class="label">43<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating a self-signed certificate</h4>
+                  </header>
+                  
+                  
+                  <p>If you are setting up a secure Web server for an intranet or for a defined circle
+                     of users, it is sufficient to sign a certificate with your own certificate authority
+                     (CA). Visitors to such a site will see a warning like <q>this is an untrusted site</q>, as Web browsers do not recognize self-signed certificates.</p>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Self-signed certificates</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Only use a self-signed certificate on a Web server that is accessed by people who
+                                 know and trust you as a certificate authority. It is not recommended to use such a
+                                 certificate for a public shop, for example.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>First you need to generate a certificate signing request (CSR). You are going to use
+                     <code class="command">openssl</code>, with <code class="literal">PEM</code> as the certificate format. During this step, you will be asked for a passphrase,
+                     and to answer several questions. Remember the passphrase you enter as you will need
+                     it in the future.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> openssl req -new &gt; new.cert.csr</code></span></span>
+<span class="line"><span class="ld"><code>Generating a 1024 bit RSA private key</code></span></span>
+<span class="line"><span class="ld"><code>..++++++</code></span></span>
+<span class="line"><span class="ld"><code>.........++++++</code></span></span>
+<span class="line"><span class="ld"><code>writing new private key to 'privkey.pem'</code></span></span>
+<span class="line"><span class="ld"><code>Enter PEM pass phrase:<span class="co" id="co-ssl-self-pass1">⟈</span></code></span></span>
+<span class="line"><span class="ld"><code>Verifying - Enter PEM pass phrase:<span class="co" id="co-ssl-self-pass2">⟉</span></code></span></span>
+<span class="line"><span class="ld"><code>-----</code></span></span>
+<span class="line"><span class="ld"><code>You are about to be asked to enter information that will be incorporated</code></span></span>
+<span class="line"><span class="ld"><code>into your certificate request.</code></span></span>
+<span class="line"><span class="ld"><code>What you are about to enter is what is called a Distinguished Name or a DN.</code></span></span>
+<span class="line"><span class="ld"><code>There are quite a few fields but you can leave some blank</code></span></span>
+<span class="line"><span class="ld"><code>For some fields there will be a default value,</code></span></span>
+<span class="line"><span class="ld"><code>If you enter '.', the field will be left blank.</code></span></span>
+<span class="line"><span class="ld"><code>-----</code></span></span>
+<span class="line"><span class="ld"><code>Country Name (2 letter code) [AU]:<span class="co" id="co-ssl-self-country">⟊</span></code></span></span>
+<span class="line"><span class="ld"><code>State or Province Name (full name) [Some-State]:<span class="co" id="co-ssl-self-state">⟋</span></code></span></span>
+<span class="line"><span class="ld"><code>Locality Name (eg, city) []:<span class="co" id="co-ssl-self-city">⟌</span></code></span></span>
+<span class="line"><span class="ld"><code>Organization Name (eg, company) [Internet Widgits Pty Ltd]:<span class="co" id="co-ssl-self-org">⟍</span></code></span></span>
+<span class="line"><span class="ld"><code>Organizational Unit Name (eg, section) []:<span class="co" id="co-ssl-self-uname">⟎</span></code></span></span>
+<span class="line"><span class="ld"><code>Common Name (for example server FQDN, or YOUR name) []:<span class="co" id="co-ssl-self-cname">⟏</span></code></span></span>
+<span class="line"><span class="ld"><code>Email Address []:<span class="co" id="co-ssl-self-email">⟐</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Please enter the following 'extra' attributes</code></span></span>
+<span class="line"><span class="ld"><code>to be sent with your certificate request</code></span></span>
+<span class="line"><span class="ld"><code>A challenge password []:<span class="co" id="co-ssl-self-challenge">⟑</span></code></span></span>
+<span class="line"><span class="ld"><code>An optional company name []:<span class="co" id="co-ssl-self-optional">⟒</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-pass1">⟈</a></dt>
+                        <dd>
+                           
+                           <p>Fill in your passphrase.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-pass2">⟉</a></dt>
+                        <dd>
+                           
+                           <p>Fill it in once more (and remember it).</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-country">⟊</a></dt>
+                        <dd>
+                           
+                           <p>Fill in your 2 letter country code, such as <code class="literal">GB</code> or <code class="literal">CZ</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-state">⟋</a></dt>
+                        <dd>
+                           
+                           <p>Fill in the name of the state where you live.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-city">⟌</a></dt>
+                        <dd>
+                           
+                           <p>Fill in the city name, such as <code class="literal">Prague</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-org">⟍</a></dt>
+                        <dd>
+                           
+                           <p>Fill in the name of the organization you work for.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-uname">⟎</a></dt>
+                        <dd>
+                           
+                           <p>Fill in your organization unit, or leave blank if you have none.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-cname">⟏</a></dt>
+                        <dd>
+                           
+                           <p>Fill in either the domain name of the server, or your first and last name.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-email">⟐</a></dt>
+                        <dd>
+                           
+                           <p>Fill in your work e-mail address.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-challenge">⟑</a></dt>
+                        <dd>
+                           
+                           <p>Leave the challenge password empty, otherwise you need to enter it every time you
+                              restart the Apache Web server.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-ssl-self-optional">⟒</a></dt>
+                        <dd>
+                           
+                           <p>Fill in the optional company name, or leave blank.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <p>Now you can generate the certificate. You are going to use <code class="command">openssl</code> again, and the format of the certificate is the default <code class="literal">PEM</code>.</p>
+                  
+                  <div class="formalobject procedure" id="sec-apache2-ssl-certificate-custom_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">43<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Generating the certificate</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Export the private part of the key to <code class="filename">new.cert.key</code>. You will be prompted for the passphrase you entered when creating the certificate
+                              signing request (CSR).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> openssl rsa -in privkey.pem -out new.cert.key</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Generate the public part of the certificate according to the information you filled
+                              out in the signing request. The <code class="option">-days</code> option specifies the length of time before the certificate expires. You can revoke
+                              a certificate, or replace one before it expires.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> openssl x509 -in new.cert.csr -out new.cert.cert -req \</code></span></span>
+<span class="line"><span class="ld"><code>-signkey new.cert.key -days 365</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Copy the certificate files to the relevant directories, so that the Apache server
+                              can read them. Make sure that the private key <code class="filename">/etc/apache2/ssl.key/server.key</code> is not world-readable, while the public PEM certificate <code class="filename">/etc/apache2/ssl.crt/server.crt</code> is.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cp new.cert.cert /etc/apache2/ssl.crt/server.crt</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cp new.cert.key /etc/apache2/ssl.key/server.key</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Public certificate location</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The last step is to copy the public certificate file from <code class="filename">/etc/apache2/ssl.crt/server.crt</code> to a location where your users can access it to incorporate it into the list of known
+                                 and trusted CAs in their Web browsers. Otherwise a browser complains that the certificate
+                                 was issued by an unknown authority.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-apache2-ssl-certificate-official">
+                  <header>
+                     <h4><span class="label">43<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Getting an officially signed certificate</h4>
+                  </header>
+                  
+                  
+                  <p>There are several official certificate authorities that sign your certificates. The
+                     certificate is signed by a trustworthy third party, so can be fully trusted. Publicly
+                     operating secure Web servers usually have an officially signed certificate. A list
+                     of the most used Certificate Authorities (CAs) is available at <a class="link" href="https://en.wikipedia.org/wiki/Certificate_authority#Providers">https://en.wikipedia.org/wiki/Certificate_authority#Providers</a>.</p>
+                  
+                  <p>When requesting an officially signed certificate, you do not send a certificate to
+                     the CA. Instead, issue a Certificate Signing Request  (CSR). To create a CSR, run
+                     the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>openssl req -new -newkey rsa:2048 -nodes -keyout newkey.pem -out newreq.pem</code></span></span></pre>
+                  </div>
+                  
+                  <p> You are asked to enter a distinguished name. This requires you to answer a few questions,
+                     such as country name or organization name. Enter valid data—everything you enter here
+                     later shows up in the certificate and is checked. You do not need to answer every
+                     question. If one does not apply to you or you want to leave it blank, use <q>.</q>. Common name is the name of the CA itself—choose a significant name, such as <em class="replaceable">My company</em> CA. Last, a challenge password and an alternative company name must be entered.</p>
+                  
+                  <p>Find the CSR in the directory from which you called the script. The file is named
+                     <code class="filename">newreq.pem</code>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-apache2-ssl-configuration">
+               <header>
+                  <h3><span class="label">43<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring Apache with SSL</h3>
+               </header>
+               
+               
+               <p>The default port for TLS/SSL requests on the Web server side is 443. There is no conflict
+                  between a <q>regular</q> Apache listening on port 80 and an TLS/SSL-enabled Apache listening on port 443.
+                  In fact, HTTP and HTTPS can be run with the same Apache instance. Usually separate
+                  virtual hosts are used to dispatch requests to port 80 and port 443 to separate virtual
+                  servers.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Firewall configuration</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Do not forget to open the firewall for SSL-enabled Apache on port 443. This can be
+                              done with <code class="daemon systemitem">firewalld</code> as described in <a class="xref xref-sect2" href="bk06partiiich03s04.html#sec-security-firewall-firewalld-cmd">the section called “Configuring the firewall on the command line”</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The SSL module is enabled by default in the global server configuration. In case it
+                  has been disabled on your host, activate it with the following command: <code class="command">a2enmod ssl</code>. To finally enable SSL, the server needs to be started with the flag <q>SSL</q>. To do so, call <code class="command">a2enflag SSL</code> (case-sensitive!). If you have chosen to encrypt your server certificate with a password,
+                  you should also increase the value for <code class="systemitem">APACHE_TIMEOUT</code> in <code class="filename">/etc/sysconfig/apache2</code>, so you have enough time to enter the passphrase when Apache starts. Restart the
+                  server to make these changes active. A reload is not sufficient.</p>
+               
+               <p>The virtual host configuration directory contains a template <code class="filename">/etc/apache2/vhosts.d/vhost-ssl.template</code> with SSL-specific directives that are extensively documented. Refer to <a class="xref xref-sect3" href="bk01partvch06s02.html#sec-apache2-configuration-manually-vhost">the section called “Virtual host configuration”</a> for the general virtual host configuration.</p>
+               
+               <p>To get started, copy the template to <code class="filename">/etc/apache2/vhosts.d/<em class="replaceable">MYSSL-HOST</em>.conf</code> and edit it. Adjusting the values for the following directives should be sufficient:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">DocumentRoot</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">ServerName</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">ServerAdmin</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">ErrorLog</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="systemitem">TransferLog</code></p>
+                     </li>
+                  </ul>
+               
+               <section class="sect3" id="sec-apache2-ssl-configuration-name-based">
+                  <header>
+                     <h4><span class="label">43<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Name-based virtual hosts and SSL</h4>
+                  </header>
+                  
+                  
+                  <p>By default it is not possible to run multiple SSL-enabled virtual hosts on a server
+                     with only one IP address. Name-based virtual hosting requires that Apache knows which
+                     server name has been requested. The problem with SSL connections is, that such a request
+                     can only be read after the SSL connection has already been established (by using the
+                     default virtual host). As a result, users will receive a warning message stating that
+                     the certificate does not match the server name.</p>
+                  
+                  <p><span class="phrase productname">SUSE Linux Enterprise Server</span> comes with an extension to the SSL protocol called Server Name Indication (SNI) addresses
+                     this issue by sending the name of the virtual domain as part of the SSL negotiation.
+                     This enables the server to <q>switch</q> to the correct virtual domain early and present the browser the correct certificate.</p>
+                  
+                  <p>SNI is enabled by default on <span class="phrase productname">SUSE Linux Enterprise Server</span>. To enable Name-Based Virtual Hosts for SSL, configure the server as described in
+                     <a class="xref xref-sect4" href="bk01partvch06s02.html#sec-apache2-configuration-manually-vhost-named-vhosts">the section called “Name-based virtual hosts”</a> (you need to use port <code class="literal">443</code> rather than port <code class="literal">80</code> with SSL).</p>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">SNI browser support</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>SNI must also be supported on the client side. However, SNI is supported by most browsers,
+                                 except for certain older browsers. For more information, see <a class="link" href="https://en.wikipedia.org/wiki/Server_Name_Indication#Support">https://en.wikipedia.org/wiki/Server_Name_Indication#Support</a>.</p>
+                              
+                              <p>To configure handling of non-SNI capable browsers, use the directive <code class="systemitem">SSLStrictSNIVHostCheck</code>. When set to <code class="literal">on</code> in the server configuration, non-SNI capable browser will be rejected for all virtual
+                                 hosts. When set to <code class="literal">on</code> within a <code class="systemitem">VirtualHost</code> directive, access to this particular host will be rejected.</p>
+                              
+                              <p>When set to <code class="literal">off</code> in the server configuration, the server will behave as if not having SNI support.
+                                 SSL requests will be handled by the <em>first</em> virtual host defined (for port 443).</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch06s05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch06.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch06s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">43<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Enabling CGI scripts</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">43<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Running multiple Apache instances on the same server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

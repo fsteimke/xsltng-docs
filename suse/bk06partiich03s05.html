@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.5.&nbsp;SUID/SGID files</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich03s04.html" rel="prev">
+      <link href="bk06partiich03s06.html" rel="next">
+      <link href="bk06partiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich03.html">Up</a> <a href="bk06partiich03s06.html">Next</a> <a href="bk06partiich03s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich03s05.html" db-id="d616951e168037" id="sec-sec-prot-general-s-bit">
+            <header>
+               <h2><span class="label">11<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>SUID/SGID files</h2>
+            </header>
+            
+            
+            <p>When the SUID (set user ID) or SGID (set group ID) bits are set on an executable,
+               it executes with the UID or GID of the owner of the executable rather than that of
+               the person executing it. This means that, for example, all executables that have the
+               SUID bit set and are owned by <code class="systemitem username">root</code> are executed with the UID of <code class="systemitem username">root</code>. A good example is the <code class="command">passwd</code> command that allows ordinary users to update the password field in the <code class="filename">/etc/shadow</code> file, which is owned by <code class="systemitem username">root</code>.</p>
+            
+            <p>SUID/SGID bits can be misused when the executable has a security hole. Therefore,
+               you should search the entire system for SUID/SGID executables and document them. To
+               search the entire system for SUID or SGID files, you can run the following command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>find /bin /boot /etc /home /lib /lib64 /opt /root /sbin \</code></span></span>
+<span class="line"><span class="ld"><code>  /srv /tmp /usr /var -type f -perm '/6000' -ls</code></span></span></pre>
+            </div>
+            
+            <p>You may need to extend the list of directories that are searched if you have a different
+               file system structure.</p>
+            
+            <p>SUSE sets the SUID/SGID bit on binary if it is really necessary. Ensure that code
+               developers do not set SUID/SGID bits on their programs if it is not an absolute requirement.
+               You can often use workarounds like removing the executable bit for world/others. However,
+               a better approach is to change the design of the software or use capabilities.</p>
+            
+            <p><span class="phrase productname">SUSE Linux Enterprise Server</span> supports file capabilities to allow more fine-grained privileges to be given to programs
+               rather than the full power of <code class="systemitem username">root</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>getcap -v /usr/bin/ping</code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/ping = cap_new_raw+eip</code></span></span></pre>
+            </div>
+            
+            <p>The previous command grants the <code class="literal">CAP_NET_RAW</code> capability to whoever executes <code class="command">ping</code>. In case of vulnerabilities inside <code class="command">ping</code>, an attacker can gain, at most, this capability in contrast with full <code class="systemitem username">root</code>. Whenever possible, file capabilities should be chosen in favor of the SUID bit.
+               But this applies when the binary is SUID to <code class="systemitem username">root</code>, not to other users such as <code class="literal">news</code>, <code class="literal">lp</code> and similar.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich03s04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich03.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich03s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">11<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Default umask</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>World-writable files</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

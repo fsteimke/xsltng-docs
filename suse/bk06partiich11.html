@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;19.&nbsp;Access control lists in Linux</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich10s05.html" rel="prev">
+      <link href="bk06partiich11s02.html" rel="next">
+      <link href="bk06partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partii.html">Up</a> <a href="bk06partiich11s02.html">Next</a> <a href="bk06partiich10s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partiich11.html" db-id="d616951e174083" id="cha-security-acls" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">19</span><span class="sep">.&nbsp;</span>Access control lists in Linux</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>The term <em>POSIX ACL</em> suggests that this is a true POSIX (<em>portable operating system interface</em>) standard. The respective draft standards POSIX 1003.1e and POSIX 1003.2c have been
+                  withdrawn for several reasons. Nevertheless, ACLs (as found on many systems belonging
+                  to the Unix family) are based on these drafts and the implementation of file system
+                  ACLs (as described in this chapter) follows these two standards.</p>
+               </div>
+            <section class="sect1" id="sec-security-acls-traditional">
+               <header>
+                  <h2><span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Traditional file permissions</h2>
+               </header>
+               
+               
+               <p>The permissions of all files included in <span class="phrase productname">SUSE Linux Enterprise Server</span> are carefully chosen. When installing additional software or files, take great care
+                  when setting the permissions. Always use the <code class="option">-l</code> option with the command <code class="command">ls</code> to detect any incorrect file permissions immediately. An incorrect file attribute
+                  does not only mean that files could be changed or deleted. Modified files could be
+                  executed by <code class="systemitem username">root</code> or services could be hijacked by modifying configuration files. This increases the
+                  danger of an attack.</p>
+               
+               <p>A <span class="phrase productname">SUSE® Linux Enterprise Server</span> system includes the files <code class="filename">permissions</code>, <code class="filename">permissions.easy</code>, <code class="filename">permissions.secure</code>, and <code class="filename">permissions.paranoid</code>, all in the directory <code class="filename">/etc</code>. The purpose of these files is to define special permissions, such as world-writable
+                  directories or, for files, the setuser ID bit. Programs with the setuser ID bit set
+                  do not run with the permissions of the user that launched it, but with the permissions
+                  of the file owner, <code class="systemitem username">root</code>. An administrator can use the file <code class="filename">/etc/permissions.local</code> to add their own settings.</p>
+               
+               <p>To define one of the available profiles, select <span class="guimenu">Local Security</span> in the <span class="guimenu">Security and Users</span> section of YaST. To learn more about the topic, read the comments in <code class="filename">/etc/permissions</code> or consult <code class="command">man chmod</code>.</p>
+               
+               <p>Find detailed information about the traditional file permissions in the GNU Coreutils
+                  Info page, Node <em>File permissions</em> (<code class="command">info coreutils "File permissions"</code>). More advanced features are the setuid, setgid and sticky bit.</p>
+               
+               <section class="sect2" id="sec-security-acls-traditional-setuid">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The setuid bit</h3>
+                  </header>
+                  
+                  
+                  <p>In certain situations, the access permissions may be too restrictive. Therefore, Linux
+                     has additional settings that enable the temporary change of the current user and group
+                     identity for a specific action. For example, the <code class="command">passwd</code> program normally requires root permissions to access <code class="filename">/etc/passwd</code>. This file contains important information, like the home directories of users and
+                     user and group IDs. Thus, a normal user would not be able to change <code class="filename">passwd</code>, because it would be too dangerous to grant all users direct access to this file.
+                     A possible solution to this problem is the <em>setuid</em> mechanism. setuid (set user ID) is a special file attribute that instructs the system
+                     to execute programs marked accordingly under a specific user ID. Consider the <code class="command">passwd</code> command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-rwsr-xr-x  1 root shadow 80036 2004-10-02 11:08 /usr/bin/passwd</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can see the <code class="literal">s</code> that denotes that the setuid bit is set for the user permission. Through the setuid
+                     bit, all users starting the <code class="command">passwd</code> command execute it as <code class="systemitem username">root</code>.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-security-acls-traditional-setgid">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The setgid bit</h3>
+                  </header>
+                  
+                  
+                  <p>The setuid bit applies to users. However, there is also an equivalent property for
+                     groups: the <em>setgid</em> bit. A program for which this bit was set runs under the group ID under which it
+                     was saved, no matter which user starts it. Therefore, in a directory with the setgid
+                     bit, all newly created files and subdirectories are assigned to the group to which
+                     the directory belongs. Consider the following example directory:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>drwxrws--- 2 tux archive 48 Nov 19 17:12  backup</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can see the <code class="literal">s</code> that denotes that the setgid bit is set for the group permission. The owner of the
+                     directory and members of the group <code class="groupname systemitem">archive</code> can access this directory. Users that are not members of this group are <q>mapped</q> to the respective group. The effective group ID of all written files is <code class="groupname systemitem">archive</code>. For example, a backup program that runs with the group ID <code class="groupname systemitem">archive</code> can access this directory even without root privileges.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-security-acls-traditional-sticky">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The sticky bit</h3>
+                  </header>
+                  
+                  
+                  <p>There is also the <em>sticky bit</em>. It makes a difference whether it belongs to an executable program or a directory.
+                     If it belongs to a program, a file marked in this way is loaded to RAM to avoid needing
+                     to get it from the hard disk each time it is used. This attribute is used rarely,
+                     because modern hard disks are fast enough. If this bit is assigned to a directory,
+                     it prevents users from deleting each other's files. Typical examples include the <code class="filename">/tmp</code> and <code class="filename">/var/tmp</code> directories:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>drwxrwxrwt 2 root root 1160 2002-11-19 17:15 /tmp</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich10s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich11s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Restoring the SUSE default privileges</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Advantages of ACLs</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

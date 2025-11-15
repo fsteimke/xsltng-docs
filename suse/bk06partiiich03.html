@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;23.&nbsp;Masquerading and firewalls</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich02s19.html" rel="prev">
+      <link href="bk06partiiich03s02.html" rel="next">
+      <link href="bk06partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiii.html">Up</a> <a href="bk06partiiich03s02.html">Next</a> <a href="bk06partiiich02s19.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partiiich03.html" db-id="d616951e178373" id="cha-security-firewall" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">23</span><span class="sep">.&nbsp;</span>Masquerading and firewalls</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Whenever Linux is used in a network environment, you can use the kernel functions
+                  that allow the manipulation of network packets to maintain a separation between internal
+                  and external network areas. The Linux <code class="systemitem">netfilter</code> framework provides the means to establish an effective firewall that keeps different
+                  networks apart. Using iptables—a generic table structure for the definition of rule
+                  sets—precisely controls the packets allowed to pass a network interface. Such a packet
+                  filter can be set up using <code class="daemon systemitem">firewalld</code> and its graphical interface <code class="command">firewall-config</code>.</p>
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> 15 GA introduces <code class="daemon systemitem">firewalld</code> as the new default software firewall, replacing SuSEfirewall2. This chapter provides
+                  guidance for configuring <code class="daemon systemitem">firewalld</code>, and migrating from SuSEfirewall2 for users who have upgraded from older <span class="phrase productname">SUSE Linux Enterprise Server</span> releases.</p>
+               </div>
+            <section class="sect1" id="sec-security-firewall-iptables">
+               <header>
+                  <h2><span class="label">23<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Packet filtering with iptables</h2>
+               </header>
+               
+               
+               <p>This section discusses the low-level details of packet filtering. The components <code class="systemitem">netfilter</code> and <code class="systemitem">iptables</code> are responsible for the filtering and manipulation of network packets and for network
+                  address translation (NAT). The filtering criteria and any actions associated with
+                  them are stored in chains, which must be matched one after another by individual network
+                  packets as they arrive. The chains to match are stored in tables. The <code class="command">iptables</code> command allows you to alter these tables and rule sets.</p>
+               
+               <p>The Linux kernel maintains three tables, each for a particular category of functions
+                  of the packet filter:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">filter</span></dt>
+                     <dd>
+                        
+                        <p>This table holds the bulk of the filter rules, because it implements the <em>packet filtering</em> mechanism in the stricter sense, which determines whether packets are let through
+                           (<code class="literal">ACCEPT</code>) or discarded (<code class="literal">DROP</code>), for example.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">nat</span></dt>
+                     <dd>
+                        
+                        <p>This table defines any changes to the source and target addresses of packets. Using
+                           these functions also allows you to implement <em>masquerading</em>, which is a special case of NAT used to link a private network with the Internet.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mangle</span></dt>
+                     <dd>
+                        
+                        <p>The rules held in this table make it possible to manipulate values stored in IP headers
+                           (such as the type of service).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>These tables contain several predefined chains to match packets:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">PREROUTING</span></dt>
+                     <dd>
+                        
+                        <p>This chain is applied to all incoming packets.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">INPUT</span></dt>
+                     <dd>
+                        
+                        <p>This chain is applied to packets destined for the system's internal processes.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">FORWARD</span></dt>
+                     <dd>
+                        
+                        <p>This chain is applied to packets that are routed through the system.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">OUTPUT</span></dt>
+                     <dd>
+                        
+                        <p>This chain is applied to packets originating from the system itself.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">POSTROUTING</span></dt>
+                     <dd>
+                        
+                        <p>This chain is applied to all outgoing packets.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p><a class="xref xref-figure" href="#fig-fire-table">Figure&nbsp;<span class="label">23<span class="sep">.</span>1</span>, “iptables: a packet's possible paths”</a> illustrates the paths along which a network packet may travel on a given system.
+                  For the sake of simplicity, the figure lists tables as parts of chains, but in reality
+                  these chains are held within the tables themselves.</p>
+               
+               <p>In the simplest case, an incoming packet destined for the system itself arrives at
+                  the <code class="literal">eth0</code> interface. The packet is first referred to the <code class="literal">PREROUTING</code> chain of the <code class="literal">mangle</code> table then to the <code class="literal">PREROUTING</code> chain of the <code class="literal">nat</code> table. The following step, concerning the routing of the packet, determines that
+                  the actual target of the packet is a process of the system itself. After passing the
+                  <code class="literal">INPUT</code> chains of the <code class="literal">mangle</code> and the <code class="literal">filter</code> table, the packet finally reaches its target, provided that the rules of the <code class="literal">filter</code> table allow this.</p>
+               
+               <div class="figure formalobject" id="fig-fire-table">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:556px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/fire_tables.png" style="width:556px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">23<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>iptables: a packet's possible paths</div>
+                  </header>
+               </div>
+               </section>
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich02s19.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">22<span class="sep">.</span>19</span><span class="sep">.&nbsp;</span>Stopping SSH brute force attacks with Fail2Ban</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">23<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Masquerading basics</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

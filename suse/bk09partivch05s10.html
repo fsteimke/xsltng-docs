@@ -1,0 +1,290 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.10.&nbsp;Configuring path grouping and priorities</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s09.html" rel="prev">
+      <link href="bk09partivch05s11.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s11.html">Next</a> <a href="bk09partivch05s09.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s10.html" db-id="d616951e255715" id="sec-multipath-grouping">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Configuring path grouping and priorities</h2>
+            </header>
+            
+            
+            <p>Path devices in multipath maps are grouped in <em>path groups</em>, also called <em>priority groups</em>. Only one path group receives I/O at any given time. <code class="command">multipathd</code> assigns <em>priorities</em> to path groups. Out of the path groups with active paths, the group with the highest
+               priority is activated according to the configured failback policy for the map (see
+               <a class="xref xref-sect1" href="bk09partivch05s09.html">the section called “Configuring policies for failover, queuing, and failback”</a>). The priority of a path group is the average of the priorities of the active path
+               devices in the path group. The priority of a path device is an integer value calculated
+               from the device properties (see the description of the <code class="literal">prio</code> option below).</p>
+            
+            <p>This section describes the <code class="filename">multipath.conf</code> configuration parameters relevant for priority determination and path grouping.</p>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">path_grouping_policy</span></dt>
+                  <dd>
+                     
+                     <p>Specifies the method used to combine paths into groups. Only the most important policies
+                        are listed here; see <code class="systemitem">multipath.conf(5)</code> for other less frequently used values.</p>
+                     
+                     <dl class="variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">failover</span></dt>
+                           <dd>
+                              
+                              <p>One path per path group. This setting is useful for traditional “active/passive” storage
+                                 arrays.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">multibus</span></dt>
+                           <dd>
+                              
+                              <p>All paths in one path group. This is useful for traditional “active/active” arrays.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">group_by_prio</span></dt>
+                           <dd>
+                              
+                              <p>Path devices with the same path priority are grouped together. This option is useful
+                                 for modern arrays that support asymmetric access states, like ALUA. Combined with
+                                 the <code class="literal">alua</code> or <code class="literal">sysfs</code> priority algorithms, the priority groups set up by <code class="command">multipathd</code> will match the primary target port groups that the storage array reports through
+                                 ALUA-related SCSI commands.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <p>Using the same policy names, the path grouping policy for a multipath map can be changed
+                        temporarily with the command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipath -p <em class="replaceable">POLICY_NAME</em><em class="replaceable">MAP_NAME</em></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">marginal_pathgroups</span></dt>
+                  <dd>
+                     
+                     <p>If set to <code class="literal">on</code> or <code class="literal">fpin</code>, “marginal” path devices are sorted into a separate path group. This is independent
+                        of the path grouping algorithm in use. See <a class="xref xref-sect2" href="bk09partivch05s13.html#sec-multipath-marginal">the section called “Handling unreliable (“marginal”) path devices”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">detect_prio</span></dt>
+                  <dd>
+                     
+                     <p>If this is set to <code class="literal">yes</code> (default, recommended), <code class="command">multipathd</code> automatically detects the best algorithm to set the priority for a storage device
+                        and ignores the <code class="literal">prio</code> setting. In practice, this means using the <code class="literal">sysfs</code> prio algorithm if ALUA support is detected.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">prio</span></dt>
+                  <dd>
+                     
+                     <p>Determines the method to derive priorities for path devices. If you override this,
+                        disable <code class="literal">detect_prio</code> as follows:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>defaults {</code></span></span>
+<span class="line"><span class="ld"><code>          detect_prio no</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                     </div>
+                     
+                     <p>The following list contains only the most important methods. Several other methods
+                        are available, mainly to support legacy hardware. See <code class="systemitem">multipath.conf(5)</code> for the full list.</p>
+                     
+                     <dl class="variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">alua</span></dt>
+                           <dd>
+                              
+                              <p>Uses SCSI-3 ALUA access states to derive path priority values. The optional <code class="literal">exclusive_pref_bit</code> argument can be used to change the behavior for devices that have the ALUA “preferred
+                                 primary target port group” (PREF) bit set:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        prio alua</code></span></span>
+<span class="line"><span class="ld"><code>        prio_args exclusive_pref_bit</code></span></span></pre>
+                              </div>
+                              
+                              <p>If this option is set, “preferred” paths get a priority bonus over other active/optimized
+                                 paths. Otherwise, all active/optimized paths are assigned the same priority.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">sysfs</span></dt>
+                           <dd>
+                              
+                              <p>Like <code class="literal">alua</code>, but instead of sending SCSI commands to the device, it obtains the access states
+                                 from <code class="systemitem">sysfs</code>. This causes less I/O load than <code class="literal">alua</code>, but is not suitable for all storage arrays with ALUA support.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">const</span></dt>
+                           <dd>
+                              
+                              <p>Uses a constant value for all paths.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">path_latency</span></dt>
+                           <dd>
+                              
+                              <p>Measures I/O latency (time from I/O submission to completion) on path devices, and
+                                 assigns higher priority to devices with lower latency. See <code class="systemitem">multipath.conf(5)</code> for details. This algorithm is still experimental.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">weightedpath</span></dt>
+                           <dd>
+                              
+                              <p>Assigns a priority to paths based on their name, serial number, Host:Bus:Target:Lun
+                                 ID (HBTL), or Fibre Channel WWN. The priority value does not change over time. The
+                                 method requires a <code class="literal">prio_args</code> argument, see <code class="systemitem">multipath.conf(5)</code> for details. For example:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        prio weightedpath</code></span></span>
+<span class="line"><span class="ld"><code>        prio_args "hbtl 2:.*:.*:.* 10 hbtl 3:.*:.*:.* 20 hbtl .* 1"</code></span></span></pre>
+                              </div>
+                              
+                              <p>This assigns devices on SCSI host 3 a higher priority than devices on SCSI host 2,
+                                 and all others a lower priority.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">prio_args</span></dt>
+                  <dd>
+                     
+                     <p>Some <code class="literal">prio</code> algorithms require extra arguments. These are specified in this option, with syntax
+                        depending on the algorithm. See above.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">hardware_handler</span></dt>
+                  <dd>
+                     
+                     <p>The name of a kernel module that the kernel uses to activate path devices when switching
+                        path groups. This option has no effect with recent kernels because hardware handlers
+                        are autodetected. See <a class="xref xref-sect2" href="bk09partivch05s02.html#sec-multipath-hardware-handlers">the section called “Storage arrays that require specific hardware handlers”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">path_selector</span></dt>
+                  <dd>
+                     
+                     <p>The name of a kernel module that is used for load balancing between the paths of the
+                        active path group. The available choices depend on the kernel configuration. For historical
+                        reasons, the name must always be enclosed in quotes and followed by a “0” in <code class="filename">multipath.conf</code>, like this:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>    path_selector "queue-length 0"</code></span></span></pre>
+                     </div>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">service-time</span></dt>
+                           <dd>
+                              
+                              <p>Estimates the time pending I/O will need to complete on all paths, and selects the
+                                 path with the lowest value. This is the default.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">historical-service-time</span></dt>
+                           <dd>
+                              
+                              <p>Estimates future service time based on the historical service time (about which it
+                                 keeps a moving average) and the number of outstanding requests. Estimates the time
+                                 pending I/O will need to complete on all paths, and selects the path with the lowest
+                                 value.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">queue-length</span></dt>
+                           <dd>
+                              
+                              <p>Selects the path with the lowest number of currently pending I/O requests.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">round-robin</span></dt>
+                           <dd>
+                              
+                              <p>Switches paths in round-robin fashion. The number of requests submitted to a path
+                                 before switching to the next one can be adjusted with the options <code class="literal">rr_min_io_rq</code> and <code class="literal">rr_weight</code>.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">io-affinity</span></dt>
+                           <dd>
+                              
+                              <p>This path selector currently does not work with <code class="systemitem">multipath-tools</code>.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>After modifying the <code class="filename">/etc/multipath.conf</code> file, apply your settings as described in <a class="xref xref-sect2" href="bk09partivch05s08.html#sec-multipath-conf-file-apply">the section called “Applying <code class="filename">multipath.conf</code> modifications”</a>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s09.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s11.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Configuring policies for failover, queuing, and failback</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Selecting devices for multipathing</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

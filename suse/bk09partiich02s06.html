@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.6.&nbsp;Merging a snapshot with the source logical volume to revert changes or roll back to a previous state</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiich02s05.html" rel="prev">
+      <link href="bk09partiii.html" rel="next">
+      <link href="bk09partiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiich02.html">Up</a> <a href="bk09partiii.html">Next</a> <a href="bk09partiich02s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partiich02s06.html" db-id="d616951e242324" id="sec-lvm-snapshots-rollback">
+            <header>
+               <h2><span class="label">6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Merging a snapshot with the source logical volume to revert changes or roll back to
+                  a previous state</h2>
+            </header>
+            
+            
+            <p>Snapshots can be useful if you need to roll back or restore data on a volume to a
+               previous state. For example, you might need to revert data changes that resulted from
+               an administrator error or a failed or undesirable package installation or upgrade.</p>
+            
+            <p>You can use the <code class="command">lvconvert --merge</code> command to revert the changes made to an LVM logical volume. The merging begins as
+               follows:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>If both the source logical volume and snapshot volume are not open, the merge begins
+                     immediately.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>If the source logical volume or snapshot volume are open, the merge starts the first
+                     time either the source logical volume or snapshot volume are activated and both are
+                     closed.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>If the source logical volume cannot be closed, such as the root file system, the merge
+                     is deferred until the next time the server reboots and the source logical volume is
+                     activated.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>If the source logical volume contains a virtual machine image, you must shut down
+                     the virtual machine, deactivate the source logical volume and snapshot volume (by
+                     dismounting them in that order), and then issue the merge command. Because the source
+                     logical volume is automatically remounted and the snapshot volume is deleted when
+                     the merge is complete, you should not restart the virtual machine until after the
+                     merge is complete. After the merge is complete, you use the resulting logical volume
+                     for the virtual machine.</p>
+                  </li>
+               </ul>
+            
+            <p>After a merge begins, the merge continues automatically after server restarts until
+               it is complete. A new snapshot cannot be created for the source logical volume while
+               a merge is in progress.</p>
+            
+            <p>While the merge is in progress, reads or writes to the source logical volume are transparently
+               redirected to the snapshot that is being merged. This allows users to immediately
+               view and access the data as it was when the snapshot was created. They do not need
+               to wait for the merge to complete.</p>
+            
+            <p>When the merge is complete, the source logical volume contains the same data as it
+               did when the snapshot was taken, plus any data changes made after the merge began.
+               The resulting logical volume has the source logical volume’s name, minor number, and
+               UUID. The source logical volume is automatically remounted, and the snapshot volume
+               is removed.</p>
+            
+            <div class="informalobject procedure" id="sec-lvm-snapshots-rollback_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Open a terminal and enter</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --merge  [-b] [-i <em class="replaceable">SECONDS</em>] [<em class="replaceable">SNAP_VOLUME_PATH</em>[...<em class="replaceable">snapN</em>]|@<em class="replaceable">VOLUME_TAG</em>]</code></span></span></pre>
+                     </div>
+                     
+                     <p>You can specify one or multiple snapshots on the command line. You can alternatively
+                        tag multiple source logical volumes with the same volume tag then specify <code class="literal">@&lt;<em class="replaceable">VOLUME_TAG</em>&gt;</code> on the command line. The snapshots for the tagged volumes are merged to their respective
+                        source logical volumes. For information about tagging logical volumes, see <a class="xref xref-sect1" href="bk09partiich01s10.html">the section called “Tagging LVM2 storage objects”</a>.</p>
+                     
+                     <p>The options include:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">-b</span>, <span class="term">--background</span>
+                              </dt>
+                           <dd>
+                              
+                              <p>Run the daemon in the background. This allows multiple specified snapshots to be merged
+                                 concurrently in parallel.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">-i</span>, <span class="term">--interval &lt;<em class="replaceable">SECONDS</em>&gt;</span>
+                              </dt>
+                           <dd>
+                              
+                              <p>Report progress as a percentage at regular intervals. Specify the interval in seconds.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     
+                     <p>For more information about this command, see the <code class="command">lvconvert(8)</code> man page.</p>
+                     
+                     <p>For example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --merge /dev/lvmvg/linux01-snap</code></span></span></pre>
+                     </div>
+                     
+                     <p>This command merges <code class="filename">/dev/lvmvg/linux01-snap</code> into its source logical volume.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvconvert --merge @mytag</code></span></span></pre>
+                     </div>
+                     
+                     <p>If <code class="filename">lvol1</code>, <code class="filename">lvol2</code>, and <code class="filename">lvol3</code> are all tagged with <code class="literal">mytag</code>, each snapshot volume is merged serially with its respective source logical volume;
+                        that is: <code class="filename">lvol1</code>, then <code class="filename">lvol2</code>, then <code class="filename">lvol3</code>. If the <code class="literal">--background</code> option is specified, the snapshots for the respective tagged logical volume are merged
+                        concurrently in parallel.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>(Optional) If both the source logical volume and snapshot volume are open and they
+                        can be closed, you can manually deactivate and activate the source logical volume
+                        to get the merge to start immediately.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> umount <em class="replaceable">ORIGINAL_VOLUME</em><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange -an <em class="replaceable">ORIGINAL_VOLUME</em><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange -ay <em class="replaceable">ORIGINAL_VOLUME</em><span class="prompt">&gt;</span><code class="command">sudo</code> mount <em class="replaceable">ORIGINAL_VOLUME</em><em class="replaceable">MOUNT_POINT</em></code></span></span></pre>
+                     </div>
+                     
+                     <p>For example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> umount /dev/lvmvg/lvol01</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange -an /dev/lvmvg/lvol01</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange -ay /dev/lvmvg/lvol01</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount /dev/lvmvg/lvol01 /mnt/lvol01</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>(Optional) If both the source logical volume and snapshot volume are open and the
+                        source logical volume cannot be closed, such as the <code class="systemitem username">root</code> file system, you can restart the server and mount the source logical volume to get
+                        the merge to start immediately after the restart.</p>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiich02s05.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiich02.html">Up</a></td>
+                  <td class="next"><a href="bk09partiii.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using snapshots for virtual machines on a virtual host</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">III</span><span class="sep">.&nbsp;</span>Software RAID</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

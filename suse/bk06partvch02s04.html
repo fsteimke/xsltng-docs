@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>32.4.&nbsp;Building and modifying profiles</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch02s03.html" rel="prev">
+      <link href="bk06partvch02s05.html" rel="next">
+      <link href="bk06partvch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch02.html">Up</a> <a href="bk06partvch02s05.html">Next</a> <a href="bk06partvch02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch02s04.html" db-id="d616951e182950" id="sec-apparmor-start-build">
+            <header>
+               <h2><span class="label">32<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Building and modifying profiles</h2>
+            </header>
+            
+            
+            <p>AppArmor on <span class="phrase productname">SUSE Linux Enterprise Server</span> ships with a preconfigured set of profiles for the most important applications. Additionally,
+               you can use AppArmor to create your own profiles for any application you want.</p>
+            
+            <p>There are two ways of managing profiles. One is to use the graphical front-end provided
+               by the YaST AppArmor modules and the other is to use the command-line tools provided
+               by the AppArmor suite itself. The main difference is that YaST supports basic functionality
+               for AppArmor profiles, while the command-line tools let you update/tune the profiles
+               in a more fine-grained way.</p>
+            
+            <p>For each application, perform the following steps to create a profile:</p>
+            
+            <div class="informalobject procedure" id="proc-genprof">
+               <ol class="procedure" type="1">
+                  <li class="step" id="st-genprof1">
+                     
+                     <p>As <code class="systemitem username">root</code>, let AppArmor create a rough outline of the application's profile by running <code class="command">aa-genprof</code><em class="replaceable">PROGRAM_NAME</em>.</p>
+                     
+                     <p><em>or</em></p>
+                     
+                     <p> Outline the basic profile by running <span class="menuchoice"><span class="guimenu">YaST</span><span class="guimenu">Security and Users</span><span class="guimenu">AppArmor Configuration</span><span class="guimenu">Manually Add Profile</span></span> and specifying the complete path to the application you want to profile.</p>
+                     
+                     <p>A new basic profile is outlined and put into learning mode, which means that it logs
+                        any activity of the program you are executing, but does not yet restrict it.</p>
+                     </li>
+                  <li class="step" id="st-genprof2">
+                     
+                     <p>Run the full range of the application's actions to let AppArmor get a specific picture
+                        of its activities.</p>
+                     </li>
+                  <li class="step" id="st-genprof3">
+                     
+                     <p>Let AppArmor analyze the log files generated in <a class="xref xref-step" href="#st-genprof2">step <span class="label">2</span></a> by typing <span class="keycap">S</span> in aa-genprof.</p>
+                     
+                     <p>AppArmor scans the logs it recorded during the application's run and asks you to set
+                        the access rights for each event that was logged. Either set them for each file or
+                        use globbing.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Depending on the complexity of your application, it might be necessary to repeat <a class="xref xref-step" href="#st-genprof2">step <span class="label">2</span></a> and <a class="xref xref-step" href="#st-genprof3">step <span class="label">3</span></a>. Confine the application, exercise it under the confined conditions, and process
+                        any new log events. To properly confine the full range of an application's capabilities,
+                        you might be required to repeat this procedure often.</p>
+                     </li>
+                  <li class="step" id="st-genprof4">
+                     
+                     <p>When you finish <code class="command">aa-genprof</code>, your profile is set to enforce mode. The profile is applied and AppArmor restricts
+                        the application according to it.</p>
+                     
+                     <p>If you started <code class="command">aa-genprof</code> on an application that had an existing profile that was in complain mode, this profile
+                        remains in learning mode upon exit of this learning cycle. For more information about
+                        changing the mode of a profile, refer to <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-complain">the section called “aa-complain—entering complain or learning mode”</a> and <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-enforce">the section called “aa-enforce—entering enforce mode”</a>.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Test your profile settings by performing every task you need with the application
+               you confined. Normally, the confined program runs smoothly and you do not notice AppArmor
+               activities. If you notice certain misbehavior with your application, check the system
+               logs and see if AppArmor is too tightly confining your application. Depending on the
+               log mechanism used on your system, there are several places to look for AppArmor log
+               entries:</p>
+            
+            <div class="simplelist simplelistvert">
+               <div class="row"><span>
+                     <code class="filename">/var/log/audit/audit.log</code>
+                     </span></div>
+               <div class="row"><span>The command <code class="command">journalctl | grep -i apparmor</code>
+                     </span></div>
+               <div class="row"><span>The command <code class="command">dmesg -T</code>
+                     </span></div>
+            </div>
+            
+            <p>To adjust the profile, analyze the log messages relating to this application again
+               as described in <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-logprof">the section called “aa-logprof—scanning the system log”</a>. Determine the access rights or restrictions when prompted.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">More information</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>For more information about profile building and modification, refer to <a class="xref xref-chapter" href="bk06partvch04.html">Chapter&nbsp;<span class="label">34</span>, Profile components and syntax</a>, <a class="xref xref-chapter" href="bk06partvch06.html">Chapter&nbsp;<span class="label">36</span>, Building and managing profiles with YaST</a>, and <a class="xref xref-chapter" href="bk06partvch07.html">Chapter&nbsp;<span class="label">37</span>, Building profiles from the command line</a>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch02.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">32<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Choosing applications to profile</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">32<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Updating your profiles</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;40.&nbsp;Gathering system information and logs</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvich01.html" rel="prev">
+      <link href="bk10gloss01.html" rel="next">
+      <link href="bk10partvi.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partvi.html">Up</a> <a href="bk10gloss01.html">Next</a> <a href="bk10partvich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partvich02.html" db-id="d616951e303578" id="cha-virt-logs" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">40</span><span class="sep">.&nbsp;</span>Gathering system information and logs</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>When a virtualization host encounters a problem, it is often necessary to collect
+                  a detailed system report, which can be done with the help of the <code class="command">supportconfig</code> tool. See <a class="xref xref-chapter" href="bk01partvich02.html">Chapter&nbsp;<span class="label">48</span>, Gathering system information for support</a> for more information about <code class="command">supportconfig</code>.</p>
+               
+               <p>In certain cases, the information gathered by <code class="command">supportconfig</code> is insufficient, and logs generated from a custom logging or debugging configuration
+                  may be required to determine the cause of a problem.</p>
+               </div>
+            <section class="sect1" id="sec-logs-libvirt">
+               <header>
+                  <h2><span class="label">40<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                     <code class="library systemitem">libvirt</code> log controls</h2>
+               </header>
+               
+               
+               <p><code class="library systemitem">libvirt</code> provides logging facilities for both the library and the daemon. The behavior of
+                  the logging facility is controlled by adjusting the log level, filter and output settings.</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Log level</span></dt>
+                     <dd>
+                        
+                        <p><code class="library systemitem">libvirt</code> log messages are classified into four priority levels: DEBUG, INFO, WARNING and ERROR.
+                           The DEBUG level is verbose and capable of generating gigabytes of information in a
+                           short time. The volume of log messages progressively decreases with the INFO, WARNING
+                           and ERROR log levels. ERROR is the default log level.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Log filters</span></dt>
+                     <dd>
+                        
+                        <p>Log filters provide a way to log only messages matching a specific component and log
+                           level. Log filters allow collecting the verbose DEBUG log messages of specific components,
+                           but only ERROR level log messages from the rest of the system. By default, no log
+                           filters are defined.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Log outputs</span></dt>
+                     <dd>
+                        
+                        <p>Log outputs allow specifying where the filtered log messages are sent. Messages can
+                           be sent to a file, the standard error stream of the process, or journald. By default,
+                           filtered log messages are sent to journald.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>See <a class="link" href="https://libvirt.org/logging.html">https://libvirt.org/logging.html</a> for more details on <code class="library systemitem">libvirt</code>'s log controls.</p>
+               
+               <p>A default <code class="library systemitem">libvirt</code> installation has the log level set to ERROR, no log filters defined, and log outputs
+                  set to journald. Log messages from the <code class="library systemitem">libvirt</code> daemon can be viewed with the <code class="command">journalctl</code> command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>journalctl --unit libvirtd</code></span></span></pre>
+               </div>
+               
+               <p>The default log facility settings are fine for normal operations and provide useful
+                  messages for applications and users of <code class="library systemitem">libvirt</code>, but internal issues often require DEBUG level messages. As an example, consider
+                  a potential bug in the interaction between <code class="library systemitem">libvirt</code> and the QEMU monitor. In this case, we only need to see the debug messages of the
+                  communication between <code class="library systemitem">libvirt</code> and QEMU. The following example creates a log filter to select debug messages from
+                  the QEMU driver and send them to a file named <code class="filename">/tmp/libvirtd.log</code></p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>   log_filters="1:qemu.qemu_monitor_json"</code></span></span>
+<span class="line"><span class="ld"><code>   log_outputs="1:file:/tmp/libvirtd.log"</code></span></span></pre>
+               </div>
+               
+               <p>Log controls for the <code class="library systemitem">libvirt</code> daemon can be found in <code class="filename">/etc/libvirt/libvirtd.conf</code>. The daemon must be restarted after making any changes to the configuration file.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl restart libvirtd.service</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvich01.html">Prev</a></td>
+                  <td class="up"><a href="bk10partvi.html">Up</a></td>
+                  <td class="next"><a href="bk10gloss01.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">39</span><span class="sep">.&nbsp;</span>Integrated help and package documentation</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Glossary</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

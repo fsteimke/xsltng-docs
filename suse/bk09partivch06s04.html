@@ -1,0 +1,329 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.4.&nbsp;Configuring clients</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch06s03.html" rel="prev">
+      <link href="bk09partivch06s05.html" rel="next">
+      <link href="bk09partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch06.html">Up</a> <a href="bk09partivch06s05.html">Next</a> <a href="bk09partivch06s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch06s04.html" db-id="d616951e259094" id="sec-nfs-configuring-nfs-clients">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring clients</h2>
+            </header>
+            
+            
+            <p>To configure your host as an NFS client, you do not need to install additional software.
+               All needed packages are installed by default.</p>
+            
+            <section class="sect2" id="sec-nfs-import-yast2">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Importing file systems with YaST</h3>
+               </header>
+               
+               
+               <p>Authorized users can mount NFS directories from an NFS server into the local file
+                  tree using the YaST NFS client module. Proceed as follows:</p>
+               
+               <div class="formalobject procedure" id="pro-nfs-import-yast2">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Importing NFS directories</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Start the YaST NFS client module.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Add</span> in the <span class="guimenu">NFS Shares</span> tab. Enter the host name of the NFS server, the directory to import, and the mount
+                           point at which to mount this directory locally.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>When using NFSv4, select <span class="guimenu">Enable NFSv4</span> in the <span class="guimenu">NFS Settings</span> tab. Additionally, the <span class="guimenu">NFSv4 Domain Name</span> must contain the same value as used by the NFSv4 server. The default domain is <code class="literal">localdomain</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To use Kerberos authentication for NFS, GSS security must be enabled. Select <span class="guimenu">Enable GSS Security</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If <code class="daemon systemitem">firewalld</code> is active on your system, configure it separately for NFS (see <a class="xref xref-sect1" href="bk09partivch06s05.html">the section called “Operating an NFS server and clients behind a firewall”</a>). YaST does not yet have complete support for <code class="daemon systemitem">firewalld</code>, so ignore the <q>Firewall not configurable</q> message and continue.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">OK</span> to save your changes.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>The configuration is written to <code class="filename">/etc/fstab</code> and the specified file systems are mounted. When you start the YaST configuration
+                  client at a later time, it also reads the existing configuration from this file.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">NFS as a root file system</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>On (diskless) systems where the root partition is mounted via network as an NFS share,
+                              you need to be careful when configuring the network device with which the NFS share
+                              is accessible.</p>
+                           
+                           <p>When shutting down or rebooting the system, the default processing order is to turn
+                              off network connections then unmount the root partition. With NFS root, this order
+                              causes problems as the root partition cannot be cleanly unmounted as the network connection
+                              to the NFS share is already deactivated. To prevent the system from deactivating the
+                              relevant network device, open the network device configuration tab as described in
+                              <a class="xref xref-sect4" href="bk01partiiich04s04.html#sec-network-yast-change-start">the section called “Activating the network device”</a> and choose <span class="guimenu">On NFSroot</span> in the <span class="guimenu">Device Activation</span> pane.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               </section>
+            
+            <section class="sect2" id="sec-nfs-import">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Importing file systems manually</h3>
+               </header>
+               
+               
+               
+               <p>The prerequisite for importing file systems manually from an NFS server is a running
+                  RPC port mapper. The <code class="option">nfs</code> service takes care to start it properly; thus, start it by entering <code class="command">systemctl start nfs</code> as <code class="systemitem username">root</code>. Then remote file systems can be mounted in the file system just like local partitions,
+                  using the <code class="command">mount</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount <em class="replaceable">HOST</em>:<em class="replaceable">REMOTE-PATH</em><em class="replaceable">LOCAL-PATH</em></code></span></span></pre>
+               </div>
+               
+               <p>To import user directories from the <code class="systemitem">nfs.example.com</code> machine, for example, use:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount nfs.example.com:/home /home</code></span></span></pre>
+               </div>
+               
+               <p>To define a count of TCP connections that the clients make to the NFS server, you
+                  can use the <code class="literal">nconnect</code> option of the <code class="command">mount</code> command. You can specify any number between 1 and 16, where 1 is the default value
+                  if the mount option has not been specified.</p>
+               
+               <p>The <code class="literal">nconnect</code> setting is applied only during the first mount process to the particular NFS server.
+                  If the same client executes the mount command to the same NFS server, all already
+                  established connections will be shared—no new connection will be established. To change
+                  the <code class="literal">nconnect</code> setting, you have to unmount <strong class="bold">all</strong> client connections to the particular NFS server. Then you can define a new value
+                  for the <code class="literal">nconnect</code> option.</p>
+               
+               <p>You can find the value of <code class="literal">nconnect</code> that is in currently in effect in the output of the <code class="command">mount</code>, or in the file <code class="filename">/proc/mounts</code>. If there is no value for the mount option, then the option has not been used during
+                  mounting and the default value of <em>1</em> is in use.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Different number of connections than defined by <code class="literal">nconnect</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>As you can close and open connections after the first mount, the actual count of connections
+                              does not necessarily have to be the same as the value of <code class="literal">nconnect</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="sec-nfs-automount">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Using the automount service</h4>
+                  </header>
+                  
+                  
+                  <p>The autofs daemon can be used to mount remote file systems automatically. Add the
+                     following entry to the <code class="filename">/etc/auto.master</code> file:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/nfsmounts /etc/auto.nfs</code></span></span></pre>
+                  </div>
+                  
+                  <p>Now the <code class="filename">/nfsmounts</code> directory acts as the root for all the NFS mounts on the client if the <code class="filename">auto.nfs</code> file is filled appropriately. The name <code class="filename">auto.nfs</code> is chosen for the sake of convenience—you can choose any name. In <code class="filename">auto.nfs</code> add entries for all the NFS mounts as follows:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>localdata -fstype=nfs server1:/data</code></span></span>
+<span class="line"><span class="ld"><code>nfs4mount -fstype=nfs4 server2:/</code></span></span></pre>
+                  </div>
+                  
+                  <p>Activate the settings with <code class="command">systemctl start autofs</code> as <code class="systemitem username">root</code>. In this example, <code class="filename">/nfsmounts/localdata</code>, the <code class="filename">/data</code> directory of <code class="systemitem">server1</code>, is mounted with NFS and <code class="filename">/nfsmounts/nfs4mount</code> from <code class="systemitem">server2</code> is mounted with NFSv4.</p>
+                  
+                  <p>If the <code class="filename">/etc/auto.master</code> file is edited while the service autofs is running, the automounter must be restarted
+                     for the changes to take effect with <code class="command">systemctl restart autofs</code>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-nfs-fstab">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Manually editing <code class="filename">/etc/fstab</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>A typical NFSv3 mount entry in <code class="filename">/etc/fstab</code> looks like this:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>nfs.example.com:/data /local/path nfs rw,noauto 0 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>For NFSv4 mounts, use <code class="literal">nfs4</code> instead of <code class="literal">nfs</code> in the third column:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>nfs.example.com:/data /local/pathv4 nfs4 rw,noauto 0 0</code></span></span></pre>
+                  </div>
+                  
+                  <p>The <code class="literal">noauto</code> option prevents the file system from being mounted automatically at start-up. If
+                     you want to mount the respective file system manually, it is possible to shorten the
+                     mount command specifying the mount point only:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount /local/path</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Mounting at start-up</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>If you do not enter the <code class="literal">noauto</code> option, the init scripts of the system will handle the mount of those file systems
+                                 at start-up. In that case, you may consider adding the option <code class="option">_netdev</code>, which prevents scripts from trying to mount the share before the network is available.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-nfs-pnfs">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Parallel NFS (pNFS)</h3>
+               </header>
+               
+               
+               <p>NFS is one of the oldest protocols, developed in the 1980s. As such, NFS is usually
+                  sufficient if you want to share small files. However, when you want to transfer big
+                  files or many clients want to access data, an NFS server becomes a bottleneck and
+                  has a significant impact on the system performance. This is because files are quickly
+                  getting bigger, whereas the relative speed of Ethernet has not fully kept pace.</p>
+               
+               <p>When you request a file from a regular NFS server, the server looks up the file metadata,
+                  collects all the data, and transfers it over the network to your client. However,
+                  the performance bottleneck becomes apparent no matter how small or big the files are:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>With small files, most of the time is spent collecting the metadata.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>With big files, most of the time is spent on transferring the data from server to
+                        client.</p>
+                     </li>
+                  </ul>
+               
+               <p>pNFS, or parallel NFS, overcomes this limitation as it separates the file system metadata
+                  from the location of the data. As such, pNFS requires two types of servers:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>A <em>metadata</em> or <em>control server</em> that handles all the non-data traffic</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>One or more <em>storage server(s)</em> that hold(s) the data</p>
+                     </li>
+                  </ul>
+               
+               <p>The metadata and the storage servers form a single, logical NFS server. When a client
+                  wants to read or write, the metadata server tells the NFSv4 client which storage server
+                  to use to access the file chunks. The client can access the data directly on the server.</p>
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> supports pNFS on the client side only.</p>
+               
+               <section class="sect3" id="sec-nfs-pnfs-yast">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring pNFS client with YaST</h4>
+                  </header>
+                  
+                  
+                  <p>Proceed as described in <a class="xref xref-procedure" href="#pro-nfs-import-yast2">Procedure&nbsp;<span class="label">19<span class="sep">.</span>2</span>, “Importing NFS directories”</a>, but click the <span class="guimenu">pNFS (v4.2)</span> check box and optionally <span class="guimenu">NFSv4 share</span>. YaST will do all the necessary steps and will write all the required options in
+                     the file <code class="filename">/etc/exports</code>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-nfs-pnfs-manual">
+                  <header>
+                     <h4><span class="label">19<span class="sep">.</span>4<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring pNFS client manually</h4>
+                  </header>
+                  
+                  
+                  <p>Refer to <a class="xref xref-sect2" href="#sec-nfs-import">the section called “Importing file systems manually”</a> to start. Most of the configuration is done by the NFSv4 server. For pNFS, the only
+                     difference is to add the <code class="option">nfsvers</code> option and the metadata server <em class="replaceable">MDS_SERVER</em> to your <code class="command">mount</code> command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount -t nfs4 -o nfsvers=4.2 <em class="replaceable">MDS_SERVER</em><em class="replaceable">MOUNTPOINT</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>To help with debugging, change the value in the <code class="filename">/proc</code> file system:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> echo 32767 &gt; /proc/sys/sunrpc/nfsd_debug</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> echo 32767 &gt; /proc/sys/sunrpc/nfs_debug</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch06s03.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch06s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring NFS server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Operating an NFS server and clients behind a firewall</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

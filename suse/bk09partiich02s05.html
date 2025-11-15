@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>6.5.&nbsp;Using snapshots for virtual machines on a virtual host</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiich02s04.html" rel="prev">
+      <link href="bk09partiich02s06.html" rel="next">
+      <link href="bk09partiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiich02.html">Up</a> <a href="bk09partiich02s06.html">Next</a> <a href="bk09partiich02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partiich02s05.html" db-id="d616951e242193" id="sec-lvm-snapshots-xen-host">
+            <header>
+               <h2><span class="label">6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using snapshots for virtual machines on a virtual host</h2>
+            </header>
+            
+            
+            <p>Using an LVM logical volume for a virtual machine’s back-end storage allows flexibility
+               in administering the underlying device, such as making it easier to move storage objects,
+               create snapshots, and back up data. You can mount the LVM logical volume and use it
+               to store the virtual machine image as a file-backed disk, or you can assign the LVM
+               logical volume as a physical disk to write to it as a block device. You can create
+               a virtual disk image on the LVM logical volume, then snapshot the LVM.</p>
+            
+            <p>You can leverage the read/write capability of the snapshot to create different instances
+               of a virtual machine, where the changes are made to the snapshot for a particular
+               virtual machine instance. You can create a virtual disk image on an LVM logical volume,
+               snapshot the source logical volume, and modify the snapshot for a particular virtual
+               machine instance. You can create another snapshot of the source logical volume, and
+               modify it for a different virtual machine instance. The majority of the data for the
+               different virtual machine instances resides with the image on the source logical volume.</p>
+            
+            <p>You can also leverage the read/write capability of the snapshot to preserve the virtual
+               disk image while testing patches or upgrades in the guest environment. You create
+               a snapshot of the LVM volume that contains the image, and then run the virtual machine
+               on the snapshot location. The source logical volume is unchanged, and all changes
+               for that machine are written to the snapshot. To return to the source logical volume
+               of the virtual machine image, you power off the virtual machine, then remove the snapshot
+               from the source logical volume. To start over, you re-create the snapshot, mount the
+               snapshot, and restart the virtual machine on the snapshot image.</p>
+            
+            <p>The following procedure uses a file-backed virtual disk image and the Xen hypervisor.
+               You can adapt the procedure in this section for other hypervisors that run on the
+               SUSE Linux Enterprise platform, such as KVM. To run a file-backed virtual machine
+               image from the snapshot volume:</p>
+            
+            <div class="informalobject procedure" id="sec-lvm-snapshots-xen-host_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Ensure that the source logical volume that contains the file-backed virtual machine
+                        image is mounted, such as at mount point <code class="filename">/var/lib/xen/images/&lt;<em class="replaceable">IMAGE_NAME</em>&gt;</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create a snapshot of the LVM logical volume with enough space to store the differences
+                        that you expect.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvcreate -s -L 20G -n myvm-snap /dev/lvmvg/myvm</code></span></span></pre>
+                     </div>
+                     
+                     <p>If no size is specified, the snapshot is created as a thin snapshot.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create a mount point where you will mount the snapshot volume.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkdir -p /mnt/xen/vm/myvm-snap</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Mount the snapshot volume at the mount point you created.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount -t auto /dev/lvmvg/myvm-snap /mnt/xen/vm/myvm-snap</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>In a text editor, copy the configuration file for the source virtual machine, modify
+                        the paths to point to the file-backed image file on the mounted snapshot volume, and
+                        save the file such as <code class="filename">/etc/xen/myvm-snap.cfg</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start the virtual machine using the mounted snapshot volume of the virtual machine.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xm create -c /etc/xen/myvm-snap.cfg</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>(Optional) Remove the snapshot, and use the unchanged virtual machine image on the
+                        source logical volume.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> umount /mnt/xenvms/myvm-snap</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvremove -f /dev/lvmvg/mylvm-snap</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>(Optional) Repeat this process as desired.</p>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiich02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiich02.html">Up</a></td>
+                  <td class="next"><a href="bk09partiich02s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Deleting Linux snapshots</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Merging a snapshot with the source logical volume to revert changes or roll back to
+                     a previous state</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

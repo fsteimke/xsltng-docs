@@ -1,0 +1,328 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.8.&nbsp;Multipath configuration</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s07.html" rel="prev">
+      <link href="bk09partivch05s09.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s09.html">Next</a> <a href="bk09partivch05s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s08.html" db-id="d616951e254861" id="sec-multipath-conf-file">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Multipath configuration</h2>
+            </header>
+            
+            
+            <p>The built-in <code class="systemitem">multipath-tools</code> defaults work well for most setups. If customizations are needed, a configuration
+               file needs to be created. The main configuration file is <code class="filename">/etc/multipath.conf</code>. In addition, files in <code class="filename">/etc/multipath/conf.d/</code> are taken into account. See <a class="xref xref-sect3" href="#sec-multipath-conf-file-precedence">the section called “Additional configuration files and precedence rules”</a> for additional information.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Vendor recommendations and built-in hardware defaults</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Some storage vendors publish recommended values for multipath options in their documentation.
+                           These values often represent what the vendor has tested in their environment and found
+                           most suitable for the storage product. See the disclaimer in <a class="xref xref-sect2" href="bk09partivch05s02.html#sec-multipath-hardware-autodetect">the section called “Storage array autodetection for multipathing”</a>.</p>
+                        
+                        <p><code class="systemitem">multipath-tools</code> has built-in defaults for many storage arrays that are derived from the published
+                           vendor recommendations. Run <code class="command">multipath -T</code> to see the current settings for your devices and compare them to vendor recommendations.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-multipath-conf-file-create">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating <code class="filename">/etc/multipath.conf</code>
+                     </h3>
+               </header>
+               
+               
+               <p>It is recommended that you create a minimal <code class="filename">/etc/multipath.conf</code> that just contains those settings you want to change. In many cases, you do not need
+                  to create <code class="filename">/etc/multipath.conf</code> at all.</p>
+               
+               <p>If you prefer working with a configuration template that contains all possible configuration
+                  directives, run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>multipath -T &gt;/etc/multipath.conf</code></span></span></pre>
+               </div>
+               
+               <p>See also <a class="xref xref-sect2" href="bk09partivch05s14.html#sec-multipath-best-practice-config">the section called “Best practices for configuration”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-conf-file-syntax">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>
+                     <code class="filename">multipath.conf</code> syntax</h3>
+               </header>
+               
+               
+               <p>The <code class="filename">/etc/multipath.conf</code> file uses a hierarchy of sections, subsections and option/value pairs.</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>White space separates tokens. Consecutive white space characters are collapsed into
+                        a single space, unless quoted (see below).</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The hash (<code class="literal">#</code>) and exclamation mark (<code class="literal">!</code>) characters cause the rest of the line to be discarded as a comment.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Sections and subsections are started with a section name and an opening brace (<code class="literal">{</code>) on the same line, and end with a closing brace (<code class="literal">}</code>) on a line on its own.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Options and values are written on one line. Line continuations are unsupported.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Options and section names must be keywords. The allowed keywords are documented in
+                        <code class="systemitem">multipath.conf(5)</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Values may be enclosed in double quotes (<code class="literal">"</code>). They must be enclosed in quotes if they contain white space or comment characters.
+                        A double quote character inside a value is represented by a pair of double quotes
+                        (<code class="literal">""</code>).</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The values of some options are POSIX regular expressions (see <code class="systemitem">regex(7)</code>). They are case sensitive and not anchored, so “<code class="literal">bar</code>” matches “<code class="literal">rhabarber</code>”, but not “Barbie”.</p>
+                     </li>
+                  </ul>
+               
+               <p>The following example illustrates the syntax:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>section {</code></span></span>
+<span class="line"><span class="ld"><code>    subsection {</code></span></span>
+<span class="line"><span class="ld"><code>        option1 value</code></span></span>
+<span class="line"><span class="ld"><code>        option2      "complex value!"</code></span></span>
+<span class="line"><span class="ld"><code>        option3    "value with ""quoted"" word"</code></span></span>
+<span class="line"><span class="ld"><code>    } ! subsection end</code></span></span>
+<span class="line"><span class="ld"><code>} # section end</code></span></span></pre>
+               </div>
+               
+               <section class="sect3" id="sec-multipath-conf-file-precedence">
+                  <header>
+                     <h4><span class="label">18<span class="sep">.</span>8<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Additional configuration files and precedence rules</h4>
+                  </header>
+                  
+                  
+                  <p>After <code class="filename">/etc/multipath.conf</code>, the tools read files matching the pattern <code class="filename">/etc/multipath.conf.d/*.conf</code>. The additional files follow the same syntax rules as <code class="filename">/etc/multipath.conf</code>. Sections and options can occur multiple times. If <em>the same option in the same section</em> is set in multiple files, or on multiple lines in the same file, the last value takes
+                     precedence. Separate precedence rules apply between <code class="filename">multipath.conf</code> sections. See below.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-conf-file-sections">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                     <code class="filename">multipath.conf</code> sections</h3>
+               </header>
+               
+               
+               <p>The <code class="filename">/etc/multipath.conf</code> file is organized into the following sections. Some options can occur in more than
+                  one section. See <code class="systemitem">multipath.conf(5)</code> for details.</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">defaults</span></dt>
+                     <dd>
+                        
+                        <p>General default settings.</p>
+                        
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Overriding built-in device properties</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>Built-in hardware-specific device properties take precedence over the settings in
+                                       the <code class="literal">defaults</code> section. Changes must therefore be made in the <code class="literal">devices</code> section or in the <code class="literal">overrides</code> section.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">blacklist</span></dt>
+                     <dd>
+                        
+                        <p>Lists devices to ignore. See <a class="xref xref-sect2" href="bk09partivch05s11.html#sec-multipath-blacklist">the section called “The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                              ”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">blacklist_exceptions</span></dt>
+                     <dd>
+                        
+                        <p>Lists devices to be multipathed even though they are matched by the blacklist. See
+                           <a class="xref xref-sect2" href="bk09partivch05s11.html#sec-multipath-blacklist">the section called “The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                              ”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">devices</span></dt>
+                     <dd>
+                        
+                        <p>Settings specific to the storage controller. This section is a collection of <code class="literal">device</code> subsections. Values in this section override values for the same options in the <code class="filename">defaults</code> section, and the built-in settings of <code class="systemitem">multipath-tools</code>.</p>
+                        
+                        <p><code class="literal">device</code> entries in the <code class="literal">devices</code> section are matched against the vendor and product of a device using regular expressions.
+                           These entries will be “merged”, setting all options from matching sections for the
+                           device. If the same option is set in multiple matching <code class="literal">device</code> sections, the last device entry takes precedence, even if it is less “specific” than
+                           preceding entries. This applies also if the matching entries appear in different configuration
+                           files (see <a class="xref xref-sect3" href="#sec-multipath-conf-file-precedence">the section called “Additional configuration files and precedence rules”</a>). In the following example, a device <code class="literal">SOMECORP STORAGE</code> will use <code class="literal">fast_io_fail_tmo 15</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>devices {</code></span></span>
+<span class="line"><span class="ld"><code>    device {</code></span></span>
+<span class="line"><span class="ld"><code>        vendor SOMECORP</code></span></span>
+<span class="line"><span class="ld"><code>        product STOR</code></span></span>
+<span class="line"><span class="ld"><code>        fast_io_fail_tmo 10</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>    device {</code></span></span>
+<span class="line"><span class="ld"><code>        vendor SOMECORP</code></span></span>
+<span class="line"><span class="ld"><code>        product .*</code></span></span>
+<span class="line"><span class="ld"><code>        fast_io_fail_tmo 15</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipaths</span></dt>
+                     <dd>
+                        
+                        <p>Settings for individual multipath devices. This section is a list of <code class="literal">multipath</code> subsections. Values override the <code class="literal">defaults</code> and <code class="literal">devices</code> sections.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">overrides</span></dt>
+                     <dd>
+                        
+                        <p>Settings that override values from all other sections.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-conf-file-apply">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>8<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Applying <code class="filename">multipath.conf</code> modifications</h3>
+               </header>
+               
+               
+               <p>To apply the configuration changes, run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd reconfigure</code></span></span></pre>
+               </div>
+               
+               <p>Do not forget to synchronize with the configuration in the initramfs. See <a class="xref xref-sect2" href="bk09partivch05s07.html#sec-multipath-initrd-sync">the section called “Keeping the initramfs synchronized”</a>.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Do not apply settings using <code class="command">multipath</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Do not apply new settings with the <code class="command">multipath</code> command while <code class="command">multipathd</code> is running. This may result in an inconsistent and possibly broken setup.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note" id="sec-multipath-conf-file-verify">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Verifying a modified setup</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>It is possible to test modified settings first before they are applied, by running:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipath -d -v2</code></span></span></pre>
+                           </div>
+                           
+                           <p>This command shows new maps to be created with the proposed topology, but not whether
+                              maps will be removed/flushed. To obtain more information, run with increased verbosity:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipath -d -v3 2&gt;&amp;1 | less</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s07.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Configuring the system for multipathing</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Configuring policies for failover, queuing, and failback</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

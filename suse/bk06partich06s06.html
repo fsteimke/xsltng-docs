@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>7.6.&nbsp;Active Directory certificate auto-enrollment</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich06s05.html" rel="prev">
+      <link href="bk06partich07.html" rel="next">
+      <link href="bk06partich06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich06.html">Up</a> <a href="bk06partich07.html">Next</a> <a href="bk06partich06s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich06s06.html" db-id="d616951e165814" id="sec-active-directory-certificate-auto-enrollment">
+            <header>
+               <h2><span class="label">7<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Active Directory certificate auto-enrollment</h2>
+            </header>
+            
+            
+            <p>Certificate auto-enrollment enables network devices to automatically enroll certificates
+               from Active Directory Certificate Services, including <span class="phrase productname">SUSE Linux Enterprise Server</span> devices, with no user intervention. This is managed by Active Directory's Group Policy,
+               using Samba's <code class="command">samba-gpupdate</code> command.</p>
+            
+            <section class="sect2" id="sec-active-directory-auto-enrollment-server-configuration">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring certificate auto-enrollment on the server</h3>
+               </header>
+               
+               
+               <p>The Windows server roles <code class="literal">Certification Authority</code>, <code class="literal">Certificate Enrollment Policy Web Service</code>, <code class="literal">Certificate Enrollment Web Service</code> and <code class="literal">Network Device Enrollment Service</code> all must be installed and configured on the Active Directory server.</p>
+               
+               <p>Configure Group Policy auto-enrollment as described in this Microsoft documentation:
+                  <a class="link" href="https://docs.microsoft.com/en-us/windows-server/networking/core-network-guide/cncg/server-certs/configure-server-certificate-autoenrollment#configure-server-certificate-auto-enrollment">https://docs.microsoft.com/en-us/windows-server/networking/core-network-guide/cncg/server-certs/configure-server-certificate-autoenrollment#configure-server-certificate-auto-enrollment</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-active-directory-auto-enrollment-client-configuration">
+               <header>
+                  <h3><span class="label">7<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Enable certificate auto-enrollment on the client</h3>
+               </header>
+               
+               
+               <p>Follow the steps in the following procedure to enable certificate on your clients.</p>
+               
+               <div class="informalobject procedure" id="pro-enable-certification-auto-enrollment-client">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the <code class="package">samba-gpupdate</code> package. This automatically installs the <code class="package">certmonger</code>, <code class="package">cepces</code> and <code class="package">sscep</code> dependencies. Samba uses <code class="command">sscep</code> to download the Certificate Authority root chain, then uses the <code class="daemon systemitem">certmonger</code> paired with <code class="systemitem">cepces</code> to monitor the host certificate templates.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Join to an Active Directory domain (one where the CA has been previously configured
+                           as explained in <a class="xref xref-sect2" href="#sec-active-directory-auto-enrollment-server-configuration">the section called “Configuring certificate auto-enrollment on the server”</a>).</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>On Winbind-joined machines, set the <code class="filename">smb.conf</code> global parameter by adding the line <code class="literal">apply group policies = yes</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>For SSSD-joined machines, install <code class="package">oddjob-gpupdate</code> from <a class="link" href="https://github.com/openSUSE/oddjob-gpupdate">https://github.com/openSUSE/oddjob-gpupdate</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Then verify that certificate auto-enrollment is correctly configured by running the
+                           following command on the client:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">/usr/sbin/samba-gpupdate --rsop</code></code></span></span></pre>
+                        </div>
+                        
+                        <p>If you see output like the following example, it is correctly configured:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Resultant Set of Policy</code></span></span>
+<span class="line"><span class="ld"><code>Computer Policy</code></span></span>
+<span class="line"><span class="ld"><code>GPO: Default Domain Policy</code></span></span>
+<span class="line"><span class="ld"><code>==========================================================</code></span></span>
+<span class="line"><span class="ld"><code>CSE: gp_cert_auto_enroll_ext</code></span></span>
+<span class="line"><span class="ld"><code>-----------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>Policy Type: Auto Enrollment Policy</code></span></span>
+<span class="line"><span class="ld"><code>-----------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>[ &lt;<em class="replaceable">CA NAME</em>&gt; ] =</code></span></span>
+<span class="line"><span class="ld"><code>[ CA Certificate ] =</code></span></span>
+<span class="line"><span class="ld"><code>----BEGIN CERTIFICATE----</code></span></span>
+<span class="line"><span class="ld"><code>&lt;<em class="replaceable">CERTIFICATE</em>&gt;</code></span></span>
+<span class="line"><span class="ld"><code>----END CERTIFICATE----</code></span></span>
+<span class="line"><span class="ld"><code>[ Auto Enrollment Server ] = &lt;<em class="replaceable">DNS NAME</em>&gt;</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Use the following command to display installed certificates:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">getcert list</code></code></span></span>
+<span class="line"><span class="ld"><code> Number of certificates and requests being tracked: 1.</code></span></span>
+<span class="line"><span class="ld"><code> Request ID 'Machine':</code></span></span>
+<span class="line"><span class="ld"><code> status: MONITORING</code></span></span>
+<span class="line"><span class="ld"><code> stuck: no</code></span></span>
+<span class="line"><span class="ld"><code> key pair storage: type=FILE,location='/var/lib/samba/private/certs/Machine.key'</code></span></span>
+<span class="line"><span class="ld"><code> certificate: type=FILE,location='/var/lib/samba/certs/Machine.crt'</code></span></span>
+<span class="line"><span class="ld"><code> CA: &lt;<em class="replaceable">CA NAME</em>&gt;</code></span></span>
+<span class="line"><span class="ld"><code> issuer: CN=&lt;<em class="replaceable">CA NAME</em>&gt;</code></span></span>
+<span class="line"><span class="ld"><code> subject: CN=&lt;<em class="replaceable">HOSTNAME</em>&gt;</code></span></span>
+<span class="line"><span class="ld"><code> expires: 2017-08-15 17:37:02 UTC</code></span></span>
+<span class="line"><span class="ld"><code> dns: &lt;<em class="replaceable">hostname</em>&gt;</code></span></span>
+<span class="line"><span class="ld"><code> key usage: digitalSignature,keyEncipherment</code></span></span>
+<span class="line"><span class="ld"><code> eku: id-kp-clientAuth,id-kp-serverAuth</code></span></span>
+<span class="line"><span class="ld"><code> certificate template/profile: Machine</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>Certificates are installed in <code class="filename">/var/lib/samba/certs</code> and private keys are installed in <code class="filename">/var/lib/samba/private</code>/certs.</p>
+               
+               <p>For more information, see <code class="command">man samba-gpupdate</code>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich06s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich06.html">Up</a></td>
+                  <td class="next"><a href="bk06partich07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">7<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Changing passwords</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">8</span><span class="sep">.&nbsp;</span>Setting up a freeRADIUS server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

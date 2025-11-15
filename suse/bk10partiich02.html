@@ -1,0 +1,1098 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;9.&nbsp;Preparing the VM Host Server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich01s03.html" rel="prev">
+      <link href="bk10partiich02s02.html" rel="next">
+      <link href="bk10partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partii.html">Up</a> <a href="bk10partiich02s02.html">Next</a> <a href="bk10partiich01s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partiich02.html" db-id="d616951e270473" id="cha-libvirt-host" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">9</span><span class="sep">.&nbsp;</span>Preparing the VM Host Server</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               <p>Before you can install guest virtual machines, you need to prepare the VM Host Server
+                  to provide the guests with the resources that they need for their operation. Specifically,
+                  you need to configure:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><em>Networking</em> so that guests can make use of the network connection provided the host.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A <em>storage pool</em> reachable from the host so that the guests can store their disk images.</p>
+                     </li>
+                  </ul>
+               </div>
+            <section class="sect1" id="libvirt-host-network">
+               <header>
+                  <h2><span class="label">9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring networks</h2>
+               </header>
+               
+               
+               <p>There are two common network configurations to provide a VM Guest with a network connection:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>A <em>network bridge</em>. This is the default and recommended way of providing the guests with network connection.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>A <em>virtual network</em> with forwarding enabled.</p>
+                     </li>
+                  </ul>
+               
+               <section class="sect2" id="libvirt-networks-bridged">
+                  <header>
+                     <h3><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Network bridge</h3>
+                  </header>
+                  
+                  
+                  <p>The network bridge configuration provides a Layer 2 switch for VM Guests, switching
+                     Layer 2 Ethernet packets between ports on the bridge based on MAC addresses associated
+                     with the ports. This gives the VM Guest Layer 2 access to the VM Host Server's network.
+                     This configuration is analogous to connecting the VM Guest's virtual Ethernet cable
+                     into a hub that is shared with the host and other VM Guests running on the host. The
+                     configuration is often referred to as <em>shared physical device</em>.</p>
+                  
+                  <p>The network bridge configuration is the default configuration of <span class="phrase productname">SUSE Linux Enterprise Server</span> when configured as a KVM or Xen hypervisor. It is the preferred configuration when
+                     you simply want to connect VM Guests to the VM Host Server's LAN.</p>
+                  
+                  <p>Which tool to use to create the network bridge depends on the service you use to manage
+                     the network connection on the VM Host Server:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p>If a network connection is managed by <code class="systemitem">wicked</code>, use either YaST or the command line to create the network bridge. <code class="systemitem">wicked</code> is the default on server hosts.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>If a network connection is managed by NetworkManager, use the NetworkManager command
+                           line tool <code class="command">nmcli</code> to create the network bridge. NetworkManager is the default on desktop and laptops.</p>
+                        </li>
+                     </ul>
+                  
+                  <section class="sect3" id="libvirt-networks-bridged-yast">
+                     <header>
+                        <h4><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Managing network bridges with YaST</h4>
+                     </header>
+                     
+                     
+                     <p>This section includes procedures to add or remove network bridges with YaST.</p>
+                     
+                     <section class="sect4" id="libvirt-networks-bridged-yast-add">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Adding a network bridge</h5>
+                        </header>
+                        
+                        
+                        <p>To add a network bridge on VM Host Server, follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-bridged-yast-add_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Start <span class="menuchoice"><span class="guimenu">YaST</span><span class="guimenu">System</span><span class="guimenu">Network Settings</span></span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Activate the <span class="guimenu">Overview</span> tab and click <span class="guimenu">Add</span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Select <span class="guimenu">Bridge</span> from the <span class="guimenu">Device Type</span> list and enter the bridge device interface name in the <span class="guimenu">Configuration Name</span> entry. Click the <span class="guimenu">Next</span> button to proceed.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>In the <span class="guimenu">Address</span> tab, specify networking details such as DHCP/static IP address, subnet mask or host
+                                    name.</p>
+                                 
+                                 <p>Using <span class="guimenu">Dynamic Address</span> is only useful when also assigning a device to a bridge that is connected to a DHCP
+                                    server.</p>
+                                 
+                                 <p>If you intend to create a virtual bridge that has no connection to a real network
+                                    device, use <span class="guimenu">Statically assigned IP Address</span>. In this case, it is a good idea to use addresses from the private IP address ranges,
+                                    for example, <code class="literal">192.168.0.0/16</code>, <code class="literal">172.16.0.0/12</code>, or <code class="literal">10.0.0.0/8</code>.</p>
+                                 
+                                 <p>To create a bridge that should only serve as a connection between the different guests
+                                    without connection to the host system, set the IP address to <code class="literal">0.0.0.0</code> and the subnet mask to <code class="literal">255.255.255.255</code>. The network scripts handle this special address as an unset IP address.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Activate the <span class="guimenu">Bridged Devices</span> tab and activate the network devices you want to include in the network bridge.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Click <span class="guimenu">Next</span> to return to the <span class="guimenu">Overview</span> tab and confirm with <span class="guimenu">OK</span>. The new network bridge should now be active on VM Host Server.</p>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-bridged-yast-rm">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Deleting a network bridge</h5>
+                        </header>
+                        
+                        
+                        <p>To delete an existing network bridge, follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-bridged-yast-rm_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Start <span class="menuchoice"><span class="guimenu">YaST</span><span class="guimenu">System</span><span class="guimenu">Network Settings</span></span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Select the bridge device you want to delete from the list in the <span class="guimenu">Overview</span> tab.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Delete the bridge with <span class="guimenu">Delete</span> and confirm with <span class="guimenu">OK</span>.</p>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     </section>
+                  
+                  <section class="sect3" id="libvirt-networks-bridged-add-brctl">
+                     <header>
+                        <h4><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing network bridges from the command line</h4>
+                     </header>
+                     
+                     
+                     <p>This section includes procedures to add or remove network bridges using the command
+                        line.</p>
+                     
+                     <section class="sect4" id="libvirt-networks-bridged-add-brctl-add">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Adding a network bridge</h5>
+                        </header>
+                        
+                        
+                        <p>To add a new network bridge device on VM Host Server, follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-bridged-add-brctl-add_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Log in as <code class="systemitem username">root</code> on the VM Host Server where you want to create a new network bridge.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Choose a name for the new bridge—<em class="replaceable">virbr_test</em> in our example—and run</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ip link add name <em class="replaceable">VIRBR_TEST</em> type bridge</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Check if the bridge was created on VM Host Server:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>bridge vlan</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>virbr_test  1 PVID Egress Untagged</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p><code class="literal">virbr_test</code> is present, but is not associated with any physical network interface.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Bring the network bridge up and add a network interface to the bridge:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ip link set virbr_test up</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>ip link set eth1 master virbr_test</code></span></span></pre>
+                                 </div>
+                                 
+                                 <div class="admonition important">
+                                    <div>
+                                       <div class="icon">☝</div>
+                                       <div class="body">
+                                          <header>
+                                             <div class="title">Network interface must be unused</div>
+                                          </header>
+                                          <div>
+                                             
+                                             
+                                             <p>You can only assign a network interface that is not yet used by another network bridge.</p>
+                                             </div>
+                                       </div>
+                                    </div>
+                                 </div>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Optionally, enable STP (see <a class="link" href="https://en.wikipedia.org/wiki/Spanning_Tree_Protocol">Spanning Tree Protocol</a>):</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>bridge link set dev virbr_test cost 4</code></span></span></pre>
+                                 </div>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-bridged-add-brctl-del">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Deleting a network bridge</h5>
+                        </header>
+                        
+                        
+                        <p>To delete an existing network bridge device on VM Host Server from the command line,
+                           follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-bridged-add-brctl-del_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Log in as <code class="systemitem username">root</code> on the VM Host Server where you want to delete an existing network bridge.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>List existing network bridges to identify the name of the bridge to remove:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>bridge vlan</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>virbr_test  1 PVID Egress Untagged</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Delete the bridge:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>ip link delete dev virbr_test</code></span></span></pre>
+                                 </div>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     </section>
+                  
+                  <section class="sect3" id="libvirt-networks-bridged-add-nm">
+                     <header>
+                        <h4><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Adding a network bridge with <code class="command">nmcli</code>
+                           </h4>
+                     </header>
+                     
+                     
+                     <p>This section includes procedures to add a network bridge with NetworkManager's command
+                        line tool <code class="command">nmcli</code>.</p>
+                     
+                     <div class="informalobject procedure" id="libvirt-networks-bridged-add-nm_proc1">
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>List active network connections:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli connection show --active</code></span></span>
+<span class="line"><span class="ld"><code>NAME                   UUID                                  TYPE      DEVICE</code></span></span>
+<span class="line"><span class="ld"><code>Ethernet connection 1  84ba4c22-0cfe-46b6-87bb-909be6cb1214  ethernet  eth0</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Add a new bridge device named <code class="literal">br0</code> and verify its creation:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli connection add type bridge ifname br0</code></span></span>
+<span class="line"><span class="ld"><code>Connection 'bridge-br0' (36e11b95-8d5d-4a8f-9ca3-ff4180eb89f7) \</code></span></span>
+<span class="line"><span class="ld"><code>successfully added.</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli connection show --active</code></span></span>
+<span class="line"><span class="ld"><code>NAME                   UUID                                  TYPE      DEVICE</code></span></span>
+<span class="line"><span class="ld"><code>bridge-br0             36e11b95-8d5d-4a8f-9ca3-ff4180eb89f7  bridge    br0</code></span></span>
+<span class="line"><span class="ld"><code>Ethernet connection 1  84ba4c22-0cfe-46b6-87bb-909be6cb1214  ethernet  eth0</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Optionally, you can view the bridge settings:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli -f bridge connection show bridge-br0</code></span></span>
+<span class="line"><span class="ld"><code>bridge.mac-address:                     --</code></span></span>
+<span class="line"><span class="ld"><code>bridge.stp:                             yes</code></span></span>
+<span class="line"><span class="ld"><code>bridge.priority:                        32768</code></span></span>
+<span class="line"><span class="ld"><code>bridge.forward-delay:                   15</code></span></span>
+<span class="line"><span class="ld"><code>bridge.hello-time:                      2</code></span></span>
+<span class="line"><span class="ld"><code>bridge.max-age:                         20</code></span></span>
+<span class="line"><span class="ld"><code>bridge.ageing-time:                     300</code></span></span>
+<span class="line"><span class="ld"><code>bridge.group-forward-mask:              0</code></span></span>
+<span class="line"><span class="ld"><code>bridge.multicast-snooping:              yes</code></span></span>
+<span class="line"><span class="ld"><code>bridge.vlan-filtering:                  no</code></span></span>
+<span class="line"><span class="ld"><code>bridge.vlan-default-pvid:               1</code></span></span>
+<span class="line"><span class="ld"><code>bridge.vlans:                           --</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Link the bridge device to the physical Ethernet device <code class="literal">eth0</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli connection add type bridge-slave ifname eth0 master br0</code></span></span></pre>
+                              </div>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Disable the <code class="literal">eth0</code> interface and enable the new bridge:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli connection down "Ethernet connection 1"</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nmcli connection up bridge-br0</code></span></span>
+<span class="line"><span class="ld"><code>Connection successfully activated (master waiting for slaves) \</code></span></span>
+<span class="line"><span class="ld"><code>(D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/9)</code></span></span></pre>
+                              </div>
+                              </li>
+                        </ol>
+                     </div>
+                     </section>
+                  
+                  <section class="sect3" id="sec-xen-net-vlan">
+                     <header>
+                        <h4><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using VLAN interfaces</h4>
+                     </header>
+                     
+                     
+                     <p>Sometimes it is necessary to create a private connection either between two VM Host
+                        Servers or between VM Guest systems. For example, to migrate a VM Guest to hosts in
+                        a different network segment. Or to create a private bridge that only VM Guest systems
+                        may connect to (even when running on different VM Host Server systems). An easy way
+                        to build such connections is to set up VLAN networks.</p>
+                     
+                     <p>VLAN interfaces are commonly set up on the VM Host Server. They either interconnect
+                        the different VM Host Server systems, or they may be set up as a physical interface
+                        to an otherwise virtual-only bridge. It is even possible to create a bridge with a
+                        VLAN as a physical interface that has no IP address in the VM Host Server. That way,
+                        the guest systems have no possibility to access the host over this network.</p>
+                     
+                     <p>Run the YaST module <span class="menuchoice"><span class="guimenu">System</span><span class="guimenu">Network Settings</span></span>. Follow this procedure to set up the VLAN device:</p>
+                     
+                     <div class="formalobject procedure" id="sec-xen-net-vlan_proc1">
+                        <header>
+                           <div class="title">Procedure&nbsp;<span class="label">9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up VLAN interfaces with YaST</div>
+                        </header>
+                        <ol class="procedure" type="1">
+                           <li class="step">
+                              
+                              <p>Click <span class="guimenu">Add</span> to create a new network interface.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>In the <span class="guimenu">Hardware Dialog</span>, select <span class="guimenu">Device Type</span><span class="guimenu">VLAN</span>.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Change the value of <span class="guimenu">Configuration Name</span> to the ID of your VLAN. Be aware VLAN ID <code class="literal">1</code> is commonly used for management purposes.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Click <span class="guimenu">Next</span>.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Select the interface that the VLAN device should connect to below <span class="guimenu">Real Interface for VLAN</span>. If the desired interface does not appear in the list, first set up this interface
+                                 without an IP address.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Select the desired method for assigning an IP address to the VLAN device.</p>
+                              </li>
+                           <li class="step">
+                              
+                              <p>Click <span class="guimenu">Next</span> to finish the configuration.</p>
+                              </li>
+                        </ol>
+                     </div>
+                     
+                     <p>It is also possible to use the VLAN interface as a physical interface of a bridge.
+                        This makes it possible to connect several VM Host Server-only networks and allows
+                        live migration of VM Guest systems that are connected to such a network.</p>
+                     
+                     <p>YaST does not always allow setting no IP address. However, this may be a desired feature,
+                        especially if VM Host Server-only networks should be connected. In this case, use
+                        the special address <code class="literal">0.0.0.0</code> with netmask <code class="literal">255.255.255.255</code>. The system scripts handle this address as no IP address set.</p>
+                     </section>
+                  </section>
+               
+               <section class="sect2" id="libvirt-networks-virtual">
+                  <header>
+                     <h3><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Virtual networks</h3>
+                  </header>
+                  
+                  
+                  <p><code class="library systemitem">libvirt</code>-managed virtual networks are similar to bridged networks, but typically have no Layer
+                     2 connection to the VM Host Server. Connectivity to the VM Host Server's physical
+                     network is accomplished with Layer 3 forwarding, which introduces additional packet
+                     processing on the VM Host Server as compared to a Layer 2 bridged network. Virtual
+                     networks also provide DHCP and DNS services for VM Guests. For more information on
+                     <code class="library systemitem">libvirt</code> virtual networks, see the <cite class="citetitle">Network XML format</cite> documentation at <a class="link" href="https://libvirt.org/formatnetwork.html">https://libvirt.org/formatnetwork.html</a>.</p>
+                  
+                  <p>A standard <code class="library systemitem">libvirt</code> installation on <span class="phrase productname">SUSE Linux Enterprise Server</span> already comes with a predefined virtual network named <code class="literal">default</code>. It provides DHCP and DNS services for the network, along with connectivity to the
+                     VM Host Server's physical network using the network address translation (NAT) forwarding
+                     mode. Although it is predefined, the <code class="literal">default</code> virtual network needs to be explicitly enabled by the administrator. For more information
+                     on the forwarding modes supported by <code class="library systemitem">libvirt</code>, see the <cite class="citetitle">Connectivity</cite> section of the <cite class="citetitle">Network XML format</cite> documentation at <a class="link" href="https://libvirt.org/formatnetwork.html#elementsConnect">https://libvirt.org/formatnetwork.html#elementsConnect</a>.</p>
+                  
+                  <p><code class="library systemitem">libvirt</code>-managed virtual networks can be used to satisfy a wide range of use cases, but are
+                     commonly used on VM Host Servers that have a wireless connection or dynamic/sporadic
+                     network connectivity, such as laptops. Virtual networks are also useful when the VM
+                     Host Server's network has limited IP addresses, allowing forwarding of packets between
+                     the virtual network and the VM Host Server's network. However, most server use cases
+                     are better suited for the network bridge configuration, where VM Guests are connected
+                     to the VM Host Server's LAN.</p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Enabling forwarding mode</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Enabling forwarding mode in a <code class="library systemitem">libvirt</code> virtual network enables forwarding in the VM Host Server by setting <code class="filename">/proc/sys/net/ipv4/ip_forward</code> and <code class="filename">/proc/sys/net/ipv6/conf/all/forwarding</code> to 1, which turns the VM Host Server into a router. Restarting the VM Host Server's
+                                 network may reset the values and disable forwarding. To avoid this behavior, explicitly
+                                 enable forwarding in the VM Host Server by editing the <code class="filename">/etc/sysctl.conf</code> file and adding:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>net.ipv4.ip_forward = 1</code></span></span></pre>
+                              </div>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>net.ipv6.conf.all.forwarding = 1</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <section class="sect3" id="libvirt-networks-virtual-vmm">
+                     <header>
+                        <h4><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Managing virtual networks with Virtual Machine Manager</h4>
+                     </header>
+                     
+                     
+                     <p>You can define, configure and operate virtual networks with Virtual Machine Manager.</p>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-vmm-define">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Defining virtual networks</h5>
+                        </header>
+                        
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-virtual-vmm-define_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Start Virtual Machine Manager. In the list of available connections, right-click the
+                                    name of the connection for which you need to configure the virtual network, and then
+                                    select <span class="guimenu">Details</span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>In the <span class="guimenu">Connection Details</span> window, click the <span class="guimenu">Virtual Networks</span> tab. You can see the list of all virtual networks available for the current connection.
+                                    On the right, there are details of the selected virtual network.</p>
+                                 
+                                 <div class="figure formalobject" id="libvirt-networks-virtual-vmm-define_proc1_step2_fig1">
+                                    
+                                    
+                                    <div class="mediaobject">
+                                       <div class="media image"><span class="viewport-table" style="width:248px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/libvirt_vmm_conndetails.png" style="width:248px;"></picture></span></span></span></span></span></div>
+                                    </div>
+                                    
+                                    <header>
+                                       <div class="title">Figure&nbsp;<span class="label">9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Connection details</div>
+                                    </header>
+                                 </div>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>To add a new virtual network, click <span class="guimenu">Add</span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Specify a name for the new virtual network.</p>
+                                 
+                                 <div class="figure formalobject" id="libvirt-networks-virtual-vmm-define_proc1_step4_fig1">
+                                    
+                                    
+                                    <div class="mediaobject">
+                                       <div class="media image"><span class="viewport-table" style="width:248px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/libvirt_vmm_vnet_ipv4.png" style="width:248px;"></picture></span></span></span></span></span></div>
+                                    </div>
+                                    
+                                    <header>
+                                       <div class="title">Figure&nbsp;<span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Create virtual network</div>
+                                    </header>
+                                 </div>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Specify the networking mode. For the <span class="guimenu">NAT</span> and <span class="guimenu">Routed</span> types, you can specify to which device to forward network communications. While <span class="guimenu">NAT</span> (network address translation) remaps the virtual network address space and allows
+                                    sharing a single IP address, <span class="guimenu">Routed</span> forwards packets from the virtual network to the VM Host Server's physical network
+                                    with no translation.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>If you need IPv4 networking, activate <span class="guimenu">Enable IPv4</span> and specify the IPv4 network address. If you need a DHCP server, activate <span class="guimenu">Enable DHCPv4</span> and specify the assignable IP address range.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>If you need IPv6 networking, activate <span class="guimenu">Enable IPv6</span> and specify the IPv6 network address. If you need a DHCP server, activate <span class="guimenu">Enable DHCPv6</span> and specify the assignable IP address range.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>To specify a different domain name than the name of the virtual network, select <span class="guimenu">Custom</span> under <span class="guimenu">DNS domain name</span> and enter it here.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Click <span class="guimenu">Finish</span> to create the new virtual network. On the VM Host Server, a new virtual network bridge
+                                    <code class="literal">virbr<em class="replaceable">X</em></code> is available, which corresponds to the newly created virtual network. You can check
+                                    with <code class="command">bridge link</code>. <code class="library systemitem">libvirt</code> automatically adds iptables rules to allow traffic to/from guests attached to the
+                                    new <em>virbr<em class="replaceable">X</em></em> device.</p>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-vmm-start">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Starting virtual networks</h5>
+                        </header>
+                        
+                        
+                        <p>To start a virtual network that is temporarily stopped, follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-virtual-vmm-start_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Start Virtual Machine Manager. In the list of available connections, right-click the
+                                    name of the connection for which you need to configure the virtual network, and then
+                                    select <span class="guimenu">Details</span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>In the <span class="guimenu">Connection Details</span> window, click the <span class="guimenu">Virtual Networks</span> tab. You can see the list of all virtual networks available for the current connection.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>To start the virtual network, click <span class="guimenu">Start</span>.</p>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-vmm-stop">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Stopping virtual networks</h5>
+                        </header>
+                        
+                        
+                        <p>To stop an active virtual network, follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-virtual-vmm-stop_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Start Virtual Machine Manager. In the list of available connections, right-click the
+                                    name of the connection for which you need to configure the virtual network, and then
+                                    select <span class="guimenu">Details</span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>In the <span class="guimenu">Connection Details</span> window, click the <span class="guimenu">Virtual Networks</span> tab. You can see the list of all virtual networks available for the current connection.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Select the virtual network to be stopped, then click <span class="guimenu">Stop</span>.</p>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-vmm-delete">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Deleting virtual networks</h5>
+                        </header>
+                        
+                        
+                        <p>To delete a virtual network from VM Host Server, follow these steps:</p>
+                        
+                        <div class="informalobject procedure" id="libvirt-networks-virtual-vmm-delete_proc1">
+                           <ol class="procedure" type="1">
+                              <li class="step">
+                                 
+                                 <p>Start Virtual Machine Manager. In the list of available connections, right-click the
+                                    name of the connection for which you need to configure the virtual network, and then
+                                    select <span class="guimenu">Details</span>.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>In the <span class="guimenu">Connection Details</span> window, click the <span class="guimenu">Virtual Networks</span> tab. You can see the list of all virtual networks available for the current connection.</p>
+                                 </li>
+                              <li class="step">
+                                 
+                                 <p>Select the virtual network to be deleted, then click <span class="guimenu">Delete</span>.</p>
+                                 </li>
+                           </ol>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-vmm-nsswitch">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Obtaining IP addresses with <code class="command">nsswitch</code> for NAT networks (in KVM)</h5>
+                        </header>
+                        
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p>On VM Host Server, install libvirt-nss, which provides NSS support for libvirt:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in libvirt-nss</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Add <code class="literal">libvirt</code> to <code class="filename">/etc/nsswitch.conf</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>hosts:  files libvirt mdns_minimal [NOTFOUND=return] dns</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>If NSCD is running, restart it:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart nscd</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ul>
+                        
+                        <p>Now you can reach the guest system by name from the host.</p>
+                        
+                        <p>The NSS module has limited functionality. It reads <code class="filename">/var/lib/libvirt/dnsmasq/*.status</code> files to find the host name and corresponding IP addresses in a JSON record describing
+                           each lease provided by <code class="command">dnsmasq</code>. Host name translation can only be done on those VM Host Servers using a libvirt-managed
+                           bridged network backed by <code class="command">dnsmasq</code>.</p>
+                        </section>
+                     </section>
+                  
+                  <section class="sect3" id="libvirt-networks-virtual-virsh">
+                     <header>
+                        <h4><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing virtual networks with <code class="command">virsh</code>
+                           </h4>
+                     </header>
+                     
+                     
+                     <p>You can manage <code class="library systemitem">libvirt</code>-provided virtual networks with the <code class="command">virsh</code> command line tool. To view all network related <code class="command">virsh</code> commands, run</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh help network</code></span></span>
+<span class="line"><span class="ld"><code>Networking (help keyword 'network'):</code></span></span>
+<span class="line"><span class="ld"><code> net-autostart                  autostart a network</code></span></span>
+<span class="line"><span class="ld"><code>        net-create                     create a network from an XML file</code></span></span>
+<span class="line"><span class="ld"><code>        net-define                     define (but don't start) a network from an XML file</code></span></span>
+<span class="line"><span class="ld"><code>        net-destroy                    destroy (stop) a network</code></span></span>
+<span class="line"><span class="ld"><code>        net-dumpxml                    network information in XML</code></span></span>
+<span class="line"><span class="ld"><code>        net-edit                       edit XML configuration for a network</code></span></span>
+<span class="line"><span class="ld"><code>        net-event                      Network Events</code></span></span>
+<span class="line"><span class="ld"><code>        net-info                       network information</code></span></span>
+<span class="line"><span class="ld"><code>        net-list                       list networks</code></span></span>
+<span class="line"><span class="ld"><code>        net-name                       convert a network UUID to network name</code></span></span>
+<span class="line"><span class="ld"><code>        net-start                      start a (previously defined) inactive network</code></span></span>
+<span class="line"><span class="ld"><code>        net-undefine                   undefine an inactive network</code></span></span>
+<span class="line"><span class="ld"><code>        net-update                     update parts of an existing network's configuration</code></span></span>
+<span class="line"><span class="ld"><code> net-uuid                       convert a network name to network UUID</code></span></span></pre>
+                     </div>
+                     
+                     <p>To view brief help information for a specific <code class="command">virsh</code> command, run <code class="command">virsh help <em class="replaceable">VIRSH_COMMAND</em></code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh help net-create</code></span></span>
+<span class="line"><span class="ld"><code>  NAME</code></span></span>
+<span class="line"><span class="ld"><code>    net-create - create a network from an XML file</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  SYNOPSIS</code></span></span>
+<span class="line"><span class="ld"><code>    net-create &lt;file&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  DESCRIPTION</code></span></span>
+<span class="line"><span class="ld"><code>    Create a network.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  OPTIONS</code></span></span>
+<span class="line"><span class="ld"><code>    [--file] &lt;string&gt;  file containing an XML network description</code></span></span></pre>
+                     </div>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-virsh-create">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating a network</h5>
+                        </header>
+                        
+                        
+                        
+                        <p>To create a new <em>running</em> virtual network, run</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-create <em class="replaceable">VNET_DEFINITION.xml</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>The <em class="replaceable">VNET_DEFINITION.xml</em> XML file includes the definition of the virtual network that <code class="library systemitem">libvirt</code> accepts.</p>
+                        
+                        <p>To define a new virtual network without activating it, run</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-define <em class="replaceable">VNET_DEFINITION.xml</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>The following examples illustrate definitions of different types of virtual networks.</p>
+                        
+                        <div class="example formalobject" id="ex-libvirt-net-nat">
+                           
+                           
+                           <p>The following configuration allows VM Guests outgoing connectivity if it is available
+                              on the VM Host Server. Without VM Host Server networking, it allows guests to talk
+                              directly to each other.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;network&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;name&gt;vnet_nated&lt;/name&gt;<span class="co" id="vnet-xml-name">⣭</span></code></span></span>
+<span class="line"><span class="ld"><code>&lt;bridge name="virbr1"/&gt;<span class="co" id="vnet-xml-bridge">⣮</span></code></span></span>
+<span class="line"><span class="ld"><code> &lt;forward mode="nat"/&gt;<span class="co" id="vnet-xml-forward">⣯</span></code></span></span>
+<span class="line"><span class="ld"><code> &lt;ip address="192.168.122.1" netmask="255.255.255.0"&gt;<span class="co" id="vnet-xml-ip">⣰</span></code></span></span>
+<span class="line"><span class="ld"><code>  &lt;dhcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;range start="192.168.122.2" end="192.168.122.254"/&gt;<span class="co" id="vnet-xml-dhcp">⣱</span></code></span></span>
+<span class="line"><span class="ld"><code>   &lt;host mac="52:54:00:c7:92:da" name="host1.testing.com" \</code></span></span>
+<span class="line"><span class="ld"><code>    ip="192.168.1.101"/&gt;<span class="co" id="vnet-xml-dhcp-host">⣲</span></code></span></span>
+<span class="line"><span class="ld"><code>   &lt;host mac="52:54:00:c7:92:db" name="host2.testing.com" \</code></span></span>
+<span class="line"><span class="ld"><code>    ip="192.168.1.102"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;host mac="52:54:00:c7:92:dc" name="host3.testing.com" \</code></span></span>
+<span class="line"><span class="ld"><code>    ip="192.168.1.103"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/dhcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/ip&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/network&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-name">⣭</a></dt>
+                                 <dd>
+                                    
+                                    <p>The name of the new virtual network.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-bridge">⣮</a></dt>
+                                 <dd>
+                                    
+                                    <p>The name of the bridge device used to construct the virtual network. When defining
+                                       a new network with a &lt;forward&gt; mode of <code class="literal">"nat"</code> or <code class="literal">"route"</code> (or an isolated network with no &lt;forward&gt; element), <code class="library systemitem">libvirt</code> automatically generates a unique name for the bridge device if none is given.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-forward">⣯</a></dt>
+                                 <dd>
+                                    
+                                    <p>Inclusion of the &lt;forward&gt; element indicates that the virtual network is connected
+                                       to the physical LAN. The <code class="literal">mode</code> attribute specifies the forwarding method. The most common modes are <code class="literal">"nat"</code> (Network Address Translation, the default), <code class="literal">"route"</code> (direct forwarding to the physical network, no address translation), and <code class="literal">"bridge"</code> (network bridge configured outside of <code class="library systemitem">libvirt</code>). If the &lt;forward&gt; element is not specified, the virtual network is isolated from
+                                       other networks. For a complete list of forwarding modes, see <a class="link" href="https://libvirt.org/formatnetwork.html#elementsConnect">https://libvirt.org/formatnetwork.html#elementsConnect</a>.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-ip">⣰</a></dt>
+                                 <dd>
+                                    
+                                    <p>The IP address and netmask for the network bridge.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-dhcp">⣱</a></dt>
+                                 <dd>
+                                    
+                                    <p>Enable DHCP server for the virtual network, offering IP addresses ranging from the
+                                       specified <code class="literal">start</code> and <code class="literal">end</code> attributes.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-dhcp-host">⣲</a></dt>
+                                 <dd>
+                                    
+                                    <p>The optional &lt;host&gt; elements specify hosts that are given names and predefined IP
+                                       addresses by the built-in DHCP server. Any IPv4 host element must specify the following:
+                                       the MAC address of the host to be assigned a given name, the IP to be assigned to
+                                       that host, and the name to be given to that host by the DHCP server. An IPv6 host
+                                       element differs slightly from that for IPv4: there is no <code class="literal">mac</code> attribute since a MAC address has no defined meaning in IPv6. Instead, the <code class="literal">name</code> attribute is used to identify the host to be assigned the IPv6 address. For DHCPv6,
+                                       the <code class="literal">name</code> is the plain name of the client host sent by the client to the server. This method
+                                       of assigning a specific IP address can also be used instead of the <code class="literal">mac</code> attribute for IPv4.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NAT-based network</div>
+                           </header>
+                        </div>
+                        
+                        <div class="example formalobject" id="libvirt-networks-virtual-virsh-create_ex2">
+                           
+                           
+                           <p>The following configuration routes traffic from the virtual network to the LAN without
+                              applying any NAT. The IP address range must be preconfigured in the routing tables
+                              of the router on the VM Host Server network.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;network&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;name&gt;vnet_routed&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;bridge name="virbr1"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;forward mode="route" dev="eth1"/&gt;<span class="co" id="vnet-xml-route">⣳</span></code></span></span>
+<span class="line"><span class="ld"><code> &lt;ip address="192.168.122.1" netmask="255.255.255.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;dhcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;range start="192.168.122.2" end="192.168.122.254"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/dhcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/ip&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/network&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#vnet-xml-route">⣳</a></dt>
+                                 <dd>
+                                    
+                                    <p>The guest traffic may only go out via the <code class="systemitem">eth1</code> network device on the VM Host Server.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Routed network</div>
+                           </header>
+                        </div>
+                        
+                        <div class="example formalobject" id="libvirt-networks-virtual-virsh-create_ex3">
+                           
+                           
+                           <p>This configuration provides an isolated private network. The guests can talk to each
+                              other, and to VM Host Server, but cannot reach any other machines on the LAN, as the
+                              &lt;forward&gt; element is missing in the XML description.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;network&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;name&gt;vnet_isolated&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;bridge name="virbr3"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;ip address="192.168.152.1" netmask="255.255.255.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;dhcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;range start="192.168.152.2" end="192.168.152.254"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/dhcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/ip&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/network&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Isolated network</div>
+                           </header>
+                        </div>
+                        
+                        <div class="example formalobject" id="libvirt-networks-virtual-virsh-create_ex4">
+                           
+                           
+                           <p>This configuration shows how to use an existing VM Host Server's network bridge <code class="literal">br0</code>. VM Guests are directly connected to the physical network. Their IP addresses are
+                              all on the subnet of the physical network, and there are no restrictions on incoming
+                              or outgoing connections.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;network&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;name&gt;host-bridge&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;forward mode="bridge"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;bridge name="br0"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/network&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using an existing bridge on VM Host Server</div>
+                           </header>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-virsh-list">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Listing networks</h5>
+                        </header>
+                        
+                        
+                        <p>To list all virtual networks available to <code class="library systemitem">libvirt</code>, run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-list --all</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> Name                 State      Autostart     Persistent</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> crowbar              active     yes           yes</code></span></span>
+<span class="line"><span class="ld"><code> vnet_nated           active     yes           yes</code></span></span>
+<span class="line"><span class="ld"><code> vnet_routed          active     yes           yes</code></span></span>
+<span class="line"><span class="ld"><code> vnet_isolated        inactive   yes           yes</code></span></span></pre>
+                        </div>
+                        
+                        
+                        <p>To list available domains, run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh list</code></span></span>
+<span class="line"><span class="ld"><code> Id    Name                           State</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> 1     nated_sles12sp3                running</code></span></span>
+<span class="line"><span class="ld"><code> ...</code></span></span></pre>
+                        </div>
+                        
+                        <p>To get a list of interfaces of a running domain, run <code class="option">domifaddr <em class="replaceable">DOMAIN</em></code>, or optionally specify the interface to limit the output to this interface. By default,
+                           it additionally outputs their IP and MAC addresses:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh domifaddr nated_sles12sp3 --interface vnet0 --source lease</code></span></span>
+<span class="line"><span class="ld"><code> Name       MAC address          Protocol     Address</code></span></span>
+<span class="line"><span class="ld"><code>-------------------------------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> vnet0      52:54:00:9e:0d:2b    ipv6         fd00:dead:beef:55::140/64</code></span></span>
+<span class="line"><span class="ld"><code> -          -                    ipv4         192.168.100.168/24</code></span></span></pre>
+                        </div>
+                        
+                        <p>To print brief information of all virtual interfaces associated with the specified
+                           domain, run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh domiflist nated_sles12sp3</code></span></span>
+<span class="line"><span class="ld"><code>Interface  Type       Source       Model       MAC</code></span></span>
+<span class="line"><span class="ld"><code>---------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>vnet0      network    vnet_nated   virtio      52:54:00:9e:0d:2b</code></span></span></pre>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-virsh-info">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Getting details about a network</h5>
+                        </header>
+                        
+                        
+                        <p>To get detailed information about a network, run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-info vnet_routed</code></span></span>
+<span class="line"><span class="ld"><code>Name:           vnet_routed</code></span></span>
+<span class="line"><span class="ld"><code>UUID:           756b48ff-d0c6-4c0a-804c-86c4c832a498</code></span></span>
+<span class="line"><span class="ld"><code>Active:         yes</code></span></span>
+<span class="line"><span class="ld"><code>Persistent:     yes</code></span></span>
+<span class="line"><span class="ld"><code>Autostart:      yes</code></span></span>
+<span class="line"><span class="ld"><code>Bridge:         virbr5</code></span></span></pre>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-virsh-start">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Starting a network</h5>
+                        </header>
+                        
+                        
+                        <p>To start an inactive network that was already defined, find its name (or unique identifier,
+                           UUID) with:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-list --inactive</code></span></span>
+<span class="line"><span class="ld"><code> Name                 State      Autostart     Persistent</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> vnet_isolated        inactive   yes           yes</code></span></span></pre>
+                        </div>
+                        
+                        <p>Then run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-start vnet_isolated</code></span></span>
+<span class="line"><span class="ld"><code>Network vnet_isolated started</code></span></span></pre>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-virsh-stop">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Stopping a network</h5>
+                        </header>
+                        
+                        
+                        <p>To stop an active network, find its name (or unique identifier, UUID) with:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-list --inactive</code></span></span>
+<span class="line"><span class="ld"><code> Name                 State      Autostart     Persistent</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> vnet_isolated        active     yes           yes</code></span></span></pre>
+                        </div>
+                        
+                        <p>Then run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-destroy vnet_isolated</code></span></span>
+<span class="line"><span class="ld"><code>Network vnet_isolated destroyed</code></span></span></pre>
+                        </div>
+                        </section>
+                     
+                     <section class="sect4" id="libvirt-networks-virtual-virsh-undefine">
+                        <header>
+                           <h5><span class="label">9<span class="sep">.</span>1<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Removing a network</h5>
+                        </header>
+                        
+                        
+                        <p>To remove the definition of an inactive network from VM Host Server permanently, run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> virsh net-undefine vnet_isolated</code></span></span>
+<span class="line"><span class="ld"><code>Network vnet_isolated has been undefined</code></span></span></pre>
+                        </div>
+                        </section>
+                     </section>
+                  </section>
+               </section>
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich01s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partii.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich02s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Switching to the monolithic daemon</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring a storage pool</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>43.9.&nbsp;Troubleshooting</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvich01s08.html" rel="prev">
+      <link href="bk06partvii.html" rel="next">
+      <link href="bk06partvich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvich01.html">Up</a> <a href="bk06partvii.html">Next</a> <a href="bk06partvich01s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvich01s09.html" db-id="d616951e194071" id="sec-selinux-troubleshoot">
+            <header>
+               <h2><span class="label">43<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Troubleshooting</h2>
+            </header>
+            
+            
+            <p>By default, if SELinux is the reason something is not working, a log message to this
+               effect is sent to the <code class="filename">/var/log/audit/audit.log</code> file. That is, if the auditd service is running. If you see an empty <code class="filename">/var/log/audit</code>, start the auditd service using</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl start auditd</code></code></span></span></pre>
+            </div>
+            
+            <p>and enable it in the targets of your system, using</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl enable auditd</code></code></span></span></pre>
+            </div>
+            
+            <p>You can see a partial example of the contents of <code class="filename">/var/log/audit/audit.log</code> below:</p>
+            
+            <div class="example formalobject" id="ex-selnx-li-auditlog">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>type=DAEMON_START msg=audit(1348173810.874:6248): auditd start, ver=1.7.7 format=raw kernel=6.4.0-150700.38-default auid=0 pid=4235 subj=system_u:system_r:auditd_t res=success</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:292): avc:  denied  { write } for  pid=3426 comm="smartd" name="smartmontools" dev=sda6 ino=581743 scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=dir</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:293): avc:  denied  { remove_name } for  pid=3426 comm="smartd" name="smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state~" dev=sda6 ino=582390 scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=dir</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:294): avc:  denied  { unlink } for  pid=3426 comm="smartd" name="smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state~" dev=sda6 ino=582390 scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=file</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:295): avc:  denied  { rename } for  pid=3426 comm="smartd" name="smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state" dev=sda6 ino=582373 scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=file</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:296): avc:  denied  { add_name } for  pid=3426 comm="smartd" name="smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state~" scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=dir</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:297): avc:  denied  { create } for  pid=3426 comm="smartd" name="smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state" scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=file</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:298): avc:  denied  { write open } for  pid=3426 comm="smartd" name="smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state" dev=sda6 ino=582390 scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=file</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.081:299): avc:  denied  { getattr } for  pid=3426 comm="smartd" path="/var/lib/smartmontools/smartd.WDC_WD2500BEKT_75PVMT0-WD_WXC1A21E0454.ata.state" dev=sda6 ino=582390 scontext=system_u:system_r:fsdaemon_t tcontext=system_u:object_r:var_lib_t tclass=file</code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.309:300): avc:  denied  { append } for  pid=1316</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Example lines from <code class="filename">/var/log/audit/audit.log</code>
+                     </div>
+               </header>
+            </div>
+            
+            <p>At first look, the lines in <code class="filename">audit.log</code> are a bit hard to read. However, on closer examination they are not that hard to
+               understand. Every line can be broken down into sections. For example, the sections
+               in the last line are:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">type=AVC</code>:</span></dt>
+                  <dd>
+                     
+                     <p>every SELinux-related audit log line starts with the type identification <code class="literal">type=AVC</code></p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">msg=audit(1348173901.309:300)</code>:</span></dt>
+                  <dd>
+                     
+                     <p>This is the time stamp, which unfortunately is written in epoch time, the number of
+                        seconds that have passed since Jan 1, 1970. You can use <code class="command">date -d</code> on the part up to the dot in the epoch time notation to find out when the event has
+                        happened:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">date -d @1348173901</code></code></span></span>
+<span class="line"><span class="ld"><code>Thu Sep 20 16:45:01 EDT 2012</code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">avc: denied { append }</code>:</span></dt>
+                  <dd>
+                     
+                     <p>the specific action that was denied. In this case the system has denied the appending
+                        of data to a file. While browsing through the audit log file, you can see other system
+                        actions, such as write open, getattr and more.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">for pid=1316</code>:</span></dt>
+                  <dd>
+                     
+                     <p>the process ID of the command or process that initiated the action</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">comm="rsyslogd"</code>:</span></dt>
+                  <dd>
+                     
+                     <p>the specific command that was associated with that PID</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">name="smartmontools"</code>:</span></dt>
+                  <dd>
+                     
+                     <p>the name of the subject of the action</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">dev=sda6 ino=582296</code>:</span></dt>
+                  <dd>
+                     
+                     <p>the block device and inode number of the file that was involved</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">scontext=system_u:system_r:syslogd_t</code>:</span></dt>
+                  <dd>
+                     
+                     <p>the source context, which is the context of the initiator of the action</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">tclass=file</code>:</span></dt>
+                  <dd>
+                     
+                     <p>a class identification of the subject</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>Instead of interpreting the events in audit.log yourself, there is another approach.
+               You can use the <code class="command">audit2allow</code> command, which helps analyze the cryptic log messages in <code class="filename">/var/log/audit/audit.log</code>. An audit2allow troubleshooting session always consists of three different commands.
+               First, you would use <code class="command">audit2allow -w -a</code> to present the audit information in a more readable way. The <code class="command">audit2allow -w -a</code> by default works on the audit.log file. If you want to analyze a specific message
+               in the audit.log file, copy it to a temporary file and analyze the file with:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">audit2allow -w -i <em class="replaceable">FILENAME</em></code></code></span></span></pre>
+            </div>
+            
+            <div class="example formalobject" id="sec-selinux-troubleshoot_ex2">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">audit2allow -w -i testfile</code></code></span></span>
+<span class="line"><span class="ld"><code>type=AVC msg=audit(1348173901.309:300): avc:  denied  { append } for  pid=1316</code></span></span>
+<span class="line"><span class="ld"><code>comm="rsyslogd" name="acpid" dev=sda6 ino=582296</code></span></span>
+<span class="line"><span class="ld"><code>scontext=system_u:system_r:syslogd_t tcontext=system_u:object_r:apmd_log_t tclass=file</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Analyzing audit messages</div>
+               </header>
+            </div>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">This was caused by:</span></dt>
+                  <dd>
+                     
+                     <p>Missing type enforcement (TE) allow rule.</p>
+                     
+                     <p>To generate a loadable module to allow this access, run</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">audit2allow</code></code></span></span></pre>
+                     </div>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>To find out which specific rule has denied access, you can use <code class="command">audit2allow -a</code> to show the enforcing rules from all events that were logged to the <code class="filename">audit.log</code> file, or <code class="command">audit2allow -i <em class="replaceable">FILENAME</em></code> to show it for messages that you have stored in a specific file:</p>
+            
+            <div class="example formalobject" id="sec-selinux-troubleshoot_ex3">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">audit2allow -i testfile</code></code></span></span>
+<span class="line"><span class="ld"><code>#============= syslogd_t ==============</code></span></span>
+<span class="line"><span class="ld"><code>allow syslogd_t apmd_log_t:file append;</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Viewing which lines deny access</div>
+               </header>
+            </div>
+            
+            <p>To create an SELinux module with the name <code class="literal">mymodule</code> that you can load to allow the access that was previously denied, run</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">audit2allow -a -R -M mymodule</code></code></span></span></pre>
+            </div>
+            
+            <p>If you want to do this for all events that have been logged to the audit.log, use
+               the <code class="option">-a -M</code> command arguments. To do it for specific messages that are in a specific file, use
+               <code class="option">-i -M</code> as in the example below:</p>
+            
+            <div class="example formalobject" id="sec-selinux-troubleshoot_ex4">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">audit2allow -i testfile -M example</code></code></span></span>
+<span class="line"><span class="ld"><code>******************** IMPORTANT ***********************</code></span></span>
+<span class="line"><span class="ld"><code>To make this policy package active, execute:</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>semodule -i example.pp</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">43<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Creating a policy module allowing an action previously denied</div>
+               </header>
+            </div>
+            
+            <p>As indicated by the <code class="command">audit2allow</code> command, you can now run this module by using the <code class="command">semodule -i</code> command, followed by the name of the module that <code class="command">audit2allow</code> has created for you (<code class="filename">example.pp</code> in the above example).</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvich01s08.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partvii.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">43<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Managing SELinux</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">VII</span><span class="sep">.&nbsp;</span>The Linux Audit Framework</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

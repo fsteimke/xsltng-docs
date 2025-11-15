@@ -1,0 +1,355 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.6.&nbsp;System protection with enforced USB device authorization via USBGuard
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich01s05.html" rel="prev">
+      <link href="bk06partiich02.html" rel="next">
+      <link href="bk06partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich01.html">Up</a> <a href="bk06partiich02.html">Next</a> <a href="bk06partiich01s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich01s06.html" db-id="d616951e166695" id="sec-USBGuard">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>System protection with enforced USB device authorization via <em>USBGuard</em>
+                  </h2>
+            </header>
+            
+            
+            <p>The USBGuard software framework helps to protect your system with enforced USB device
+               authorization. It implements allowlist and blocklist capabilities based on the device
+               attributes.</p>
+            
+            <p>The USBGuard provides the following features:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>A command-line interface to interact with a running USBGuard daemon</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The daemon component with an inter-process communication (IPC) interface for dynamic
+                     interaction and policy enforcement</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The rule language for writing USB device authorization policies</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The C++ API for interacting with the daemon component implemented in a shared library</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="sec-installing-usbguard">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installing USBGuard</h3>
+               </header>
+               
+               
+               <p>The USBGuard daemon decides which USB device to authorize based on a set of rules
+                  defined in the policy. To install and configure USBGuard, use the following commands:</p>
+               
+               <div class="informalobject procedure" id="sec-installing-usbguard_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>To install USBGuard:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  zypper install usbguard</code></span></span></pre>
+                        </div>
+                        
+                        <p>USBGuard and the required dependencies are installed. If you want to interact with
+                           the USBGuard service, you can install <code class="literal">usbguard-tools</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To generate a rule set based on currently connected USB devices, switch to <code class="systemitem username">root</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>usbguard generate-policy &gt; /etc/usbguard/rules.conf</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Note</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>You can customize USBGuard by editing the <code class="filename">/etc/usbguard/rules.conf</code> file.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>You can start the USBGuard daemon or ensure automatic enablement at system start by
+                           switching to <code class="systemitem username">root</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl enable --now usbguard.service</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>You can either authorize or deauthorize a device from interacting with the system.
+                           This depends on the value of the <code class="literal">ImplicitPolicyTarget</code> option in the <code class="filename">usbguard-daemon.conf</code> file. This option is used to treat devices that do not match any rule in the policy.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>usbguard allow-device 6</code></span></span></pre>
+                        </div>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>usbguard block-device 6</code></span></span></pre>
+                        </div>
+                        
+                        <p>You can also use the <code class="command">reject-device</code>option to deauthorize and remove a device from the system.</p>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Note</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>Use the <code class="command">usbguard --help</code> command to see all the options.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-how-to-use-usbguard">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>How to use USBGuard</h3>
+               </header>
+               
+               
+               <p>You can configure a security policy to protect your system with enforced USB device
+                  authorization by implementing <em>allow</em> and <em>block</em> lists based on the device attributes.</p>
+               
+               <section class="sect3" id="sec-how-to-use-usbguard_s3_1">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>6<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>The USBGuard configuration file</h4>
+                  </header>
+                  
+                  
+                  <p>The USBGuard daemon loads the <code class="filename">usbguard-daemon.conf</code> file after the command-line options are parsed and are used to configure the runtime
+                     parameters of the daemon. The file is, by default, located at <code class="filename">/etc/usbguard/usbguard-daemon.conf</code>. Some options in the file include:</p>
+                  
+                  <div class="long-terms variablelist">
+                     <header>
+                        <div class="title">Options</div>
+                     </header>
+                     <dl class="long-terms variablelist">
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">RuleFile=<em class="replaceable">PATH</em>
+                                    </code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>The USBGuard daemon uses this file to load the policy rule set from it and to write
+                                 new rules received through the IPC (inter-process communication) interface. The default
+                                 is <code class="filename">%sysconfdir%/usbguard/rules.conf</code>.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">ImplicitPolicyTarget= <em class="replaceable">TARGET</em>
+                                    </code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>How to treat devices that do not match any rule in the policy, for example:</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p>allow - authorize every present device</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>block - deauthorize every present device</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>reject - logically remove the device node from the system</p>
+                                    </li>
+                                 </ul>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">PresentDevicePolicy= <em class="replaceable">POLICY</em>
+                                    </code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>How to treat devices that are already connected when the daemon starts.</p>
+                              
+                              <ul class="itemizedlist">
+                                 
+                                 <li>
+                                    
+                                    <p>allow - authorize every present device</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>block - deauthorize every present device</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>reject - remove every present device</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>keep - sync the internal state</p>
+                                    </li>
+                                 
+                                 <li>
+                                    
+                                    <p>apply-policy - evaluate the rule set for all present devices</p>
+                                    </li>
+                                 </ul>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">IPCAllowedUsers= <em class="replaceable">USERNAME</em>
+                                    </code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>A space-delimited list of user names that the daemon accepts IPC connections from.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">IPCAllowedGroups= <em class="replaceable">GROUPNAME</em>
+                                    </code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>A space-delimited list of group names that the daemon accepts IPC connections from.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="option">IPCAccessControlFiles= <em class="replaceable">PATH</em>
+                                    </code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Path to files that are interpreted by the daemon as IPC access control definition
+                                 files.</p>
+                              </dd>
+                        </div>
+                     </dl>
+                  </div>
+                  
+                  <div class="example formalobject" id="usbguard-config-file-ipcaccess">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>IPCAllowedUsers=root joe</code></span></span>
+<span class="line"><span class="ld"><code>IPCAllowedGroups=wheel</code></span></span></pre>
+                     </div>
+                     
+                     <p>The example allows full IPC access to the users <code class="literal">root</code>, <code class="literal">joe</code> and to the members of the group <code class="literal">wheel</code>.</p>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuration</div>
+                     </header>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-more-information-usbguard">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>More information</h3>
+               </header>
+               
+               
+               <p>To know more about USBGuard, see:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>The upstream documentation at <a class="link" href="https://usbguard.github.io/">https://usbguard.github.io/</a></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>man <em>usbguard</em></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>man <em>usbguard-rules.conf</em></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>man <em>usbguard-daemon</em></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>man <em>usbguard-daemon.conf</em></p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich01s05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">9<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Restricting access to removable media</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>Software management</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

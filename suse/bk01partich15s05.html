@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.5.&nbsp;Configuring and using an rsync server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich15s04.html" rel="prev">
+      <link href="bk01partich15s06.html" rel="next">
+      <link href="bk01partich15.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich15.html">Up</a> <a href="bk01partich15s06.html">Next</a> <a href="bk01partich15s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich15s05.html" db-id="d616951e24832" id="sec-net-rsync-server">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring and using an rsync server</h2>
+            </header>
+            
+            
+            <p>Rsync can run as a daemon (<code class="daemon systemitem">rsyncd</code>) listening on default port 873 for incoming connections. This daemon can receive
+               <q>copying targets</q>.</p>
+            
+            <p>The following description explains how to create an Rsync server on a <code class="systemitem">jupiter</code> host with a <em>backup</em> target. This target can be used to store your backups. To create an Rsync server,
+               do the following:</p>
+            
+            <div class="formalobject procedure" id="sec-net-rsync-server_proc1">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">15<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up an rsync server</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step" id="st-rsync-server-mkdir">
+                     
+                     <p>On jupiter, create a directory to store all your backup files. In this example, we
+                        use <code class="filename">/var/backup</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mkdir</code> /var/backup</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Specify ownership. In this case, the directory is owned by user <code class="systemitem username">tux</code> in group <code class="groupname systemitem">users</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">chown</code> tux.users /var/backup</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Configure the rsyncd daemon.</p>
+                     
+                     <p>We separate the configuration file into a main file and certain <q>modules</q> which hold your backup target. This makes it easier to add additional targets later.
+                        Global values can be stored in <code class="filename">/etc/rsyncd.d/*.inc</code> files, whereas your modules are placed in <code class="filename">/etc/rsyncd.d/*.conf</code> files:</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Create a directory <code class="filename">/etc/rsyncd.d/</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">mkdir</code> /etc/rsyncd.d/</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>In the main configuration file <code class="filename">/etc/rsyncd.conf</code>, add the following lines:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># rsyncd.conf main configuration file</code></span></span>
+<span class="line"><span class="ld"><code>log file = /var/log/rsync.log</code></span></span>
+<span class="line"><span class="ld"><code>pid file = /var/lock/rsync.lock</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&amp;merge /etc/rsyncd.d <span class="co" id="co-rsync-conf-merge">➏</span></code></span></span>
+<span class="line"><span class="ld"><code>&amp;include /etc/rsyncd.d <span class="co" id="co-rsync-conf-include">➐</span></code></span></span></pre>
+                              </div>
+                              
+                              <div class="calloutlist">
+                                 <dl>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-merge">➏</a></dt>
+                                    <dd>
+                                       
+                                       <p>Merges global values from <code class="filename">/etc/rsyncd.d/*.inc</code> files into the main configuration file.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-include">➐</a></dt>
+                                    <dd>
+                                       
+                                       <p>Loads any modules (or targets) from <code class="filename">/etc/rsyncd.d/*.conf</code> files. These files should not contain any references to global values.</p>
+                                       </dd>
+                                 </dl>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Create your module (your backup target) in the file <code class="filename">/etc/rsyncd.d/backup.conf</code> with the following lines:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># backup.conf: backup module</code></span></span>
+<span class="line"><span class="ld"><code>[backup] <span class="co" id="co-rsync-conf-target">➑</span></code></span></span>
+<span class="line"><span class="ld"><code>   uid = tux <span class="co" id="co-rsync-conf-uid-gid">➒</span></code></span></span>
+<span class="line"><span class="ld"><code>   gid = users <span class="co">➒</span></code></span></span>
+<span class="line"><span class="ld"><code>   path = /var/backup <span class="co" id="co-rsync-conf-path">➓</span></code></span></span>
+<span class="line"><span class="ld"><code>   auth users = tux  <span class="co" id="co-rsync-conf-authusers">➔</span></code></span></span>
+<span class="line"><span class="ld"><code>   secrets file = /etc/rsyncd.secrets <span class="co" id="co-rsync-conf-secretfiles">➕</span></code></span></span>
+<span class="line"><span class="ld"><code>   comment = Our backup target</code></span></span></pre>
+                              </div>
+                              
+                              <div class="calloutlist">
+                                 <dl>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-target">➑</a></dt>
+                                    <dd>
+                                       
+                                       <p>The <em>backup</em> target. You can use any name you like. However, it is a good idea to name a target
+                                          according to its purpose and use the same name in your <code class="filename">*.conf</code> file.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-uid-gid">➒</a></dt>
+                                    <dd>
+                                       
+                                       <p>Specifies the user name or group name that is used when the file transfer takes place.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-path">➓</a></dt>
+                                    <dd>
+                                       
+                                       <p>Defines the path to store your backups (from <a class="xref xref-step" href="#st-rsync-server-mkdir">step <span class="label">1</span></a>).</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-authusers">➔</a></dt>
+                                    <dd>
+                                       
+                                       <p>Specifies a comma-separated list of allowed users. In its simplest form, it contains
+                                          the user names that are allowed to connect to this module. In our case, only user
+                                          <code class="systemitem username">tux</code> is allowed.</p>
+                                       </dd>
+                                    <dt class="callout"><a class="callout-bug" href="#co-rsync-conf-secretfiles">➕</a></dt>
+                                    <dd>
+                                       
+                                       <p>Specifies the path of a file that contains lines with user names and plain passwords.</p>
+                                       </dd>
+                                 </dl>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Create the <code class="filename">/etc/rsyncd.secrets</code> file with the following content and replace <em class="replaceable">PASSPHRASE</em>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># user:passwd</code></span></span>
+<span class="line"><span class="ld"><code>tux:<em class="replaceable">PASSPHRASE</em></code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Make sure the file is only readable by <code class="systemitem username">root</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">chmod</code> 0600 /etc/rsyncd.secrets</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start and enable the rsyncd daemon with:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl</code> enable rsyncd</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">systemctl</code> start rsyncd</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Test the access to your Rsync server:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">rsync</code> jupiter::</code></span></span></pre>
+                     </div>
+                     
+                     <p>You should see a response that looks like this:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>backup          Our backup target</code></span></span></pre>
+                     </div>
+                     
+                     <p>Otherwise, check your configuration file, firewall and network settings.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>The above steps create an Rsync server that can now be used to store backups. The
+               example also creates a log file listing all connections. This file is stored in <code class="filename">/var/log/rsyncd.log</code>. This is useful to debug your transfers.</p>
+            
+            <p>To list the content of your backup target, use the following command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rsync -avz jupiter::backup</code></span></span></pre>
+            </div>
+            
+            <p>This command lists all files present in the directory <code class="filename">/var/backup</code> on the server. This request is also logged in the log file <code class="filename">/var/log/rsyncd.log</code>. To start an actual transfer, provide a source directory. Use <code class="literal">.</code> for the current directory. For example, the following command copies the current
+               directory to your Rsync backup server:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>rsync -avz . jupiter::backup</code></span></span></pre>
+            </div>
+            
+            <p>By default, Rsync does not delete files and directories when it runs. To enable deletion,
+               the additional option <code class="option">--delete</code> must be stated. To ensure that no newer files are deleted, the option <code class="option">--update</code> can be used instead. Any conflicts that arise must be resolved manually.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich15s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich15.html">Up</a></td>
+                  <td class="next"><a href="bk01partich15s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Copying files and directories remotely</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

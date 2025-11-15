@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>B.4.&nbsp;Configuring the guest</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10appbs03.html" rel="prev">
+      <link href="bk10appc.html" rel="next">
+      <link href="bk10appb.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10appb.html">Up</a> <a href="bk10appc.html">Next</a> <a href="bk10appbs03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10appbs04.html" db-id="d616951e305214" id="gpu-passthru-guest">
+            <header>
+               <h2><span class="label">B<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring the guest</h2>
+            </header>
+            
+            
+            <p>This section describes how to configure the guest virtual machine so that it can use
+               the host's NVIDIA GPU. Use Virtual Machine Manager or <code class="command">virt-install</code> to install the guest VM. Find more details in <a class="xref xref-chapter" href="bk10partiich03.html">Chapter&nbsp;<span class="label">10</span>, Guest installation</a>.</p>
+            
+            <section class="sect2" id="gpu-passthru-guest-general">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Requirements for the guest configuration</h3>
+               </header>
+               
+               
+               <p>During the guest VM installation, select <span class="guimenu">Customize configuration before install</span> and configure the following devices:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Use Q35 chipset if possible.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Install the guest VM using UEFI firmware.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Add the following emulated devices:</p>
+                     
+                     <p>Graphic: Spice or VNC</p>
+                     
+                     <p>Device: qxl, VGA or Virtio</p>
+                     
+                     <p>Find more information in <a class="xref xref-sect1" href="bk10partiich07s06.html">the section called “Video”</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Add the host PCI device (<code class="literal">03:00.0</code> in our example) to the guest. Find more information in <a class="xref xref-sect1" href="bk10partiich07s12.html">the section called “Assigning a host PCI device to a VM Guest”</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>For the best performance, we recommend using virtio drivers for the network card and
+                        storage.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-guest-driver">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Install the graphic card driver</h3>
+               </header>
+               
+               
+               <section class="sect3" id="gpu-passthru-guest-driver-linux-rpm">
+                  <header>
+                     <h4><span class="label">B<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Linux guest</h4>
+                  </header>
+                  
+                  
+                  <div class="formalobject procedure" id="gpu-passthru-guest-driver-linux-rpm_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">B<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>RPM-based distributions</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Download the driver RPM package from <a class="link" href="https://www.nvidia.com/download/driverResults.aspx/131159/en-us">https://www.nvidia.com/download/driverResults.aspx/131159/en-us</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Install the downloaded RPM package:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> rpm -i nvidia-diag-driver-local-repo-sles123-390.30-1.0-1.x86_64.rpm</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Refresh repositories and install <code class="package">cuda-drivers</code>. This step is different for non-SUSE distributions:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper refresh &amp;&amp; zypper install cuda-drivers</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Reboot the guest VM:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> shutdown -r now</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="gpu-passthru-guest-driver-linux-rpm_proc2">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">B<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Generic installer</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Because the installer needs to compile the NVIDIA driver modules, install the <code class="package">gcc-c++</code> and <code class="package">kernel-devel</code> packages.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Disable Secure Boot on the guest, because NVIDIA's driver modules are unsigned. On
+                              SUSE distributions, you can use the YaST GRUB&nbsp;2 module to disable Secure Boot. Find
+                              more information in <a class="xref xref-sect2" href="bk01partiich02.html#sec-uefi-secboot-sle">the section called “Implementation on <span class="phrase productname">SUSE Linux Enterprise Server</span>
+                                 ”</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Download the driver installation script from <a class="link" href="https://www.nvidia.com/Download/index.aspx?lang=en-us">https://www.nvidia.com/Download/index.aspx?lang=en-us</a>, make it executable and run it to complete the driver installation:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>chmod +x NVIDIA-Linux-x86_64-460.73.01.run</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ./NVIDIA-Linux-x86_64-460.73.01.run</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Download CUDA drivers from <a class="link" href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;target_distro=SLES&amp;target_version=15&amp;target_type=rpmlocal">https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;target_distro=SLES&amp;target_version=15&amp;target_type=rpmlocal</a> and install following the on-screen instructions.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Display issues</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>After you have installed the NVIDIA drivers, the Virtual Machine Manager display loses
+                                 its connection to the guest OS. To access the guest VM, you must either login via
+                                 <code class="command">ssh</code>, change to the console interface, or install a dedicated VNC server in the guest.
+                                 To avoid a flickering screen, stop and disable the display manager:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl stop display-manager &amp;&amp; systemctl disable display-manager</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="gpu-passthru-guest-driver-linux-rpm_proc3">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">B<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Testing the Linux driver installation</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Change the directory to the CUDA sample templates:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cd /usr/local/cuda-9.1/samples/0_Simple/simpleTemplates</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Compile and run the <code class="literal">simpleTemplates</code> file:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>make &amp;&amp; ./simpleTemplates</code></span></span>
+<span class="line"><span class="ld"><code>runTest&lt;float,32&gt;</code></span></span>
+<span class="line"><span class="ld"><code>GPU Device 0: "Tesla V100-PCIE-16GB" with compute capability 7.0</code></span></span>
+<span class="line"><span class="ld"><code>CUDA device [Tesla V100-PCIE-16GB] has 80 Multi-Processors</code></span></span>
+<span class="line"><span class="ld"><code>Processing time: 495.006000 (ms)</code></span></span>
+<span class="line"><span class="ld"><code>Compare OK</code></span></span>
+<span class="line"><span class="ld"><code>runTest&lt;int,64&gt;</code></span></span>
+<span class="line"><span class="ld"><code>GPU Device 0: "Tesla V100-PCIE-16GB" with compute capability 7.0</code></span></span>
+<span class="line"><span class="ld"><code>CUDA device [Tesla V100-PCIE-16GB] has 80 Multi-Processors</code></span></span>
+<span class="line"><span class="ld"><code>Processing time: 0.203000 (ms)</code></span></span>
+<span class="line"><span class="ld"><code>Compare OK</code></span></span>
+<span class="line"><span class="ld"><code>[simpleTemplates] -&gt; Test Results: 0 Failures</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="gpu-passthru-guest-driver-windows">
+                  <header>
+                     <h4><span class="label">B<span class="sep">.</span>4<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Microsoft Windows guest</h4>
+                  </header>
+                  
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Important</div>
+                           </header>
+                           <div>
+                              
+                              <p>Before you install the NVIDIA drivers, you need to hide the hypervisor from the drivers
+                                 by using the <code class="literal">&lt;hidden state='on'/&gt;</code> directive in the guest's <code class="library systemitem">libvirt</code> definition, for example:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;features&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;acpi/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;apic/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;kvm&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;hidden state='on'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/kvm&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/features&gt;</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="informalobject procedure" id="gpu-passthru-guest-driver-windows_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Download and install the NVIDIA driver from <a class="link" href="https://www.nvidia.com/Download/index.aspx">https://www.nvidia.com/Download/index.aspx</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Download and install the CUDA toolkit from <a class="link" href="https://developer.nvidia.com/cuda-downloads?target_os=Windows&amp;target_arch=x86_64">https://developer.nvidia.com/cuda-downloads?target_os=Windows&amp;target_arch=x86_64</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Find several NVIDIA demo samples in the directory <code class="filename">Program Files\Nvidia GPU Computing Toolkit\CUDA\v10.2\extras\demo_suite</code> on the guest.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10appbs03.html">Prev</a></td>
+                  <td class="up"><a href="bk10appb.html">Up</a></td>
+                  <td class="next"><a href="bk10appc.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">B<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring the host</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Appendix&nbsp;<span class="label">C</span><span class="sep">.&nbsp;</span>XM, XL toolstacks, and the <code class="library systemitem">libvirt</code> framework</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.2.&nbsp;Using Snapper to undo changes</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10.html" rel="prev">
+      <link href="bk01partich10s03.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s03.html">Next</a> <a href="bk01partich10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s02.html" db-id="d616951e17954" id="sec-snapper-undo">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using Snapper to undo changes</h2>
+            </header>
+            
+            
+            <p>Snapper on <span class="phrase productname">SUSE Linux Enterprise Server</span> is preconfigured to serve as a tool that lets you undo changes made by <code class="command">zypper</code> and YaST. For this purpose, Snapper is configured to create a pair of snapshots before
+               and after each run of <code class="command">zypper</code> and YaST. Snapper also lets you restore system files that have been accidentally
+               deleted or modified. Timeline snapshots for the root partition need to be enabled
+               for this purpose—see <a class="xref xref-sect3" href="bk01partich10.html#sec-snapper-setup-customize-auto-snapshots">the section called “Disabling/enabling snapshots”</a> for details.</p>
+            
+            <p>By default, automatic snapshots as described above are configured for the root partition
+               and its subvolumes. To make snapshots available for other partitions such as <code class="filename">/home</code> for example, you can create custom configurations.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Undoing changes compared to rollback</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>When working with snapshots to restore data, it is important to know that there are
+                           two fundamentally different scenarios Snapper can handle:</p>
+                        
+                        <dl class="variablelist">
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">Undoing changes</span></dt>
+                              <dd>
+                                 
+                                 <p>When undoing changes as described in the following, two snapshots are being compared
+                                    and the changes between these two snapshots are made undone. Using this method also
+                                    allows to explicitly select the files that should be restored.</p>
+                                 </dd>
+                           </div>
+                           
+                           <div class="varlistentry">
+                              <dt><span class="term">Rollback</span></dt>
+                              <dd>
+                                 
+                                 <p>When doing rollbacks as described in <a class="xref xref-sect1" href="bk01partich10s03.html">the section called “System rollback by booting from snapshots”</a>, the system is reset to the state at which the snapshot was taken.</p>
+                                 </dd>
+                           </div>
+                           </dl>
+                        
+                        <p>When undoing changes, it is also possible to compare a snapshot against the current
+                           system. When restoring <em>all</em> files from such a comparison, this will have the same result as doing a rollback.
+                           However, using the method described in <a class="xref xref-sect1" href="bk01partich10s03.html">the section called “System rollback by booting from snapshots”</a> for rollbacks should be preferred, since it is faster and allows you to review the
+                           system before doing the rollback.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Data consistency</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>There is no mechanism to ensure data consistency when creating a snapshot. Whenever
+                           a file (for example, a database) is written at the same time as the snapshot is being
+                           created, it will result in a corrupted or partly written file. Restoring such a file
+                           will cause problems. Furthermore, certain system files such as <code class="filename">/etc/mtab</code> must never be restored. Therefore it is strongly recommended to <em>always</em> closely review the list of changed files and their diffs. Only restore files that
+                           really belong to the action you want to revert.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-snapper-undo-yast">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Undoing YaST and Zypper changes</h3>
+               </header>
+               
+               
+               <p>If you set up the root partition with <code class="literal">Btrfs</code> during the installation, Snapper—preconfigured for doing rollbacks of YaST or Zypper
+                  changes—will automatically be installed. Every time you start a YaST module or a Zypper
+                  transaction, two snapshots are created: a <q>pre-snapshot</q> capturing the state of the file system before the start of the module and a <q>post-snapshot</q> after the module has been finished.</p>
+               
+               <p>Using the YaST Snapper module or the <code class="command">snapper</code> command line tool, you can undo the changes made by YaST/Zypper by restoring files
+                  from the <q>pre-snapshot</q>. Comparing two snapshots the tools also allow you to see which files have been changed.
+                  You can also display the differences between two versions of a file (diff).</p>
+               
+               <div class="formalobject procedure" id="proc-snapper-undo-yast">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">10<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Undoing changes using the YaST <span class="guimenu">Snapper</span> module</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Start the <span class="guimenu">Snapper</span> module from the <span class="guimenu">Miscellaneous</span> section in YaST or by entering <code class="command">yast2 snapper</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Make sure <span class="guimenu">Current Configuration</span> is set to <span class="guimenu">root</span>. This is always the case unless you have manually added own Snapper configurations.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose a pair of pre- and post-snapshots from the list. Both, YaST and Zypper snapshot
+                           pairs are of the type <span class="guimenu">Pre &amp; Post</span>. YaST snapshots are labeled as <code class="literal">zypp(y2base)</code> in the <span class="guimenu">Description column</span>; Zypper snapshots are labeled <code class="literal">zypp(zypper)</code>.</p>
+                        
+                        <div class="informalfigure informalobject" id="proc-snapper-undo-yast_step3_informalfigure1">
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/snapper_yast2_list.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Show Changes</span> to open the list of files that differ between the two snapshots.</p>
+                        
+                        <div class="informalfigure informalobject" id="proc-snapper-undo-yast_step4_informalfigure1">
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/snapper_yast2_changes.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Review the list of files. To display a <q>diff</q> between the pre- and post-version of a file, select it from the list.</p>
+                        
+                        <div class="informalfigure informalobject" id="proc-snapper-undo-yast_step5_informalfigure1">
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/snapper_yast2_diff.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To restore one or more files, select the relevant files or directories by activating
+                           the respective check box. Click <span class="guimenu">Restore Selected</span> and confirm the action by clicking <span class="guimenu">Yes</span>.</p>
+                        
+                        <div class="informalfigure informalobject" id="proc-snapper-undo-yast_step6_informalfigure1">
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/snapper_yast2_restore.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           </div>
+                        
+                        <p>To restore a single file, activate its diff view by clicking its name. Click <span class="guimenu">Restore From First</span> and confirm your choice with <span class="guimenu">Yes</span>.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="formalobject procedure" id="proc-snapper-yast-cmdline">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">10<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Undoing changes using the <code class="command">snapper</code> command</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Get a list of YaST and Zypper snapshots by running <code class="command">snapper list -t pre-post</code>. YaST snapshots are labeled as <code class="literal">yast <em class="replaceable">MODULE_NAME</em></code> in the <span class="guimenu">Description column</span>; Zypper snapshots are labeled <code class="literal">zypp(zypper)</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper list -t pre-post</code></span></span>
+<span class="line"><span class="ld"><code>Pre # | Post # | Pre Date                      | Post Date                     | Description</code></span></span>
+<span class="line"><span class="ld"><code>------+--------+-------------------------------+-------------------------------+--------------</code></span></span>
+<span class="line"><span class="ld"><code>311   | 312    | Tue 06 May 2018 14:05:46 CEST | Tue 06 May 2018 14:05:52 CEST | zypp(y2base)</code></span></span>
+<span class="line"><span class="ld"><code>340   | 341    | Wed 07 May 2018 16:15:10 CEST | Wed 07 May 2018 16:15:16 CEST | zypp(zypper)</code></span></span>
+<span class="line"><span class="ld"><code>342   | 343    | Wed 07 May 2018 16:20:38 CEST | Wed 07 May 2018 16:20:42 CEST | zypp(y2base)</code></span></span>
+<span class="line"><span class="ld"><code>344   | 345    | Wed 07 May 2018 16:21:23 CEST | Wed 07 May 2018 16:21:24 CEST | zypp(zypper)</code></span></span>
+<span class="line"><span class="ld"><code>346   | 347    | Wed 07 May 2018 16:41:06 CEST | Wed 07 May 2018 16:41:10 CEST | zypp(y2base)</code></span></span>
+<span class="line"><span class="ld"><code>348   | 349    | Wed 07 May 2018 16:44:50 CEST | Wed 07 May 2018 16:44:53 CEST | zypp(y2base)</code></span></span>
+<span class="line"><span class="ld"><code>350   | 351    | Wed 07 May 2018 16:46:27 CEST | Wed 07 May 2018 16:46:38 CEST | zypp(y2base) </code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Get a list of changed files for a snapshot pair with <code class="command">snapper status</code><em class="replaceable">PRE</em>..<em class="replaceable">POST</em>. Files with content changes are marked with <span class="guimenu">c</span>, files that have been added are marked with <span class="guimenu">+</span> and deleted files are marked with <span class="guimenu">-</span>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper status 350..351</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/doc/packages/mikachan-fonts</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/doc/packages/mikachan-fonts/COPYING</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/doc/packages/mikachan-fonts/dl.html</code></span></span>
+<span class="line"><span class="ld"><code>c..... /usr/share/fonts/truetype/fonts.dir</code></span></span>
+<span class="line"><span class="ld"><code>c..... /usr/share/fonts/truetype/fonts.scale</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/fonts/truetype/みかちゃん-p.ttf</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/fonts/truetype/みかちゃん-pb.ttf</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/fonts/truetype/みかちゃん-ps.ttf</code></span></span>
+<span class="line"><span class="ld"><code>+..... /usr/share/fonts/truetype/みかちゃん.ttf</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/cache/fontconfig/7ef2298fde41cc6eeb7af42e48b7d293-x86_64.cache-4</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Basenames</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Dirnames</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Group</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Installtid</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Name</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Packages</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Providename</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Requirename</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Sha1header</code></span></span>
+<span class="line"><span class="ld"><code>c..... /var/lib/rpm/Sigmd5</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To display the diff for a certain file, run <code class="command">snapper diff</code><em class="replaceable">PRE</em>..<em class="replaceable">POST</em><em class="replaceable">FILENAME</em>. If you do not specify <em class="replaceable">FILENAME</em>, a diff for all files will be displayed.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper diff 350..351 /usr/share/fonts/truetype/fonts.scale</code></span></span>
+<span class="line"><span class="ld"><code>--- /.snapshots/350/snapshot/usr/share/fonts/truetype/fonts.scale       2014-04-23 15:58:57.000000000 +0200</code></span></span>
+<span class="line"><span class="ld"><code>+++ /.snapshots/351/snapshot/usr/share/fonts/truetype/fonts.scale       2014-05-07 16:46:31.000000000 +0200</code></span></span>
+<span class="line"><span class="ld"><code>@@ -1,4 +1,4 @@</code></span></span>
+<span class="line"><span class="ld"><code>-1174</code></span></span>
+<span class="line"><span class="ld"><code>+1486</code></span></span>
+<span class="line"><span class="ld"><code> ds=y:ai=0.2:luximr.ttf -b&amp;h-luxi mono-bold-i-normal--0-0-0-0-c-0-iso10646-1</code></span></span>
+<span class="line"><span class="ld"><code> ds=y:ai=0.2:luximr.ttf -b&amp;h-luxi mono-bold-i-normal--0-0-0-0-c-0-iso8859-1</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To restore one or more files run <code class="command">snapper -v undochange</code><em class="replaceable">PRE</em>..<em class="replaceable">POST</em><em class="replaceable">FILENAMES</em>. If you do not specify a <em class="replaceable">FILENAMES</em>, all changed files will be restored.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -v undochange 350..351</code></span></span>
+<span class="line"><span class="ld"><code>     create:0 modify:13 delete:7</code></span></span>
+<span class="line"><span class="ld"><code>     undoing change...</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/doc/packages/mikachan-fonts</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/doc/packages/mikachan-fonts/COPYING</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/doc/packages/mikachan-fonts/dl.html</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/fonts/truetype/みかちゃん-p.ttf</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/fonts/truetype/みかちゃん-pb.ttf</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/fonts/truetype/みかちゃん-ps.ttf</code></span></span>
+<span class="line"><span class="ld"><code>     deleting /usr/share/fonts/truetype/みかちゃん.ttf</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /usr/share/fonts/truetype/fonts.dir</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /usr/share/fonts/truetype/fonts.scale</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/cache/fontconfig/7ef2298fde41cc6eeb7af42e48b7d293-x86_64.cache-4</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Basenames</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Dirnames</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Group</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Installtid</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Name</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Packages</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Providename</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Requirename</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Sha1header</code></span></span>
+<span class="line"><span class="ld"><code>     modifying /var/lib/rpm/Sigmd5</code></span></span>
+<span class="line"><span class="ld"><code>     undoing change done</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Reverting user additions</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Reverting user additions via undoing changes with Snapper is not recommended. Since
+                              certain directories are excluded from snapshots, files belonging to these users will
+                              remain in the file system. If a user with the same user ID as a deleted user is created,
+                              this user will inherit the files. Therefore it is strongly recommended to use the
+                              YaST <span class="guimenu">User and Group Management</span> tool to remove users.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-undo-delete-file">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using Snapper to restore files</h3>
+               </header>
+               
+               
+               <p>Apart from the installation and administration snapshots, Snapper creates timeline
+                  snapshots. You can use these backup snapshots to restore files that have accidentally
+                  been deleted or to restore a previous version of a file. By using Snapper's diff feature
+                  you can also find out which modifications have been made at a certain point of time.</p>
+               
+               <p>Being able to restore files is especially interesting for data, which may reside on
+                  subvolumes or partitions for which snapshots are not taken by default. To be able
+                  to restore files from home directories, for example, create a separate Snapper configuration
+                  for <code class="filename">/home</code> doing automatic timeline snapshots. See <a class="xref xref-sect1" href="bk01partich10s05.html">the section called “Creating and modifying Snapper configurations”</a> for instructions.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Restoring files compared to rollback</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Snapshots taken from the root file system (defined by Snapper's root configuration),
+                              can be used to do a system rollback. The recommended way to do such a rollback is
+                              to boot from the snapshot and then perform the rollback. See <a class="xref xref-sect1" href="bk01partich10s03.html">the section called “System rollback by booting from snapshots”</a> for details.</p>
+                           
+                           <p>Performing a rollback would also be possible by restoring all files from a root file
+                              system snapshot as described below. However, this is not recommended. You may restore
+                              single files, for example, a configuration file from the <code class="systemitem">/etc</code> directory, but not the complete list of files from the snapshot.</p>
+                           
+                           <p>This restriction only affects snapshots taken from the root file system.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="formalobject procedure" id="proc-snapper-restore-yast">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Restoring files using the YaST <span class="guimenu">Snapper</span> module</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Start the <span class="guimenu">Snapper</span> module from the <span class="guimenu">Miscellaneous</span> section in YaST or by entering <code class="command">yast2 snapper</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose the <span class="guimenu">Current Configuration</span> from which to choose a snapshot.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Select a timeline snapshot from which to restore a file and choose <span class="guimenu">Show Changes</span>. Timeline snapshots are of the type <span class="guimenu">Single</span> with a description value of <span class="guimenu">timeline</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Select a file from the text box by clicking the file name. The difference between
+                           the snapshot version and the current system is shown. Activate the check box to select
+                           the file for restore. Do so for all files you want to restore.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Restore Selected</span> and confirm the action by clicking <span class="guimenu">Yes</span>.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="formalobject procedure" id="proc-snapper-restore-cmdl">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Restoring files using the <code class="command">snapper</code> command</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Get a list of timeline snapshots for a specific configuration by running the following
+                           command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> list -t single | grep timeline</code></span></span></pre>
+                        </div>
+                        
+                        <p><em class="replaceable">CONFIG</em> needs to be replaced by an existing Snapper configuration. Use <code class="command">snapper list-configs</code> to display a list.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Get a list of changed files for a given snapshot by running the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> status <em class="replaceable">SNAPSHOT_ID</em>..0</code></span></span></pre>
+                        </div>
+                        
+                        <p>Replace <em class="replaceable">SNAPSHOT_ID</em> by the ID for the snapshot from which you want to restore the files.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Optionally list the differences between the current file version and the one from
+                           the snapshot by running</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> diff <em class="replaceable">SNAPSHOT_ID</em>..0 <em class="replaceable">FILE NAME</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>If you do not specify <em class="replaceable">&lt;FILE NAME&gt;</em>, the difference for all files are shown.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>To restore one or more files, run</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c <em class="replaceable">CONFIG</em> -v undochange <em class="replaceable">SNAPSHOT_ID</em>..0 <em class="replaceable">FILENAME1</em><em class="replaceable">FILENAME2</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>If you do not specify file names, all changed files will be restored.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>System recovery and snapshot management with Snapper</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System rollback by booting from snapshots</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

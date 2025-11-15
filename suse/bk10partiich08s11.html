@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.11.&nbsp;Configuring storage devices</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich08s10.html" rel="prev">
+      <link href="bk10partiich08s12.html" rel="next">
+      <link href="bk10partiich08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich08.html">Up</a> <a href="bk10partiich08s12.html">Next</a> <a href="bk10partiich08s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich08s11.html" db-id="d616951e283418" id="libvirt-config-storage-virsh">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Configuring storage devices</h2>
+            </header>
+            
+            
+            <p>Storage devices are defined within the <code class="tag tag-element">disk</code> element. The usual <code class="tag tag-element">disk</code> element supports several attributes. The following two attributes are the most important:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>The <code class="tag tag-attribute">type</code> attribute describes the source of the virtual disk device. Valid values are <code class="tag tag-attvalue">file</code> , <code class="tag tag-attvalue">block</code> , <code class="tag tag-attvalue">dir</code> , <code class="tag tag-attvalue">network</code> , or <code class="tag tag-attvalue">volume</code> .</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The <code class="tag tag-attribute">device</code> attribute shows how the disk is exposed to the VM Guest OS. As an example, possible
+                     values can include <code class="tag tag-attvalue">floppy</code> , <code class="tag tag-attvalue">disk</code> , <code class="tag tag-attvalue">cdrom</code> , and others.</p>
+                  </li>
+               </ul>
+            
+            <p>The following child elements are the most important:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p><code class="tag tag-element">driver</code> contains the driver and the bus. These are used by the VM Guest to work with the
+                     new disk device.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The <code class="tag tag-element">target</code> element contains the device name under which the new disk is shown in the VM Guest.
+                     It also contains the optional bus attribute, which defines the type of bus on which
+                     the new disk should operate.</p>
+                  </li>
+               </ul>
+            
+            <p>The following procedure shows how to add storage devices to the VM Guest:</p>
+            
+            <div class="informalobject procedure" id="libvirt-config-storage-virsh_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Edit the configuration for an existing VM Guest:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh edit sles15</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Add a <code class="tag tag-element">disk</code> element inside the <code class="tag tag-element">devices</code> element together with the attributes <code class="tag tag-attvalue">type</code> and <code class="tag tag-attvalue">device</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;disk type='file' device='disk'&gt;</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Specify a <code class="tag tag-element">driver</code> element and use the default values:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;driver name='qemu' type='qcow2'/&gt;</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create a disk image as a source for the new virtual disk device:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">qemu-img create -f qcow2 /var/lib/libvirt/images/sles15.qcow2 32G</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Add the path for the disk source:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;source file='/var/lib/libvirt/images/sles15.qcow2'/&gt;</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Define the target device name in the VM Guest and the bus on which the disk should
+                        work:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;target dev='vda' bus='virtio'/&gt;</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Restart your VM:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh start sles15</code></code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Your new storage device should be available in the VM Guest OS.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich08s10.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich08.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich08s12.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Listing attached devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Configuring controller devices</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

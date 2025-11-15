@@ -1,0 +1,422 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.6.&nbsp;Raspberry&nbsp;Pi</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk02partich04s05.html" rel="prev">
+      <link href="bk02partich05.html" rel="next">
+      <link href="bk02partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk02partich04.html">Up</a> <a href="bk02partich05.html">Next</a> <a href="bk02partich04s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk02partich04s06.html" db-id="d616951e80520" id="sec-aarch64-deprpi" lang="">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Raspberry&nbsp;Pi</h2>
+            </header>
+            
+            
+            
+            <p>SUSE® Linux Enterprise Server is the first enterprise Linux distribution to support
+               the inexpensive Raspberry&nbsp;Pi* single-board computer. <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span> supports the following models:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;A+</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;B</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;B+</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Raspberry&nbsp;Pi&nbsp;4 Model&nbsp;B</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Raspberry&nbsp;Pi Compute Module&nbsp;3</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Raspberry&nbsp;Pi Compute Module&nbsp;3+</p>
+                  </li>
+               </ul>
+            
+            <p>The Raspberry&nbsp;Pi differs from more conventional server machines in several ways. First
+               and foremost, it does not come with a boot loader capable of loading operating systems.
+               <span class="phrase productname">SUSE Linux Enterprise Server</span> therefore ships additional boot loader software to fill that gap.</p>
+            
+            <section class="sect2" id="sec-aarch64-deprpi-boot">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Boot process</h3>
+               </header>
+               
+               
+               <p>The primary processor on the Raspberry&nbsp;Pi's System-on-Chip (SoC) is the Broadcom VideoCore
+                  Graphics Processing Unit (GPU), not the Arm Central Processing Unit (CPU). It is the
+                  GPU which starts initializing the hardware from a first-stage boot loader in the on-chip
+                  Boot Read-Only Memory (Boot ROM). Only a few configuration options can influence the
+                  Boot ROM; see <a class="xref xref-sect3" href="#sec-aarch64-deprpi-otp">the section called “OTP memory”</a>.</p>
+               
+               <p>The Raspberry&nbsp;Pi&nbsp;3 hardware does not have any built-in firmware. Instead, its second-stage
+                  boot loader firmware <code class="literal">bootcode.bin</code> is loaded from the boot medium every time the machine is powered on. It in turn loads
+                  the third-stage boot loader <code class="literal">start.elf</code>.</p>
+               
+               <p>The Raspberry&nbsp;Pi&nbsp;4 hardware has a small Electrically Erasable Programmable Read-Only
+                  Memory (EEPROM) for the second-stage boot loader. Apart from that, its boot sequence
+                  is similar to that of the Raspberry&nbsp;Pi&nbsp;3, loading the third-stage boot loader <code class="literal">start4.elf</code> from the boot medium.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">EEPROM update on Raspberry&nbsp;Pi&nbsp;4</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>An update of the second-stage boot loader can be performed by booting from a specially
+                              prepared microSD card.</p>
+                           
+                           <p>Only insert boot media that you trust, and verify that no file called <code class="literal">recovery.bin</code> is unintentionally present.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>If an <code class="literal">armstub8.bin</code> file is present, it will be loaded as a fourth-stage boot loader at AArch64 Exception
+                  Level 3 (EL3). Otherwise, a minimal integrated stub will be used.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">EL3 security considerations</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Code loaded for EL3 (often called BL31) will reside in memory, and Linux may attempt
+                              hypercalls into EL3 throughout its runtime.</p>
+                           
+                           <p>Verify that your boot media have no <code class="literal">armstub8.bin</code> file unintentionally present. <span class="phrase productname">SUSE Linux Enterprise Server</span><span class="phrase productnumber">15 SP7</span> does not include it.</p>
+                           
+                           <p>Beware that the Raspberry&nbsp;Pi's SoC does not provide TrustZone secure memory. Both
+                              the OS on the CPU and any software on the GPU may access its RAM. It is therefore
+                              unsuited for cryptographic EL0-s applications. <span class="phrase productname">SUSE Linux Enterprise Server</span> does not provide an EL1-s Trusted Execution Environment (TEE) for that reason.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> for the Raspberry&nbsp;Pi is configured to load a fifth-stage boot loader called <code class="literal">Das U-Boot</code>.</p>
+               
+               <section class="sect3" id="sec-aarch64-deprpi-configtxt">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Config.txt</h4>
+                  </header>
+                  
+                  
+                  <p>There is no non-volatile memory to hold configuration information. This means there
+                     are no conventional settings to adjust for boot device order, time and date, and so
+                     on.</p>
+                  
+                  <p>Instead, the boot loader reads a configuration file <code class="literal">config.txt</code> from the boot medium. The <code class="literal">config.txt</code> provided by SUSE should not be modified. It allows the user to optionally provide
+                     an <code class="literal">extraconfig.txt</code> file, which can override any setting from <code class="literal">config.txt</code> if needed. This permits <span class="phrase productname">SUSE Linux Enterprise Server</span> to update the <code class="literal">config.txt</code> file when needed, without overwriting any user settings.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-aarch64-deprpi-otp">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>OTP memory</h4>
+                  </header>
+                  
+                  
+                  <p>The SoC also has a very small amount of One-Time Programmable Memory (OTP memory).
+                     This can be used to configure some settings, such as whether the Boot ROM should attempt
+                     to boot from USB devices or over Ethernet.</p>
+                  
+                  <p>This OTP memory is described on the Raspberry&nbsp;Pi Foundation Web site: <a class="link" href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/otpbits.md">https://www.raspberrypi.org/documentation/hardware/raspberrypi/otpbits.md</a></p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">One-time programmable only</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Configuration settings written into OTP memory cannot be reversed.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>The most common use case for OTP memory will be enabling USB boot on Raspberry&nbsp;Pi&nbsp;3
+                     Model&nbsp;B or Compute Module&nbsp;3.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-aarch64-deprpi-boot_s3_3">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Enabling USB boot mode for Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;B</h4>
+                  </header>
+                  
+                  
+                  <p>To permanently allow booting from connected USB mass storage devices on Raspberry&nbsp;Pi&nbsp;3
+                     Model&nbsp;B, and from its on-board USB Ethernet, prepare a microSD card as described in
+                     <a class="xref xref-sect2" href="#sec-aarch64-deprpi-img">the section called “Deploying an appliance image”</a>. Before unmounting or ejecting the card and booting from it, add to its FAT partition
+                     a text file <code class="literal">extraconfig.txt</code> (<a class="xref xref-sect3" href="#sec-aarch64-deprpi-configtxt">the section called “Config.txt”</a>) with the following setting:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>program_usb_boot_mode=1</code></span></span></pre>
+                  </div>
+                  
+                  <p>Then continue to boot from the modified microSD card as usual. Once you see output
+                     from the U-Boot or GRUB boot loaders or the Linux kernel, you can remove power and
+                     then the microSD card. Your device should now be able to boot from USB (<a class="xref xref-sect2" href="#sec-aarch64-deprpi-usb">the section called “Installation from USB media”</a>).</p>
+                  
+                  <p>Note that once USB boot mode has been enabled for Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;B, USB boot
+                     mode cannot be disabled again (<a class="xref xref-sect3" href="#sec-aarch64-deprpi-otp">the section called “OTP memory”</a>).</p>
+                  
+                  <p>For more details, refer to the Raspberry&nbsp;Pi Foundation Web site: <a class="link" href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/msd.md">https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/msd.md</a></p>
+                  
+                  <p>For the Raspberry&nbsp;Pi Compute Module&nbsp;3, the setting required is the same, but the deployment
+                     of the modified image is a little more complicated.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-aarch64-deprpi-rtc">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Lack of a real-time clock</h3>
+               </header>
+               
+               
+               <p>There is no battery-backed Real-Time Clock (RTC) on the Raspberry&nbsp;Pi itself.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Time synchronization</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The lack of a Real-Time Clock means that Raspberry&nbsp;Pi devices need to be configured
+                              to fetch the time from a network server by Network Time Protocol (NTP).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>However, base boards for the Raspberry&nbsp;Pi Compute Modules may feature an RTC.</p>
+               
+               <p>It is also possible to connect an RTC via the GPIO connector, using Hardware Attached
+                  on Top (HATs) or other expansion boards.</p>
+               
+               <p>Either way, check whether the respective RTC chipset is supported by <span class="phrase productname">SUSE Linux Enterprise Server</span>. The connected RTC will need to be described to the operating system via a Device
+                  Tree Overlay (<a class="xref xref-sect3" href="#sec-aarch64-deprpi-configtxt">the section called “Config.txt”</a>).</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Compute Module 4 IO Board</span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>dtparam=i2c_vc=on</code></span></span>
+<span class="line"><span class="ld"><code>dtoverlay=i2c-rtc,pcf85063a,i2c_csi_dsi</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">MyPi base board</span></dt>
+                     <dd>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>dtparam=i2c1=on</code></span></span>
+<span class="line"><span class="ld"><code>dtoverlay=i2c-rtc,ds1307</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>For other boards and HATs, consult the documentation they are shipped with.</p>
+               </section>
+            
+            <section class="sect2" id="sec-aarch64-deprpi-img">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Deploying an appliance image</h3>
+               </header>
+               
+               
+               <p>The most common method to deploy an operating system onto Raspberry&nbsp;Pi hardware is
+                  to copy a pre-installed system image onto a boot medium, usually a microSD card. This
+                  is the simplest and easiest method.</p>
+               
+               <p>SUSE provides a preconfigured bootable image of <span class="phrase productname">SUSE Linux Enterprise Server</span> for Raspberry&nbsp;Pi hardware. This comes with the Btrfs file system, with compression
+                  enabled to improve performance and reduce wear on microSD media.</p>
+               
+               <p>A microSD card with a minimum size of 8&nbsp;GB is recommended. Faster cards will give
+                  better system performance. On the first boot, the operating system automatically expands
+                  the file system to fill the card. This means that the first boot will be substantially
+                  slower than subsequent boots.</p>
+               
+               <p>The process of writing the card image onto microSD media is described in the <a class="link" href="https://documentation.suse.com/sles/html/SLES-raspberry-pi/article-raspberry-pi.html">Raspberry&nbsp;Pi Quick Start</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-aarch64-deprpi-usb">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Installation from USB media</h3>
+               </header>
+               
+               
+               <p>Some models of Raspberry&nbsp;Pi allow booting from USB mass storage devices. This will
+                  then allow deploying <span class="phrase productname">SUSE Linux Enterprise Server</span> on Raspberry&nbsp;Pi similar to server platforms.</p>
+               
+               <p>Installation can be performed from a removable USB medium, such as a memory stick,
+                  onto a microSD card in the machine's internal slot. Alternatively, it can be performed
+                  from a removable USB medium onto another USB medium, such as a USB-connected hard
+                  disk.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">USB bandwidth limitations</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Note that the Ethernet controller on the Raspberry&nbsp;Pi&nbsp;3 is connected to the device's
+                              on-board USB 2.0 bus.</p>
+                           
+                           <p>Therefore an operating system running from a disk attached via USB must share the
+                              total 480&nbsp;Mbps bandwidth of the USB 2.0 controller. This will limit performance, and
+                              could significantly impact network performance.</p>
+                           
+                           <p>This limitation does not apply to the Raspberry&nbsp;Pi&nbsp;4.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Newer models of Raspberry&nbsp;Pi&nbsp;3 with BCM2837 B0 silicon (silver instead of black chip),
+                  including Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;B+ and Compute Module&nbsp;3+, allow booting from USB-connected
+                  storage devices by default.</p>
+               
+               <p>On older models, such as Raspberry&nbsp;Pi&nbsp;3 Model&nbsp;B or Compute Module&nbsp;3, USB boot can
+                  be enabled by booting from a specially prepared microSD card once. See <a class="xref xref-sect3" href="#sec-aarch64-deprpi-otp">the section called “OTP memory”</a> for instructions.</p>
+               </section>
+            
+            <section class="sect2" id="sec-aarch64-deprpi-net">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Installation from network</h3>
+               </header>
+               
+               
+               <p>Because of the hardware's lack of on-board firmware (<a class="xref xref-sect2" href="#sec-aarch64-deprpi-boot">the section called “Boot process”</a>), network-booting the Raspberry&nbsp;Pi using PXE is more complex than with more conventional
+                  computers.</p>
+               
+               <p>The process of setting up a PXE boot server for x86 and Arm is described in the SUSE
+                  Best Practices document <a class="link" href="https://documentation.suse.com/sbp/all/html/SBP-Multi-PXE-Install/index.html"><cite class="citetitle">How to Set Up a Multi-PXE Installation Server</cite></a>.</p>
+               
+               <p>The Raspberry&nbsp;Pi Foundation publishes information on how to boot using PXE one Raspberry&nbsp;Pi
+                  from another Raspberry&nbsp;Pi: <a class="link" href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/net_tutorial.md">https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/net_tutorial.md</a></p>
+               </section>
+            
+            <section class="sect2" id="sec-aarch64-deprpi_s2_6">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</h3>
+               </header>
+               
+               
+               <p>For more information, consult the following resources:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">SUSE Linux Enterprise Server <span class="phrase productnumber">15 SP7</span> Release Notes</span></dt>
+                     <dd>
+                        
+                        <p>For more information about hardware compatibility, supported options and functionality
+                           when running on Raspberry&nbsp;Pi hardware, consult the <cite class="citetitle">Boot and Driver Enablement for Raspberry Pi</cite> section of the SUSE Linux Enterprise Server Release Notes:</p>
+                        
+                        <p><a class="link" href="https://www.suse.com/releasenotes/aarch64/SUSE-SLES/15-SP7/#aarch64-rpi">https://www.suse.com/releasenotes/aarch64/SUSE-SLES/15-SP7/#aarch64-rpi</a></p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Raspberry&nbsp;Pi Quick Start</span></dt>
+                     <dd>
+                        
+                        <p><a class="link" href="https://documentation.suse.com/sles/15-SP7/html/SLES-raspberry-pi/article-raspberry-pi.html">https://documentation.suse.com/sles/15-SP7/html/SLES-raspberry-pi/article-raspberry-pi.html</a></p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">openSUSE Hardware Compatibility List: Raspberry&nbsp;Pi&nbsp;3</span></dt>
+                     <dd>
+                        
+                        <p>The openSUSE project also has information about installing and configuring Raspberry&nbsp;Pi
+                           hardware. Much of this also applies to SUSE Linux Enterprise.</p>
+                        
+                        <p>See <a class="link" href="https://en.opensuse.org/HCL:Raspberry_Pi3">https://en.opensuse.org/HCL:Raspberry_Pi3</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Das U-Boot</span></dt>
+                     <dd>
+                        
+                        <p>More information about <code class="literal">Das U-Boot</code> boot loader can be found on the project's GitHub page at <a class="link" href="https://github.com/u-boot/u-boot">https://github.com/u-boot/u-boot</a>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk02partich04s05.html">Prev</a></td>
+                  <td class="up"><a href="bk02partich04.html">Up</a></td>
+                  <td class="next"><a href="bk02partich05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Dealing with boot and installation problems</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">5</span><span class="sep">.&nbsp;</span>Installation on IBM POWER</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

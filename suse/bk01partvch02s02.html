@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>39.2.&nbsp;Manually configuring NTP in the network</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch02.html" rel="prev">
+      <link href="bk01partvch02s03.html" rel="next">
+      <link href="bk01partvch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch02.html">Up</a> <a href="bk01partvch02s03.html">Next</a> <a href="bk01partvch02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch02s02.html" db-id="d616951e56091" id="sec-net-xntp-netconf">
+            <header>
+               <h2><span class="label">39<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Manually configuring NTP in the network</h2>
+            </header>
+            
+            
+            <p><code class="resource systemitem">chrony</code> reads its configuration from the <code class="filename">/etc/chrony.conf</code> file. To keep the computer clock synchronized, you need to tell <code class="resource systemitem">chrony</code> what time servers to use. You can use specific server names or IP addresses, for
+               example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>0.suse.pool.ntp.org</code></span></span>
+<span class="line"><span class="ld"><code>1.suse.pool.ntp.org</code></span></span>
+<span class="line"><span class="ld"><code>2.suse.pool.ntp.org</code></span></span>
+<span class="line"><span class="ld"><code>3.suse.pool.ntp.org</code></span></span></pre>
+            </div>
+            
+            <p>You can also specify a <em>pool</em> name. Pool name resolves to several IP addresses:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>pool pool.ntp.org</code></span></span></pre>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Computers on the same network</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>To synchronize time on multiple computers on the same network, we do not recommend
+                           to synchronize them all with an external server. A good practice is to make one computer
+                           the time server which is synchronized with an external time server, and the other
+                           computers act as its clients. Add a <code class="literal">local</code> directive to the server's <code class="filename">/etc/chrony.conf</code> to distinguish it from an authoritative time server:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>local stratum 10</code></span></span></pre>
+                        </div>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>To start <code class="resource systemitem">chrony</code>, run:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl start chronyd.service</code></span></span></pre>
+            </div>
+            
+            <p>After initializing <code class="daemon systemitem">chronyd</code>, it takes a while before the time is stabilized and the drift file for correcting
+               the local computer clock is created. With the drift file, the systematic error of
+               the hardware clock can be computed when the computer is powered on. The correction
+               is used immediately, resulting in a higher stability of the system time.</p>
+            
+            <p>To enable the service so that <code class="resource systemitem">chrony</code> starts automatically at boot time, run:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl enable chronyd.service</code></span></span></pre>
+            </div>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Conflicting <code class="daemon systemitem">yast-timesync.service</code> service</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Besides the <code class="daemon systemitem">chronyd.service</code> service, <span class="phrase productname">SLES</span> includes <code class="daemon systemitem">yast-timesync.service</code>. <code class="daemon systemitem">yast-timesync.service</code> is triggered by a timer every 5 minutes and runs <code class="daemon systemitem">chronyd</code> with the <code class="option">-q</code> option to set the system time and exit. Because only one instance of <code class="daemon systemitem">chronyd</code> can be running at any given time, do not enable or start both <code class="daemon systemitem">chronyd</code>-related services at the same time.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch02.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch02s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">39</span><span class="sep">.&nbsp;</span>Time synchronization with NTP</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">39<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring NTS</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

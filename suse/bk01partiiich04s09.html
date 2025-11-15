@@ -1,0 +1,634 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>23.9.&nbsp;Setting up team devices for Network Teaming</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich04s08.html" rel="prev">
+      <link href="bk01partiiich04s10.html" rel="next">
+      <link href="bk01partiiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich04.html">Up</a> <a href="bk01partiiich04s10.html">Next</a> <a href="bk01partiiich04s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich04s09.html" db-id="d616951e41790" id="sec-network-iface-teaming" lang="">
+            <header>
+               <h2><span class="label">23<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Setting up team devices for Network Teaming</h2>
+            </header>
+            
+            
+            
+            
+            <p>The term <q>link aggregation</q> is the general term which describes combining (or aggregating) a network connection
+               to provide a logical layer. Sometimes you find the terms <q>channel teaming</q>, <q>Ethernet bonding</q>, <q>port trunking</q>, etc. which are synonyms and refer to the same concept.</p>
+            
+            <p>This concept is widely known as <q>bonding</q> and was originally integrated into the Linux kernel (see <a class="xref xref-sect1" href="bk01partiiich04s08.html">the section called “Setting up bonding devices”</a> for the original implementation). The term <em>Network Teaming</em> is used to refer to the new implementation of this concept.</p>
+            
+            <p>The main difference between bonding and Network Teaming is that teaming supplies a
+               set of small kernel modules responsible for providing an interface for teamd instances.
+               Everything else is handled in user space. This is different from the original bonding
+               implementation which contains all of its functionality exclusively in the kernel.
+               For a comparison refer to <a class="xref xref-table" href="#tab-team-comparison">Table&nbsp;<span class="label">23<span class="sep">.</span>5</span>, “Feature comparison between bonding and team”</a>.</p>
+            
+            <div class="formalobject table" id="tab-team-comparison">
+               <header>
+                  <div class="title">Table&nbsp;<span class="label">23<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Feature comparison between bonding and team</div>
+               </header>
+               <table>
+                  <thead>
+                     
+                     <tr>
+                        <th class="bleft btop colsep rowsep">Feature</th>
+                        <th class="btop colsep rowsep">Bonding</th>
+                        <th class="btop colsep rowsep">Team</th>
+                     </tr>
+                     </thead>
+                  <tbody>
+                     
+                     <tr>
+                        <td class="bleft btop colsep rowsep">broadcast, round-robin TX policy</td>
+                        <td class="btop colsep rowsep">yes</td>
+                        <td class="btop colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">active-backup TX policy</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">LACP (802.3ad) support</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">hash-based TX policy</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">user can set hash function</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">TX load-balancing support (TLB)</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">TX load-balancing support for LACP</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">Ethtool link monitoring</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">ARP link monitoring</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">NS/NA (IPV6) link monitoring</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">RCU locking on TX/RX paths</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">port prio and stickiness</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">separate per-port link monitoring setup</td>
+                        <td class="colsep rowsep">no</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">multiple link monitoring setup</td>
+                        <td class="colsep rowsep">limited</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">VLAN support</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">multiple device stacking</td>
+                        <td class="colsep rowsep">yes</td>
+                        <td class="colsep rowsep">yes</td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep" colspan="3">Source: <a class="link" href="https://libteam.org/files/teamdev.pp.pdf">https://libteam.org/files/teamdev.pp.pdf</a></td>
+                     </tr>
+                     </tbody>
+               </table>
+            </div>
+            
+            <p>Both implementations, bonding and Network Teaming, can be used in parallel. Network
+               Teaming is an alternative to the existing bonding implementation. It does not replace
+               bonding.</p>
+            
+            <p>Network Teaming can be used for different use cases. The two most important use cases
+               are explained later and involve:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Load balancing between different network devices.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Failover from one network device to another in case one of the devices should fail.</p>
+                  </li>
+               </ul>
+            
+            <p> Currently, there is no YaST module to support creating a teaming device. You need
+               to configure Network Teaming manually. The general procedure is shown below which
+               can be applied for all your Network Teaming configurations:</p>
+            
+            <div class="formalobject procedure" id="pro-team-general">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">23<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>General procedure</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Install the package <code class="package">libteam-tools</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper in libteam-tools</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create a configuration file under <code class="filename">/etc/sysconfig/network/</code>. Usually it will be <code class="filename">ifcfg-team0</code>. If you need more than one Network Teaming device, give them ascending numbers.</p>
+                     
+                     <p>This configuration file contains several variables which are explained in the man
+                        pages (see <code class="command">man ifcfg</code> and <code class="command">man ifcfg-team</code>). An example configuration can be found in your system in the file <code class="filename">/etc/sysconfig/network/ifcfg.template</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Remove the configuration files of the interfaces which will be used for the teaming
+                        device (usually <code class="filename">ifcfg-eth0</code> and <code class="filename">ifcfg-eth1</code>).</p>
+                     
+                     <p>It is recommended to make a backup and remove both files. Wicked will re-create the
+                        configuration files with the necessary parameters for teaming.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Optionally, check if everything is included in Wicked's configuration file:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked show-config</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start the Network Teaming device <code class="service systemitem">team0</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifup team0</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>In case you need additional debug information, use the option <code class="option">--debug all</code> after the <code class="command">all</code> subcommand.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Check the status of the Network Teaming device. This can be done by the following
+                        commands:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p>Get the state of the teamd instance from Wicked:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifstatus --verbose team0</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Get the state of the entire instance:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">teamdctl team0 state</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        
+                        <li>
+                           
+                           <p>Get the systemd state of the teamd instance:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl status teamd@team0</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        </ul>
+                     
+                     <p>Each of them shows a slightly different view depending on your needs.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>In case you need to change something in the <code class="filename">ifcfg-team0</code> file afterward, reload its configuration with:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifreload team0</code></code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Do <em>not</em> use <code class="command">systemctl</code> for starting or stopping the teaming device! Instead, use the <code class="command">wicked</code> command as shown above.</p>
+            
+            <p>To completely remove the team device, use this procedure:</p>
+            
+            <div class="formalobject procedure" id="sec-network-iface-teaming_proc2">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">23<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Removing a team device</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Stop the Network Teaming device <code class="service systemitem">team0</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifdown team0</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Rename the file <code class="filename">/etc/sysconfig/network/ifcfg-team0</code> to <code class="filename">/etc/sysconfig/network/.ifcfg-team0</code>. Inserting a dot in front of the file name makes it <q>invisible</q> for wicked. If you really do not need the configuration anymore, you can also remove
+                        the file.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Reload the configuration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">wicked ifreload all</code></code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <section class="sect2" id="sec-network-iface-teaming-lb">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Use case: load balancing with Network Teaming</h3>
+               </header>
+               
+               
+               <p>Load balancing is used to improve bandwidth. Use the following configuration file
+                  to create a Network Teaming device with load balancing capabilities. Proceed with
+                  <a class="xref xref-procedure" href="#pro-team-general">Procedure&nbsp;<span class="label">23<span class="sep">.</span>2</span>, “General procedure”</a> to set up the device. Check the output with <code class="command">teamdctl</code>.</p>
+               
+               <div class="example formalobject" id="ex-team-lb">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STARTMODE=auto <span class="co" id="co-team-lb-startmode">➟</span></code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO=static <span class="co" id="co-team-lb-boot-and-ip">➠</span></code></span></span>
+<span class="line"><span class="ld"><code>IPADDRESS="192.168.1.1/24" <span class="co">➠</span></code></span></span>
+<span class="line"><span class="ld"><code>IPADDR6="fd00:deca:fbad:50::1/64" <span class="co">➠</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>TEAM_RUNNER="loadbalance" <span class="co" id="co-team-lb-loadbalance">➡</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LB_TX_HASH="ipv4,ipv6,eth,vlan"</code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LB_TX_BALANCER_NAME="basic"</code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LB_TX_BALANCER_INTERVAL="100"</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>TEAM_PORT_DEVICE_0="eth0" <span class="co" id="co-team-lb-dev">➢</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_PORT_DEVICE_1="eth1" <span class="co">➢</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LW_NAME="ethtool" <span class="co" id="co-team-lb-name">➣</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LW_ETHTOOL_DELAY_UP="10" <span class="co" id="co-team-lb-ethtool-delay">➤</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LW_ETHTOOL_DELAY_DOWN="10" <span class="co">➤</span></code></span></span></pre>
+                  </div>
+                  
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-lb-startmode">➟</a></dt>
+                        <dd>
+                           
+                           <p>Controls the start of the teaming device. The value of <code class="literal">auto</code> means, the interface will be set up when the network service is available and will
+                              be started automatically on every reboot.</p>
+                           
+                           <p>In case you need to control the device yourself (and prevent it from starting automatically),
+                              set <code class="varname">STARTMODE</code> to <code class="literal">manual</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-lb-boot-and-ip">➠</a></dt>
+                        <dd>
+                           
+                           <p>Sets a static IP address (here <code class="ipaddress systemitem">192.168.1.1</code> for IPv4 and <code class="ipaddress systemitem">fd00:deca:fbad:50::1</code> for IPv6).</p>
+                           
+                           <p>If the Network Teaming device should use a dynamic IP address, set <code class="literal">BOOTPROTO="dhcp"</code> and remove (or comment) the line with <code class="varname">IPADDRESS</code> and <code class="varname">IPADDR6</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-lb-loadbalance">➡</a></dt>
+                        <dd>
+                           
+                           <p>Sets <code class="varname">TEAM_RUNNER</code> to <code class="literal">loadbalance</code> to activate the load balancing mode.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-lb-dev">➢</a></dt>
+                        <dd>
+                           
+                           <p>Specifies one or more devices which should be aggregated to create the Network Teaming
+                              device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-lb-name">➣</a></dt>
+                        <dd>
+                           
+                           <p>Defines a link watcher to monitor the state of subordinate devices. The default value
+                              <code class="literal">ethtool</code> checks only if the device is up and accessible. This makes this check fast enough.
+                              However, it does not check if the device can really send or receive packets.</p>
+                           
+                           <p>If you need a higher confidence in the connection, use the <code class="literal">arp_ping</code> option. This sends pings to an arbitrary host (configured in the <code class="varname">TEAM_LW_ARP_PING_TARGET_HOST</code> variable). The Network Teaming device is considered to be up only if the replies
+                              are received.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-lb-ethtool-delay">➤</a></dt>
+                        <dd>
+                           
+                           <p>Defines the delay in milliseconds between the link coming up (or down) and the runner
+                              being notified.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Configuration for load balancing with Network Teaming</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-network-iface-teaming-failover">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Use case: failover with Network Teaming</h3>
+               </header>
+               
+               
+               <p>Failover is used to ensure high availability of a critical Network Teaming device
+                  by involving a parallel backup network device. The backup network device is running
+                  all the time and takes over if and when the main device fails.</p>
+               
+               <p>Use the following configuration file to create a Network Teaming device with failover
+                  capabilities. Proceed with <a class="xref xref-procedure" href="#pro-team-general">Procedure&nbsp;<span class="label">23<span class="sep">.</span>2</span>, “General procedure”</a> to set up the device. Check the output with <code class="command">teamdctl</code>.</p>
+               
+               <div class="example formalobject" id="ex-team-failover">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STARTMODE=auto <span class="co" id="co-team-failover-startmode">➥</span></code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO=static <span class="co" id="co-team-failover-boot-and-ip">➦</span></code></span></span>
+<span class="line"><span class="ld"><code>IPADDR="192.168.1.2/24" <span class="co">➦</span></code></span></span>
+<span class="line"><span class="ld"><code>IPADDR6="fd00:deca:fbad:50::2/64" <span class="co">➦</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>TEAM_RUNNER=activebackup <span class="co" id="co-team-failover-activebackup">➧</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_PORT_DEVICE_0="eth0" <span class="co" id="co-team-failover-dev">➨</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_PORT_DEVICE_1="eth1" <span class="co">➨</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LW_NAME=ethtool <span class="co" id="co-team-failover-name">➩</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LW_ETHTOOL_DELAY_UP="10" <span class="co" id="co-team-failover-ethtool-delay">➪</span></code></span></span>
+<span class="line"><span class="ld"><code>TEAM_LW_ETHTOOL_DELAY_DOWN="10" <span class="co">➪</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-failover-startmode">➥</a></dt>
+                        <dd>
+                           
+                           <p>Controls the start of the teaming device. The value of <code class="literal">auto</code> means the interface will be set up when the network service is available and will
+                              be started automatically on every reboot.</p>
+                           
+                           <p>In case you need to control the device yourself (and prevent it from starting automatically),
+                              set <code class="varname">STARTMODE</code> to <code class="literal">manual</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-failover-boot-and-ip">➦</a></dt>
+                        <dd>
+                           
+                           <p>Sets a static IP address (here <code class="ipaddress systemitem">192.168.1.2</code> for IPv4 and <code class="ipaddress systemitem">fd00:deca:fbad:50::2</code> for IPv6).</p>
+                           
+                           <p>If the Network Teaming device should use a dynamic IP address, set <code class="literal">BOOTPROTO="dhcp"</code> and remove (or comment) the line with <code class="varname">IPADDRESS</code> and <code class="varname">IPADDR6</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-failover-activebackup">➧</a></dt>
+                        <dd>
+                           
+                           <p>Sets <code class="varname">TEAM_RUNNER</code> to <code class="literal">activebackup</code> to activate the failover mode.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-failover-dev">➨</a></dt>
+                        <dd>
+                           
+                           <p>Specifies one or more devices which should be aggregated to create the Network Teaming
+                              device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-failover-name">➩</a></dt>
+                        <dd>
+                           
+                           <p>Defines a link watcher to monitor the state of subordinate devices. The default value
+                              <code class="literal">ethtool</code> checks only if the device is up and accessible. This makes this check fast enough.
+                              However, it does not check if the device can really send or receive packets.</p>
+                           
+                           <p>If you need a higher confidence in the connection, use the <code class="literal">arp_ping</code> option. This sends pings to an arbitrary host (configured in the <code class="varname">TEAM_LW_ARP_PING_TARGET_HOST</code> variable). Only if the replies are received, the Network Teaming device is considered
+                              to be up.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-team-failover-ethtool-delay">➪</a></dt>
+                        <dd>
+                           
+                           <p>Defines the delay in milliseconds between the link coming up (or down) and the runner
+                              being notified.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">23<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>Configuration for DHCP Network Teaming device</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-network-iface-teaming-vlan">
+               <header>
+                  <h3><span class="label">23<span class="sep">.</span>9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Use case: VLAN over team device</h3>
+               </header>
+               
+               
+               
+               <p>VLAN is an abbreviation of <em>Virtual Local Area Network</em>. It allows the running of multiple <em>logical</em> (virtual) Ethernets over one single physical Ethernet. It logically splits the network
+                  into different broadcast domains so that packets are only switched between ports that
+                  are designated for the same VLAN.</p>
+               
+               <p>The following use case creates two static VLANs on top of a team device:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><code class="other systemitem">vlan0</code>, bound to the IP address <code class="ipaddress systemitem">192.168.10.1</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="other systemitem">vlan1</code>, bound to the IP address <code class="ipaddress systemitem">192.168.20.1</code></p>
+                     </li>
+                  </ul>
+               
+               <p>Proceed as follows:</p>
+               
+               <div class="informalobject procedure" id="sec-network-iface-teaming-vlan_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Enable the VLAN tags on your switch. To use load balancing for your team device, your
+                           switch needs to be capable of <em>Link Aggregation Control Protocol</em> (LACP) (802.3ad). Consult your hardware manual about the details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Decide if you want to use load balancing or failover for your team device. Set up
+                           your team device as described in <a class="xref xref-sect2" href="#sec-network-iface-teaming-lb">the section called “Use case: load balancing with Network Teaming”</a> or <a class="xref xref-sect2" href="#sec-network-iface-teaming-failover">the section called “Use case: failover with Network Teaming”</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In <code class="filename">/etc/sysconfig/network</code> create a file <code class="filename">ifcfg-vlan0</code> with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>STARTMODE="auto"</code></span></span>
+<span class="line"><span class="ld"><code>BOOTPROTO="static" <span class="co" id="co-team-vlan-bootproto">➫</span></code></span></span>
+<span class="line"><span class="ld"><code>IPADDR='192.168.10.1/24' <span class="co" id="co-team-vlan-ipaddr">➬</span></code></span></span>
+<span class="line"><span class="ld"><code>ETHERDEVICE="team0" <span class="co" id="co-team-vlan-etherdevice">➭</span></code></span></span>
+<span class="line"><span class="ld"><code>VLAN_ID="0" <span class="co" id="co-team-vlan-vlan-id">➮</span></code></span></span>
+<span class="line"><span class="ld"><code>VLAN='yes'</code></span></span></pre>
+                        </div>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#co-team-vlan-bootproto">➫</a></dt>
+                              <dd>
+                                 
+                                 <p>Defines a fixed IP address, specified in <code class="varname">IPADDR</code>.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#co-team-vlan-ipaddr">➬</a></dt>
+                              <dd>
+                                 
+                                 <p>Defines the IP address, here with its netmask.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#co-team-vlan-etherdevice">➭</a></dt>
+                              <dd>
+                                 
+                                 <p>Contains the real interface to use for the VLAN interface, here our team device (<code class="systemitem">team0</code>).</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#co-team-vlan-vlan-id">➮</a></dt>
+                              <dd>
+                                 
+                                 <p>Specifies a unique ID for the VLAN. Preferably, the file name and the <code class="varname">VLAN_ID</code> corresponds to the name <code class="filename">ifcfg-vlan<em class="replaceable">VLAN_ID</em></code>. In our case <code class="varname">VLAN_ID</code> is <code class="literal">0</code> which leads to the file name <code class="filename">ifcfg-vlan0</code>.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy the file <code class="filename">/etc/sysconfig/network/ifcfg-vlan0</code> to <code class="filename">/etc/sysconfig/network/ifcfg-vlan1</code> and change the following values:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="varname">IPADDR</code> from <code class="ipaddress systemitem">192.168.10.1/24</code> to <code class="ipaddress systemitem">192.168.20.1/24</code>.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="varname">VLAN_ID</code> from <code class="literal">0</code> to <code class="literal">1</code>.</p>
+                              </li>
+                           </ul>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the two VLANs:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">wicked</code> ifup vlan0 vlan1</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check the output of <code class="command">ifconfig</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">ifconfig</code> -a</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>vlan0     Link encap:Ethernet  HWaddr 08:00:27:DC:43:98</code></span></span>
+<span class="line"><span class="ld"><code>          inet addr:192.168.10.1 Bcast:192.168.10.255 Mask:255.255.255.0</code></span></span>
+<span class="line"><span class="ld"><code>          inet6 addr: fe80::a00:27ff:fedc:4398/64 Scope:Link</code></span></span>
+<span class="line"><span class="ld"><code>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1</code></span></span>
+<span class="line"><span class="ld"><code>          RX packets:0 errors:0 dropped:0 overruns:0 frame:0</code></span></span>
+<span class="line"><span class="ld"><code>          TX packets:12 errors:0 dropped:0 overruns:0 carrier:0</code></span></span>
+<span class="line"><span class="ld"><code>          collisions:0 txqueuelen:1000</code></span></span>
+<span class="line"><span class="ld"><code>          RX bytes:0 (0.0 b)  TX bytes:816 (816.0 b)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>vlan1     Link encap:Ethernet  HWaddr 08:00:27:DC:43:98</code></span></span>
+<span class="line"><span class="ld"><code>          inet addr:192.168.20.1 Bcast:192.168.20.255 Mask:255.255.255.0</code></span></span>
+<span class="line"><span class="ld"><code>          inet6 addr: fe80::a00:27ff:fedc:4398/64 Scope:Link</code></span></span>
+<span class="line"><span class="ld"><code>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1</code></span></span>
+<span class="line"><span class="ld"><code>          RX packets:0 errors:0 dropped:0 overruns:0 frame:0</code></span></span>
+<span class="line"><span class="ld"><code>          TX packets:12 errors:0 dropped:0 overruns:0 carrier:0</code></span></span>
+<span class="line"><span class="ld"><code>          collisions:0 txqueuelen:1000</code></span></span>
+<span class="line"><span class="ld"><code>          RX bytes:0 (0.0 b)  TX bytes:816 (816.0 b)</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich04s08.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich04.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich04s10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">23<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Setting up bonding devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">23<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Software-defined networking with <span class="phrase productname">Open vSwitch</span>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

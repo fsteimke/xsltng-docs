@@ -1,0 +1,346 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>24.3.&nbsp;Setting up your VPN server using a certificate authority</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich04s02.html" rel="prev">
+      <link href="bk06partiiich04s04.html" rel="next">
+      <link href="bk06partiiich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiiich04.html">Up</a> <a href="bk06partiiich04s04.html">Next</a> <a href="bk06partiiich04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiiich04s03.html" db-id="d616951e180602" id="sec-security-vpn-ca">
+            <header>
+               <h2><span class="label">24<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Setting up your VPN server using a certificate authority</h2>
+            </header>
+            
+            
+            <p>The example in <a class="xref xref-sect1" href="bk06partiiich04s02.html">Section&nbsp;<span class="label">24<span class="sep">.</span>2</span></a> is useful for testing, but not for daily work. This section explains how to build
+               a VPN server that allows more than one connection at the same time. This is done with
+               a public key infrastructure (PKI). A PKI consists of a pair of public and private
+               keys for the server and each client, and a certificate authority (CA), which is used
+               to sign every server and client certificate.</p>
+            
+            <p>This setup involves the following basic steps:</p>
+            
+            <div class="informalobject procedure" id="sec-security-vpn-ca_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p><a class="xref xref-sect2" href="#sec-security-vpn-certs">the section called “Creating certificates”</a></p>
+                     </li>
+                  <li class="step">
+                     
+                     <p><a class="xref xref-sect2" href="#sec-security-vpn-config-server">the section called “Configuring the VPN server”</a></p>
+                     </li>
+                  <li class="step">
+                     
+                     <p><a class="xref xref-sect2" href="#sec-security-vpn-config-clients">the section called “Configuring the VPN clients”</a></p>
+                     </li>
+               </ol>
+            </div>
+            
+            <section class="sect2" id="sec-security-vpn-certs">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Creating certificates</h3>
+               </header>
+               
+               
+               <p>Before a VPN connection can be established, the client must authenticate the server
+                  certificate. Conversely, the server must also authenticate the client certificate.
+                  This is called <em>mutual authentication</em>.</p>
+               
+               <p>Creating certificates is not supported on <span class="phrase productname">SUSE Linux Enterprise Server</span>. The following assumes you have created a CA certificate, a server certificate, and
+                  a client certificate on another system.</p>
+               
+               <p>The server certificate is required in the PEM and unencrypted key in PEM formats.
+                  Copy the PEM version to <code class="filename">/etc/openvpn/server_crt.pem</code> on the VPN server. The unencrypted version needs to go to <code class="filename">/etc/openvpn/server_key.pem</code>.</p>
+               
+               <p>Client certificates need to be of the format PKCS12 (preferred) or PEM. The certificate
+                  in PKCS12 format needs to contain the CA chain and needs to be copied to <code class="filename">/etc/openvpn/<em class="replaceable">CLIENT</em>.p12</code>. In case you have client certificates in PEM format containing the CA chain, copy
+                  them to <code class="filename">/etc/openvpn/<em class="replaceable">CLIENT</em>.pem</code>. In case you have split the PEM certificates into client certificate (<code class="filename">*.ca</code>), client key (<code class="filename">*.key</code>), and the CA certificate (<code class="filename">*.ca</code>), copy these files to <code class="filename">/etc/openvpn/</code> on each client.</p>
+               
+               <p>The CA certificate needs to be copied to <code class="filename">/etc/openvpn/vpn_ca.pem</code> on the server and each client.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Splitting client certificates</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you split client certificates into client certificate, client key, and the CA certificate,
+                              you need to provide the respective file names in the OpenVPN configuration file on
+                              the respective clients (see <a class="xref xref-example" href="#ex-vpn-serv-config">Example&nbsp;<span class="label">24<span class="sep">.</span>1</span>, “VPN server configuration file”</a>).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            
+            <section class="sect2" id="sec-security-vpn-config-server">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the VPN server</h3>
+               </header>
+               
+               
+               <p>As the basis of your configuration file, copy <code class="filename">/usr/share/doc/packages/openvpn/sample-config-files/server.conf</code> to <code class="filename">/etc/openvpn/</code>. Then customize it to your needs.</p>
+               
+               <div class="example formalobject" id="ex-vpn-serv-config">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># /etc/openvpn/server.conf</code></span></span>
+<span class="line"><span class="ld"><code>port 1194 <span class="co" id="co-vpn-servconfig-port">⠩</span></code></span></span>
+<span class="line"><span class="ld"><code>proto udp <span class="co" id="co-vpn-servconfig-proto">⠪</span></code></span></span>
+<span class="line"><span class="ld"><code>dev tun0 <span class="co" id="co-vpn-servconfig-dev">⠫</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Security <span class="co" id="co-vpn-servconfig-security">⠬</span></code></span></span>
+<span class="line"><span class="ld"><code>ca    vpn_ca.pem</code></span></span>
+<span class="line"><span class="ld"><code>cert  server_crt.pem</code></span></span>
+<span class="line"><span class="ld"><code>key   server_key.pem</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># ns-cert-type server </code></span></span>
+<span class="line"><span class="ld"><code>remote-cert-tls client <span class="co" id="co-vpn-servconfig-remote-cert-tls">⠭</span></code></span></span>
+<span class="line"><span class="ld"><code>dh   server/dh2048.pem <span class="co" id="co-vpn-servconfig-dh">⠮</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>server 192.168.1.0 255.255.255.0 <span class="co" id="co-vpn-servconfig-server">⠯</span></code></span></span>
+<span class="line"><span class="ld"><code>ifconfig-pool-persist /var/run/openvpn/ipp.txt <span class="co" id="co-vpn-servconfig-pool">⠰</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Privileges <span class="co" id="co-vpn-serverconf-privilege">⠱</span></code></span></span>
+<span class="line"><span class="ld"><code>user nobody</code></span></span>
+<span class="line"><span class="ld"><code>group nobody</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Other configuration <span class="co" id="co-vpn-servconfig-misc">⠲</span></code></span></span>
+<span class="line"><span class="ld"><code>keepalive 10 120</code></span></span>
+<span class="line"><span class="ld"><code>comp-lzo</code></span></span>
+<span class="line"><span class="ld"><code>persist-key</code></span></span>
+<span class="line"><span class="ld"><code>persist-tun</code></span></span>
+<span class="line"><span class="ld"><code># status      /var/log/openvpn-status.tun0.log <span class="co" id="co-vpn-serverconfig-status">⠳</span></code></span></span>
+<span class="line"><span class="ld"><code># log-append  /var/log/openvpn-server.log <span class="co" id="co-vpn-serverconfig-log-append">⠴</span></code></span></span>
+<span class="line"><span class="ld"><code>verb 4</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">24<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VPN server configuration file</div>
+                  </header>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-port">⠩</a></dt>
+                     <dd>
+                        
+                        <p>The TCP/UDP port on which OpenVPN listens. You need to open the port in the firewall,
+                           see <a class="xref xref-chapter" href="bk06partiiich03.html">Chapter&nbsp;<span class="label">23</span>, Masquerading and firewalls</a>. The standard port for VPN is 1194, so you can leave that as it is.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-proto">⠪</a></dt>
+                     <dd>
+                        
+                        <p>The protocol, either UDP or TCP.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-dev">⠫</a></dt>
+                     <dd>
+                        
+                        <p>The tun or tap device. For the difference between these, see <a class="xref xref-sect2" href="bk06partiiich04.html#sec-security-vpn-terminology">the section called “Terminology”</a>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-security">⠬</a></dt>
+                     <dd>
+                        
+                        <p>The following lines contain the relative or absolute path to the root server CA certificate
+                           (<code class="literal">ca</code>), the root CA key (<code class="literal">cert</code>), and the private server key (<code class="literal">key</code>). These were generated in <a class="xref xref-sect2" href="#sec-security-vpn-certs">the section called “Creating certificates”</a>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-remote-cert-tls">⠭</a></dt>
+                     <dd>
+                        
+                        <p>Require that peer certificates have been signed with an explicit key usage and extended
+                           key usage based on RFC3280 TLS rules. </p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-dh">⠮</a></dt>
+                     <dd>
+                        
+                        <p>The Diffie-Hellman parameters. Create the required file with the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>openssl dhparam -out /etc/openvpn/dh2048.pem 2048</code></span></span></pre>
+                        </div>
+                        
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-server">⠯</a></dt>
+                     <dd>
+                        
+                        <p>Supplies a VPN subnet. The server can be reached by <code class="ipaddress systemitem">192.168.1.1</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-pool">⠰</a></dt>
+                     <dd>
+                        
+                        <p>Records a mapping of clients and its virtual IP address in the given file. Useful
+                           when the server goes down and (after the restart) the clients get their previously
+                           assigned IP address.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-serverconf-privilege">⠱</a></dt>
+                     <dd>
+                        
+                        <p>For security reasons, run the OpenVPN daemon with reduced privileges. To do so, specify
+                           that it should use the group and user <code class="systemitem">nobody</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-servconfig-misc">⠲</a></dt>
+                     <dd>
+                        
+                        <p>Several configuration options—see the comment in the example configuration file: <code class="filename">/usr/share/doc/packages/openvpn/sample-config-files</code>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-serverconfig-status">⠳</a></dt>
+                     <dd>
+                        
+                        <p>Enable this option to write short status updates with statistical data (<q>operational status dump</q>) to the named file. By default, this is not enabled.</p>
+                        
+                        <p>All output is written to the system journal, which can be displayed with <code class="command">journalctl</code>. If you have more than one configuration file (for example, one for home and another
+                           for work), it is recommended to include the device name into the file name. This avoids
+                           overwriting output files accidentally. In this case, it is <code class="systemitem">tun0</code>, taken from the <code class="option">dev</code> directive—see <a class="xref xref-co" href="#co-vpn-servconfig-dev"><span class="label">⠫</span></a>.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-vpn-serverconfig-log-append">⠴</a></dt>
+                     <dd>
+                        
+                        <p>By default, log messages go to syslog. Overwrite this behavior by removing the hash
+                           character. In that case, all messages go to <code class="filename">/var/log/openvpn-server.log</code>. Do not forget to configure a logrotate service. See <code class="command">man 8 logrotate</code> for further details.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <p>After having completed this configuration, you can see log messages of your OpenVPN
+                  server under <code class="filename">/var/log/openvpn.log</code>. After having started it for the first time, it should finish with:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>... Initialization Sequence Completed</code></span></span></pre>
+               </div>
+               
+               <p>If you do not see this message, check the log carefully for any hints of what is wrong
+                  in your configuration file.</p>
+               </section>
+            
+            <section class="sect2" id="sec-security-vpn-config-clients">
+               <header>
+                  <h3><span class="label">24<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring the VPN clients</h3>
+               </header>
+               
+               
+               <p>As the basis of your configuration file, copy <code class="filename">/usr/share/doc/packages/openvpn/sample-config-files/client.conf</code> to <code class="filename">/etc/openvpn/</code>. Then customize it to your needs.</p>
+               
+               <div class="example formalobject" id="sec-security-vpn-config-clients_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># /etc/openvpn/client.conf</code></span></span>
+<span class="line"><span class="ld"><code>client <span class="co" id="co-vpn-clientconf-client">⠵</span></code></span></span>
+<span class="line"><span class="ld"><code>dev tun <span class="co" id="co-vpn-clientconf-dev">⠶</span></code></span></span>
+<span class="line"><span class="ld"><code>proto udp <span class="co" id="co-vpn-clientconf-proto">⠷</span></code></span></span>
+<span class="line"><span class="ld"><code>remote <em class="replaceable">IP_OR_HOST_NAME</em> 1194 <span class="co" id="co-vpn-clientconf-remote">⠸</span></code></span></span>
+<span class="line"><span class="ld"><code>resolv-retry infinite</code></span></span>
+<span class="line"><span class="ld"><code>nobind</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>remote-cert-tls server <span class="co" id="co-vpn-clientconf-remote-cert-tls">⠹</span></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Privileges <span class="co" id="co-vpn-clientconf-privileges">⠺</span></code></span></span>
+<span class="line"><span class="ld"><code>user nobody</code></span></span>
+<span class="line"><span class="ld"><code>group nobody</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Try to preserve some state across restarts.</code></span></span>
+<span class="line"><span class="ld"><code>persist-key</code></span></span>
+<span class="line"><span class="ld"><code>persist-tun</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Security <span class="co" id="co-vpn-clientconf-security">⠻</span></code></span></span>
+<span class="line"><span class="ld"><code>pkcs12 client1.p12</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>comp-lzo <span class="co" id="co-vpn-clientconf-compr">⠼</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-client">⠵</a></dt>
+                        <dd>
+                           
+                           <p>Specifies that this machine is a client.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-dev">⠶</a></dt>
+                        <dd>
+                           
+                           <p>The network device. Both clients and server must use the same device.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-proto">⠷</a></dt>
+                        <dd>
+                           
+                           <p>The protocol. Use the same settings as on the server.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-remote-cert-tls">⠹</a></dt>
+                        <dd>
+                           
+                           <p>This is security option for clients which ensures that the host they connect to is
+                              a designated server.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-remote">⠸</a></dt>
+                        <dd>
+                           
+                           <p>Replace the placeholder <em class="replaceable">IP_OR_HOST_NAME</em> with the respective host name or IP address of your VPN server. After the host name,
+                              the port of the server is given. You can have multiple lines of <code class="literal">remote</code> entries pointing to different VPN servers. This is useful for load balancing between
+                              different VPN servers.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-privileges">⠺</a></dt>
+                        <dd>
+                           
+                           <p>For security reasons, run the OpenVPN daemon with reduced privileges. To do so, specify
+                              that it should use the group and user <code class="systemitem">nobody</code>.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-security">⠻</a></dt>
+                        <dd>
+                           
+                           <p>Contains the client files. For security reasons, use a separate pair of files for
+                              each client.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-vpn-clientconf-compr">⠼</a></dt>
+                        <dd>
+                           
+                           <p>Turn on compression. Only use this parameter if compression is enabled on the server
+                              as well.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">24<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VPN client configuration file</div>
+                  </header>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiiich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">24<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a simple test scenario</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">24<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Setting up a VPN server or client using YaST</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

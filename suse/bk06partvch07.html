@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;37.&nbsp;Building profiles from the command line</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch06s04.html" rel="prev">
+      <link href="bk06partvch07s02.html" rel="next">
+      <link href="bk06partv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="General chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partv.html">Up</a> <a href="bk06partvch07s02.html">Next</a> <a href="bk06partvch06s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="General chapter component" db-chunk="bk06partvch07.html" db-id="d616951e187813" id="cha-apparmor-commandline" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">37</span><span class="sep">.&nbsp;</span>Building profiles from the command line</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>AppArmor® provides the user the ability to use a command line interface rather than
+                  a graphical interface to manage and configure the system security. Track the status
+                  of AppArmor and create, delete or modify AppArmor profiles using the AppArmor command
+                  line tools.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Background information</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Before starting to manage your profiles using the AppArmor command line tools, check
+                              out the general introduction to AppArmor given in <a class="xref xref-chapter" href="bk06partvch03.html">Chapter&nbsp;<span class="label">33</span>, Immunizing programs</a> and <a class="xref xref-chapter" href="bk06partvch04.html">Chapter&nbsp;<span class="label">34</span>, Profile components and syntax</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="sec-apparmor-commandline-status">
+               <header>
+                  <h2><span class="label">37<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Checking the AppArmor status</h2>
+               </header>
+               
+               
+               <p>AppArmor can be in any one of three states:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Unloaded</span></dt>
+                     <dd>
+                        
+                        <p>AppArmor is not activated in the kernel.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Running</span></dt>
+                     <dd>
+                        
+                        <p>AppArmor is activated in the kernel and is enforcing AppArmor program policies.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Stopped</span></dt>
+                     <dd>
+                        
+                        <p>AppArmor is activated in the kernel, but no policies are enforced.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Detect the state of AppArmor by inspecting <code class="filename">/sys/kernel/security/apparmor/profiles</code>. If <code class="command">cat /sys/kernel/security/apparmor/profiles</code> reports a list of profiles, AppArmor is running. If it is empty and returns nothing,
+                  AppArmor is stopped. If the file does not exist, AppArmor is unloaded.</p>
+               
+               <p>Manage AppArmor with <code class="command">systemctl</code>. It lets you perform the following operations:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">sudo systemctl start apparmor</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Behavior depends on the state of AppArmor. If it is not activated, <code class="option">start</code> activates and starts it, putting it in the running state. If it is stopped, <code class="option">start</code> causes the re-scan of AppArmor profiles found in <code class="filename">/etc/apparmor.d</code> and puts AppArmor in the running state. If AppArmor is already running, <code class="option">start</code> reports a warning and takes no action.</p>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Already running processes</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>Already running processes need to be restarted to apply the AppArmor profiles on them.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">sudo systemctl stop apparmor</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Stops AppArmor if it is running by removing all profiles from kernel memory, effectively
+                           disabling all access controls, and putting AppArmor into the stopped state. If the
+                           AppArmor is already stopped, <code class="option">stop</code> tries to unload the profiles again, but nothing happens.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">sudo systemctl reload apparmor</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Causes the AppArmor module to re-scan the profiles in <code class="filename">/etc/apparmor.d</code> without unconfining running  processes. Freshly created profiles are enforced and
+                           recently deleted ones are removed from the <code class="filename">/etc/apparmor.d</code> directory.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch06s04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partv.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch07s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">36<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Managing AppArmor</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Building AppArmor profiles</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

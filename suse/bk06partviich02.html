@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;45.&nbsp;Setting up the Linux audit framework</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partviich01s09.html" rel="prev">
+      <link href="bk06partviich02s02.html" rel="next">
+      <link href="bk06partvii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvii.html">Up</a> <a href="bk06partviich02s02.html">Next</a> <a href="bk06partviich01s09.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partviich02.html" db-id="d616951e197903" id="cha-audit-setup" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">45</span><span class="sep">.&nbsp;</span>Setting up the Linux audit framework</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>This chapter shows how to set up a simple audit scenario. Every step involved in configuring
+                  and enabling audit is explained in detail. After you have learned to set up audit,
+                  consider a real-world example scenario in <a class="xref xref-chapter" href="bk06partviich03.html">Chapter&nbsp;<span class="label">46</span>, Introducing an audit rule set</a>.</p>
+               
+               <p>To set up audit on <span class="phrase productname">SUSE Linux Enterprise Server</span>, you need to complete the following steps:</p>
+               
+               <div class="formalobject procedure" id="cha-audit-setup_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">45<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up the Linux audit framework</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the <code class="resource systemitem">audit</code> package. To use the log visualization as described in <a class="xref xref-sect1" href="bk06partviich02s06.html">the section called “Configuring log visualization”</a>, install <code class="resource systemitem">gnuplot</code> and <code class="resource systemitem">graphviz</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Determine the components to audit. Refer to <a class="xref xref-sect1" href="#sec-audit-choose">the section called “Determining the components to audit”</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check or modify the basic audit daemon configuration. Refer to <a class="xref xref-sect1" href="bk06partviich02s02.html">the section called “Configuring the audit daemon”</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enable auditing for system calls. Refer to <a class="xref xref-sect1" href="bk06partviich02s03.html">the section called “Enabling audit for system calls”</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Compose audit rules to suit your scenario. Refer to <a class="xref xref-sect1" href="bk06partviich02s04.html">the section called “Setting up audit rules”</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Generate logs and configure tailor-made reports. Refer to <a class="xref xref-sect1" href="bk06partviich02s05.html">the section called “Configuring audit reports”</a> for details.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Configure optional log visualization. Refer to <a class="xref xref-sect1" href="bk06partviich02s06.html">the section called “Configuring log visualization”</a> for details.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Controlling the audit daemon</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Before configuring any of the components of the audit system, make sure that the audit
+                              daemon is not running by entering <code class="command">systemctl status auditd</code> as <code class="systemitem username">root</code>. On a default <span class="phrase productname">SUSE Linux Enterprise Server</span> system, audit is started on boot, so you need to turn it off by entering <code class="command">systemctl stop auditd</code>. Start the daemon after configuring it with <code class="command">systemctl start auditd</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+            <section class="sect1" id="sec-audit-choose">
+               <header>
+                  <h2><span class="label">45<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Determining the components to audit</h2>
+               </header>
+               
+               
+               <p>Before starting to create your own audit configuration, determine to which degree
+                  you want to use it. Check the following general rules to determine which use case
+                  best applies to you and your requirements:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>If you require a full security audit for CAPP/EAL certification, enable full audit
+                        for system calls and configure watches on various configuration files and directories,
+                        similar to the rule set featured in <a class="xref xref-chapter" href="bk06partviich03.html">Chapter&nbsp;<span class="label">46</span>, Introducing an audit rule set</a>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>If you need to trace a process based on the audit rules, use <code class="command">autrace</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>If you require file and directory watches to track access to important or security-sensitive
+                        data, create a rule set matching these requirements. Enable audit as described in
+                        <a class="xref xref-sect1" href="bk06partviich02s03.html">the section called “Enabling audit for system calls”</a> and proceed to <a class="xref xref-sect1" href="bk06partviich02s04.html">the section called “Setting up audit rules”</a>.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partviich01s09.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvii.html">Up</a></td>
+                  <td class="next"><a href="bk06partviich02s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">44<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Relaying audit event notifications</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">45<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the audit daemon</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

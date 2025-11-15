@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;8.&nbsp;Setting up a freeRADIUS server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich06s06.html" rel="prev">
+      <link href="bk06partii.html" rel="next">
+      <link href="bk06parti.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06parti.html">Up</a> <a href="bk06partii.html">Next</a> <a href="bk06partich06s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partich07.html" db-id="d616951e166002" id="cha-security-freeradius" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">8</span><span class="sep">.&nbsp;</span>Setting up a freeRADIUS server</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>The RADIUS (Remote Authentication Dial-In User Service) protocol has long been a standard
+                  service for manage network access. It provides authentication, authorization and accounting
+                  (AAA) for large businesses such as Internet service providers and cellular network
+                  providers, and is also popular for small networks. It authenticates users and devices,
+                  authorizes those users and devices for certain network services, and tracks use of
+                  services for billing and auditing. You do not have to use all three of the AAA protocols,
+                  but only the ones you need. For example, you may not need accounting but only client
+                  authentication, or perhaps all you want is accounting, and client authorization is
+                  managed by something else.</p>
+               
+               <p>It is efficient and manages thousands of requests on modest hardware. It works for
+                  all network protocols and not just dial-up, but the name remains the same.</p>
+               
+               <p>RADIUS operates in a distributed architecture, sitting separately from the Network
+                  Access Server (NAS). User access data is stored on a central RADIUS server that is
+                  available to multiple NAS. The NAS provides the physical access to the network, such
+                  as a managed Ethernet switch, or wireless access point.</p>
+               
+               <p>FreeRADIUS is the open source RADIUS implementation, and is the most widely used RADIUS
+                  server. In this chapter you learn how to install and test a FreeRADIUS server. Because
+                  of the numerous use cases, after your initial setup is working correctly, your next
+                  stop is the official documentation, which is detailed and thorough (see <a class="link" href="https://freeradius.org/documentation/">https://freeradius.org/documentation/</a>).</p>
+               </div>
+            <section class="sect1" id="sec-test-radiusd">
+               <header>
+                  <h2><span class="label">8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installation and testing on <span class="phrase productname">SUSE Linux Enterprise Server</span>
+                     </h2>
+               </header>
+               
+               
+               <p>The following steps set up a simple test system. When you have verified that the server
+                  is operating correctly and you are ready to create a production configuration, you
+                  have several undo steps to perform before starting your production configuration.</p>
+               
+               <p>First install the <code class="resource systemitem">freeradius-server</code> and <code class="resource systemitem">freeradius-server-utils</code> packages. Then enter <code class="filename">/etc/raddb/certs</code> and run the <code class="filename">bootstrap</code> script to create a set of test certificates:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">zypper in freeradius-server freeradius-server-utils</code><span class="prompt root">#</span><code class="command">cd /etc/raddb/certs</code><span class="prompt root">#</span><code class="command">./bootstrap</code></code></span></span></pre>
+               </div>
+               
+               <p>The README in the <code class="filename">certs</code> directory contains a great deal of useful information. When the <code class="filename">bootstrap</code> script has completed, start the server in debugging mode:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">radiusd -X</code></code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>Listening on auth address * port 1812 bound to server default</code></span></span>
+<span class="line"><span class="ld"><code>Listening on acct address * port 1813 bound to server default</code></span></span>
+<span class="line"><span class="ld"><code>Listening on auth address :: port 1812 bound to server default</code></span></span>
+<span class="line"><span class="ld"><code>Listening on acct address :: port 1813 bound to server default</code></span></span>
+<span class="line"><span class="ld"><code>Listening on auth address 127.0.0.1 port 18120 bound to server inner-tunnel</code></span></span>
+<span class="line"><span class="ld"><code>Listening on proxy address * port 54435</code></span></span>
+<span class="line"><span class="ld"><code>Listening on proxy address :: port 58415</code></span></span>
+<span class="line"><span class="ld"><code>Ready to process requests</code></span></span></pre>
+               </div>
+               
+               <p>When you see the <code class="literal">Listening</code> and <code class="literal">Ready to process requests</code> lines, your server has started correctly. If it does not start, read the output carefully
+                  because it tells you what went wrong. You may direct the output to a text file with
+                  <code class="command">tee</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">radiusd -X | tee radiusd.text</code></code></span></span></pre>
+               </div>
+               
+               <p>The next step is to test authentication with a test client and user. The client is
+                  a client of the RADIUS server, such as a wireless access point or switch. Clients
+                  are configured in <code class="filename">/etc/raddb/client.conf</code>. Human users are configured in <code class="filename">/etc/raddb/mods-config/files/authorize</code>.</p>
+               
+               <p>Open <code class="filename">/etc/raddb/mods-config/files/authorize</code> and uncomment the following lines:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>bob   Cleartext-Password := "hello"</code></span></span>
+<span class="line"><span class="ld"><code>Reply-Message := "Hello, %{User-Name}" </code></span></span></pre>
+               </div>
+               
+               <p>A test client, <code class="literal">client localhost</code>, is provided in <code class="filename">/etc/raddb/client.conf</code>, with a secret of <code class="literal">testing123</code>. Open a second terminal, and as an unprivileged user use the <code class="command">radtest</code> command to log in as bob:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">radtest bob hello 127.0.0.1 0 testing123</code></code></span></span>
+<span class="line"><span class="ld"><code>Sent Access-Request Id 241 from 0.0.0.0:35234 to 127.0.0.1:1812 length 73</code></span></span>
+<span class="line"><span class="ld"><code>        User-Name = "bob"</code></span></span>
+<span class="line"><span class="ld"><code>        User-Password = "hello"</code></span></span>
+<span class="line"><span class="ld"><code>        NAS-IP-Address = 127.0.0.1</code></span></span>
+<span class="line"><span class="ld"><code>        NAS-Port = 0</code></span></span>
+<span class="line"><span class="ld"><code>        Message-Authenticator = 0x00</code></span></span>
+<span class="line"><span class="ld"><code>        Cleartext-Password = "hello"</code></span></span>
+<span class="line"><span class="ld"><code>Received Access-Accept Id 241 from 127.0.0.1:1812 to 0.0.0.0:0 length 20</code></span></span></pre>
+               </div>
+               
+               <p>In your <code class="literal">radius -X</code> terminal, a successful login looks like this:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>(3) pap: Login attempt with password</code></span></span>
+<span class="line"><span class="ld"><code>(3) pap: Comparing with "known good" Cleartext-Password</code></span></span>
+<span class="line"><span class="ld"><code>(3) pap: User authenticated successfully</code></span></span>
+<span class="line"><span class="ld"><code>(3)     [pap] = ok</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>(3) Sent Access-Accept Id 241 from 127.0.0.1:1812 to 127.0.0.1:35234 length 0</code></span></span>
+<span class="line"><span class="ld"><code>(3) Finished request</code></span></span>
+<span class="line"><span class="ld"><code>Waking up in 4.9 seconds.</code></span></span>
+<span class="line"><span class="ld"><code>(3) Cleaning up request packet ID 241 with timestamp +889</code></span></span></pre>
+               </div>
+               
+               <p>Now run one more login test from a different computer on your network. Create a client
+                  configuration on your server by uncommenting and modifying the following entry in
+                  <code class="filename">clients.conf</code>, using the IP address of your test machine:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>client private-network-1 }</code></span></span>
+<span class="line"><span class="ld"><code>  ipaddr          = <em class="replaceable">192.0.2.0/24</em></code></span></span>
+<span class="line"><span class="ld"><code>  secret          = testing123-1</code></span></span>
+<span class="line"><span class="ld"><code>  {</code></span></span></pre>
+               </div>
+               
+               <p>On the client machine, install <code class="resource systemitem">freeradius-server-utils</code>. Try logging in from the client as <code class="literal">bob</code>, using the <code class="command">radtest</code> command. It is better to use the IP address of the RADIUS server rather than the
+                  hostname because it is faster:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">radtest bob hello 192.168.2.100 0 testing123-1</code></code></span></span></pre>
+               </div>
+               
+               <p>If your test logins fail, review all the output to learn what went wrong. There are
+                  several test users and test clients provided. The configuration files are full of
+                  useful information, and we recommend studying them. When you are satisfied with your
+                  testing and ready to create a production configuration, remove all the test certificates
+                  in <code class="filename">/etc/raddb/certs</code> and replace them with your own certificates, comment out all the test users and clients,
+                  and stop <code class="command">radiusd</code> by pressing <span class="keycombo"><span class="control keycap">Ctrl</span><span class="keycap">C</span></span>. Manage the <code class="literal">radiusd.service</code> with <code class="command">systemctl</code>, just like any other service.</p>
+               
+               <p>To learn how to fit a FreeRADIUS server in your network, see <a class="link" href="https://freeradius.org/documentation/">https://freeradius.org/documentation/</a> and <a class="link" href="https://networkradius.com/freeradius-documentation/">https://networkradius.com/freeradius-documentation/</a> for in-depth references and howtos.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich06s06.html">Prev</a></td>
+                  <td class="up"><a href="bk06parti.html">Up</a></td>
+                  <td class="next"><a href="bk06partii.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">7<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Active Directory certificate auto-enrollment</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Part&nbsp;<span class="label">II</span><span class="sep">.&nbsp;</span>Local security</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

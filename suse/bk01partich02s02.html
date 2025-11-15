@@ -1,0 +1,659 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.2.&nbsp;Configuring sudo
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich02.html" rel="prev">
+      <link href="bk01partich02s03.html" rel="next">
+      <link href="bk01partich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich02.html">Up</a> <a href="bk01partich02s03.html">Next</a> <a href="bk01partich02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich02s02.html" db-id="d616951e3346" id="sec-sudo-conf">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring <code class="command">sudo</code>
+                  </h2>
+            </header>
+            
+            
+            <p><code class="command">sudo</code> provides a wide range on configurable options.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Locked yourself out of sudo</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>If you accidentally locked yourself out of <code class="command">sudo</code>, use <code class="command">su -</code> and the <code class="systemitem username">root</code> password to start a root shell. To fix the error, run <code class="command">visudo</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Example configurations are for demonstration purposes only</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>The example rules outlined below are purely for demonstration purposes. Use them to
+                           understand the general syntax of <code class="command">sudo</code> configuration files. Do not use them in real-world setups, because they do not reflect
+                           the complexity of these environments.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sudo-creating-custom-configuration-bp">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                     <code class="command">sudo</code> configuration best practices</h3>
+               </header>
+               
+               
+               <p>Before you start, here are a few ground rules for maintaining <code class="command">sudo</code> configurations:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Always use <code class="command">visudo</code> to edit <code class="command">sudo</code> configuration files</span></dt>
+                     <dd>
+                        
+                        <p>Any changes to the <code class="command">sudo</code> configuration should be done using the <code class="command">visudo</code> command. <code class="command">visudo</code> is a tailor-made tool that allows you to edit the <code class="command">sudo</code> configuration files and runs basic syntax checks, making sure that the configuration
+                           remains intact and functional. A faulty <code class="command">sudo</code> configuration can result in a user being locked out of their own system.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Always create custom configurations under <code class="filename">/etc/sudoers.d/</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Custom configurations must reside under <code class="filename">/etc/sudoers.d/</code> to be pulled in by <code class="command">sudo</code>. Settings in the custom configuration files take precedence over the ones in the
+                           default configuration in <code class="filename">/etc/sudoers</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Always mind the order in which configurations are read</span></dt>
+                     <dd>
+                        
+                        <p>To make sure the custom configurations are read in the correct order, prefix them
+                           with numbers. Use leading zeroes to establish the order in which the files are read.
+                           For example, <code class="filename">01_myfirstconfig</code> is parsed before <code class="filename">10_myotherconfig</code>. If a directive has been set in a file that is read before another file that contains
+                           conflicting information, the last-read directive is applied.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Always use descriptive file names</span></dt>
+                     <dd>
+                        
+                        <p>Use file names that hint at what the configuration file does. This helps you keep
+                           track of what your <code class="command">sudo</code> setup is supposed to do.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sudo-creating-custom-config-single-user">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Create a user-specific configuration file</h3>
+               </header>
+               
+               
+               <p>Create a <code class="command">sudo</code> configuration file that allows a normal user (<code class="systemitem username">tux</code>) to use the <code class="command">useradd</code> command with their own password instead of the <code class="systemitem username">root</code> password.</p>
+               
+               <div class="example formalobject" id="ex-sudo-custom-config-user">
+                  
+                  
+                  <div class="informalobject procedure" id="ex-sudo-custom-config-user_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>As system administrator (<code class="systemitem username">root</code>), create a custom configuration file that holds the new user-specific directives
+                              by starting <code class="command">visudo</code>. Use both numbering and a descriptive name:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">visudo -f /etc/sudoers.d/02_usermanagement</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Create a rule that allows <code class="systemitem username">tux</code> to execute the <code class="command">/usr/sbin/useradd</code> binary in the entire environment that this <code class="command">sudo</code> configuration is applied to:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  tux<span class="co" id="co-who">❽</span> ALL<span class="co" id="co-where">❾</span> = /usr/sbin/useradd<span class="co" id="co-what">❿</span></code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#co-who">❽</a></dt>
+                                 <dd>
+                                    
+                                    <p>Specify the user or group. List users by name or <code class="literal">#UID</code>, and groups by <code class="literal">%GROUPNAME</code>. Separate multiple items with commas. To negate entries, use <code class="literal">!</code>.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-where">❾</a></dt>
+                                 <dd>
+                                    
+                                    <p>Specify one or several (separated by commas) hosts. Use (fully qualified) host names
+                                       or IP addresses. Add <code class="literal">ALL</code> to enforce this setting globally across all hosts. Use <code class="literal">!</code> for negations.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-what">❿</a></dt>
+                                 <dd>
+                                    
+                                    <p>Specify one or several executables (separated by commas). When specifying them, make
+                                       sure to mind the following rules:</p>
+                                    
+                                    <dl class="long-terms variablelist">
+                                       
+                                       <div class="varlistentry">
+                                          <dt><span class="term">
+                                                <code class="command">/usr/sbin/useradd</code>
+                                                </span></dt>
+                                          <dd>
+                                             
+                                             <p>Without any additional options added, this allows the execution of every possible
+                                                <code class="command">useradd</code> command.</p>
+                                             </dd>
+                                       </div>
+                                       
+                                       <div class="varlistentry">
+                                          <dt><span class="term">
+                                                <code class="command">/usr/sbin/useradd -c</code>
+                                                </span></dt>
+                                          <dd>
+                                             
+                                             <p>If you explicitly specify an option, then that option is the only one that is allowed.
+                                                Nothing else would be available to the user you specified above.</p>
+                                             </dd>
+                                       </div>
+                                       
+                                       <div class="varlistentry">
+                                          <dt><span class="term">
+                                                <code class="command">/usr/sbin/useradd ""</code>
+                                                </span></dt>
+                                          <dd>
+                                             
+                                             <p>This would just let the user invoke a mere <code class="command">useradd</code> without any option at all.</p>
+                                             </dd>
+                                       </div>
+                                       </dl>
+                                    
+                                    <p>In the example above, you would want to either allow all options and subcommands or
+                                       limit them to a few for security reasons, but forbidding a user from specifying any
+                                       option at all would be pointless in this context.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To let the user use their own password instead of the <code class="systemitem username">root</code> password, add the following line:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Defaults:tux !targetpw</code></span></span></pre>
+                           </div>
+                           
+                           <p>When active, this flag requires the user to enter the password of the target user,
+                              that is, <code class="systemitem username">root</code>. This flag is enabled by default on any <span class="phrase productname">SUSE Linux Enterprise Server</span> system. Negate it using <code class="literal">!</code> to require the user to just enter their own password instead of the <code class="systemitem username">root</code> password.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Save the configuration, leave the editor and open a second shell to test whether <code class="command">sudo</code> honors your new configuration.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Create a user-specific configuration file</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sudo-creating-custom-config-group">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Create custom configurations by grouping items</h3>
+               </header>
+               
+               
+               <p>Modify the configuration from <a class="xref xref-example" href="#ex-sudo-custom-config-user">Example&nbsp;<span class="label">2<span class="sep">.</span>1</span>, “Create a user-specific configuration file”</a> so that a group of named users can run the <code class="command">useradd</code> command without the need for the <code class="systemitem username">root</code> password. Also, add the <code class="command">usermod</code> and <code class="command">userdel</code> to the list of commands available to this group.</p>
+               
+               <div class="example formalobject" id="ex-sudo-custom-config-group">
+                  
+                  
+                  <div class="informalobject procedure" id="ex-sudo-custom-config-group_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>To modify the example configuration, open it as system administrator with <code class="command">visudo</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">visudo /etc/sudoers.d/02_usermanagement</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add more users to the rule in a comma-separated list:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux, wilber ALL = /usr/sbin/useradd</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To allow the listed users to execute a list of commands, specify the commands as a
+                              comma-separated list:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux, wilber ALL = /usr/sbin/useradd, /usr/sbin/usermod, /usr/sbin/userdel</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To let the listed users use their own password instead of the <code class="systemitem username">root</code> password, add the following line:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Defaults:tux, wilber !targetpw</code></span></span></pre>
+                           </div>
+                           
+                           <p>When active, this flag requires the listed users to enter the password of the target
+                              user, that is, <code class="systemitem username">root</code>. This flag is enabled by default on any <span class="phrase productname">SUSE Linux Enterprise Server</span> system. Negate it using <code class="literal">!</code> to require the listed users to just enter their own password instead of the <code class="systemitem username">root</code> password.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Save the configuration, leave the editor and open a second shell to test whether <code class="command">sudo</code> honors your new configuration.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Create custom configurations by grouping items</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sudo-creating-custom-config-aliases">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Simplify configurations by applying aliases</h3>
+               </header>
+               
+               
+               <p>Use aliases to simplify your custom configuration from <a class="xref xref-example" href="#ex-sudo-custom-config-group">Example&nbsp;<span class="label">2<span class="sep">.</span>2</span>, “Create custom configurations by grouping items”</a> even further. Grouping items helps to a certain extent, but using global aliases
+                  for users, commands and hosts is the most efficient way to keep a clean and lean <code class="command">sudo</code> configuration.</p>
+               
+               <p>Using aliases and groups instead of lists is a much better way to address changes
+                  in your setup. Should a user leave, just remove them from the global <code class="literal">User_Alias</code> declaration in your alias declaration file instead of scouring all the separate custom
+                  configuration files. The same procedure applies for any other type of alias (<code class="literal">Host_Alias</code>, <code class="literal">Cmnd_Alias</code> and <code class="literal">Runas_Alias</code>).</p>
+               
+               <div class="example formalobject" id="ex-sudo-custom-config-alias">
+                  
+                  
+                  <div class="informalobject procedure" id="ex-sudo-custom-config-alias_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create a new file to hold your global alias definitions:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">visudo /etc/sudoers.d/01_aliases</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add the following line to create the <code class="literal">TEAMLEADERS</code> alias:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>User_Alias    TEAMLEADERS = tux, wilber</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add the following line to create the <code class="literal">USERMANAGEMENT</code> alias:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Cmnd_Alias    USERMANAGEMENT = /usr/sbin/useradd, /usr/sbin/usermod, /usr/sbin/userdel</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Save your changes and exit <code class="command">visudo</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>As system administrator, start <code class="command">visudo</code> to edit the example configuration file:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">visudo -f /etc/sudoers.d/02_usermanagement</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Delete the previous rule and replace it with the following rule that uses the aliases
+                              you have just defined above:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>TEAMLEADERS ALL = USERMANAGEMENT</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To let all the users defined by <code class="literal">User_Alias</code> use their own password instead of the <code class="systemitem username">root</code> password, add the following line:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Defaults:TEAMLEADERS !targetpw</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Save the configuration, leave the editor and open a second shell to test whether <code class="command">sudo</code> honors your new configuration.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Simplify configurations by applying aliases</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-sudo-conf-syntax">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Basic sudoers configuration syntax</h3>
+               </header>
+               
+               
+               <p>The sudoers configuration files contain two types of options: strings and flags. While
+                  strings can contain any value, flags can be turned either ON or OFF. The most important
+                  syntax constructs for sudoers configuration files are as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Everything on a line after # is ignored <span class="co" id="co-sudo-syntax-comment">➀</span></code></span></span>
+<span class="line"><span class="ld"><code>Defaults !insults # Disable the insults flag <span class="co" id="co-sudo-syntax-flag">➁</span></code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_keep += "DISPLAY HOME" # Add DISPLAY and HOME to env_keep</code></span></span>
+<span class="line"><span class="ld"><code>tux ALL = NOPASSWD: /usr/bin/frobnicate, PASSWD: /usr/bin/journalctl <span class="co" id="co-sudo-syntax-rule">➂</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-sudo-syntax-comment">➀</a></dt>
+                     <dd>
+                        
+                        <p>There are two exceptions: <code class="literal">#include</code> and <code class="literal">#includedir</code> are regular commands.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-sudo-syntax-flag">➁</a></dt>
+                     <dd>
+                        
+                        <p>Remove the <code class="literal">!</code> character to set the desired flag to ON.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-sudo-syntax-rule">➂</a></dt>
+                     <dd>
+                        
+                        <p>See <a class="xref xref-sect2" href="#sec-sudo-conf-rule">the section called “Basic sudoers rules”</a>.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <div class="long-terms variablelist" id="tab-adm-sudo-options">
+                  <header>
+                     <div class="title">Useful flags and options</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">targetpw</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>This flag controls whether the invoking user is required to enter the password of
+                              the target user (ON) (for example <code class="systemitem username">root</code>) or the invoking user (OFF).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Defaults targetpw # Turn targetpw flag ON</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">rootpw</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If set, <code class="command">sudo</code> prompts for the <code class="systemitem username">root</code> password. The default is OFF.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Defaults !rootpw # Turn rootpw flag OFF</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">env_reset</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If set, <code class="command">sudo</code> constructs a minimal environment with <code class="envar">TERM</code>, <code class="envar">PATH</code>, <code class="envar">HOME</code>, <code class="envar">MAIL</code>, <code class="envar">SHELL</code>, <code class="envar">LOGNAME</code>, <code class="envar">USER</code>, <code class="envar">USERNAME</code>, and <code class="envar">SUDO_*</code>. Additionally, variables listed in <code class="literal">env_keep</code> are imported from the calling environment. The default is ON.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Defaults env_reset # Turn env_reset flag ON</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">env_keep</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>List of environment variables to keep when the <code class="literal">env_reset</code> flag is ON.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Set env_keep to contain EDITOR and PROMPT</code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_keep = "EDITOR PROMPT"</code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_keep += "JRE_HOME" # Add JRE_HOME</code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_keep -= "JRE_HOME" # Remove JRE_HOME</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">env_delete</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>List of environment variables to remove when the <code class="literal">env_reset</code> flag is OFF.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># Set env_delete to contain EDITOR and PROMPT</code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_delete = "EDITOR PROMPT"</code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_delete += "JRE_HOME" # Add JRE_HOME</code></span></span>
+<span class="line"><span class="ld"><code>Defaults env_delete -= "JRE_HOME" # Remove JRE_HOME</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <p>The <code class="literal">Defaults</code> token can also be used to create aliases for a collection of users, hosts, and commands.
+                  Furthermore, it is possible to apply an option only to a specific set of users.</p>
+               
+               <p>For detailed information about the sudoers configuration files, consult <code class="command">man 5 sudoers</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-sudo-conf-rule">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>2<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Basic sudoers rules</h3>
+               </header>
+               
+               
+               <p>Each rule follows the following scheme (<code class="literal">[]</code> marks optional parts):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>#Who      Where         As whom      Tag                What</code></span></span>
+<span class="line"><span class="ld"><code>User_List Host_List = [(User_List)] [NOPASSWD:|PASSWD:] Cmnd_List</code></span></span></pre>
+               </div>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">sudoers rule syntax</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">User_List</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>One or several (separated by comma) identifiers: either a user name, a group in the
+                              format <code class="literal">%GROUPNAME</code>, or a user ID in the format <code class="literal">#UID</code>. Negation can be specified with the <code class="literal">!</code> prefix.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">Host_List</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>One or several (separated by comma) identifiers: either a (fully qualified) host name
+                              or an IP address. Negation can be specified with the <code class="literal">!</code> prefix. <code class="literal">ALL</code> is a common choice for <code class="literal">Host_List</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">NOPASSWD:|PASSWD:</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The user is not prompted for a password when running commands matching <code class="literal">Cmd_List</code> after <code class="literal">NOPASSWD:</code>.</p>
+                           
+                           <p><code class="literal">PASSWD</code> is the default. It only needs to be specified when both <code class="literal">PASSWD</code> and <code class="literal">NOPASSWD</code> are on the same line:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux ALL = PASSWD: /usr/bin/foo, NOPASSWD: /usr/bin/bar</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">Cmnd_List</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>One or several (separated by comma) specifiers: a path to an executable, followed
+                              by an optional allowed argument.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/foo     # Anything allowed</code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/foo bar # Only "/usr/bin/foo bar" allowed</code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/foo ""  # No arguments allowed</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <p><code class="literal">ALL</code> can be used as <code class="literal">User_List</code>, <code class="literal">Host_List</code>, and <code class="literal">Cmnd_List</code>.</p>
+               
+               <p>A rule that allows <code class="systemitem username">tux</code> to run all commands as root without entering a password:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux ALL = NOPASSWD: ALL</code></span></span></pre>
+               </div>
+               
+               <p>A rule that allows <code class="systemitem username">tux</code> to run <code class="command">systemctl restart apache2</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux ALL = /usr/bin/systemctl restart apache2</code></span></span></pre>
+               </div>
+               
+               <p>A rule that allows <code class="systemitem username">tux</code> to run <code class="command">wall</code> as <code class="systemitem">admin</code> with no arguments:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tux ALL = (admin) /usr/bin/wall ""</code></span></span></pre>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Unsafe rules</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p><em>Do not</em> use rules like <code class="literal">ALL ALL = ALL</code> without <code class="literal">Defaults targetpw</code>. Otherwise anyone can run commands as <code class="systemitem username">root</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Winbind and sudo</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>When specifying the group name in the <code class="filename">sudoers</code> file, make sure that you use the NetBIOS domain name instead of the realm, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><em class="replaceable">%DOMAIN</em>\\<em class="replaceable">GROUP_NAME</em> ALL = (ALL) ALL</code></span></span></pre>
+                           </div>
+                           
+                           <p>Keep in mind that when using winbindd, the format also depends on the <code class="option">winbind separator</code> option in the <code class="filename">smb.conf</code> file. By default, it is <code class="literal">\</code>. If it is changed, for example, to <code class="literal">+</code>, then the account format in the <code class="filename">sudoers</code> file must be <code class="literal">DOMAIN+GROUP_NAME</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich02.html">Up</a></td>
+                  <td class="next"><a href="bk01partich02s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">2</span><span class="sep">.&nbsp;</span>
+                     <code class="command">sudo</code> basics</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using <code class="command">sudo</code> with X.Org applications</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

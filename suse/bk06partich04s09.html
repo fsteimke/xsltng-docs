@@ -1,0 +1,678 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.9.&nbsp;Migrating to 389 Directory Server from OpenLDAP</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s08.html" rel="prev">
+      <link href="bk06partich04s10.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s10.html">Next</a> <a href="bk06partich04s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s09.html" db-id="d616951e159139" id="sec-security-ldap-migrate" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Migrating to 389 Directory Server from OpenLDAP</h2>
+            </header>
+            
+            
+            <p>OpenLDAP is deprecated and no longer supported as of SUSE Linux Enterprise 15&nbsp;SP3.
+               It has been replaced by 389 Directory Server. SUSE provides the <code class="command">openldap_to_ds</code> utility to assist with migration, included in the <code class="package">389-ds</code> package.</p>
+            
+            <p>The <code class="command">openldap_to_ds</code> utility automates as much of the migration as possible. However, every LDAP deployment
+               is different, and it is impossible to develop a tool that satisfies all situations.
+               When necessary, intervene and perform manual steps. Additionally, test your migration
+               procedure thoroughly before attempting a production migration.</p>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Read the <code class="command">help</code> page</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Before using the <code class="command">openldap_to_ds</code> migration tool, we strongly recommend reading the output of <code class="command">openldap_to_ds --help</code>. It helps you learn about the capabilities and limitations of the migration tool,
+                           and prevents you from making wrong assumptions.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-security-ldap-migrate-test">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Testing migration from OpenLDAP</h3>
+               </header>
+               
+               
+               <p>Due to significant differences between OpenLDAP and 389 Directory Server, migration
+                  involves repeated testing and adjustments. It is helpful to do a quick migration test
+                  to get an idea of what steps are necessary for a successful migration.</p>
+               
+               <p>Prerequisites:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>A running 389 Directory Server instance</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>An OpenLDAP <code class="filename">slapd</code> configuration file or directory in dynamic ldif format</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>An ldif file backup of your OpenLDAP database</p>
+                     </li>
+                  </ul>
+               
+               <p>If your slapd configuration is not in dynamic ldif format, create a dynamic copy with
+                  <code class="command">slaptest</code>. Create a <code class="filename">slapd.d</code> directory, for example <code class="filename">/root/slapd.d/</code>, then run the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">slaptest -f /etc/openldap/slapd.conf -F /root/slapd.d</code></code></span></span></pre>
+               </div>
+               
+               <p>This results in several files similar to the following example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">ls /root/slapd.d/*</code></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/root/slapd.d/cn=config.ldif</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/root/slapd.d/cn=config:</code></span></span>
+<span class="line"><span class="ld"><code>cn=module{0}.ldif  cn=schema.ldif                 olcDatabase={0}config.ldif</code></span></span>
+<span class="line"><span class="ld"><code>cn=schema          olcDatabase={-1}frontend.ldif  olcDatabase={1}mdb.ldif</code></span></span></pre>
+               </div>
+               
+               <p>Create one ldif file per suffix. In the following examples, the suffix is dc=<em class="replaceable">LDAP1</em>,dc=<em class="replaceable">COM</em>. If you are using the <code class="filename">/etc/openldap/slapd.conf</code> format, use the following command to create the ldif backup file:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">slapcat -f /etc/openldap/slapd.conf -b dc=<em class="replaceable">LDAP1</em>,dc=<em class="replaceable">COM</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">-l <em class="replaceable">/root/LDAP1-COM</em>.ldif</code></code></span></span></pre>
+               </div>
+               
+               <p>Use <code class="command">openldap_to_ds</code> to analyze the configuration and files, and show a migration plan without changing
+                  anything:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">openldap_to_ds <em class="replaceable">LDAP1</em></code>\</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">/root/slapd.d <em class="replaceable">/root/LDAP1-COM</em>.ldif.ldif</code></code></span></span></pre>
+               </div>
+               
+               <p>This performs a dry run and does not change anything. The output looks like this:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Examining OpenLDAP Configuration ...</code></span></span>
+<span class="line"><span class="ld"><code>Completed OpenLDAP Configuration Parsing.</code></span></span>
+<span class="line"><span class="ld"><code>Examining Ldifs ...</code></span></span>
+<span class="line"><span class="ld"><code>Completed Ldif Metadata Parsing.</code></span></span>
+<span class="line"><span class="ld"><code>The following migration steps will be performed:</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Skip Unsupported Attribute -&gt; otherMailbox (0.9.2342.19200300.100.1.22)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Skip Unsupported Attribute -&gt; dSAQuality (0.9.2342.19200300.100.1.49)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Skip Unsupported Attribute -&gt; singleLevelQuality (0.9.2342.19200300.100.1.50)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Skip Unsupported Attribute -&gt; subtreeMinimumQuality (0.9.2342.19200300.100.1.51)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Skip Unsupported Attribute -&gt; subtreeMaximumQuality (0.9.2342.19200300.100.1.52)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Create Attribute -&gt; suseDefaultBase (SUSE.YaST.ModuleConfig.Attr:2)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Create Attribute -&gt; suseNextUniqueId (SUSE.YaST.ModuleConfig.Attr:3)</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Create ObjectClass -&gt; suseDhcpConfiguration (SUSE.YaST.ModuleConfig.OC:10)</code></span></span>
+<span class="line"><span class="ld"><code> * Schema Create ObjectClass -&gt; suseMailConfiguration (SUSE.YaST.ModuleConfig.OC:11)</code></span></span>
+<span class="line"><span class="ld"><code> * Database Reindex -&gt; dc=example,dc=com</code></span></span>
+<span class="line"><span class="ld"><code> * Database Import Ldif -&gt; dc=example,dc=com from example.ldif -</code></span></span>
+<span class="line"><span class="ld"><code>excluding entry attributes = [{'structuralobjectclass', 'entrycsn'}]</code></span></span>
+<span class="line"><span class="ld"><code>No actions taken. To apply migration plan, use '--confirm'</code></span></span></pre>
+               </div>
+               
+               <p>The following example performs the migration, and the output looks different from
+                  the dry run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">openldap_to_ds <em class="replaceable">LDAP1</em> /root/slapd.d <em class="replaceable">/root/LDAP1-COM</em>.ldif --confirm</code></code></span></span>
+<span class="line"><span class="ld"><code>Starting Migration ... This may take some time ...</code></span></span>
+<span class="line"><span class="ld"><code>migration: 1 / 40 complete ...</code></span></span>
+<span class="line"><span class="ld"><code>migration: 2 / 40 complete ...</code></span></span>
+<span class="line"><span class="ld"><code>migration: 3 / 40 complete ...</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>Index task index_all_05252021_120216 completed successfully</code></span></span>
+<span class="line"><span class="ld"><code>post: 39 / 40 complete ...</code></span></span>
+<span class="line"><span class="ld"><code>post: 40 / 40 complete ...</code></span></span>
+<span class="line"><span class="ld"><code>🎉 Migration complete!</code></span></span>
+<span class="line"><span class="ld"><code>----------------------</code></span></span>
+<span class="line"><span class="ld"><code>You should now review your instance configuration and data:</code></span></span>
+<span class="line"><span class="ld"><code> * [ ] - Create/Migrate Database Access Controls (ACI)</code></span></span>
+<span class="line"><span class="ld"><code> * [ ] - Enable and Verify TLS (LDAPS) Operation</code></span></span>
+<span class="line"><span class="ld"><code> * [ ] - Schedule Automatic Backups</code></span></span>
+<span class="line"><span class="ld"><code> * [ ] - Verify Accounts Can Bind Correctly</code></span></span>
+<span class="line"><span class="ld"><code> * [ ] - Review Schema Inconistent ObjectClass -&gt; pilotOrganization (0.9.2342.19200300.100.4.20)</code></span></span>
+<span class="line"><span class="ld"><code> * [ ] - Review Database Imported Content is Correct -&gt; dc=ldap1,dc=com</code></span></span></pre>
+               </div>
+               
+               <p>When the migration is complete, <code class="command">openldap_to_ds</code> creates a checklist of post-migration tasks that must be completed. It is a best
+                  practice to document your post-migration steps, so that you can reproduce them in
+                  your post-production procedures. Then test clients and application integrations to
+                  the migrated 389 Directory Server instance.</p>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Develop a rollback plan</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Develop a rollback plan in case of any failures. This plan should define a successful
+                              migration, the tests to determine what worked and what needs to be fixed, which steps
+                              are critical, what can be deferred until later, how to decide when to undo any changes,
+                              how to undo them with minimal disruption, and which other teams need to be involved.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Due to the variability of deployments, it is difficult to provide a recipe for a successful
+                  production migration. After you have thoroughly tested the migration process and verified
+                  that you get good results, the following general steps help:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Lower all hostname/DNS TTLs to 5 minutes 48 hours before the change, to allow a fast
+                        rollback to your existing OpenLDAP deployment.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Pause all data synchronization and incoming data processes, so that the data in the
+                        OpenLDAP environment does not change during the migration.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Have all 389 Directory Server hosts ready for deployment before the migration.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Have your test migration documentation available.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-migrate-saslauthd">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Testing migration of OpenLDAP servers that use <code class="literal">saslauthd</code>
+                     </h3>
+               </header>
+               
+               
+               <p>In OpenLDAP deployments, it is common to use <code class="literal">saslauthd</code> for passthrough authentication of users. The authentication process involves the
+                  following components:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> │   LDAP client   │</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>          │</code></span></span>
+<span class="line"><span class="ld"><code>      binds to</code></span></span>
+<span class="line"><span class="ld"><code>          │</code></span></span>
+<span class="line"><span class="ld"><code>          ▼</code></span></span>
+<span class="line"><span class="ld"><code> ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code> │    OpenLDAP     │</code></span></span>
+<span class="line"><span class="ld"><code> │     server      │</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>          │</code></span></span>
+<span class="line"><span class="ld"><code>          │</code></span></span>
+<span class="line"><span class="ld"><code>          ▼</code></span></span>
+<span class="line"><span class="ld"><code> ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> │    saslauthd    │</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>          │</code></span></span>
+<span class="line"><span class="ld"><code>          │</code></span></span>
+<span class="line"><span class="ld"><code>          ▼</code></span></span>
+<span class="line"><span class="ld"><code> ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> │  External auth  │</code></span></span>
+<span class="line"><span class="ld"><code> │                 │</code></span></span>
+<span class="line"><span class="ld"><code> └─────────────────┘</code></span></span></pre>
+               </div>
+               
+               <p>For checking the correctness of configuration and subsequent troubleshooting, the
+                  following information is important:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>OpenLDAP discovers that a user is allowed passthrough authentication if the <code class="literal">userPassword</code> attribute has a value with the <code class="literal">userPassword: {SASL}<em class="replaceable">USERNAME@REALM</em></code> format. The prerequisite is to build the OpenLDAP server with the <code class="literal">--enable-spasswd</code> option to enable passthrough authentication.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>OpenLDAP configures its connection to <code class="literal">saslauthd</code> from <code class="filename">/usr/lib/sasl2/slapd.conf</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">saslauthd</code> discovers the relevant modules using its command-line parameters configured in <code class="literal">/etc/sysconfig/saslauthd</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The back-end modules of <code class="literal">saslauthd</code> use their own configuration, as documented in <code class="command">man saslauthd</code>.</p>
+                     </li>
+                  </ul>
+               
+               <p>Detailed information about passthrough authentication using OpenLDAP is available
+                  in the official <a class="link" href="https://openldap.org/doc/admin24/security.html#Pass-Through%20authentication">OpenLDAP Admin Guide</a>.</p>
+               
+               <section class="sect3" id="sec-security-ldap-migrate-saslauthd-procedure">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Migrating SASL passthrough authentication from OpenLDAP to 389 Directory Server</h4>
+                  </header>
+                  
+                  
+                  <p>As a best practice for correctly migrating SASL passthrough authentication from OpenLDAP
+                     to 389 Directory Server, refer to the following steps:</p>
+                  
+                  <div class="informalobject procedure" id="sec-security-ldap-migrate-saslauthd-procedure_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Before migration, ensure that you can successfully run <code class="command">testsaslauthd</code> on the OpenLDAP server.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">testsaslauthd -u <em class="replaceable">USERNAME@REALM</em> -p <em class="replaceable">PASSWORD</em></code></code></span></span></pre>
+                           </div>
+                           
+                           <p>The realm routes the authentication to the correct back-end in <code class="literal">saslauthd</code>, and the user name is then used to check the identity.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Install the <code class="package">pam_saslauthd</code> package that enables 389 Directory Server to connect with <code class="literal">saslauthd</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper install -y pam_saslauthd</code></code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Migrate from OpenLDAP to 389 Directory Server by running the <code class="command">openldap_to_ds</code> command-line tool. For detailed information on the migration process, refer to the
+                              section <a class="xref xref-sect2" href="#sec-security-ldap-migrate-test">the section called “Testing migration from OpenLDAP”</a>.</p>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Note</div>
+                                    </header>
+                                    <div>
+                                       
+                                       <p>While the <code class="command">openldap_to_ds</code> process is running, if a user is detected as having the value of the <code class="literal">userPssword</code> attribute in the <code class="literal">userPassword: {SASL}<em class="replaceable">USERNAME@REALM</em></code> format, it is removed and placed as the value of the <code class="literal">nsSaslauthId</code> attribute in the <code class="literal">nsSaslauthId: <em class="replaceable">USERNAME@REALM</em></code> format. Additionally, the attribute value <code class="literal">objectClass: nsSaslauthAccount</code> is automatically added to support the modification.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>After completion of the migration, check whether the PAM passthrough authentication
+                              is configured correctly by running the following commands:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE</em> plugin pam-pass-through-auth show</code></code></span></span></pre>
+                           </div>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE</em> plugin pam-pass-through-auth list</code></code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>After successful migration, the passthrough authentication flow involves the following
+                     components:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  │   LDAP client   │</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>           │</code></span></span>
+<span class="line"><span class="ld"><code>       binds to</code></span></span>
+<span class="line"><span class="ld"><code>           │</code></span></span>
+<span class="line"><span class="ld"><code>           ▼</code></span></span>
+<span class="line"><span class="ld"><code>  ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>  │     389-DS      │</code></span></span>
+<span class="line"><span class="ld"><code>  │     server      │</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>           │</code></span></span>
+<span class="line"><span class="ld"><code>           ▼</code></span></span>
+<span class="line"><span class="ld"><code>  ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  │  pam saslauthd  │</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>           │</code></span></span>
+<span class="line"><span class="ld"><code>           ▼</code></span></span>
+<span class="line"><span class="ld"><code>  ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  │    saslauthd    │</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  └─────────────────┘</code></span></span>
+<span class="line"><span class="ld"><code>           │</code></span></span>
+<span class="line"><span class="ld"><code>           │</code></span></span>
+<span class="line"><span class="ld"><code>           ▼</code></span></span>
+<span class="line"><span class="ld"><code>  ┌─────────────────┐</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  │  External auth  │</code></span></span>
+<span class="line"><span class="ld"><code>  │                 │</code></span></span>
+<span class="line"><span class="ld"><code>  └─────────────────┘</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-security-ldap-troubleshoot-saslauthd">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Troubleshooting <code class="literal">saslauthd</code> passthrough authentication</h4>
+                  </header>
+                  
+                  
+                  <p>To troubleshoot problems with <code class="literal">saslauthd</code> passthrough authentication before and after the migration from OpenLDAP to 389 Directory
+                     Server, refer to the following tips:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Ensure that <code class="command">testsaslauthd</code> works with <em class="replaceable">USERNAME@REALM</em>.</span></dt>
+                        <dd>
+                           
+                           <p>Refer to the step for running <code class="command">testsaslauthd</code> in the <a class="xref xref-sect2" href="#sec-security-ldap-migrate-saslauthd">the section called “Testing migration of OpenLDAP servers that use <code class="literal">saslauthd</code>
+                                 ”</a> section.</p>
+                           
+                           <p>In case of problems, try the following:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p>Check <code class="filename">/etc/sysconfig/saslauthd</code> to ensure the <code class="literal">saslauthd</code> back-end modules are configured correctly. For detailed information on the back-end
+                                    modules of <code class="literal">saslauthd</code> and their configurations, run <code class="command">man saslauthd</code>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>Turn on debug logging by adding <code class="literal">SASLAUTHD_PARAMS="-d"</code> in <code class="filename">/etc/sysconfig/saslauthd</code>.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p>View the <code class="literal">saslauthd</code> logs that are available as part of the output of <code class="command">journalctl</code>.</p>
+                                 </li>
+                              </ul>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Ensure that PAM <code class="literal">saslauthd</code> works correctly.</span></dt>
+                        <dd>
+                           
+                           <p>To check if PAM <code class="literal">saslauthd</code> works correctly, you can use the <code class="command">pam_tester</code> tool available at <a class="link" href="https://github.com/kanidm/pam_tester">https://github.com/kanidm/pam_tester</a>.</p>
+                           
+                           <div class="admonition note">
+                              <div>
+                                 <div class="icon">ⓘ</div>
+                                 <div class="body">
+                                    <header>
+                                       <div class="title">Note</div>
+                                    </header>
+                                    <div>
+                                       
+                                       <p>The <code class="command">pam_tester</code> tool is NOT officially supported.</p>
+                                       </div>
+                                 </div>
+                              </div>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Ensure that the PAM Pass Through Auth plug-in is enabled.</span></dt>
+                        <dd>
+                           
+                           <p>Check the status of the PAM Pass Through Auth plug-in by running the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE</em> plugin pam-pass-through-auth status</code></code></span></span></pre>
+                           </div>
+                           
+                           <p>To enable the plug-in, run the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE</em> plugin pam-pass-through-auth enable</code></code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Check the configuration of the PAM Pass Through Auth plug-in.</span></dt>
+                        <dd>
+                           
+                           <p>To check the configuration of the PAM Pass Through Auth plug-in for the server instance,
+                              run the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE</em> plugin pam-pass-through-auth show</code></code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Check the error logs for the user of the server instance.</span></dt>
+                        <dd>
+                           
+                           <p>Check the logs available in <code class="filename">/var/lib/<em class="replaceable">SERVER_USER_NAME</em>/<em class="replaceable">INSTANCE</em>/error</code>.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-migrate-plan">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>9<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Planning your migration</h3>
+               </header>
+               
+               
+               <p>As OpenLDAP is a <q>box of parts</q> and highly customizable, it is not possible to prescribe a <q>one size fits all</q> migration. It is necessary to assess your current environment and configuration with
+                  OpenLDAP and other integrations. This includes, and is not limited to:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Replication topology</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>High availability and load balancer configurations</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>External data flows (IGA, HR, AD, etc.)</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Configured overlays (plug-ins in 389 Directory Server)</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Client configuration and expected server features</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Customized schema</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>TLS configuration</p>
+                     </li>
+                  </ul>
+               
+               <p>Plan what your 389 Directory Server deployment will look like in the end. This includes
+                  the same list, except replace overlays with plug-ins. Once you have assessed your
+                  current environment and planned what your 389 Directory Server environment will look
+                  like, you can then form a migration plan. We recommended building the 389 Directory
+                  Server environment in parallel to your OpenLDAP environment to allow switching between
+                  them.</p>
+               
+               <p>Migrating from OpenLDAP to 389 Directory Server is a one-way migration. There are
+                  enough differences between the two that they cannot interoperate, and there is not
+                  a migration path from 389 Directory Server to OpenLDAP. The following table highlights
+                  the major similarities and differences.</p>
+               
+               <div class="informalobject informaltable" id="sec-security-ldap-migrate-plan_informaltable1">
+                  <table>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">Feature</th>
+                           <th class="btop colsep rowsep">OpenLDAP</th>
+                           <th class="btop colsep rowsep">389 Directory Server</th>
+                           <th class="btop colsep rowsep">Compatible</th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">Two-way replication</td>
+                           <td class="btop colsep rowsep">SyncREPL</td>
+                           <td class="btop colsep rowsep">389&nbsp;DS-specific system</td>
+                           <td class="btop colsep rowsep">No</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">MemberOf</td>
+                           <td class="colsep rowsep">Overlay</td>
+                           <td class="colsep rowsep">Plug-in</td>
+                           <td class="colsep rowsep">Yes, simple configurations only</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">External Auth</td>
+                           <td class="colsep rowsep">Proxy</td>
+                           <td class="colsep rowsep">-</td>
+                           <td class="colsep rowsep">No</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">Active Directory Synchronization</td>
+                           <td class="colsep rowsep">-</td>
+                           <td class="colsep rowsep">Winsync Plug-in</td>
+                           <td class="colsep rowsep">No</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">Inbuilt Schema</td>
+                           <td class="colsep rowsep">OLDAP Schemas</td>
+                           <td class="colsep rowsep">389 Schemas</td>
+                           <td class="colsep rowsep">Yes, supported by migration tool</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">Custom Schema</td>
+                           <td class="colsep rowsep">OLDAP Schemas</td>
+                           <td class="colsep rowsep">389 Schemas</td>
+                           <td class="colsep rowsep">Yes, supported by migration tool</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">Database Import</td>
+                           <td class="colsep rowsep">LDIF</td>
+                           <td class="colsep rowsep">LDIF</td>
+                           <td class="colsep rowsep">Yes, supported by migration tool</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">Password hashes</td>
+                           <td class="colsep rowsep">Varies</td>
+                           <td class="colsep rowsep">Varies</td>
+                           <td class="colsep rowsep">Yes, all formats supported excluding Argon2</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">OpenLDAP to 389&nbsp;DS replication</td>
+                           <td class="colsep rowsep">-</td>
+                           <td class="colsep rowsep">-</td>
+                           <td class="colsep rowsep">No mechanism to replicate to 389&nbsp;DS is possible</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">Time-based one-time password (TOTP)</td>
+                           <td class="colsep rowsep">TOTP overlay</td>
+                           <td class="colsep rowsep">-</td>
+                           <td class="colsep rowsep">No, currently not supported</td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">entryUUID</td>
+                           <td class="colsep rowsep">Part of OpenLDAP</td>
+                           <td class="colsep rowsep">Plug-in</td>
+                           <td class="colsep rowsep">Yes</td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s08.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Using SSSD to manage LDAP authentication</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Importing TLS server certificates and keys</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

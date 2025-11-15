@@ -1,0 +1,455 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>38.2.&nbsp;Managing ChangeHat-aware applications</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch08.html" rel="prev">
+      <link href="bk06partvch09.html" rel="next">
+      <link href="bk06partvch08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch08.html">Up</a> <a href="bk06partvch09.html">Next</a> <a href="bk06partvch08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch08s02.html" db-id="d616951e191093" id="sec-apparmor-hat-apache-managing">
+            <header>
+               <h2><span class="label">38<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Managing ChangeHat-aware applications</h2>
+            </header>
+            
+            
+            <p>In the previous section you learned about <code class="literal">mod_apparmor</code> and the way it helps you to secure a specific Web application. This section walks
+               you through a real-life example of creating a hat for a Web application, and using
+               AppArmor's change_hat feature to secure it. This chapter focuses on AppArmor's command-line
+               tools, as YaST's AppArmor module has limited functionality.</p>
+            
+            <section class="sect2" id="sec-apparmor-hat-apache-managing_s2_1">
+               <header>
+                  <h3><span class="label">38<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>With AppArmor's command line tools</h3>
+               </header>
+               
+               
+               <p>For illustration purposes, let us choose the Web application called <em>Adminer</em> (<a class="link" href="https://www.adminer.org/en/">https://www.adminer.org/en/</a>). It is a full-featured SQL database management tool written in PHP, yet consisting
+                  of a single PHP file. For Adminer to work, you need to set up an Apache Web server,
+                  PHP and its Apache module, and one of the database drivers available for PHP—MariaDB
+                  in this example. You can install the required packages with</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>zypper in apache2 apache2-mod_apparmor apache2-mod_php5 php5 php5-mysql</code></span></span></pre>
+               </div>
+               
+               <p>To set up the Web environment for running Adminer, follow these steps:</p>
+               
+               <div class="formalobject procedure" id="sec-apparmor-hat-apache-managing_s2_1_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">38<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up a web server environment</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Make sure <code class="literal">apparmor</code> and <code class="literal">php5</code> modules are enabled for Apache. To enable the modules in any case, use:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>a2enmod apparmor php5</code></span></span></pre>
+                        </div>
+                        
+                        <p>and then restart Apache with</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart apache2</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Make sure MariaDB is running. If unsure, restart it with</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart mariadb</code></span></span></pre>
+                        </div>
+                        
+                        </li>
+                     <li class="step">
+                        
+                        <p>Download Adminer from <a class="link" href="https://www.adminer.org">https://www.adminer.org</a>, copy it to <code class="filename">/srv/www/htdocs/adminer/</code>, and rename it to <code class="filename">adminer.php</code>, so that its full path is <code class="filename">/srv/www/htdocs/adminer/adminer.php</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Test Adminer in your Web browser by entering <code class="uri">http://localhost/adminer/adminer.php</code> in its URI address field. If you installed Adminer to a remote server, replace <code class="literal">localhost</code> with the real host name of the server.</p>
+                        
+                        <div class="figure formalobject" id="sec-apparmor-hat-apache-managing_s2_1_proc1_step4_fig1">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:218px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/aa_changehat_adminer.png" style="width:218px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">38<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Adminer login page</div>
+                           </header>
+                        </div>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Tip</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>If you encounter problems viewing the Adminer login page, try to look for help in
+                                       the Apache error log <code class="filename">/var/log/apache2/error.log</code>. Another reason you cannot access the Web page may be that your Apache is already
+                                       under AppArmor control and its AppArmor profile is too tight to permit viewing Adminer.
+                                       Check it with <code class="command">aa-status</code>, and if needed, set Apache temporarily in complain mode with</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>sudo aa-complain usr.sbin.httpd2-prefork</code></span></span></pre>
+                                    </div>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>After the Web environment for Adminer is ready, you need to configure Apache's <code class="literal">mod_apparmor</code>, so that AppArmor can detect accesses to Adminer and change to the specific <q>hat</q>.</p>
+               
+               <div class="formalobject procedure" id="sec-apparmor-hat-apache-managing_s2_1_proc2">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">38<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring <code class="literal">mod_apparmor</code>
+                        </div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Apache has several configuration files under <code class="filename">/etc/apache2/</code> and <code class="filename">/etc/apache2/conf.d/</code>. Choose your preferred one and open it in a text editor. In this example, the <code class="command">vim</code> editor is used to create a new configuration file <code class="filename">/etc/apache2/conf.d/apparmor.conf</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vim /etc/apache2/conf.d/apparmor.conf</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy the following snippet into the edited file.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;Directory /srv/www/htdocs/adminer&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  AAHatName adminer</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/Directory&gt;</code></span></span></pre>
+                        </div>
+                        
+                        <p>It tells Apache to let AppArmor know about a change_hat event when the Web user accesses
+                           the directory <code class="filename">/adminer</code> (and any file/directory inside) in Apache's document root. Remember, we placed the
+                           <code class="filename">adminer.php</code> application there.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Save the file, close the editor, and restart Apache with</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart apache2</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>Apache now knows about our Adminer and changing a <q>hat</q> for it. It is time to create the related hat for Adminer in the AppArmor configuration.
+                  If you do not have an AppArmor profile yet, create one before proceeding. Remember
+                  that if your Apache's main binary is <code class="filename">/usr/sbin/httpd2-prefork</code>, then the related profile is named <code class="filename">/etc/apparmor.d/usr.sbin.httpd2-prefork</code>.</p>
+               
+               <div class="formalobject procedure" id="sec-apparmor-hat-apache-managing_s2_1_proc3">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">38<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a hat for Adminer</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open (or create one if it does not exist) the file <code class="filename">/etc/apparmor.d/usr.sbin.httpd2-prefork</code> in a text editor. Its contents should be similar to the following:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#include &lt;tunables/global&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>/usr/sbin/httpd2-prefork {</code></span></span>
+<span class="line"><span class="ld"><code>  #include &lt;abstractions/apache2-common&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  #include &lt;abstractions/base&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  #include &lt;abstractions/php5&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  capability kill,</code></span></span>
+<span class="line"><span class="ld"><code>  capability setgid,</code></span></span>
+<span class="line"><span class="ld"><code>  capability setuid,</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  /etc/apache2/** r,</code></span></span>
+<span class="line"><span class="ld"><code>  /run/httpd.pid rw,</code></span></span>
+<span class="line"><span class="ld"><code>  /usr/lib{,32,64}/apache2*/** mr,</code></span></span>
+<span class="line"><span class="ld"><code>  /var/log/apache2/** rw,</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  ^DEFAULT_URI {</code></span></span>
+<span class="line"><span class="ld"><code>    #include &lt;abstractions/apache2-common&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    /var/log/apache2/** rw,</code></span></span>
+<span class="line"><span class="ld"><code>  }</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  ^HANDLING_UNTRUSTED_INPUT {</code></span></span>
+<span class="line"><span class="ld"><code>    #include &lt;abstractions/apache2-common&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    /var/log/apache2/** w,</code></span></span>
+<span class="line"><span class="ld"><code>  }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Before the last closing curly bracket (<code class="literal">}</code>), insert the following section:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>^adminer flags=(complain) {</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                        </div>
+                        
+                        <p>Note the <code class="literal">(complain)</code> addition after the hat name—it tells AppArmor to leave the <code class="systemitem">adminer</code> hat in complain mode. That is because we need to learn the hat profile by accessing
+                           Adminer later on. </p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Save the file, and then restart AppArmor, then Apache.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl reload apparmor apache2</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check if the <code class="systemitem">adminer</code> hat really is in complain mode.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-status</code></span></span>
+<span class="line"><span class="ld"><code>apparmor module is loaded.</code></span></span>
+<span class="line"><span class="ld"><code>39 profiles are loaded.</code></span></span>
+<span class="line"><span class="ld"><code>37 profiles are in enforce mode.</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork//DEFAULT_URI</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>2 profiles are in complain mode.</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/bin/getopt</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork//adminer</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                        </div>
+                        
+                        <p>As we can see, the <code class="literal">httpd2-prefork//adminer</code> is loaded in complain mode.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>Our last task is to find out the right set of rules for the <code class="systemitem">adminer</code> hat. That is why we set the <code class="systemitem">adminer</code> hat into complain mode—the logging facility collects useful information about the
+                  access requirements of <code class="filename">adminer.php</code> as we use it via the Web browser. <code class="command">aa-logprof</code> then helps us with creating the hat's profile.</p>
+               
+               <div class="formalobject procedure" id="sec-apparmor-hat-apache-managing_s2_1_proc4">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">38<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Generating rules for the <code class="systemitem">adminer</code> hat</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open Adminer in the Web browser. If you installed it locally, then the URI is <code class="uri">http://localhost/adminer/adminer.php</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Choose the database engine you want to use (MariaDB in our case), and log in to Adminer
+                           using the existing database user name and password. You do not need to specify the
+                           database name as you can do so after logging in. Perform any operations with Adminer
+                           you like—create a new database, create a new table for it, set user privileges, and
+                           so on.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>After the short testing of Adminer's user interface, switch back to console and examine
+                           the log for collected data.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-logprof</code></span></span>
+<span class="line"><span class="ld"><code>Reading log entries from /var/log/audit/audit.log.</code></span></span>
+<span class="line"><span class="ld"><code>Updating AppArmor profiles in /etc/apparmor.d.</code></span></span>
+<span class="line"><span class="ld"><code>Complain-mode changes:</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Profile:  /usr/sbin/httpd2-prefork^adminer</code></span></span>
+<span class="line"><span class="ld"><code>Path:     /dev/urandom</code></span></span>
+<span class="line"><span class="ld"><code>Mode:     r</code></span></span>
+<span class="line"><span class="ld"><code>Severity: 3</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  1 - #include &lt;abstractions/apache2-common&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code> [8 - /dev/urandom]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[(A)llow] / (D)eny / (G)lob / Glob w/(E)xt / (N)ew / Abo(r)t / (F)inish / (O)pts</code></span></span></pre>
+                        </div>
+                        
+                        <p>From the <code class="command">aa-logprof</code> message, it is clear that our new <code class="systemitem">adminer</code> hat was correctly detected:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Profile:  /usr/sbin/httpd2-prefork^adminer</code></span></span></pre>
+                        </div>
+                        
+                        <p>The <code class="command">aa-logprof</code> command asks you to pick the right rule for each discovered AppArmor event. Specify
+                           the one you want to use, and confirm with <span class="guimenu">Allow</span>. For more information on working with the <code class="command">aa-genprof</code> and <code class="command">aa-logprof</code> interface, see <a class="xref xref-sect3" href="bk06partvch07s07.html#sec-apparmor-commandline-profiling-summary-genprof">the section called “aa-genprof—generating profiles”</a>.</p>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Tip</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p><code class="command">aa-logprof</code> offers several valid rules for the examined event. Some are <em>abstractions</em>—predefined sets of rules affecting a specific common group of targets. Sometimes
+                                       it is useful to include such an abstraction instead of a direct URI rule:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> 1 - #include &lt;abstractions/php5&gt;</code></span></span>
+<span class="line"><span class="ld"><code> [2 - /var/lib/php5/sess_3jdmii9cacj1e3jnahbtopajl7p064ai242]</code></span></span></pre>
+                                    </div>
+                                    
+                                    <p>In the example above, it is recommended hitting <span class="guimenu">1</span> and confirming with <span class="guimenu">A</span> to allow the abstraction.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>After the last change, you are asked to save the changed profile.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>The following local profiles were changed. Would you like to save them?</code></span></span>
+<span class="line"><span class="ld"><code> [1 - /usr/sbin/httpd2-prefork]</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code> (S)ave Changes / [(V)iew Changes] / Abo(r)t</code></span></span></pre>
+                        </div>
+                        
+                        <p>Hit <span class="guimenu">S</span> to save the changes.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Set the profile to enforce mode with <code class="command">aa-enforce</code></p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-enforce usr.sbin.httpd2-prefork</code></span></span></pre>
+                        </div>
+                        
+                        <p>and check its status with <code class="command">aa-status</code></p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> aa-status</code></span></span>
+<span class="line"><span class="ld"><code>apparmor module is loaded.</code></span></span>
+<span class="line"><span class="ld"><code>39 profiles are loaded.</code></span></span>
+<span class="line"><span class="ld"><code>38 profiles are in enforce mode.</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork//DEFAULT_URI</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT</code></span></span>
+<span class="line"><span class="ld"><code>   /usr/sbin/httpd2-prefork//adminer</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                        </div>
+                        
+                        <p>As you can see, the <code class="literal">//adminer</code> hat jumped from <em>complain</em> to <em>enforce</em> mode.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Try to run Adminer in the Web browser, and if you encounter problems running it, switch
+                           it to the complain mode, repeat the steps that previously did not work well, and update
+                           the profile with <code class="command">aa-logprof</code> until you are satisfied with the application's functionality.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Hat and parent profile relationship</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The profile <code class="filename">^adminer</code> is only available in the context of a process running under the parent profile <code class="filename">usr.sbin.httpd2-prefork</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-hat-apache-managing-add">
+               <header>
+                  <h3><span class="label">38<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Adding hats and entries to hats in YaST</h3>
+               </header>
+               
+               
+               <p>When you use the <span class="guimenu">Edit Profile</span> dialog (for instructions, refer to <a class="xref xref-sect1" href="bk06partvch06s02.html">the section called “Editing profiles”</a>) or when you add a new profile using <span class="guimenu">Manually Add Profile</span> (for instructions, refer to <a class="xref xref-sect1" href="bk06partvch06.html#sec-apparmor-yast-add">the section called “Manually adding a profile”</a>), you are given the option of adding hats (subprofiles) to your AppArmor profiles.
+                  Add a ChangeHat subprofile from the <span class="guimenu">AppArmor Profile Dialog</span> window as in the following.</p>
+               
+               <div class="informalfigure informalobject" id="sec-apparmor-hat-apache-managing-add_informalfigure1">
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/hats_in_profiles.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  </div>
+               
+               <div class="informalobject procedure" id="sec-apparmor-hat-apache-managing-add_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>From the <span class="guimenu">AppArmor Profile Dialog</span> window, click <span class="guimenu">Add Entry</span> then select <span class="guimenu">Hat</span>. The <span class="guimenu">Enter Hat Name</span> dialog opens:</p>
+                        
+                        <div class="informalfigure informalobject" id="sec-apparmor-hat-apache-managing-add_proc1_step1_informalfigure1">
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:194px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/hat_createhat.png" style="width:194px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Enter the name of the hat to add to the AppArmor profile. The name is the URI that,
+                           when accessed, receives the permissions set in the hat.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Create Hat</span>. You are returned to the <span class="guimenu">AppArmor Profile Dialog</span> screen.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>After adding the new hat, click <span class="guimenu">Done</span>.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch08.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch08.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">38</span><span class="sep">.&nbsp;</span>Profiling your Web applications using ChangeHat</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">39</span><span class="sep">.&nbsp;</span>Confining users with <code class="systemitem">pam_apparmor</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

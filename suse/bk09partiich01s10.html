@@ -1,0 +1,551 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.10.&nbsp;Tagging LVM2 storage objects</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiich01s09.html" rel="prev">
+      <link href="bk09partiich02.html" rel="next">
+      <link href="bk09partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiich01.html">Up</a> <a href="bk09partiich02.html">Next</a> <a href="bk09partiich01s09.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partiich01s10.html" db-id="d616951e241198" id="sec-lvm-tagging">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Tagging LVM2 storage objects</h2>
+            </header>
+            
+            
+            <p>A tag is an unordered keyword or term assigned to the metadata of a storage object.
+               Tagging allows you to classify collections of LVM storage objects in ways that you
+               find useful by attaching an unordered list of tags to their metadata.</p>
+            
+            <section class="sect2" id="sec-lvm-tagging-using">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Using LVM2 tags</h3>
+               </header>
+               
+               
+               <p>After you tag the LVM2 storage objects, you can use the tags in commands to accomplish
+                  the following tasks:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Select LVM objects for processing according to the presence or absence of specific
+                        tags.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Use tags in the configuration file to control which volume groups and logical volumes
+                        are activated on a server.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Override settings in a global configuration file by specifying tags in the command.</p>
+                     </li>
+                  </ul>
+               
+               <p>A tag can be used in place of any command line LVM object reference that accepts:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>a list of objects</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>a single object as long as the tag expands to a single object</p>
+                     </li>
+                  </ul>
+               
+               <p>Replacing the object name with a tag is not supported everywhere yet. After the arguments
+                  are expanded, duplicate arguments in a list are resolved by removing the duplicate
+                  arguments, and retaining the first instance of each argument.</p>
+               
+               <p>Wherever there might be ambiguity of argument type, you must prefix a tag with the
+                  commercial at sign (@) character, such as <code class="literal">@mytag</code>. Elsewhere, using the <q>@</q> prefix is optional.</p>
+               </section>
+            
+            <section class="sect2" id="sec-lvm-tagging-requirements">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Requirements for creating LVM2 tags</h3>
+               </header>
+               
+               
+               <p>Consider the following requirements when using tags with LVM:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Supported characters</span></dt>
+                     <dd>
+                        
+                        <p>An LVM tag word can contain the ASCII uppercase characters A to Z, lowercase characters
+                           a to z, numbers 0 to 9, underscore (_), plus (+), hyphen (-), and period (.). The
+                           word cannot begin with a hyphen. The maximum length is 128 characters.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Supported storage objects</span></dt>
+                     <dd>
+                        
+                        <p>You can tag LVM2 physical volumes, volume groups, logical volumes, and logical volume
+                           segments. PV tags are stored in its volume group’s metadata. Deleting a volume group
+                           also deletes the tags in the orphaned physical volume. Snapshots cannot be tagged,
+                           but their origin can be tagged.</p>
+                        
+                        <p>LVM1 objects cannot be tagged because the disk format does not support it.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-lvm-tagging-syntax">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Command line tag syntax</h3>
+               </header>
+               
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">--addtag</code>
+                           <em class="replaceable">TAG_INFO</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Add a tag to (or <em>tag</em>) an LVM2 storage object. Example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --addtag @db1 vg1</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">--deltag</code>
+                           <em class="replaceable">TAG_INFO</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Remove a tag from (or <em>untag</em>) an LVM2 storage object. Example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --deltag @db1 vg1</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="option">--tag</code>
+                           <em class="replaceable">TAG_INFO</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Specify the tag to use to narrow the list of volume groups or logical volumes to be
+                           activated or deactivated.</p>
+                        
+                        <p>Enter the following to activate the volume if it has a tag that matches the tag provided
+                           (example):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange -ay --tag @db1 vg1/vol2</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-lvm-tagging-config">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuration file syntax</h3>
+               </header>
+               
+               
+               <p>The following sections show example configurations for certain use cases.</p>
+               
+               <section class="sect3" id="sec-lvm-tagging-configuration-hostnames-enable">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Enabling host name tags in the <code class="filename">lvm.conf</code> file</h4>
+                  </header>
+                  
+                  
+                  <p>Add the following code to the <code class="filename">/etc/lvm/lvm.conf</code> file to enable host tags that are defined separately on host in a <code class="filename">/etc/lvm/lvm_&lt;<em class="replaceable">HOSTNAME</em>&gt;.conf</code> file.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tags {</code></span></span>
+<span class="line"><span class="ld"><code>   # Enable hostname tags</code></span></span>
+<span class="line"><span class="ld"><code>   hosttags = 1</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                  </div>
+                  
+                  <p>You place the activation code in the <code class="filename">/etc/lvm/lvm_&lt;<em class="replaceable">HOSTNAME</em>&gt;.conf</code> file on the host. See <a class="xref xref-sect3" href="#sec-lvm-tagging-configuration-activate">the section called “Defining activation”</a>.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-lvm-tagging-configuration-hostnames-define">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Defining tags for host names in the lvm.conf file</h4>
+                  </header>
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tags {</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>   tag1 { }</code></span></span>
+<span class="line"><span class="ld"><code>      # Tag does not require a match to be set.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>   tag2 {</code></span></span>
+<span class="line"><span class="ld"><code>      # If no exact match, tag is not set.</code></span></span>
+<span class="line"><span class="ld"><code>      host_list = [ "hostname1", "hostname2" ]</code></span></span>
+<span class="line"><span class="ld"><code>   }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-lvm-tagging-configuration-activate">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Defining activation</h4>
+                  </header>
+                  
+                  
+                  <p>You can modify the <code class="filename">/etc/lvm/lvm.conf</code> file to activate LVM logical volumes based on tags.</p>
+                  
+                  <p>In a text editor, add the following code to the file:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>  activation {</code></span></span>
+<span class="line"><span class="ld"><code>      volume_list = [ "vg1/lvol0", "@database" ]</code></span></span>
+<span class="line"><span class="ld"><code>  }</code></span></span></pre>
+                  </div>
+                  
+                  <p>Replace <code class="literal">@database</code> with your tag. Use <code class="literal">"@*"</code> to match the tag against any tag set on the host.</p>
+                  
+                  <p>The activation command matches against <em class="replaceable">VGNAME</em>, <em class="replaceable">VGNAME/LVNAME</em>, or @<em class="replaceable">TAG</em> set in the metadata of volume groups and logical volumes. A volume group or logical
+                     volume is activated only if a metadata tag matches. The default if there is no match,
+                     is not to activate.</p>
+                  
+                  <p>If <code class="literal">volume_list</code> is not present and tags are defined on the host, then it activates the volume group
+                     or logical volumes only if a host tag matches a metadata tag.</p>
+                  
+                  <p>If <code class="literal">volume_list</code> is defined, but empty, and no tags are defined on the host, then it does not activate.</p>
+                  
+                  <p>If volume_list is undefined, it imposes no limits on LV activation (all are allowed).</p>
+                  </section>
+               
+               <section class="sect3" id="sec-lvm-tagging-configuration-activate-multi">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Defining activation in multiple host name configuration files</h4>
+                  </header>
+                  
+                  
+                  <p>You can use the activation code in a host’s configuration file (<code class="filename">/etc/lvm/lvm_&lt;<em class="replaceable">HOST_TAG</em>&gt;.conf</code>) when host tags are enabled in the <code class="filename">lvm.conf</code> file. For example, a server has two configuration files in the <code class="filename">/etc/lvm/</code> directory:</p>
+                  
+                  <div class="simplelist simplelistvert">
+                     <div class="row"><span>
+                           <code class="filename">lvm.conf</code>
+                           </span></div>
+                     <div class="row"><span>
+                           <code class="filename">lvm_&lt;<em class="replaceable">HOST_TAG</em>&gt;.conf</code>
+                           </span></div>
+                  </div>
+                  
+                  <p>At start-up, load the <code class="filename">/etc/lvm/lvm.conf</code> file, and process any tag settings in the file. If any host tags were defined, it
+                     loads the related <code class="filename">/etc/lvm/lvm_&lt;<em class="replaceable">HOST_TAG</em>&gt;.conf</code> file. When it searches for a specific configuration file entry, it searches the host
+                     tag file first, then the <code class="filename">lvm.conf</code>file, and stops at the first match. Within the <code class="filename">lvm_&lt;<em class="replaceable">HOST_TAG</em>&gt;.conf</code> file, use the reverse order that tags were set in. This allows the file for the last
+                     tag set to be searched first. New tags set in the host tag file will trigger additional
+                     configuration file loads.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-lvm-tagging-activate-cluster">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using tags for a simple activation control in a cluster</h3>
+               </header>
+               
+               
+               <p>You can set up a simple host name activation control by enabling the <code class="literal">hostname_tags</code> option in the <code class="filename">/etc/lvm/lvm.conf</code> file. Use the same file on every machine in a cluster so that it is a global setting.</p>
+               
+               <div class="informalobject procedure" id="sec-lvm-tagging-activate-cluster_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>In a text editor, add the following code to the <code class="filename">/etc/lvm/lvm.conf</code> file:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tags {</code></span></span>
+<span class="line"><span class="ld"><code>   hostname_tags = 1</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Replicate the file to all hosts in the cluster.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>From any machine in the cluster, add <code class="literal">db1</code> to the list of machines that activate <code class="filename">vg1/lvol2</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange --addtag @db1 vg1/lvol2</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>On the <code class="filename">db1</code> server, enter the following to activate it:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lvchange -ay vg1/vol2</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-lvm-tagging-activate-cluster-preferred">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Using tags to activate on preferred hosts in a cluster</h3>
+               </header>
+               
+               
+               <p>The examples in this section demonstrate two methods to accomplish the following:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Activate volume group <code class="filename">vg1</code> only on the database hosts <code class="filename">db1</code> and <code class="filename">db2</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Activate volume group <code class="filename">vg2</code> only on the file server host <code class="filename">fs1</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Activate nothing initially on the file server backup host <code class="filename">fsb1</code>, but be prepared for it to take over from the file server host <code class="filename">fs1</code>.</p>
+                     </li>
+                  </ul>
+               
+               <section class="sect3" id="sec-lvm-tagging-activate-cluster-preferred-opt1">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Option 1: centralized admin and static configuration replicated between hosts</h4>
+                  </header>
+                  
+                  
+                  <p>In the following solution, the single configuration file is replicated among multiple
+                     hosts.</p>
+                  
+                  <div class="informalobject procedure" id="sec-lvm-tagging-activate-cluster-preferred-opt1_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Add the <code class="literal">@database</code> tag to the metadata of volume group <code class="filename">vg1</code>. In a terminal, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --addtag @database vg1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add the <code class="literal">@fileserver</code> tag to the metadata of volume group <code class="filename">vg2</code>. In a terminal, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --addtag @fileserver vg2</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>In a text editor, modify the<code class="filename">/etc/lvm/lvm.conf</code> file with the following code to define the <code class="literal">@database</code>, <code class="literal">@fileserver</code>, <code class="literal">@fileserverbackup</code> tags.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tags {</code></span></span>
+<span class="line"><span class="ld"><code>   database {</code></span></span>
+<span class="line"><span class="ld"><code>      host_list = [ "db1", "db2" ]</code></span></span>
+<span class="line"><span class="ld"><code>   }</code></span></span>
+<span class="line"><span class="ld"><code>   fileserver {</code></span></span>
+<span class="line"><span class="ld"><code>      host_list = [ "fs1" ]</code></span></span>
+<span class="line"><span class="ld"><code>   }</code></span></span>
+<span class="line"><span class="ld"><code>   fileserverbackup {</code></span></span>
+<span class="line"><span class="ld"><code>      host_list = [ "fsb1" ]</code></span></span>
+<span class="line"><span class="ld"><code>   }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>activation {</code></span></span>
+<span class="line"><span class="ld"><code>   # Activate only if host has a tag that matches a metadata tag</code></span></span>
+<span class="line"><span class="ld"><code>   volume_list = [ "@*" ]</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Replicate the modified<code class="filename">/etc/lvm/lvm.conf</code> file to the four hosts: <code class="filename">db1</code>, <code class="filename">db2</code>, <code class="filename">fs1</code>, and <code class="filename">fsb1</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If the file server host goes down, <code class="filename">vg2</code> can be brought up on <code class="filename">fsb1</code> by entering the following commands in a terminal on any node:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --addtag @fileserverbackup vg2</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange -ay vg2</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-lvm-tagging-activate-cluster-preferred-opt2">
+                  <header>
+                     <h4><span class="label">5<span class="sep">.</span>10<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Option 2: localized admin and configuration</h4>
+                  </header>
+                  
+                  
+                  <p>In the following solution, each host holds locally the information about which classes
+                     of volume to activate.</p>
+                  
+                  <div class="informalobject procedure" id="sec-lvm-tagging-activate-cluster-preferred-opt2_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Add the <code class="literal">@database</code> tag to the metadata of volume group <code class="filename">vg1</code>. In a terminal, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --addtag @database vg1</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add the <code class="literal">@fileserver</code> tag to the metadata of volume group <code class="filename">vg2</code>. In a terminal, enter</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange --addtag @fileserver vg2</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Enable host tags in the <code class="filename">/etc/lvm/lvm.conf</code> file:</p>
+                           
+                           <div class="substeps">
+                              <ol class="procedure substeps" type="a">
+                                 
+                                 <li class="step">
+                                    
+                                    <p>In a text editor, modify the <code class="filename">/etc/lvm/lvm.conf</code> file with the following code to enable host tag configuration files.</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>tags {</code></span></span>
+<span class="line"><span class="ld"><code>   hosttags = 1</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li class="step">
+                                    
+                                    <p>Replicate the modified <code class="filename">/etc/lvm/lvm.conf</code> file to the four hosts: <code class="filename">db1</code>, <code class="filename">db2</code>, <code class="filename">fs1</code>, and <code class="filename">fsb1</code>.</p>
+                                    </li>
+                                 </ol>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>On host <code class="filename">db1</code>, create an activation configuration file for the database host <code class="filename">db1</code>. In a text editor, create <code class="filename">/etc/lvm/lvm_db1.conf</code> file and add the following code:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>activation {</code></span></span>
+<span class="line"><span class="ld"><code>   volume_list = [ "@database" ]</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>On host <code class="filename">db2</code>, create an activation configuration file for the database host <code class="filename">db2</code>. In a text editor, create <code class="filename">/etc/lvm/lvm_db2.conf</code> file and add the following code:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>activation {</code></span></span>
+<span class="line"><span class="ld"><code>   volume_list = [ "@database" ]</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>On host fs1, create an activation configuration file for the file server host <code class="filename">fs1</code>. In a text editor, create <code class="filename">/etc/lvm/lvm_fs1.conf</code> file and add the following code:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>activation {</code></span></span>
+<span class="line"><span class="ld"><code>   volume_list = [ "@fileserver" ]</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>If the file server host <code class="filename">fs1</code> goes down, to bring up a spare file server host fsb1 as a file server:</p>
+                           
+                           <div class="substeps">
+                              <ol class="procedure substeps" type="a">
+                                 
+                                 <li class="step">
+                                    
+                                    <p>On host <code class="filename">fsb1</code>, create an activation configuration file for the host <code class="filename">fsb1</code>. In a text editor, create <code class="filename">/etc/lvm/lvm_fsb1.conf</code> file and add the following code:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>activation {</code></span></span>
+<span class="line"><span class="ld"><code>   volume_list = [ "@fileserver" ]</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 
+                                 <li class="step">
+                                    
+                                    <p>In a terminal, enter one of the following commands:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange -ay vg2</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> vgchange -ay @fileserver</code></span></span></pre>
+                                    </div>
+                                    </li>
+                                 </ol>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiich01s09.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partiich02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Using LVM commands</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">6</span><span class="sep">.&nbsp;</span>LVM volume snapshots</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

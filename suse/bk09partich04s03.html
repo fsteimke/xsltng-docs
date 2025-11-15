@@ -1,0 +1,225 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.3.&nbsp;
+         bcache
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich04s02.html" rel="prev">
+      <link href="bk09partich04s04.html" rel="next">
+      <link href="bk09partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich04.html">Up</a> <a href="bk09partich04s04.html">Next</a> <a href="bk09partich04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich04s03.html" db-id="d616951e238229" id="sec-multitiercache-bcache">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                  <code class="resource systemitem">bcache</code>
+                  </h2>
+            </header>
+            
+            
+            
+            <p><code class="resource systemitem">bcache</code> is a Linux kernel block layer cache. It allows one or more fast disk drives (such
+               as SSDs) to act as a cache for one or more slower hard disks. <code class="resource systemitem">bcache</code> supports write-through and write-back, and is independent of the file system used.
+               By default it caches random reads and writes only, which SSDs excel at. It is suitable
+               for desktops, servers, and high end storage arrays as well.</p>
+            
+            <section class="sect2" id="sec-multitiercache-bcache-features">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Main features</h3>
+               </header>
+               
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>A single cache device can be used to cache an arbitrary number of backing devices.
+                        Backing devices can be attached and detached at runtime, while mounted and in use.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Recovers from unclean shutdowns—writes are not completed until the cache is consistent
+                        with regard to the backing device.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Throttles traffic to the SSD if it becomes congested.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Highly efficient write-back implementation. Dirty data is always written out in sorted
+                        order.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Stable and reliable—in production use.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            
+            <section class="sect2" id="sec-multitiercache-bcache-setting-bcache-device">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a <code class="resource systemitem">bcache</code> device</h3>
+               </header>
+               
+               
+               <p>This section describes steps to set up and manage a <code class="resource systemitem">bcache</code> device.</p>
+               
+               <div class="informalobject procedure" id="sec-multitiercache-bcache-setting-bcache-device_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the <code class="systemitem">bcache-tools</code> package:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper in bcache-tools</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a backing device (typically a mechanical drive). The backing device can be
+                           a whole device, a partition, or any other standard block device.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> make-bcache -B /dev/sdb</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a cache device (typically an SSD disk).</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> make-bcache -C /dev/sdc</code></span></span></pre>
+                        </div>
+                        
+                        <p>In this example, the default block and bucket sizes of 512 B and 128 KB are used.
+                           The block size should match the backing device's sector size which will usually be
+                           either 512 or 4k. The bucket size should match the erase block size of the caching
+                           device with the intention of reducing write amplification. For example, using a hard
+                           disk with 4k sectors and an SSD with an erase block size of 2 MB this command would
+                           look as follows:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sudo make-bcache --block 4k --bucket 2M -C /dev/sdc</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Multi-device support</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p><code class="command">make-bcache</code> can prepare and register multiple backing devices and a cache device at the same
+                                       time. In this case you do not need to manually attach the cache device to the backing
+                                       device afterward:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> make-bcache -B /dev/sda /dev/sdb -C /dev/sdc</code></span></span></pre>
+                                    </div>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p><code class="resource systemitem">bcache</code> devices show up as</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/bcache<em class="replaceable">N</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>and as</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/bcache/by-uuid/<em class="replaceable">UUID</em></code></span></span>
+<span class="line"><span class="ld"><code>/dev/bcache/by-label/<em class="replaceable">LABEL</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>You can normally format and mount <code class="resource systemitem">bcache</code> devices as usual:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkfs.ext4 /dev/bcache0</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount /dev/bcache0 /mnt</code></span></span></pre>
+                        </div>
+                        
+                        <p>You can control <code class="resource systemitem">bcache</code> devices through <code class="systemitem">sysfs</code> at <code class="filename">/sys/block/bcache<em class="replaceable">N</em>/bcache</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>After both the cache and backing devices are registered, you need to attach the backing
+                           device to the related cache set to enable caching:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>echo <em class="replaceable">CACHE_SET_UUID</em> &gt; /sys/block/bcache0/bcache/attach</code></span></span></pre>
+                        </div>
+                        
+                        <p>where <em class="replaceable">CACHE_SET_UUID</em> is found in <code class="filename">/sys/fs/bcache</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>By default <code class="resource systemitem">bcache</code> uses a pass-through caching mode. To change it to for example write-back, run</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>echo writeback &gt; /sys/block/bcache0/bcache/cache_mode</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multitiercache-bcache-sysfs">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">bcache</code> configuration using <code class="systemitem">sysfs</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="resource systemitem">bcache</code> devices use the <code class="systemitem">sysfs</code> interface to store their runtime configuration values. This way you can change <code class="resource systemitem">bcache</code> backing and cache disks' behavior or see their usage statistics.</p>
+               
+               <p>For the complete list of <code class="resource systemitem">bcache</code><code class="systemitem">sysfs</code> parameters, see the contents of the <code class="filename">/usr/src/linux/Documentation/bcache.txt</code> file, mainly the <code class="literal">SYSFS - BACKING DEVICE</code>, <code class="literal">SYSFS - BACKING DEVICE STATS</code>, and <code class="literal">SYSFS - CACHE DEVICE</code> sections.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich04.html">Up</a></td>
+                  <td class="next"><a href="bk09partich04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Caching modes</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">lvmcache</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

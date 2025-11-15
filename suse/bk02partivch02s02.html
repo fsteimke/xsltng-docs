@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.2.&nbsp;Setting up a TFTP server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk02partivch02.html" rel="prev">
+      <link href="bk02partivch02s03.html" rel="next">
+      <link href="bk02partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk02partivch02.html">Up</a> <a href="bk02partivch02s03.html">Next</a> <a href="bk02partivch02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk02partivch02s02.html" db-id="d616951e98928" id="sec-deployment-tftp-server">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a TFTP server</h2>
+            </header>
+            
+            
+            <p>The following procedure describes how to prepare the server so that the client machines
+               with UEFI and BIOS can boot remotely using files exported by TFTP.</p>
+            
+            <section class="sect2" id="sec-deployment-tftp-server-install">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installing a TFTP server</h3>
+               </header>
+               
+               
+               <p>To install a TFTP server, use the following procedure:</p>
+               
+               <div class="informalobject procedure" id="sec-deployment-tftp-server-install_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Install the <code class="systemitem">tftp</code> package.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper in tftp</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Review the <code class="daemon systemitem">tftpd</code> configuration in <code class="filename">/etc/sysconfig/tftp</code> and add or change options as required. Refer to <code class="command">man 8 tftpd</code> for more details. The TFTP daemon works without changing the configuration. The default
+                           root directory for the files is <code class="filename">/srv/tftpboot</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Ensure that <code class="daemon systemitem">tftpd</code> is started at boot time, and restart it to read the new configuration.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl enable tftp.socket</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl restart tftp.socket</code></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-deployment-tftp-server-grub-package">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing files for boot</h3>
+               </header>
+               
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> provides the required files for booting via PXE on BIOS or UEFI machines. The following
+                  hardware architectures are supported:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>AMD64/Intel&nbsp;64</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>AArch64</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>POWER</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>IBM&nbsp;Z</p>
+                     </li>
+                  </ul>
+               
+               <p>Files required to boot from a specific hardware architecture are included in an RPM
+                  package. Install it on the machine running the TFTP server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper in tftpboot-installation-SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em></code></code></span></span></pre>
+               </div>
+               
+               <p>Replace <em class="replaceable">OS_VERSION</em> with the version number of your <span class="phrase productname">SUSE Linux Enterprise Server</span> installation, for example <em class="replaceable">SLE-15-SP3-x86_64</em>, and replace <em class="replaceable">ARCHITECTURE</em> with the architecture of your system, for example <code class="literal">x86_64</code>. So the resulting text would look like this: <code class="package">tftpboot-installation-SLE-15-SP3-x86_64</code>. Run <code class="command">zypper se tftpboot</code> to search for all available versions and architectures.</p>
+               
+               <p>The files will be installed in <code class="filename">/srv/tftpboot/SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em></code>. You can also copy the files for other versions and architectures of <span class="phrase productname">SUSE Linux Enterprise Server</span> to the <code class="filename">/srv/tftpboot</code> directory.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Serving different architectures</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The client and server hardware architecture can vary. For example, you can run an
+                              AMD64/Intel&nbsp;64 TFTP server and provide a bootable environment for AArch64 client machines
+                              by installing the <code class="package">tftpboot-installation-SLE-15-SP3-aarch64</code> package.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Existing <code class="filename">/srv/tftpboot/</code> directory</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If the directory <code class="filename">/srv/tftpboot/</code> already exists on your machine, then all files will be installed to <code class="filename">/usr/share/tftpboot-installation/</code>. This is the case if you are upgrading your PXE server from a previous SLES release.</p>
+                           
+                           <p>To fix this problem, copy the files manually from <code class="filename">/usr/share/tftpboot-installation/</code> to <code class="filename">/srv/tftpboot/</code>. Alternatively, remove <code class="filename">/srv/tftpboot/</code> and reinstall the <code class="package">tftpboot-installation-SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em></code> package.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-deployment-tftp-server-pxelinux">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring PXELINUX</h3>
+               </header>
+               
+               
+               <p>Open the file <code class="filename">/srv/tftpboot/SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em>/net/pxelinux.cfg/default</code> in an editor. Replace the path for the <code class="literal">install</code> parameter according to your setup as described in <a class="xref xref-chapter" href="bk02partivch01.html">Chapter&nbsp;<span class="label">18</span>, Setting up a network installation source</a>. Also replace <em class="replaceable">TFTP_SERVER</em> with the IP address of the TFTP server. For an overview of the PXELINUX configuration
+                  options, see <a class="xref xref-sect1" href="bk02partivch02s03.html">the section called “PXELINUX configuration options”</a>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>default linux</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># install</code></span></span>
+<span class="line"><span class="ld"><code>label linux</code></span></span>
+<span class="line"><span class="ld"><code>  ipappend 2</code></span></span>
+<span class="line"><span class="ld"><code>  kernel boot/<em class="replaceable">ARCHITECTURE</em>/loader/linux</code></span></span>
+<span class="line"><span class="ld"><code>  append initrd=boot/<em class="replaceable">ARCHITECTURE</em>/loader/initrd instsys=tftp://<em class="replaceable">TFTP_SERVER</em>/SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em>/boot/<em class="replaceable">ARCHITECTURE</em>/root install=<em class="replaceable">PROTOCOL</em>://<em class="replaceable">SERVER_IP</em>:/<em class="replaceable">PATH</em></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>display  message</code></span></span>
+<span class="line"><span class="ld"><code>implicit 1</code></span></span>
+<span class="line"><span class="ld"><code>prompt  1</code></span></span>
+<span class="line"><span class="ld"><code>timeout  50</code></span></span></pre>
+               </div>
+               
+               <p>For details about the boot parameters that are used in the <code class="literal">append</code> line, see <a class="xref xref-sect1" href="bk02partiich01s03.html">the section called “List of important boot parameters”</a>.</p>
+               
+               <p>If required, edit the <code class="filename">/srv/tftpboot/SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em>/net/pxelinux.cfg/message</code> to display a message in the boot menu.</p>
+               </section>
+            
+            <section class="sect2" id="sec-deployment-tftp-server-efilinux-x86">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Preparing PXE boot for EFI with GRUB2</h3>
+               </header>
+               
+               
+               <p>Normally, the GRUB2 configuration files require no modifications. However, the default
+                  settings do not include a network resource for the installation system. To perform
+                  a full <span class="phrase productname">SUSE Linux Enterprise Server</span> installation via network, you need to specify the <code class="option">install</code> parameter in the <code class="option">linuxefi</code> instruction of the <code class="filename">/srv/tftpboot/SLE-<em class="replaceable">OS_VERSION</em>-<em class="replaceable">ARCHITECTURE</em>/EFI/BOOT/grub.cfg</code> file. Refer to <a class="xref xref-sect2" href="bk02partiich01s03.html#sec-boot-parameters-list-install-source">the section called “Specifying the installation source”</a> for further information about the <code class="option">install</code> parameter.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk02partivch02.html">Prev</a></td>
+                  <td class="up"><a href="bk02partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk02partivch02s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">19</span><span class="sep">.&nbsp;</span>Preparing network boot environment</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>PXELINUX configuration options</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

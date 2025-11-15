@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>13.2.&nbsp;Setting up a cryptctl client</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiich05.html" rel="prev">
+      <link href="bk06partiich05s03.html" rel="next">
+      <link href="bk06partiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiich05.html">Up</a> <a href="bk06partiich05s03.html">Next</a> <a href="bk06partiich05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partiich05s02.html" db-id="d616951e169287" id="sec-configure-cryptctl-client">
+            <header>
+               <h2><span class="label">13<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a <code class="command">cryptctl</code> client</h2>
+            </header>
+            
+            
+            <p>The following interactive setup of <code class="command">cryptctl</code> is currently the only setup method.</p>
+            
+            <p>Make sure the following preconditions are fulfilled:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>A <code class="command">cryptctl</code> server is available over the network.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>There is a directory to encrypt.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>The client machine has an empty partition available that is large enough to fit the
+                     directory to encrypt.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>When using a self-signed certificate, the certificate (<code class="filename">*.crt</code> file) generated on the server is available locally on the client. Otherwise, the
+                     certificate authority of the server certificate must be trusted by the client.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>If you set up the server to require clients to authenticate using a client certificate,
+                     prepare a TLS certificate for the client which is signed by the CA certificate you
+                     chose for the server.</p>
+                  
+                  </li>
+               </ul>
+            
+            <div class="informalobject procedure" id="sec-configure-cryptctl-client_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>As <code class="systemitem username">root</code>, run:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">cryptctl encrypt</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Answer each of the following prompts and press <span class="enter keycap">↵</span> after every answer. If there is a default answer, it is shown in square brackets
+                        at the end of the prompt.</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Specify the host name and port to connect to on the <code class="command">cryptctl</code> server.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>If you configured the server to have clients authenticate to it using a TLS certificate,
+                                 specify a certificate and a key file for the client. The client certificate must be
+                                 signed by the certificate authority chosen when setting up the server.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Specify the absolute path to the server certificate (the <code class="filename">*.crt</code> file).</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Enter the encryption password that you specified when setting up the server.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Specify the path to the directory to encrypt. Specify the path to the empty partition
+                                 that contains the encrypted content of the directory.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Specify the number of machines that are allowed to decrypt the partition simultaneously.</p>
+                              
+                              <p>Then specify the timeout in seconds before additional machines are allowed to decrypt
+                                 the partition after the last vital sign was received from the client or clients.</p>
+                              
+                              <p>When a machine unexpectedly stops working and then reboots, it needs to be able to
+                                 unlock its partitions again. That means this timeout should be set to a time slightly
+                                 shorter than the reboot time of the client.</p>
+                              
+                              <div class="admonition important">
+                                 <div>
+                                    <div class="icon">☝</div>
+                                    <div class="body">
+                                       <header>
+                                          <div class="title">Timeout length</div>
+                                       </header>
+                                       <div>
+                                          
+                                          
+                                          <p>If the time is set too long, the machine cannot decrypt encrypted partitions on the
+                                             first try. <code class="command">cryptctl</code> then continues to periodically check whether the encryption key has become available.
+                                             However, this introduces a delay.</p>
+                                          
+                                          <p>If the timeout is set too short, machines with a copy of the encrypted partition have
+                                             an increased chance of unlocking the partition first.</p>
+                                          </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>To start encryption, enter <code class="literal">yes</code>.</p>
+                     
+                     <p><code class="command">cryptctl</code> encrypts the specified directory to the previously empty partition and then mounts
+                        the newly encrypted partition. The file system type is the same type as the original
+                        unencrypted file system.</p>
+                     
+                     <p>Before creating the encrypted partition, <code class="command">cryptctl</code> moves the unencrypted content of the original directory to a location prefixed with
+                        <code class="literal">cryptctl-moved-</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>To check that the directory is indeed mounted correctly, use:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">lsblk -o NAME,MOUNTPOINT,UUID</code></code></span></span>
+<span class="line"><span class="ld"><code>NAME                        MOUNTPOINT          UUID</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>sdc</code></span></span>
+<span class="line"><span class="ld"><code>└─sdc1                                          <em class="replaceable">PARTITION_UUID</em></code></span></span>
+<span class="line"><span class="ld"><code>  └─cryptctl-unlocked-sdc1  /secret-partition   <em class="replaceable">UNLOCKED_UUID</em></code></span></span></pre>
+                     </div>
+                     
+                     <p><code class="command">cryptctl</code> identifies the encrypted partition by its UUID. For the previous example, that is
+                        the UUID displayed next to <code class="literal">sdc1</code>.</p>
+                     
+                     <p>On the server, you can check whether the directory was decrypted using <code class="command">cryptctl</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">cryptctl list-keys</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>For a successfully decrypted partition, you see output like:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>2019/06/06 15:50:00 ReloadDB: successfully loaded database of 1 records</code></span></span>
+<span class="line"><span class="ld"><code>Total: 1 records (date and time are in zone EDT)</code></span></span>
+<span class="line"><span class="ld"><code>Used By     When                 UUID  Max.Users  Num.Users  Mount Point</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">IP_ADDRESS</em>  2019-06-06 15:00:50  <em class="replaceable">UUID</em>  1          1          /secret-partition</code></span></span></pre>
+                     </div>
+                     
+                     <p>For a partition not decrypted successfully, you see output like:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>2019/06/06 15:50:00 ReloadDB: successfully loaded database of 1 records</code></span></span>
+<span class="line"><span class="ld"><code>Total: 1 records (date and time are in zone EDT)</code></span></span>
+<span class="line"><span class="ld"><code>Used By      When                 UUID  Max.Users  Num.Users  Mount Point</code></span></span>
+<span class="line"><span class="ld"><code>             2019-06-06 15:00:50  <em class="replaceable">UUID</em>  1          1          /secret-partition</code></span></span></pre>
+                     </div>
+                     
+                     <p>See the difference in the empty <code class="literal">Used by</code> column.</p>
+                     
+                     <p>Verify that the UUID shown is that of the previously encrypted partition.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>After verifying that the encrypted partition works, delete the unencrypted content
+                        from the client. For example, use <code class="command">rm</code>. For more safety, overwrite the content of the files before deleting them, for example,
+                        using <code class="command">shred -u</code>.</p>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">
+                                    <code class="command">shred</code> does not guarantee that data is erased</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Depending on the type of storage media, using <code class="command">shred</code> is not a guarantee that all data is removed. In particular, SSDs employ wear leveling
+                                    strategies that render <code class="command">shred</code> ineffective.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>The configuration for the connection from client to server is stored in <code class="filename">/etc/sysconfig/cryptctl-client</code> and can be edited manually.</p>
+            
+            <p>The server stores an encryption key for the client partition in <code class="filename">/var/lib/cryptctl/keydb/<em class="replaceable">PARTITION_UUID</em></code>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiich05.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiich05.html">Up</a></td>
+                  <td class="next"><a href="bk06partiich05s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">13</span><span class="sep">.&nbsp;</span>Storage encryption for hosted applications with cryptctl</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">13<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring /etc/fstab for LUKS volumes</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

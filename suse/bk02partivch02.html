@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;19.&nbsp;Preparing network boot environment</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk02partivch01s06.html" rel="prev">
+      <link href="bk02partivch02s02.html" rel="next">
+      <link href="bk02partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="General chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk02partiv.html">Up</a> <a href="bk02partivch02s02.html">Next</a> <a href="bk02partivch01s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="General chapter component" db-chunk="bk02partivch02.html" db-id="d616951e98650" id="cha-deployment-prep-pxe" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">19</span><span class="sep">.&nbsp;</span>Preparing network boot environment</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p><span class="phrase productname">SUSE® Linux Enterprise Server</span> can be installed via a Preboot Execution Environment (PXE). The client hardware needs
+                  to support booting via PXE. The network needs to provide a DHCP server and a TFTP
+                  server providing the required data to the clients. This chapter guides you through
+                  setting up the required servers.</p>
+               
+               <p>PXE only boots a kernel and initrd. This can be used to boot into an installation
+                  environment or into live systems. To set up the installation sources, see <a class="xref xref-chapter" href="bk02partivch01.html">Chapter&nbsp;<span class="label">18</span>, Setting up a network installation source</a>.</p>
+               
+               <p>This section covers the configuration tasks needed in complex boot scenarios. It contains
+                  ready-to-apply configuration examples for DHCP, PXE boot, TFTP, and Wake on LAN.</p>
+               
+               <p>The examples assume that the DHCP, TFTP and NFS server reside on the same machine
+                  with the IP <code class="literal">192.168.1.1</code>. All services can reside on different machines without any problems. Make sure to
+                  change the IP addresses as required.</p>
+               </div>
+            <section class="sect1" id="sec-deployment-dhcp-server">
+               <header>
+                  <h2><span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up a DHCP server</h2>
+               </header>
+               
+               
+               <p>A DHCP server provides both dynamic (<a class="xref xref-sect2" href="#sec-deployment-dhcp-dynamic">the section called “Dynamic address assignment”</a>) and static IP address assignments (<a class="xref xref-sect2" href="#sec-deployment-dhcp-static">the section called “Assigning static IP addresses”</a>) to your network clients. It advertises servers, routes, and domains. For TFTP servers,
+                  DHCP also provides the kernel and initrd files. Which files are loaded depends on
+                  the architecture of the target machine, and whether legacy BIOS or UEFI boot is used.
+                  The clients transmit their architecture type in their DHCP requests. Based on this
+                  information, the DHCP server decides which files the client must download for booting.</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">PXE and AutoYaST installation failure</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Starting with SUSE Linux Enterprise 15.0, there are special conditions that cause
+                              PXE boot and AutoYaST installations to fail. See <a class="xref xref-sect2" href="#sec-deployment-dhcp-rfc4361">the section called “PXE and AutoYaST installation failures”</a> for more information and the solution.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect2" id="sec-deployment-dhcp-dynamic">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Dynamic address assignment</h3>
+                  </header>
+                  
+                  
+                  <p>The following example shows how to set up a DHCP server that dynamically assigns IP
+                     addresses to clients, and advertises servers, routers, domains, and boot files.</p>
+                  
+                  <div class="informalobject procedure" id="pro-deployment-dhcp-server">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Log in as <code class="systemitem username">root</code> to the machine hosting the DHCP server.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Enable the DHCP server by executing <code class="command">systemctl enable dhcpd</code>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Append the following lines to a subnet configuration of your DHCP server's configuration
+                              file located under <code class="filename">/etc/dhcpd.conf</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># The following lines are optional</code></span></span>
+<span class="line"><span class="ld"><code>option domain-name "my.lab";</code></span></span>
+<span class="line"><span class="ld"><code>option domain-name-servers 192.168.1.1;</code></span></span>
+<span class="line"><span class="ld"><code>option routers 192.168.1.1;</code></span></span>
+<span class="line"><span class="ld"><code>option ntp-servers 192.168.1.1;</code></span></span>
+<span class="line"><span class="ld"><code>ddns-update-style none;</code></span></span>
+<span class="line"><span class="ld"><code>default-lease-time 3600;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code># The following lines are required</code></span></span>
+<span class="line"><span class="ld"><code>option arch code 93 = unsigned integer 16; # RFC4578</code></span></span>
+<span class="line"><span class="ld"><code>subnet 192.168.1.0 netmask 255.255.255.0 {</code></span></span>
+<span class="line"><span class="ld"><code> next-server 192.168.1.1;</code></span></span>
+<span class="line"><span class="ld"><code> range 192.168.1.100 192.168.1.199;</code></span></span>
+<span class="line"><span class="ld"><code> default-lease-time 3600;</code></span></span>
+<span class="line"><span class="ld"><code> max-lease-time 3600;</code></span></span>
+<span class="line"><span class="ld"><code> if option arch = 00:07 or option arch = 00:09 {</code></span></span>
+<span class="line"><span class="ld"><code>   filename "/EFI/x86/grub.efi";</code></span></span>
+<span class="line"><span class="ld"><code> }</code></span></span>
+<span class="line"><span class="ld"><code> else if option arch = 00:0b {</code></span></span>
+<span class="line"><span class="ld"><code>   filename "/EFI/aarch64/bootaa64.efi";</code></span></span>
+<span class="line"><span class="ld"><code> }</code></span></span>
+<span class="line"><span class="ld"><code> else  {</code></span></span>
+<span class="line"><span class="ld"><code>   filename "/BIOS/x86/pxelinux.0";</code></span></span>
+<span class="line"><span class="ld"><code> }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                           </div>
+                           
+                           <p>This configuration example uses the subnet <code class="literal">192.168.1.0/24</code> with the DHCP, DNS and gateway on the server with the IP <code class="literal">192.168.1.1</code>. Make sure that all IP addresses are changed according to your network layout. For
+                              more information about the options available in <code class="filename">dhcpd.conf</code>, refer to the <code class="systemitem">dhcpd.conf</code> manual page.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Restart the DHCP server by executing <code class="command">systemctl restart dhcpd</code>.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect2" id="sec-deployment-dhcp-static">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Assigning static IP addresses</h3>
+                  </header>
+                  
+                  
+                  <p>A DHCP server may also assign static IP addresses and host names to network clients.
+                     One use case is assigning static addresses to servers. Another use case is restricting
+                     which clients may join the network to those with assigned static IP addresses, and
+                     providing no dynamic address pools.</p>
+                  
+                  <p>Modify the above DHCP configuration according to the following example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>group {</code></span></span>
+<span class="line"><span class="ld"><code> host test {</code></span></span>
+<span class="line"><span class="ld"><code>   hardware ethernet <em class="replaceable">MAC_ADDRESS</em>;</code></span></span>
+<span class="line"><span class="ld"><code>   fixed-address <em class="replaceable">IP_ADDRESS</em>;</code></span></span>
+<span class="line"><span class="ld"><code>   }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                  </div>
+                  
+                  <p>The host statement assigns a host name to the installation target. To bind the host
+                     name and IP address to a specific host, you must specify the client's hardware (MAC)
+                     address. Replace all the variables used in this example with the actual values that
+                     match your environment, then save your changes and restart the DHCP server.</p>
+                  </section>
+               
+               <section class="sect2" id="sec-deployment-dhcp-rfc4361">
+                  <header>
+                     <h3><span class="label">19<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>PXE and AutoYaST installation failures</h3>
+                  </header>
+                  
+                  
+                  <p>Starting with SUSE Linux Enterprise 15.0 and ISC DHCP 4.3.x, there are special circumstances
+                     that cause PXE boot and AutoYaST installations to fail. If your DHCP server does not
+                     have a pool of available dynamic IP addresses, but allows only pre-defined static
+                     addresses per client, and the clients send RFC 4361 client identifiers, then PXE/AutoYaST
+                     installations will not work. (Allowing only addresses assigned to specific network
+                     clients, and providing no dynamic address pools, prevents random machines from joining
+                     the network.)</p>
+                  
+                  <p>When a new system starts in PXE, it sends a request to the DHCP server and identifies
+                     itself using a client identifier constructed from the hardware type plus the MAC address
+                     of the network interface. This is an RFC 2132 <code class="literal">client-id</code>. The DHCP server then offers the assigned IP address. Next, the installation kernel
+                     is loaded, and sends another DHCP request, but this <code class="literal">client-id</code> is different, and is sent in RFC 4361 format. The DHCP server will not recognize
+                     this as the same client, and will look for a free dynamic IP address, which is not
+                     available, and the installation stops.</p>
+                  
+                  <p>The solution is to configure clients to send RFC 2132 client IDs. To send an RFC 2132
+                     <code class="literal">client-id</code> during the installation, use <code class="literal">linuxrc</code> to pass the following <code class="literal">ifcfg</code> command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>ifcfg=eth0=dhcp,DHCLIENT_CLIENT_ID=<em class="replaceable">01:03:52:54:00:02:c2:67</em>,</code></span></span>
+<span class="line"><span class="ld"><code>DHCLIENT6_CLIENT_ID=<em class="replaceable">00:03:52:54:00:02:c2:67</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>The traditionally-used RFC 2132 DHCPv4 <code class="literal">client-id</code> on Ethernet is constructed from the hardware type (<code class="literal">01</code> for Ethernet) and followed by the hardware address (the MAC address), for example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>01:52:54:00:02:c2:67</code></span></span></pre>
+                  </div>
+                  
+                  <p>The RFC 4361 DHCPv4 <code class="literal">client-id</code> attempts to correct the problem of identifying a machine that has more than one network
+                     interface. The new DHCPv4 <code class="literal">client-id</code> has the same format as the DHCPv6 <code class="literal">client-id</code>. It starts with the <code class="literal">0xff</code> prefix, instead of the hardware type, followed by the DHCPv6 IAID (the interface-address
+                     association ID that describes the interface on the machine), followed by the DHCPv6
+                     Unique Identifier (DUID), which uniquely identifies the machine.</p>
+                  
+                  <p>Using the above hardware type-based and hardware address-based DUID, the new RFC 4361
+                     DHCPv4 <code class="literal">client-id</code> would be:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p>Using the last bytes of the MAC address as the IAID: <code class="literal">ff:00:02:c2:67:00:01:xx:xx:xx:xx:52:54:00:02:c2:67</code></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>When the IAID is a simple incremented number: <code class="literal">ff:00:00:00:01:00:01:xx:xx:xx:xx:52:54:00:02:c2:67</code></p>
+                        </li>
+                     </ul>
+                  
+                  <p>The <em class="replaceable">xx:xx:xx:xx</em> field in the DUID-Link-Layer Timestamp (DUID-LLT) is a creation time stamp. A DUID-Link-Layer
+                     (DUID-LL) (<code class="literal">00:03:00:01:$MAC</code>) does not have a time stamp.</p>
+                  
+                  <p>For more information on using <code class="literal">linuxrc</code>, see the AutoYaST Guide. Also see <code class="literal">man 4 initrd</code>, and the documentation for the options <code class="literal">dhcp4 "create-cid"</code>, <code class="literal">dhcp6 "default-duid"</code> in <code class="literal">man 5 wicked-config</code>, <code class="literal">wicked duid --help</code>, and <code class="literal">wicked iaid --help</code>.</p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk02partivch01s06.html">Prev</a></td>
+                  <td class="up"><a href="bk02partiv.html">Up</a></td>
+                  <td class="next"><a href="bk02partivch02s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Using ISO images of the installation media on the server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a TFTP server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

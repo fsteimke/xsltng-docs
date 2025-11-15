@@ -1,0 +1,484 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.6.&nbsp;Manually creating and managing snapshots</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10s05.html" rel="prev">
+      <link href="bk01partich10s07.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s07.html">Next</a> <a href="bk01partich10s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s06.html" db-id="d616951e20011" id="sec-snapper-manage">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Manually creating and managing snapshots</h2>
+            </header>
+            
+            
+            <p>Snapper is not restricted to creating and managing snapshots automatically by configuration;
+               you can also create snapshot pairs (<q>before and after</q>) or single snapshots manually using either the command-line tool or the YaST module.</p>
+            
+            <p>All Snapper operations are carried out for an existing configuration (see <a class="xref xref-sect1" href="bk01partich10s05.html">the section called “Creating and modifying Snapper configurations”</a> for details). You can only take snapshots of partitions or volumes for which a configuration
+               exists. By default the system configuration (<code class="literal">root</code>) is used. To create or manage snapshots for your own configuration you need to explicitly
+               choose it. Use the <span class="guimenu">Current Configuration</span> drop-down box in YaST or specify the <code class="option">-c</code> on the command line (<code class="command">snapper -c <em class="replaceable">MYCONFIG</em><em class="replaceable">COMMAND</em></code>).</p>
+            
+            <section class="sect2" id="sec-snapper-manage-metadata">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Snapshot metadata</h3>
+               </header>
+               
+               
+               <p>Each snapshot consists of the snapshot itself and certain metadata. When creating
+                  a snapshot you also need to specify the metadata. Modifying a snapshot means changing
+                  its metadata—you cannot modify its content. Use <code class="command">snapper list</code> to show existing snapshots and their metadata:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper --config home list</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Lists snapshots for the configuration <code class="literal">home</code>. To list snapshots for the default configuration (root), use <code class="command">snapper -c root list</code> or <code class="command">snapper list</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper list -a</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Lists snapshots for all existing configurations.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper list -t pre-post</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Lists all pre and post snapshot pairs for the default (<code class="literal">root</code>) configuration.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper list -t single</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Lists all snapshots of the type <code class="literal">single</code> for the default (<code class="literal">root</code>) configuration.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>The following metadata is available for each snapshot:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><strong class="bold">Type</strong>: snapshot type, see <a class="xref xref-sect3" href="#sec-snapper-manage-metadata-type">the section called “Snapshot types”</a> for details. This data cannot be changed.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><strong class="bold">Number</strong>: unique number of the snapshot. This data cannot be changed.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><strong class="bold">Pre Number</strong>: specifies the number of the corresponding pre snapshot. For snapshots of type post
+                        only. This data cannot be changed.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><strong class="bold">Description</strong>: a description of the snapshot.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><strong class="bold">Userdata</strong>: an extended description where you can specify custom data in the form of a comma-separated
+                        key=value list: <code class="literal">reason=testing, project=foo</code>. This field is also used to mark a snapshot as important (<code class="literal">important=yes</code>) and to list the user that created the snapshot (user=tux).</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><strong class="bold">Cleanup-Algorithm</strong>: cleanup-algorithm for the snapshot, see <a class="xref xref-sect1" href="bk01partich10s07.html">the section called “Automatic snapshot clean-up”</a> for details.</p>
+                     </li>
+                  </ul>
+               
+               <section class="sect3" id="sec-snapper-manage-metadata-type">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Snapshot types</h4>
+                  </header>
+                  
+                  
+                  <p>Snapper knows three different types of snapshots: pre, post and single. Physically
+                     they do not differ, but Snapper handles them differently.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">pre</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Snapshot of a file system <em>before</em> a modification. Each <code class="literal">pre</code> snapshot corresponds to a <code class="literal">post</code> snapshot. For example, this is used for the automatic YaST/Zypper snapshots.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">post</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Snapshot of a file system <em>after</em> a modification. Each <code class="literal">post</code> snapshot corresponds to a <code class="literal">pre</code> snapshot. For example, this is used for the automatic YaST/Zypper snapshots.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">single</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Stand-alone snapshot. For example, this is used for the automatic hourly snapshots.
+                              This is the default type when creating snapshots.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-snapper-manage-metadata-cleanup">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>6<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Cleanup algorithms</h4>
+                  </header>
+                  
+                  
+                  <p>Snapper provides three algorithms to clean up old snapshots. The algorithms are executed
+                     in a daily <code class="daemon systemitem">cron</code> job. It is possible to define the number of different types of snapshots to keep
+                     in the Snapper configuration (see <a class="xref xref-sect2" href="bk01partich10s05.html#sec-snapper-config-modify">the section called “Managing existing configurations”</a> for details).</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">number</span></dt>
+                        <dd>
+                           
+                           <p>Deletes old snapshots when a certain snapshot count is reached.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">timeline</span></dt>
+                        <dd>
+                           
+                           <p>Deletes old snapshots having passed a certain age but keeps several hourly, daily,
+                              monthly and yearly snapshots.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">empty-pre-post</span></dt>
+                        <dd>
+                           
+                           <p>Deletes pre/post snapshot pairs with empty diffs.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-manage-create">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating snapshots</h3>
+               </header>
+               
+               
+               <p>To create a snapshot, run <code class="command">snapper create</code> or click <span class="guimenu">Create</span> in the YaST module <span class="guimenu">Snapper</span>. The following examples explain how to create snapshots from the command line. The
+                  YaST interface for Snapper is not explicitly described here but provides equivalent
+                  functionality.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Snapshot description</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Always specify a meaningful description to later be able to identify its purpose.
+                              You can also specify additional information via the option <code class="option">--userdata</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper create --from <em class="replaceable">17</em> --description "with package2"</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a stand-alone snapshot (type single) from an existing snapshot, which is specified
+                           by the snapshot's number from <code class="command">snapper list</code>. (This applies to Snapper version 0.8.4 and newer.)</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper create --description "Snapshot for week 2 2014"</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a stand-alone snapshot (type single) for the default (<code class="literal">root</code>) configuration with a description. Because no cleanup-algorithm is specified, the
+                           snapshot will never be deleted automatically.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper --config home create --description "Cleanup in ~tux"</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a stand-alone snapshot (type single) for a custom configuration named <code class="literal">home</code> with a description. Because no cleanup-algorithm is specified, the snapshot will
+                           never be deleted automatically.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper --config home create --description "Daily data backup" --cleanup-algorithm
+                              timeline</code>&gt;</span></dt>
+                     <dd>
+                        
+                        <p>Creates a stand-alone snapshot (type single) for a custom configuration named <code class="literal">home</code> with a description. The snapshot will automatically be deleted when it meets the
+                           criteria specified for the timeline cleanup-algorithm in the configuration.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper create --type pre --print-number --description "Before the Apache config cleanup"
+                              --userdata "important=yes"</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a snapshot of the type <code class="literal">pre</code> and prints the snapshot number. First command needed to create a pair of snapshots
+                           used to save a <q>before</q> and <q>after</q> state. The snapshot is marked as important.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper create --type post --pre-number 30 --description "After the Apache config
+                              cleanup" --userdata "important=yes"</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a snapshot of the type <code class="literal">post</code> paired with the <code class="literal">pre</code> snapshot number <code class="literal">30</code>. Second command needed to create a pair of snapshots used to save a <q>before</q> and <q>after</q> state. The snapshot is marked as important.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper create --command <em class="replaceable">COMMAND</em> --description "Before and after COMMAND"</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Automatically creates a snapshot pair before and after running <em class="replaceable">COMMAND</em>. This option is only available when using snapper on the command line.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-manage-modify">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Modifying snapshot metadata</h3>
+               </header>
+               
+               
+               <p>Snapper allows you to modify the description, the cleanup algorithm, and the user
+                  data of a snapshot. All other metadata cannot be changed. The following examples explain
+                  how to modify snapshots from the command line. It should be easy to adopt them when
+                  using the YaST interface.</p>
+               
+               <p>To modify a snapshot on the command line, you need to know its number. Use <code class="command">snapper list</code> to display all snapshots and their numbers.</p>
+               
+               <p>The YaST <span class="guimenu">Snapper</span> module already lists all snapshots. Choose one from the list and click <span class="guimenu">Modify</span>.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper modify --cleanup-algorithm "timeline"</code> 10</span></dt>
+                     <dd>
+                        
+                        <p>Modifies the metadata of snapshot 10 for the default (<code class="literal">root</code>) configuration. The cleanup algorithm is set to <code class="literal">timeline</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper --config home modify --description "daily backup" -cleanup-algorithm "timeline"
+                              120</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Modifies the metadata of snapshot 120 for a custom configuration named <code class="literal">home</code>. A new description is set and the cleanup algorithm is unset.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-manage-delete">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Deleting snapshots</h3>
+               </header>
+               
+               
+               <p>To delete a snapshot with the YaST <span class="guimenu">Snapper</span> module, choose a snapshot from the list and click <span class="guimenu">Delete</span>.</p>
+               
+               <p>To delete a snapshot with the command-line tool, you need to know its number. Get
+                  it by running <code class="command">snapper list</code>. To delete a snapshot, run <code class="command">snapper delete</code><em class="replaceable">NUMBER</em>.</p>
+               
+               <p>Deleting the current default subvolume snapshot is not allowed.</p>
+               
+               <p>When deleting snapshots with Snapper, the freed space will be claimed by a Btrfs process
+                  running in the background. Thus the visibility and the availability of free space
+                  is delayed. In case you need space freed by deleting a snapshot to be available immediately,
+                  use the option <code class="option">--sync</code> with the delete command.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Deleting snapshot pairs</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>When deleting a <code class="literal">pre</code> snapshot, you should always delete its corresponding <code class="literal">post</code> snapshot (and vice versa).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper delete 65</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Deletes snapshot 65 for the default (<code class="literal">root</code>) configuration.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper -c home delete 89 90</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Deletes snapshots 89 and 90 for a custom configuration named <code class="literal">home</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">snapper delete --sync 23</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Deletes snapshot 23 for the default (<code class="literal">root</code>) configuration and makes the freed space available immediately.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Delete unreferenced snapshots</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Sometimes the Btrfs snapshot is present but the XML file containing the metadata for
+                              Snapper is missing. In this case, the snapshot is not visible for Snapper and needs
+                              to be deleted manually:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>btrfs subvolume delete /.snapshots/<em class="replaceable">SNAPSHOTNUMBER</em>/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>rm -rf /.snapshots/SNAPSHOTNUMBER</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Old snapshots occupy more disk space</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you delete snapshots to free space on your hard disk, make sure to delete old snapshots
+                              first. The older a snapshot is, the more disk space it occupies.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Snapshots are also automatically deleted by a daily cron job. Refer to <a class="xref xref-sect3" href="#sec-snapper-manage-metadata-cleanup">the section called “Cleanup algorithms”</a> for details.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10s05.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Creating and modifying Snapper configurations</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Automatic snapshot clean-up</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

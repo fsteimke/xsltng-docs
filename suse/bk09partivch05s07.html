@@ -1,0 +1,309 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.7.&nbsp;Configuring the system for multipathing</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s06.html" rel="prev">
+      <link href="bk09partivch05s08.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s08.html">Next</a> <a href="bk09partivch05s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s07.html" db-id="d616951e254439" id="sec-multipath-config">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Configuring the system for multipathing</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-multipath-configuration-start">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Enabling, starting, and stopping multipath services</h3>
+               </header>
+               
+               
+               <p>To enable multipath services to start at boot time, run the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable multipathd</code></span></span></pre>
+               </div>
+               
+               <p>To manually start the service in the running system, enter:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start multipathd</code></span></span></pre>
+               </div>
+               
+               <p>To restart the service, enter:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart multipathd</code></span></span></pre>
+               </div>
+               
+               <p>In most situations, restarting the service is not necessary. To simply have <code class="command">multipathd</code> reload its configuration, run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl reload multipathd</code></span></span></pre>
+               </div>
+               
+               <p>To check the status of the service, enter:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl status multipathd</code></span></span></pre>
+               </div>
+               
+               <p>To stop the multipath services in the current session, run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl stop multipathd multipathd.socket</code></span></span></pre>
+               </div>
+               
+               <p>Stopping the service does not remove existing multipath maps. To remove unused maps,
+                  run:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipath -F</code></span></span></pre>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Keep <code class="filename">multipathd.service</code> enabled</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>We strongly recommend keeping <code class="filename">multipathd.service</code> always enabled and running on systems with multipath hardware. The service does support
+                              <code class="command">systemd</code>'s socket activation mechanism, but we do not recommend that you rely on that. Multipath
+                              maps will not be set up during boot if the service is disabled.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition note" id="ann-multipath-configuration-disable">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Disabling multipath</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you need to disable multipath despite the warning above, for example, because a
+                              third-party multipathing software is going to be deployed, proceed as follows. Be
+                              sure that the system uses no hard-coded references to multipath devices (see <a class="xref xref-sect2" href="bk09partivch05s15.html#sec-multipath-trouble-ref">the section called “Understanding device referencing issues”</a>).</p>
+                           
+                           <p>To disable multipathing <em>just for a single system boot</em>, use the kernel parameter <code class="literal">multipath=off</code>. This affects both the booted system and the initramfs, which does not need to be
+                              rebuilt in this case.</p>
+                           
+                           <p>To disable multipathd services <em>permanently</em>, so that they will not be started on future system boots, run the following commands:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl disable multipathd multipathd.socket</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut --force --omit multipath</code></span></span></pre>
+                           </div>
+                           
+                           <p>(Whenever you disable or enable the multipath services, rebuild the <code class="systemitem">initramfs</code>. See <a class="xref xref-sect2" href="#sec-multipath-initrd-sync">the section called “Keeping the initramfs synchronized”</a>.)</p>
+                           
+                           <p>If you want to make sure multipath devices do not get set up, <em>even when running <code class="command">multipath</code> manually</em>, add the following lines at the end of <code class="filename">/etc/multipath.conf</code> before rebuilding the initramfs:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist {</code></span></span>
+<span class="line"><span class="ld"><code>    wwid .*</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-configuration-sandevs">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>7<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Preparing SAN devices for multipathing</h3>
+               </header>
+               
+               
+               <p>Before configuring multipath I/O for your SAN devices, prepare the SAN devices, as
+                  necessary, by doing the following:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Configure and zone the SAN with the vendor’s tools.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Configure permissions for host LUNs on the storage arrays with the vendor’s tools.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>If <span class="phrase productname">SUSE Linux Enterprise Server</span> ships no driver for the host bus adapter (HBA), install a Linux driver from the HBA
+                        vendor. See the vendor’s specific instructions for more details.</p>
+                     </li>
+                  </ul>
+               
+               <p>If multipath devices are detected and <code class="filename">multipathd.service</code> is enabled, multipath maps should be created automatically. If this does not happen,
+                  <a class="xref xref-sect2" href="bk09partivch05s15.html#sec-multipath-trouble-steps">the section called “Troubleshooting steps in emergency mode”</a> lists some shell commands that can be used to examine the situation. When the LUNs
+                  are not seen by the HBA driver, check the zoning setup in the SAN. In particular,
+                  check whether LUN masking is active and whether the LUNs are correctly assigned to
+                  the server.</p>
+               
+               <p>If the HBA driver can see LUNs, but no corresponding block devices are created, additional
+                  kernel parameters may be needed. See <cite class="citetitle">TID 3955167: Troubleshooting SCSI (LUN) Scanning Issues</cite> in the SUSE Knowledge base at <a class="link" href="https://www.suse.com/support/kb/doc.php?id=3955167">https://www.suse.com/support/kb/doc.php?id=3955167</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-configuration-partitioning">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>7<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Partitions on multipath devices and <code class="command">kpartx</code>
+                     </h3>
+               </header>
+               
+               
+               <p>Multipath maps can have partitions like their path devices. Partition table scanning
+                  and device node creation for partitions is done in user space by the <code class="command">kpartx</code> tool. <code class="command">kpartx</code> is automatically invoked by udev rules; there is usually no need to run it manually.
+                  See <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-referring">the section called “Referring to multipath maps”</a> for ways to refer to multipath partitions.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Disabling invocation of <code class="command">kpartx</code>
+                              </div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>The <code class="literal">skip_kpartx</code> option in <code class="filename">/etc/multipath.conf</code> can be used to disable invocation of <code class="command">kpartx</code> on selected multipath maps. This may be useful on virtualization hosts, for example.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Partition tables and partitions on multipath devices can be manipulated as usual,
+                  using YaST or tools like <code class="command">fdisk</code> or <code class="command">parted</code>. Changes applied to the partition table will be noted by the system when the partitioning
+                  tool exits. If this does not work (usually because a device is busy), try <code class="command">multipathd reconfigure</code>, or reboot the system.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-initrd-sync">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>7<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Keeping the initramfs synchronized</h3>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Important</div>
+                        </header>
+                        <div>
+                           
+                           <p>Make sure that the initial RAM file system (initramfs) and the booted system behave
+                              consistently regarding the use of multipathing for all block devices. Rebuild the
+                              initramfs after applying multipath configuration changes.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>If multipathing is enabled in the system, it also needs to be enabled in the <code class="filename">initramfs</code> and vice versa. The only exception to this rule is the option <a class="xref xref-varlistentry" href="bk09partivch05s03.html#vl-multipath-planning-type-noroot-noinitrd"><span class="label"><span class="term">Multipath disabled in the initramfs</span></span></a> in <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-noroot">the section called “Root file system on a local disk”</a>.</p>
+               
+               <p>The multipath configuration must be synchronized between the booted system and the
+                  initramfs. Therefore, if you change any of the files: <code class="filename">/etc/multipath.conf</code>, <code class="filename">/etc/multipath/wwids</code>, <code class="filename">/etc/multipath/bindings</code>, or other configuration files, or udev rules related to device identification, rebuild
+                  initramfs using the command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut -f</code></span></span></pre>
+               </div>
+               
+               <p>If the <code class="filename">initramfs</code> and the system are not synchronized, the system will not boot properly, and the start-up
+                  procedure may result in an emergency shell. See <a class="xref xref-sect1" href="bk09partivch05s15.html">the section called “Troubleshooting MPIO”</a> for instructions on how to avoid or repair such a scenario.</p>
+               
+               <section class="sect3" id="sec-multipath-initrd-disable">
+                  <header>
+                     <h4><span class="label">18<span class="sep">.</span>7<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Enabling or disabling multipathing in the initramfs</h4>
+                  </header>
+                  
+                  
+                  <p>Special care must be taken if the initramfs is rebuilt in non-standard situations,
+                     for example, from a rescue system or after booting with the kernel parameter <code class="literal">multipath=off</code>. <code class="command">dracut</code> will automatically include multipathing support in the initramfs if and only if it
+                     detects that the root file system is on a multipath device while the initramfs is
+                     being built. In such cases, it is necessary to enable or disable multipathing explicitly.</p>
+                  
+                  <p>To enable multipath support in the <code class="filename">initramfs</code>, run the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut --force --add multipath</code></span></span></pre>
+                  </div>
+                  
+                  <p>To disable multipath support in <code class="filename">initramfs</code>, run the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut --force --omit multipath</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-multipath-initrd-persistent">
+                  <header>
+                     <h4><span class="label">18<span class="sep">.</span>7<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Persistent device names in the initramfs</h4>
+                  </header>
+                  
+                  
+                  <p>When <code class="command">dracut</code> generates the initramfs, it must refer to disks and partitions to be mounted in a
+                     persistent manner, to make sure the system will boot correctly. When <code class="command">dracut</code> detects multipath devices, it will use the DM-MP device names such as</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/mapper/3600a098000aad73f00000a3f5a275dc8-part1</code></span></span></pre>
+                  </div>
+                  
+                  <p>for this purpose by default. This is good if the system <em>always</em> runs in multipath mode. But if the system is started without multipathing, as described
+                     in <a class="xref xref-sect3" href="#sec-multipath-initrd-disable">the section called “Enabling or disabling multipathing in the initramfs”</a>, booting with such an initramfs will fail, because the <code class="filename">/dev/mapper</code> devices will not exist. See <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-referring">the section called “Referring to multipath maps”</a> for another possible problem scenario, and some background information.</p>
+                  
+                  <p>To prevent this from happening, change <code class="command">dracut</code>'s persistent device naming policy by using the <code class="option">--persistent-policy</code> option. We recommend setting the <code class="literal">by-uuid</code> use policy:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut --force --omit multipath --persistent-policy=by-uuid</code></span></span></pre>
+                  </div>
+                  
+                  <p>See also <a class="xref xref-procedure" href="bk09partivch05s04.html#pr-multipath-disable-root">Procedure&nbsp;<span class="label">18<span class="sep">.</span>1</span>, “Disabling multipathing for the root disk after installation”</a> and <a class="xref xref-sect2" href="bk09partivch05s15.html#sec-multipath-trouble-ref">the section called “Understanding device referencing issues”</a>.</p>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s06.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Multipath management tools</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Multipath configuration</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;44.&nbsp;Understanding Linux audit</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvii.html" rel="prev">
+      <link href="bk06partviich01s02.html" rel="next">
+      <link href="bk06partvii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvii.html">Up</a> <a href="bk06partviich01s02.html">Next</a> <a href="bk06partvii.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partviich01.html" db-id="d616951e194438" id="cha-audit-comp" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">44</span><span class="sep">.&nbsp;</span>Understanding Linux audit</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Linux audit helps make your system more secure by providing you with a means to analyze
+                  what is happening on your system in great detail. It does not, however, provide additional
+                  security itself—it does not protect your system from code malfunctions or any kind
+                  of exploits. Instead, audit is useful for tracking these issues and helps you take
+                  additional security measures, like AppArmor, to prevent them.</p>
+               
+               <p>Audit consists of several components, each contributing crucial functionality to the
+                  overall framework. The audit kernel module intercepts the system calls and records
+                  the relevant events. The <code class="daemon systemitem">auditd</code> daemon writes the audit reports to disk. Various command-line utilities take care
+                  of displaying, querying and archiving the audit trail.</p>
+               
+               <p>Audit enables you to do the following:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Associate users with processes</span></dt>
+                     <dd>
+                        
+                        <p>Audit maps processes to the user ID that started them. This makes it possible for
+                           the administrator or security officer to exactly trace which user owns which process
+                           and is potentially doing malicious operations on the system.</p>
+                        
+                        <div class="admonition important">
+                           <div>
+                              <div class="icon">☝</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Renaming user IDs</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>Audit does not handle the renaming of UIDs. Therefore avoid renaming UIDs (for example,
+                                       changing <code class="literal">tux</code> from <code class="literal">uid=1001</code> to <code class="literal">uid=2000</code>) and obsolete UIDs rather than renaming them. Otherwise you would need to change
+                                       <code class="command">auditctl</code> data (audit rules) and would have problems retrieving old data correctly.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Review the audit trail</span></dt>
+                     <dd>
+                        
+                        <p>Linux audit provides tools that write the audit reports to disk and translate them
+                           into human readable format.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Review particular audit events</span></dt>
+                     <dd>
+                        
+                        <p>Audit provides a utility that allows you to filter the audit reports for certain events
+                           of interest. You can filter for:</p>
+                        
+                        <ul class="itemizedlist" db-mark="bullet">
+                           
+                           <li>
+                              
+                              <p>User</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Group</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Audit ID</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Remote Host Name</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Remote Host Address</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>System Call</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>System Call Arguments</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>File</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>File Operations</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Success or Failure</p>
+                              </li>
+                           </ul>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Apply a selective audit</span></dt>
+                     <dd>
+                        
+                        <p>Audit provides the means to filter the audit reports for events of interest and to
+                           tune audit to record selected events. You can create your own set of rules and have
+                           the audit daemon record those of interest to you.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Guarantee the availability of the report data</span></dt>
+                     <dd>
+                        
+                        <p>Audit reports are owned by <code class="systemitem username">root</code> and removable by <code class="systemitem username">root</code>. Unauthorized users cannot remove the audit logs.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Prevent audit data loss</span></dt>
+                     <dd>
+                        
+                        <p>If the kernel runs out of memory, the audit daemon's backlog is exceeded, or its rate
+                           limit is exceeded, audit can trigger a shutdown of the system to keep events from
+                           escaping audit's control. This shutdown would be an immediate halt of the system triggered
+                           by the audit kernel component without synchronizing the latest logs to disk. The default
+                           configuration is to log a warning to syslog rather than to halt the system.</p>
+                        
+                        <p>If the system runs out of disk space when logging, the audit system can be configured
+                           to perform clean shutdown. The default configuration tells the audit daemon to stop
+                           logging when it runs out of disk space.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </div>
+            <section class="sect1" id="sec-audit-bigpicture">
+               <header>
+                  <h2><span class="label">44<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Introducing the components of Linux audit</h2>
+               </header>
+               
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">audispd merged into auditd</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>In SUSE Linux Enterprise Server&nbsp;15&nbsp;SP4 the code for <code class="daemon systemitem">audispd</code> has been merged into <code class="daemon systemitem">auditd</code>. All <code class="daemon systemitem">audispd</code> configurations are now in <code class="filename">/etc/audit/auditd.conf</code> and <code class="filename">/etc/audit/plugins.d</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The following figure illustrates how the various components of audit interact with
+                  each other:</p>
+               
+               <div class="figure formalobject" id="fig-audit-components">
+                  
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/audit_components.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Figure&nbsp;<span class="label">44<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Introducing the components of Linux audit</div>
+                  </header>
+               </div>
+               
+               <p>Straight arrows represent the data flow between components while dashed arrows represent
+                  lines of control between components.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">auditd</span></dt>
+                     <dd>
+                        
+                        <p>The audit daemon writes the audit messages that were generated through the audit kernel
+                           interface and triggered by application and system activity to disk. The way the audit
+                           daemon is started is controlled by <code class="daemon systemitem">systemd</code>. The audit system functions (when started) are controlled by <code class="filename">/etc/audit/auditd.conf</code>. For more information about <code class="daemon systemitem">auditd</code> and its configuration, refer to <a class="xref xref-sect1" href="bk06partviich01s02.html">the section called “Configuring the audit daemon”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="command">auditctl</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="command">auditctl</code> utility controls the audit system. It controls the log generation parameters and
+                           kernel settings of the audit interface and the rule sets that determine which events
+                           are tracked. For more information about <code class="command">auditctl</code>, refer to <a class="xref xref-sect1" href="bk06partviich01s03.html">the section called “Controlling the audit system using <code class="command">auditctl</code>
+                              ”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">audit rules</span></dt>
+                     <dd>
+                        
+                        <p>The file <code class="filename">/etc/audit/audit.rules</code> contains a sequence of <code class="command">auditctl</code> commands that are loaded at system boot time immediately after the audit daemon is
+                           started. For more information about audit rules, refer to <a class="xref xref-sect1" href="bk06partviich01s04.html">the section called “Passing parameters to the audit system”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">aureport</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="command">aureport</code> utility allows you to create custom reports from the audit event log. This report
+                           generation can easily be scripted, and the output can be used by various other applications,
+                           for example, to plot these results. For more information about <code class="command">aureport</code>, refer to <a class="xref xref-sect1" href="bk06partviich01s05.html">the section called “Understanding the audit logs and generating reports”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">ausearch</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="command">ausearch</code> utility can search the audit log file for certain events using various keys or other
+                           characteristics of the logged format. For more information about <code class="command">ausearch</code>, refer to <a class="xref xref-sect1" href="bk06partviich01s06.html">the section called “Querying the audit daemon logs with <code class="command">ausearch</code>
+                              ”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">autrace</span></dt>
+                     <dd>
+                        
+                        <p>The <code class="command">autrace</code> utility traces individual processes in a fashion similar to <code class="command">strace</code>. The output of <code class="command">autrace</code> is logged to the audit log. For more information about <code class="command">autrace</code>, refer to <a class="xref xref-sect1" href="bk06partviich01s07.html">the section called “Analyzing processes with <code class="command">autrace</code>
+                              ”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">aulast</span></dt>
+                     <dd>
+                        
+                        <p>Prints a list of the last logged-in users, similarly to <code class="command">last</code>. <code class="command">aulast</code> searches back through the audit logs (or the given audit log file) and displays a
+                           list of all users logged in and out based on the range of time in the audit logs.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">aulastlog</span></dt>
+                     <dd>
+                        
+                        <p>Prints the last login for all users of a machine similar to the way <code class="command">lastlog</code> does. The login name, port and last login time are printed.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvii.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvii.html">Up</a></td>
+                  <td class="next"><a href="bk06partviich01s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Part&nbsp;<span class="label">VII</span><span class="sep">.&nbsp;</span>The Linux Audit Framework</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">44<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the audit daemon</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

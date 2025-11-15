@@ -1,0 +1,2724 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.6.&nbsp;Partitioning</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partiich01s05.html" rel="prev">
+      <link href="bk05partiich01s07.html" rel="next">
+      <link href="bk05partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partiich01.html">Up</a> <a href="bk05partiich01s07.html">Next</a> <a href="bk05partiich01s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partiich01s06.html" db-id="d616951e132549" id="CreateProfile-Partitioning" lang="">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Partitioning</h2>
+            </header>
+            
+            
+            
+            <p>When it comes to partitioning, we can categorize AutoYaST use cases into three different
+               levels:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>Automatic partitioning. The user does not care about the partitioning and trusts in
+                     AutoYaST to do the right thing.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Guided partitioning. The user wants to set some basic settings. For example, a user
+                     wants to use LVM but has no idea about how to configure partitions, volume groups,
+                     and so on.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Expert partitioning. The user specifies how the layout should look. However, a complete
+                     definition is not required, and AutoYaST should propose reasonable defaults for missing
+                     parts.</p>
+                  </li>
+               </ul>
+            
+            <p>To some extent, it is like using the regular installer. You can skip the partitioning
+               screen and trust in YaST, use the <span class="guimenu">Guided Proposal</span>, or define the partitioning layout through the <span class="guimenu">Expert Partitioner</span>.</p>
+            
+            <section class="sect2" id="CreateProfile-Automatic-Partitioning">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Automatic partitioning</h3>
+               </header>
+               
+               
+               <p>AutoYaST can come up with a sensible partitioning layout without any user indication.
+                  Although it depends on the selected product to install, AutoYaST usually proposes
+                  a Btrfs root file system, a separate <code class="literal">/home</code> using XFS and a swap partition. Additionally, depending on the architecture, it adds
+                  any partition that might be needed to boot (like BIOS GRUB partitions).</p>
+               
+               <p>However, these defaults might change depending on factors like the available disk
+                  space. For example, having a separate <code class="literal">/home</code> depends on the amount of available disk space.</p>
+               
+               <p>If you want to influence these default values, you can use the approach described
+                  in <a class="xref xref-sect2" href="#CreateProfile-Guided-Partitioning">the section called “Guided partitioning”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-Guided-Partitioning">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Guided partitioning</h3>
+               </header>
+               
+               
+               <p>Although AutoYaST can come up with a partitioning layout without any user indication,
+                  sometimes it is useful to set some generic parameters and let AutoYaST do the rest.
+                  For example, you may be interested in using LVM or encrypting your file systems without
+                  having to deal with the details. It is similar to what you would do when using the
+                  guided proposal in a regular installation.</p>
+               
+               <p>The <code class="literal">storage</code> section in <a class="xref xref-example" href="#example-lvm-guided">Example&nbsp;<span class="label">4<span class="sep">.</span>3</span>, “LVM-based guided partitioning”</a> instructs AutoYaST to set up a partitioning layout using LVM and deleting all Windows
+                  partitions, no matter whether they are needed.</p>
+               
+               <div class="example formalobject" id="example-lvm-guided">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;general&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;storage&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;proposal&gt;</code></span></span>
+<span class="line"><span class="ld"><code>       &lt;lvm config:type="boolean"&gt;true&lt;/lvm&gt;</code></span></span>
+<span class="line"><span class="ld"><code>       &lt;windows_delete_mode config:type="symbol"&gt;all&lt;/windows_delete_mode&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;/proposal&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;/storage&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/general&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>LVM-based guided partitioning</div>
+                  </header>
+               </div>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">lvm</span></dt>
+                     <dd>
+                        
+                        <p>Creates an LVM-based proposal. The default is <code class="literal">false</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;lvm config:type="boolean"&gt;true&lt;/lvm&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">lvm_vg_reuse</span></dt>
+                     <dd>
+                        
+                        <p>Tells the installer whether an existing LVM should be reused in the proposal. The
+                           default is <code class="literal">true</code>.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;lvm_vg_reuse config:type="boolean"&gt;false&lt;/lvm_vg_reuse&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">resize_windows</span></dt>
+                     <dd>
+                        
+                        <p>When set to <code class="literal">true</code>, AutoYaST resizes Windows partitions if needed to make room for the installation.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;resize_windows config:type="boolean"&gt;false&lt;/resize_windows&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">windows_delete_mode</span></dt>
+                     <dd>
+                        
+                        <ul class="itemizedlist" db-mark="bullet">
+                           
+                           <li>
+                              
+                              <p><code class="literal">none</code> does not remove Windows partitions.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">ondemand</code> removes Windows partitions if needed.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">all</code> removes all Windows partitions.</p>
+                              </li>
+                           </ul>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;windows_delete_mode config:type="symbol"&gt;ondemand&lt;/windows_delete_mode&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">linux_delete_mode</span></dt>
+                     <dd>
+                        
+                        <ul class="itemizedlist" db-mark="bullet">
+                           
+                           <li>
+                              
+                              <p><code class="literal">none</code> does not remove Linux partitions.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">ondemand</code> removes Linux partitions if needed.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">all</code> removes all Linux partitions.</p>
+                              </li>
+                           </ul>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;linux_delete_mode config:type="symbol"&gt;ondemand&lt;/linux_delete_mode&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">other_delete_mode</span></dt>
+                     <dd>
+                        
+                        <ul class="itemizedlist" db-mark="bullet">
+                           
+                           <li>
+                              
+                              <p><code class="literal">none</code> does not remove other partitions.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">ondemand</code> removes other partitions if needed.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">all</code> removes all other partitions.</p>
+                              </li>
+                           </ul>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;other_delete_mode config:type="symbol"&gt;ondemand&lt;/other_delete_mode&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">encryption_password</span></dt>
+                     <dd>
+                        
+                        <p>Enables encryption using the specified password. By default, encryption is disabled.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;encryption_password&gt;some-secret&lt;/encryption_password&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-Expert-Partitioning">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Expert partitioning</h3>
+               </header>
+               
+               
+               <p>As an alternative to guided partitioning, AutoYaST allows to describe the partitioning
+                  layout through a <code class="literal">partitioning</code> section. However, AutoYaST does not need to know every single detail and can build
+                  a sensible layout from a rather incomplete specification.</p>
+               
+               <p>The <code class="literal">partitioning</code> section is a list of <code class="literal">drive</code> elements. Each of these sections describes an element of the partitioning layout
+                  like a disk, an LVM volume group, a RAID, a multi-device Btrfs file system, and so
+                  on.</p>
+               
+               <p><a class="xref xref-example" href="#example-partitioning">Example&nbsp;<span class="label">4<span class="sep">.</span>4</span>, “Creating <code class="literal">/</code>, <code class="literal">/home</code> and <code class="literal">swap</code> partitions”</a>, asks AutoYaST to create a <code class="literal">/</code>, a <code class="literal">/home</code> and a <code class="literal">swap</code> partition using the whole disk. Note that some information is missing, like which
+                  file systems each partition should use. However, that is not a problem, and AutoYaST
+                  will propose sensible values for them.</p>
+               
+               <div class="example formalobject" id="example-partitioning">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;20GiB&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/home&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;1GiB&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Creating <code class="literal">/</code>, <code class="literal">/home</code> and <code class="literal">swap</code> partitions</div>
+                  </header>
+               </div>
+               
+               <div class="admonition tip" id="ay-boot-partition">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Proposing a boot partition</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>AutoYaST checks whether the layout described in the profile is bootable or not. If
+                              it is not, it adds the missing partitions. So, if you are unsure about which partitions
+                              are needed to boot, you can rely on AutoYaST to make the right decision.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="CreateProfile-Partitioning-config">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Drive configuration</h4>
+                  </header>
+                  
+                  
+                  <p>The elements listed below must be placed within the following XML structure:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;profile&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/partitioning&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/profile&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <div class="variablelist">
+                     <header>
+                        <div class="title">Attribute, Values, Description</div>
+                     </header>
+                     <dl class="variablelist">
+                        <div class="varlistentry">
+                           <dt><span class="term">device</span></dt>
+                           <dd>
+                              
+                              <p>Optional, the device you want to configure. If left out, AutoYaST tries to guess the
+                                 device. See <a class="xref xref-tip" href="#ay-partitioning-skip-devices">Skipping devices</a> on how to influence guessing.</p>
+                              
+                              <p>If set to <code class="literal">ask</code>, AutoYaST will ask the user which device to use during installation.</p>
+                              
+                              <p>You can use persistent device names via ID, like <code class="filename">/dev/disk/by-id/<em class="replaceable">ata-WDC_WD3200AAKS-75L9</em></code> or <em>by-path</em>, like <code class="filename">/dev/disk/by-path/<em class="replaceable">pci-0001:00:03.0-scsi-0:0:0:0</em></code>.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>In case of volume groups, software RAID or <code class="resource systemitem">bcache</code> devices, the name in the installed system may be different (to avoid clashes with
+                                 existing devices).</p>
+                              
+                              <p>See <a class="xref xref-sect2" href="#ay-partition-multipath">the section called “Multipath support”</a> for further information about dealing with multipath devices.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">initialize</span></dt>
+                           <dd>
+                              
+                              <p>Optional, the default is <code class="literal">false</code>. If set to <code class="literal">true</code>, the partition table is wiped out before AutoYaST starts the partition calculation.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;initialize config:type="boolean"&gt;true&lt;/initialize&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">partitions</span></dt>
+                           <dd>
+                              
+                              <p>Optional, a list of <code class="literal">&lt;partition&gt;</code> entries (see <a class="xref xref-sect3" href="#ay-partition-configuration">the section called “Partition configuration”</a>).</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;partition&gt;...&lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          ...</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;/partitions&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>If no partitions are specified, AutoYaST will create a reasonable partitioning layout
+                                 (see <a class="xref xref-sect3" href="#ay-auto-partitioning">the section called “Filling the gaps”</a>).</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">pesize</span></dt>
+                           <dd>
+                              
+                              <p>Optional, for LVM only. The default is 4M for LVM volume groups.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;pesize&gt;8M&lt;/pesize&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">use</span></dt>
+                           <dd>
+                              
+                              <p>Recommended, specifies the strategy AutoYaST will use to partition the hard disk.
+                                 Choose from:</p>
+                              
+                              <p><code class="literal">all</code>, uses the whole device while calculating the new partitioning.</p>
+                              
+                              <p><code class="literal">linux</code>, only existing Linux partitions are used.</p>
+                              
+                              <p><code class="literal">free</code>, only unused space on the device is used, no existing partitions are touched.</p>
+                              
+                              <p><em class="replaceable">1,2,3</em>, a list of comma-separated partition numbers to use.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">type</span></dt>
+                           <dd>
+                              
+                              <p>Optional, specifies the type of the <code class="literal">drive</code>. The default is <code class="literal">CT_DISK</code> for a normal physical hard disk. The following is a list of all options:</p>
+                              
+                              <p><code class="literal">CT_DISK</code> for physical hard disks (default).</p>
+                              
+                              <p><code class="literal">CT_LVM</code> for LVM volume groups.</p>
+                              
+                              <p><code class="literal">CT_MD</code> for software RAID devices.</p>
+                              
+                              <p><code class="literal">CT_DMMULTIPATH</code> for Multipath devices (deprecated, implied with CT_DISK).</p>
+                              
+                              <p><code class="literal">CT_BCACHE</code> for software <code class="resource systemitem">bcache</code> devices.</p>
+                              
+                              <p><code class="literal">CT_BTRFS</code> for multi-device Btrfs file systems.</p>
+                              
+                              <p><code class="literal">CT_NFS</code> for NFS.</p>
+                              
+                              <p><code class="literal">CT_TMPFS</code> for <code class="literal">tmpfs</code> file systems.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;type config:type="symbol"&gt;CT_LVM&lt;/type&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">disklabel</span></dt>
+                           <dd>
+                              
+                              <p>Optional. By default YaST decides what makes sense. If a partition table of a different
+                                 type already exists, it will be re-created with the given type only if it does not
+                                 include any partition that should be kept or reused. To use the disk without creating
+                                 any partition, set this element to <code class="literal">none</code>. The following is a list of all options:</p>
+                              
+                              <p><code class="literal">msdos</code></p>
+                              
+                              <p><code class="literal">gpt</code></p>
+                              
+                              <p><code class="literal">none</code></p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;disklabel&gt;gpt&lt;/disklabel&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">keep_unknown_lv</span></dt>
+                           <dd>
+                              
+                              <p>Optional, the default is <code class="literal">false</code>.</p>
+                              
+                              <p>This value only makes sense for type=CT_LVM drives. If you are reusing a logical volume
+                                 group and you set this to <code class="literal">true</code>, all existing logical volumes in that group will not be touched unless they are specified
+                                 in the &lt;partitioning&gt; section. So you can keep existing logical volumes without specifying
+                                 them.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;keep_unknown_lv config:type="boolean"&gt;false&lt;/keep_unknown_lv&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">enable_snapshots</span></dt>
+                           <dd>
+                              
+                              <p>Optional, the default is <code class="literal">true</code>.</p>
+                              
+                              <p>Enables snapshots on Btrfs file systems mounted at <code class="literal">/</code> (does not apply to other file systems, or Btrfs file systems not mounted at <code class="literal">/</code>).</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;enable_snapshots config:type="boolean"&gt;false&lt;/enable_snapshots&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">quotas</span></dt>
+                           <dd>
+                              
+                              <p>Optional, the default is <code class="literal">false</code>.</p>
+                              
+                              <p>Enables support for Btrfs subvolume quotas. Setting this element to <code class="literal">true</code> will enable support for quotas for the file system. However, you need to set the
+                                 limits for each subvolume. Check <a class="xref xref-sect3" href="#ay-btrfs-subvolumes">the section called “Btrfs subvolumes”</a> for further information.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;quotas config:type="boolean"&gt;true&lt;/quotas&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                     </dl>
+                  </div>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Beware of data loss</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The value provided in the <code class="literal">use</code> property determines how existing data and partitions are treated. The value <code class="literal">all</code> means that the entire disk will be erased. Make backups and use the <code class="literal">confirm</code> property if you need to keep some partitions with important data. Otherwise, no pop-ups
+                                 will notify you about partitions being deleted.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="admonition tip" id="ay-partitioning-skip-devices">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Skipping devices</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>You can influence AutoYaST's device-guessing for cases where you do not specify a
+                                 &lt;device&gt; entry on your own. Usually AutoYaST would use the first device it can find
+                                 that looks reasonable but you can configure it to skip some devices like this:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;initialize config:type="boolean"&gt;true&lt;/initialize&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;skip_list config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;!-- skip devices that use the usb-storage driver --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_key&gt;driver&lt;/skip_key&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_value&gt;usb-storage&lt;/skip_value&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;!-- skip devices that are smaller than 1GB --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_key&gt;size_k&lt;/skip_key&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_value&gt;1048576&lt;/skip_value&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_if_less_than config:type="boolean"&gt;true&lt;/skip_if_less_than&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;!-- skip devices that are larger than 100GB --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_key&gt;size_k&lt;/skip_key&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_value&gt;104857600&lt;/skip_value&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;skip_if_more_than config:type="boolean"&gt;true&lt;/skip_if_more_than&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/skip_list&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>For a list of all possible &lt;skip_key&gt;s, run <code class="command">yast2 ayast_probe</code> on a system that has already been installed.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="ay-partition-configuration">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Partition configuration</h4>
+                  </header>
+                  
+                  
+                  <p>The elements listed below must be placed within the following XML structure:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      ...</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/drive&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">create</span></dt>
+                        <dd>
+                           
+                           <p>Specify if this partition or logical volume must be created, or if it already exists.
+                              If set to <code class="literal">false</code>, you also need to set one of <code class="literal">partition_nr</code>, <code class="literal">lv_name</code>, <code class="literal">label</code>, or <code class="literal">uuid</code> to tell AutoYaST which device to use.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;create config:type="boolean"&gt;false&lt;/create&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_method</span></dt>
+                        <dd>
+                           
+                           <p>Optional, the partition will be encrypted using one of these methods:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">luks1</code>: regular LUKS1 encryption.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">luks2</code>: regular LUKS2 encryption.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">pervasive_luks2</code>: pervasive volume encryption.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">protected_swap</code>: encryption with volatile protected key.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">secure_swap</code>: encryption with volatile secure key.</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">random_swap</code>: encryption with volatile random key.</p>
+                                 </li>
+                              </ul>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_method config:type="symbol"&gt;luks1&lt;/crypt_method&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Encryption method selection was introduced in <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 SP2. To mimic the behavior of previous versions, use <code class="literal">luks1</code>.</p>
+                           
+                           <p>See <code class="literal">crypt_key</code> element to learn how to specify the encryption password if needed.</p>
+                           
+                           <p>When using regular LUKS encryption, it is possible to customize several aspects of
+                              the encryption using <code class="literal">crypt_pbkdf</code>, <code class="literal">crypt_cipher</code> or <code class="literal">crypt_key_size</code>, depending on the exact variant of LUKS that is used. Keep in mind that the encryption
+                              method and its corresponding settings may dramatically affect the amount of RAM needed
+                              to complete the installation process. Using regular LUKS2 with default parameters
+                              typically means that several gigabytes of RAM are needed in the system in order to
+                              encrypt the devices.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_fs</span></dt>
+                        <dd>
+                           
+                           <p>Partition will be encrypted, the default is <code class="literal">false</code>. This element is deprecated. Use <code class="literal">crypt_method</code> instead.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_fs config:type="boolean"&gt;true&lt;/crypt_fs&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_key</span></dt>
+                        <dd>
+                           
+                           <p>Required if <code class="literal">crypt_method</code> has been set to a method that requires a password (that is, <code class="literal">luks1</code>, <code class="literal">luks2</code> or <code class="literal">pervasive_luks2</code>).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_cipher</span></dt>
+                        <dd>
+                           
+                           <p>Cipher used for LUKS encryption. This value is only honored if the value of <code class="literal">crypt_method</code> is <code class="literal">luks1</code> or <code class="literal">luks2</code>. The format and value of the string must be compatible with the <code class="literal">--cipher</code> argument of the command <code class="command">cryptsetup</code>. You can find compatible ciphers in <code class="filename">/proc/crypto</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_cipher&gt;aes-xts-plain64&lt;/crypt_cipher&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_key_size</span></dt>
+                        <dd>
+                           
+                           <p>Key size, in bits, used for LUKS encryption. This value is only honored if the value
+                              of <code class="literal">crypt_method</code> is <code class="literal">luks1</code> or <code class="literal">luks2</code>. The value has to be a multiple of 8. The possible key sizes are limited by the used
+                              cipher.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_key_size config:type="integer"&gt;256&lt;/crypt_key_size&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_pbkdf</span></dt>
+                        <dd>
+                           
+                           <p>Password-based key derivation function used for LUKS2 encryption. This is only relevant
+                              if the <code class="literal">crypt_method</code> is <code class="literal">luks2</code>. The possible values are <code class="literal">pbkdf2</code>, <code class="literal">argon2i</code> and <code class="literal">argon2id</code>. If omitted, the device will be encrypted using the default function of the command
+                              <code class="command">cryptsetup</code>. Note that both variants of Argon2 are designed to intentionally consume a large
+                              amount of memory during the encryption process. Using any of those functions or omitting
+                              this setting (which will likely result in the usage of Argon2) means that more RAM
+                              is needed to complete the installation process compared to a non-encrypted setup.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_pbkdf config:type="symbol"&gt;argon2id&lt;/crypt_pbkdf&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">crypt_label</span></dt>
+                        <dd>
+                           
+                           <p>LUKS label for the encrypted device. This is only relevant if the <code class="literal">crypt_method</code> is <code class="literal">luks2</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;crypt_label&gt;crypt_home&lt;/crypt_label&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">mount</span></dt>
+                        <dd>
+                           
+                           <p>You should have at least a root partition (/) and a swap partition.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;mount&gt;/&lt;/mount&gt;&lt;mount&gt;swap&lt;/mount&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">fstopt</span></dt>
+                        <dd>
+                           
+                           <p>Mount options for this partition; see <code class="command">man mount</code> for available mount options.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;fstopt&gt;ro,noatime,user,data=ordered,acl,user_xattr&lt;/fstopt&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">label</span></dt>
+                        <dd>
+                           
+                           <p>The label of the partition. Useful when formatting the device (especially if the <code class="literal">mountby</code> parameter is set to <code class="literal">label</code>) and for identifying a device that already exists (see <code class="literal">create</code> above). See <code class="command">man e2label</code> for an example.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;label&gt;mydata&lt;/label&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">uuid</span></dt>
+                        <dd>
+                           
+                           <p>The uuid of the partition. Only useful for identifying an existing device (see <code class="literal">create</code> above). The uuid cannot be enforced for new devices. (See <code class="command">man uuidgen</code>.)</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;uuid&gt;1b4e28ba-2fa1-11d2-883f-b9a761bde3fb&lt;/uuid&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">size</span></dt>
+                        <dd>
+                           
+                           <p>The size of the partition, for example 4G, 4500M, etc. The /boot partition and the
+                              swap partition can have <code class="literal">auto</code> as size. Then AutoYaST calculates a reasonable size. One partition can have the value
+                              <code class="literal">max</code> to use all remaining space.</p>
+                           
+                           <p>You can also specify the size in percentage. So 10% will use 10% of the size of the
+                              hard disk or volume group. You can mix <code class="literal">auto</code>, <code class="literal">max</code>, <code class="literal">size</code>, and percentage as you like.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;size&gt;10G&lt;/size&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 15, all values (including <code class="literal">auto</code> and <code class="literal">max</code>) can be used for resizing partitions as well.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">format</span></dt>
+                        <dd>
+                           
+                           <p>Specify if AutoYaST should format the partition. If you set <code class="literal">create</code> to <code class="literal">true</code>, then you likely want this option set to <code class="literal">true</code> as well.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;format config:type="boolean"&gt;false&lt;/format&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">file system</span></dt>
+                        <dd>
+                           
+                           <p>Optional. The default is <code class="literal">btrfs</code> for the root partition (<code class="filename">/</code>) and <code class="literal">xfs</code> for data partitions. Specify the file system to use on this partition:</p>
+                           
+                           <ul class="itemizedlist" db-mark="bullet">
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">btrfs</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">ext2</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">ext3</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">ext4</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">fat</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">xfs</code></p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><code class="literal">swap</code></p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;filesystem config:type="symbol"&gt;ext3&lt;/filesystem&gt;</code></span></span></pre>
+                                 </div>
+                                 </li>
+                              </ul>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">mkfs_options</span></dt>
+                        <dd>
+                           
+                           <p>Optional, specify an option string for the <code class="command">mkfs</code>. Only use this when you know what you are doing. (See the relevant mkfs man page
+                              for the file system you want to use.)</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;mkfs_options&gt;-I 128&lt;/mkfs_options&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">partition_nr</span></dt>
+                        <dd>
+                           
+                           <p>The number of this partition. If you have set <code class="literal">create=false</code> or if you use LVM, then you can specify the partition via <code class="literal">partition_nr</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partition_nr config:type="integer"&gt;2&lt;/partition_nr&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">partition_id</span></dt>
+                        <dd>
+                           
+                           <p>The <code class="literal">partition_id</code> sets the id of the partition. If you want different identifiers than 131 for Linux
+                              partition or 130 for swap, configure them with <code class="literal">partition_id.</code> The default is <code class="literal">131</code> for a Linux partition and <code class="literal">130</code> for swap.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partition_id config:type="integer"&gt;131&lt;/partition_id&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <div class="simplelist simplelistvert">
+                              <div class="row"><span>FAT16 (MS-DOS): <code class="literal">6</code>
+                                    </span></div>
+                              <div class="row"><span>NTFS (MS-DOS): <code class="literal">7</code>
+                                    </span></div>
+                              <div class="row"><span>FAT32 (MS-DOS): <code class="literal">12</code>
+                                    </span></div>
+                              <div class="row"><span>Extended FAT16 (MS-DOS): <code class="literal">15</code>
+                                    </span></div>
+                              <div class="row"><span>DIAG, Diagnostics and firmware (MS-DOS, GPT): <code class="literal">18</code>
+                                    </span></div>
+                              <div class="row"><span>PPC PReP Boot partition (MS-DOS, GPT): <code class="literal">65</code>
+                                    </span></div>
+                              <div class="row"><span>Swap (MS-DOS, GPT, DASD, implicit): <code class="literal">130</code>
+                                    </span></div>
+                              <div class="row"><span>Linux (MS-DOS, GPT, DASD): <code class="literal">131</code>
+                                    </span></div>
+                              <div class="row"><span>Intel Rapid Start Technology (MS-DOS, GPT): <code class="literal">132</code>
+                                    </span></div>
+                              <div class="row"><span>LVM (MS-DOS, GPT, DASD): <code class="literal">142</code>
+                                    </span></div>
+                              <div class="row"><span>EFI System Partition (MS-DOS, GPT): <code class="literal">239</code>
+                                    </span></div>
+                              <div class="row"><span>MD RAID (MS-DOS, GPT, DASD): <code class="literal">253</code>
+                                    </span></div>
+                              <div class="row"><span>BIOS boot (GPT): <code class="literal">257</code>
+                                    </span></div>
+                              <div class="row"><span>Windows basic data (GPT): <code class="literal">258</code>
+                                    </span></div>
+                              <div class="row"><span>EFI (GPT): <code class="literal">259</code>
+                                    </span></div>
+                              <div class="row"><span>Microsoft reserved (GPT): <code class="literal">261</code>
+                                    </span></div>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">partition_type</span></dt>
+                        <dd>
+                           
+                           <p>Optional. Allowed value is <code class="literal">primary</code>. When using an <code class="literal">msdos</code> partition table, this element sets the type of the partition to <code class="literal">primary</code>. This value is ignored when using a <code class="literal">gpt</code> partition table, because such a distinction does not exist in that case.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partition_type&gt;primary&lt;/partition_type&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">mountby</span></dt>
+                        <dd>
+                           
+                           <p>Instead of a partition number, you can tell AutoYaST to mount a partition by <code class="literal">device</code>, <code class="literal">label</code>, <code class="literal">uuid</code>, <code class="literal">path</code> or <code class="literal">id</code>, which are the udev path and udev id (see <code class="filename">/dev/disk/...</code>).</p>
+                           
+                           <p>See <code class="literal">label</code> and <code class="literal">uuid</code> documentation above. The default depends on YaST and usually is <code class="literal">id</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;mountby config:type="symbol"&gt;label&lt;/mountby&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">subvolumes</span></dt>
+                        <dd>
+                           
+                           <p>List of subvolumes to create for a file system of type Btrfs. This key only makes
+                              sense for file systems of type Btrfs. (See <a class="xref xref-sect3" href="#ay-btrfs-subvolumes">the section called “Btrfs subvolumes”</a> for more information.)</p>
+                           
+                           <p>If no <code class="tag tag-element">subvolumes</code> section has been defined for a partition description, AutoYaST will create a predefined
+                              set of subvolumes for the given mount point.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;subvolumes config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;tmp&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;opt&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;srv&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;var&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  ...</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/subvolumes&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">create_subvolumes</span></dt>
+                        <dd>
+                           
+                           <p>Determine whether Btrfs subvolumes should be created or not. It is set to <code class="literal">true</code> by default. When set to <code class="literal">false</code>, no subvolumes will be created.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">subvolumes_prefix</span></dt>
+                        <dd>
+                           
+                           <p>Set the Btrfs subvolumes prefix name. If no prefix is wanted, it must be set to an
+                              empty value:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;subvolumes_prefix&gt;&lt;![CDATA[]]&gt;&lt;/subvolumes_prefix&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>It is set to <code class="literal">@</code> by default.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">lv_name</span></dt>
+                        <dd>
+                           
+                           <p>If this partition is on a logical volume in a volume group, specify the logical volume
+                              name here (see the <code class="literal">type</code> parameter in the drive configuration).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;lv_name&gt;opt_lv&lt;/lv_name&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">stripes</span></dt>
+                        <dd>
+                           
+                           <p>An integer that configures LVM striping. Specify across how many devices you want
+                              to stripe (spread data).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;stripes config:type="integer"&gt;2&lt;/stripes&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">stripesize</span></dt>
+                        <dd>
+                           
+                           <p>Specify the size of each block in KB.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;stripesize config:type="integer"&gt;4&lt;/stripesize&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">lvm_group</span></dt>
+                        <dd>
+                           
+                           <p>If this is a physical partition used by (part of) a volume group (LVM), you need to
+                              specify the name of the volume group here.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;lvm_group&gt;system&lt;/lvm_group&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">pool</span></dt>
+                        <dd>
+                           
+                           <p><code class="literal">pool</code> must be set to <code class="literal">true</code> if the LVM logical volume should be an LVM thin pool.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;pool config:type="boolean"&gt;true&lt;/pool&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">used_pool</span></dt>
+                        <dd>
+                           
+                           <p>The name of the LVM thin pool that is used as a data store for this thin logical volume.
+                              If this is set to something non-empty, it implies that the volume is a so-called thin
+                              logical volume.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;used_pool&gt;my_thin_pool&lt;/used_pool&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">raid_name</span></dt>
+                        <dd>
+                           
+                           <p>If this physical volume is part of a RAID array, specify the name of the RAID array.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">raid_options</span></dt>
+                        <dd>
+                           
+                           <p>Specify RAID options. Setting the RAID options at the <code class="literal">partition</code> level is deprecated. See <a class="xref xref-sect2" href="#ay-partition-sw-raid">the section called “Software RAID”</a>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">bcache_backing_for</span></dt>
+                        <dd>
+                           
+                           <p>If this device is used as a <em><code class="resource systemitem">bcache</code> backing device</em>, specify the name of the <code class="resource systemitem">bcache</code> device. See <a class="xref xref-sect2" href="#ay-partition-bcache">the section called “
+                                 <code class="resource systemitem">bcache</code> configuration”</a> for further details.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;bcache_backing_for&gt;/dev/bcache0&lt;/bcache_backing_for&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">bcache_caching_for</span></dt>
+                        <dd>
+                           
+                           <p>If this device is used as a <em><code class="resource systemitem">bcache</code> caching device</em>, specify the names of the <code class="resource systemitem">bcache</code> devices. See <a class="xref xref-sect2" href="#ay-partition-bcache">the section called “
+                                 <code class="resource systemitem">bcache</code> configuration”</a> for further details.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;bcache_caching_for config:type="list"&gt;&lt;listentry&gt;/dev/bcache0&lt;/listentry&gt;&lt;/bcache_caching_for&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">resize</span></dt>
+                        <dd>
+                           
+                           <p>Starting with <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 resizing works with physical disk partitions and with LVM volumes</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;resize config:type="boolean"&gt;false&lt;/resize&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="ay-btrfs-subvolumes">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Btrfs subvolumes</h4>
+                  </header>
+                  
+                  
+                  <p>As mentioned in <a class="xref xref-sect3" href="#ay-partition-configuration">the section called “Partition configuration”</a>, it is possible to define a set of subvolumes for each Btrfs file system. In its
+                     simplest form, they are specified using a list of paths:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;subvolumes config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;usr/local&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;tmp&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;opt&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;srv&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;var&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/subvolumes&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>However, it is possible to specify additional settings for each subvolume. For example,
+                     we might want to set a quota or to disable the copy-on-write mechanism. For that purpose,
+                     it is possible to expand any of the elements of the list as shown in the example below:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;subvolumes config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;usr/local&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;path&gt;tmp&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;referenced_limit&gt;1 GiB&lt;/referenced_limit&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;opt&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;srv&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;path&gt;var/lib/pgsql&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;copy_on_write config:type="boolean"&gt;false&lt;/copy_on_write&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/subvolumes&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <dl class="long-terms variablelist" id="foofoo">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">path</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Mount point for the subvolume.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;path&gt;tmp&lt;/tmp&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Required. AutoYaST will ignore the subvolume if the <code class="literal">path</code> is not specified.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">copy-on-write</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Whether copy-on-write should be enabled for the subvolume.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;copy-on-write config:type="boolean"&gt;false&lt;/copy-on-write&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional. The default value is <code class="literal">false</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">referenced_limit</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Set a quota for the subvolume.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;referenced_limit&gt;1 GiB&lt;/referenced_limit&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>Optional. The default value is <code class="literal">unlimited</code>. Btrfs supports two kinds of limits: <code class="literal">referenced</code> and <code class="literal">exclusive</code>. At this point, only the former is supported.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>If there is a default subvolume used for the distribution (for example <code class="filename">@</code> in <span class="phrase productname">SUSE Linux Enterprise Server</span>), the name of this default subvolume is automatically prefixed to the names of the
+                     defined subvolumes. This behavior can be disabled by setting the <code class="literal">subvolumes_prefix</code> in the <a class="xref xref-sect3" href="#CreateProfile-Partitioning-config">the section called “Drive configuration”</a> section.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;subvolumes_prefix&gt;&lt;![CDATA[]]&gt;&lt;/subvolumes_prefix&gt;</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="ay-use-whole-disk">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using the whole disk</h4>
+                  </header>
+                  
+                  
+                  <p>AutoYaST allows to use a whole disk without creating any partition by setting the
+                     <code class="literal">disklabel</code> to <code class="literal">none</code> as described in <a class="xref xref-sect3" href="#CreateProfile-Partitioning-config">the section called “Drive configuration”</a>. In such cases, the configuration in the first <code class="literal">partition</code> from the <code class="literal">drive</code> will be applied to the whole disk.</p>
+                  
+                  <p>In the example below, we are using the second disk (<code class="literal">/dev/sdb</code>) as the <code class="literal">/home</code> file system.</p>
+                  
+                  <div class="example formalobject" id="ay-use-whole-disk_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;create config:type="boolean"&gt;true&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdb&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;disklabel&gt;none&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/home&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using a whole disk as a file system</div>
+                     </header>
+                  </div>
+                  
+                  <p>In addition, the whole disk can be used as an LVM physical volume or as a software
+                     RAID member. See <a class="xref xref-sect2" href="#ay-partition-lvm">the section called “Logical volume manager (LVM)”</a> and <a class="xref xref-sect2" href="#ay-partition-sw-raid">the section called “Software RAID”</a> for further details about setting up an LVM or a software RAID.</p>
+                  
+                  <p>For backward compatibility reasons, it is possible to achieve the same result by setting
+                     the <code class="literal">&lt;partition_nr&gt;</code> element to <code class="literal">0</code>. However, this usage of the <code class="literal">&lt;partition_nr&gt;</code> element is deprecated from <span class="phrase productname">SUSE Linux Enterprise Server</span> 15.</p>
+                  </section>
+               
+               <section class="sect3" id="ay-auto-partitioning">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Filling the gaps</h4>
+                  </header>
+                  
+                  
+                  <p>When using the <span class="guimenu">Expert Partitioner</span> approach, AutoYaST can create a partition plan from a rather incomplete profile.
+                     The following profiles show how you can describe some details of the partitioning
+                     layout and let AutoYaST do the rest.</p>
+                  
+                  <div class="example formalobject" id="ay-auto-partitioning_ex1">
+                     
+                     
+                     <p>The following is an example of a single drive system, which is not pre-partitioned
+                        and should be automatically partitioned according to the described pre-defined partition
+                        plan. If you do not specify the device, it will be automatically detected.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Automated partitioning on selected drives</div>
+                     </header>
+                  </div>
+                  
+                  <p>A more detailed example shows how existing partitions and multiple drives are handled.</p>
+                  
+                  <div class="example formalobject" id="ay-auto-partitioning_ex2">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;10G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;1G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdb&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;free&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/data1&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;15G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;xfs&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/data2&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;auto&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Installing on multiple drives</div>
+                     </header>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="ay-partition-advanced">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Advanced partitioning features</h3>
+               </header>
+               
+               
+               <p></p>
+               
+               <section class="sect3" id="ay-partition-advanced-wipe">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Wipe out partition table</h4>
+                  </header>
+                  
+                  
+                  <p>Usually this is not needed because AutoYaST can delete partitions one by one automatically.
+                     But you need the option to let AutoYaST clear the partition table instead of deleting
+                     partitions individually.</p>
+                  
+                  <p>Go to the <code class="literal">drive</code> section and add:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;initialize config:type="boolean"&gt;true&lt;/initialize&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>With this setting AutoYaST will delete the partition table before it starts to analyze
+                     the actual partitioning and calculates its partition plan. Of course this means, that
+                     you cannot keep any of your existing partitions.</p>
+                  </section>
+               
+               <section class="sect3" id="ay-partition-advanced-mount">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Mount options</h4>
+                  </header>
+                  
+                  
+                  <p>By default a file system to be mounted is identified in <code class="filename">/etc/fstab</code> by the device name. This identification can be changed so the file system is found
+                     by searching for a UUID or a volume label. Note that not all file systems can be mounted
+                     by UUID or a volume label. To specify how a partition is to be mounted, use the <code class="literal">mountby</code> property which has the <code class="literal">symbol</code> type. Possible options are:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p><code class="literal">device</code> (default)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">label</code></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">UUID</code></p>
+                        </li>
+                     </ul>
+                  
+                  <p>If you choose to mount a new partition using a label, use the <code class="literal">label</code> property to specify its value.</p>
+                  
+                  <p>Add any valid mount option in the fourth field of <code class="filename">/etc/fstab</code>. Multiple options are separated by commas. Possible fstab options:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Mount read-only (<code class="literal">ro</code>)</span></dt>
+                        <dd>
+                           
+                           <p>No write access to the file system. Default is <code class="literal">false</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">No access time (<code class="literal">noatime</code>)</span></dt>
+                        <dd>
+                           
+                           <p>Access times are not updated when a file is read. Default is <code class="literal">false</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Mountable by user (<code class="literal">user</code>)</span></dt>
+                        <dd>
+                           
+                           <p>The file system can be mounted by a normal user. Default is <code class="literal">false</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Data Journaling Mode (<code class="literal">ordered</code>, <code class="literal">journal</code>, <code class="literal">writeback</code>)</span></dt>
+                        <dd>
+                           
+                           <dl class="long-terms variablelist">
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <code class="literal">journal</code>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <p>All data is committed to the journal prior to being written to the main file system.</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <code class="literal">ordered</code>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <p>All data is directly written to the main file system before its metadata is committed
+                                       to the journal.</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">
+                                       <code class="literal">writeback</code>
+                                       </span></dt>
+                                 <dd>
+                                    
+                                    <p>Data ordering is not preserved.</p>
+                                    </dd>
+                              </div>
+                              </dl>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Access control list (<code class="literal">acl</code>)</span></dt>
+                        <dd>
+                           
+                           <p>Enable access control lists on the file system.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Extended user attributes (<code class="literal">user_xattr</code>)</span></dt>
+                        <dd>
+                           
+                           <p>Allow extended user attributes on the file system.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <div class="example formalobject" id="ay-partition-advanced-mount_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;fstopt&gt;ro,noatime,user,data=ordered,acl,user_xattr&lt;/fstopt&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;mount&gt;/local&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;mountby config:type="symbol"&gt;uuid&lt;/mountby&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partition_id config:type="integer"&gt;131&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;size&gt;10G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitions&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Mount options</div>
+                     </header>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Check supported file system options</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Different file system types support different options. Check the documentation carefully
+                                 before setting them.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="ay-partition-advanced-keep">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Keeping specific partitions</h4>
+                  </header>
+                  
+                  
+                  <p>In some cases you should leave partitions untouched and only format specific target
+                     partitions, rather than creating them from scratch. For example, if different Linux
+                     installations coexist, or you have another operating system installed, likely you
+                     do not want to wipe these out. You may also want to leave data partitions untouched.</p>
+                  
+                  <p>Such scenarios require specific knowledge about the target systems and hard disks.
+                     Depending on the scenario, you might need to know the exact partition table of the
+                     target hard disk with partition IDs, sizes and numbers. With this data, you can tell
+                     AutoYaST to keep certain partitions, format others and create new partitions if needed.</p>
+                  
+                  <p>The following example will keep partitions 1, 2 and 5 and delete partition 6 to create
+                     two new partitions. All remaining partitions will only be formatted. </p>
+                  
+                  <div class="example formalobject" id="ay-partition-advanced-keep_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdc&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;create config:type="boolean"&gt;false&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;partition_nr config:type="integer"&gt;1&lt;/partition_nr&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;create config:type="boolean"&gt;false&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;format config:type="boolean"&gt;false&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;partition_nr config:type="integer"&gt;2&lt;/partition_nr&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/space&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;create config:type="boolean"&gt;false&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;filesystem config:type="symbol"&gt;swap&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;partition_nr config:type="integer"&gt;5&lt;/partition_nr&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/space2&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;size&gt;5G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/space3&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;6&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Keeping partitions</div>
+                     </header>
+                  </div>
+                  
+                  <p>The last example requires exact knowledge of the existing partition table and the
+                     partition numbers of those partitions that should be kept. In some cases however,
+                     such data may not be available, especially in a mixed hardware environment with different
+                     hard disk types and configurations. The following scenario is for a system with a
+                     non-Linux OS with a designated area for a Linux installation.</p>
+                  
+                  <div class="figure formalobject" id="partitioning-keep1">
+                     
+                     
+                     <div class="mediaobject">
+                        <div class="media image"><picture class="imageobject"><img src="media/partitioning-keep1.png"></picture></div>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Figure&nbsp;<span class="label">4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Keeping partitions</div>
+                     </header>
+                  </div>
+                  
+                  <p>In this scenario, shown in figure <a class="xref xref-figure" href="#partitioning-keep1">Figure&nbsp;<span class="label">4<span class="sep">.</span>1</span>, “Keeping partitions”</a>, AutoYaST will not create new partitions. Instead it searches for certain partition
+                     types on the system and uses them according to the partitioning plan in the control
+                     file. No partition numbers are given in this case, only the mount points and the partition
+                     types (additional configuration data can be provided, for example file system options,
+                     encryption and file system type).</p>
+                  
+                  <div class="example formalobject" id="ay-partition-advanced-keep_ex2">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;create config:type="boolean"&gt;false&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_id config:type="integer"&gt;131&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;create config:type="boolean"&gt;false&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;swap&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_id config:type="integer"&gt;130&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Auto-detection of partitions to be kept.</div>
+                     </header>
+                  </div>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Keeping encrypted devices</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>When AutoYaST is probing the storage devices, the partitioning section from the profile
+                                 is not yet analyzed. In some scenarios, it is not clear which key should be used to
+                                 unlock a device. For example, this can happen when more than one encryption key is
+                                 defined. To solve this problem, AutoYaST will try all defined keys on all encrypted
+                                 devices until a working key is found.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="ay-partition-lvm">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Logical volume manager (LVM)</h3>
+               </header>
+               
+               
+               <p>To configure LVM, first create a physical volume using the normal partitioning method
+                  described above.</p>
+               
+               <div class="example formalobject" id="ay-partition-lvm_ex1">
+                  
+                  
+                  <p>The following example shows how to prepare for LVM in the <code class="literal">partitioning</code> resource. A non-formatted partition is created on device <code class="filename">/dev/sda1</code> of the type <code class="literal">LVM</code> and with the volume group <code class="literal">system</code>. This partition will use all space available on the drive.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;create config:type="boolean"&gt;true&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;lvm_group&gt;system&lt;/lvm_group&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_type&gt;primary&lt;/partition_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_id config:type="integer"&gt;142&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_nr config:type="integer"&gt;1&lt;/partition_nr&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Create LVM physical volume</div>
+                  </header>
+               </div>
+               
+               <div class="example formalobject" id="ay-partition-lvm_ex2">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;lvm_group&gt;system&lt;/lvm_group&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_type&gt;primary&lt;/partition_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/system&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;type config:type="symbol"&gt;CT_LVM&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;lv_name&gt;user_lv&lt;/lv_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/usr&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;size&gt;15G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;lv_name&gt;opt_lv&lt;/lv_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/opt&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;size&gt;10G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;lv_name&gt;var_lv&lt;/lv_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;mount&gt;/var&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;size&gt;1G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;pesize&gt;4M&lt;/pesize&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>LVM logical volumes</div>
+                  </header>
+               </div>
+               
+               <p>It is possible to set the <code class="literal">size</code> to <code class="literal">max</code> for the logical volumes. Of course, you can only use <code class="literal">max</code> for one(!) logical volume. You cannot set two logical volumes in one volume group
+                  to <code class="literal">max</code>.</p>
+               </section>
+            
+            <section class="sect2" id="ay-partition-sw-raid">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Software RAID</h3>
+               </header>
+               
+               
+               <p>The support for software RAID devices has been greatly improved in <span class="phrase productname">SUSE Linux Enterprise Server</span> 15 SP2.</p>
+               
+               <p>If needed, see <a class="xref xref-sect3" href="#ay-partition-sw-raid-deprecated">the section called “Using the deprecated syntax”</a> to find out further details about the old way of specifying a software RAID, which
+                  is still supported for backward compatibility.</p>
+               
+               <p>Using AutoYaST, you can create and assemble software RAID devices. The supported RAID
+                  levels are the following:</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">RAID 0</span></dt>
+                     <dd>
+                        
+                        <p>This level increases your disk performance. There is <em>no</em> redundancy in this mode. If one of the drives crashes, data recovery will not be
+                           possible.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">RAID 1</span></dt>
+                     <dd>
+                        
+                        <p>This mode offers the best redundancy. It can be used with two or more disks. An exact
+                           copy of all data is maintained on all disks. As long as at least one disk is still
+                           working, no data is lost. The partitions used for this type of RAID should have approximately
+                           the same size.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">RAID 5</span></dt>
+                     <dd>
+                        
+                        <p>This mode combines management of a larger number of disks and still maintains some
+                           redundancy. This mode can be used on three disks or more. If one disk fails, all data
+                           is still intact. If two disks fail simultaneously, all data is lost.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Multipath</span></dt>
+                     <dd>
+                        
+                        <p>This mode allows access to the same physical device via multiple controllers for redundancy
+                           against a fault in a controller card. This mode can be used with at least two devices.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Similar to LVM, a software RAID definition in an AutoYaST profile is composed of two
+                  different parts:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>Determining which disks or partitions are going to be used as RAID members. To do
+                        that, you need to set the <code class="literal">raid_name</code> element in such devices.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Defining the RAID itself by using a dedicated <code class="literal">drive</code> section.</p>
+                     </li>
+                  </ul>
+               
+               <p>The following example shows a RAID10 configuration that uses a partition from the
+                  first disk and another one from the second disk as RAID members:</p>
+               
+               <div class="example formalobject" id="ay-partition-sw-raid_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;20G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdb&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;disklabel&gt;none&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/md/0&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/home&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;40G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/srv&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;10G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;chunk_size&gt;4&lt;/chunk_size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;parity_algorithm&gt;near_2&lt;/parity_algorithm&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;raid_type&gt;raid10&lt;/raid_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>13</span><span class="sep">.&nbsp;</span>RAID10 configuration</div>
+                  </header>
+               </div>
+               
+               <p>If you do not want to create partitions in the software RAID, set the <code class="literal">disklabel</code> to <code class="literal">none</code> as you would do for a regular disk. In the example below, only the RAID <code class="literal">drive</code> section is shown for simplicity's sake:</p>
+               
+               <div class="example formalobject" id="ay-partition-sw-raid_ex2">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;device&gt;/dev/md/0&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;disklabel&gt;none&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;mount&gt;/home&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;size&gt;40G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;chunk_size&gt;4&lt;/chunk_size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;parity_algorithm&gt;near_2&lt;/parity_algorithm&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;raid_type&gt;raid10&lt;/raid_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/drive&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>RAID10 without partitions</div>
+                  </header>
+               </div>
+               
+               <section class="sect3" id="ay-partition-sw-raid-deprecated">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Using the deprecated syntax</h4>
+                  </header>
+                  
+                  
+                  <p>If the installer self-update feature is enabled, it is possible to partition a software
+                     RAID for <span class="phrase productname">SUSE Linux Enterprise Server</span> 15. However, that scenario was not supported in previous versions and hence the way
+                     to define a software RAID was slightly different.</p>
+                  
+                  <p>This section defines what the old-style configuration looks like because it is still
+                     supported for backward compatibility.</p>
+                  
+                  <p>Keep the following in mind when configuring a RAID using this deprecated syntax:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>The device for RAID is always <code class="filename">/dev/md</code>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>The property <code class="literal">partition_nr</code> is used to determine the MD device number. If <code class="literal">partition_nr</code> is equal to 0, then <code class="filename">/dev/md/0</code> is configured. Adding several <code class="literal">partition</code> sections means that you want to have multiple software RAIDs (<code class="filename">/dev/md/0</code>, <code class="filename">/dev/md/1</code>, etc.).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>All RAID-specific options are contained in the <code class="literal">raid_options</code> resource.</p>
+                        </li>
+                     </ul>
+                  
+                  <div class="example formalobject" id="ay-partition-sw-raid-deprecated_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_id config:type="integer"&gt;253&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;false&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;raid_name&gt;/dev/md0&lt;/raid_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;raid_type&gt;raid1&lt;/raid_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;4G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        &lt;!-- Insert a configuration for the regular partitions located on</code></span></span>
+<span class="line"><span class="ld"><code>                /dev/sda here (for example / and swap) --&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdb&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;false&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_id config:type="integer"&gt;253&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;raid_name&gt;/dev/md0&lt;/raid_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;4gb&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/md&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;format config:type="boolean"&gt;true&lt;/format&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/space&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_id config:type="integer"&gt;131&lt;/partition_id&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_nr config:type="integer"&gt;0&lt;/partition_nr&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;chunk_size&gt;4&lt;/chunk_size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;parity_algorithm&gt;near_2&lt;/parity_algorithm&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;raid_type&gt;raid10&lt;/raid_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>Old style RAID10 configuration</div>
+                     </header>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="ay-raid-configuration">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>RAID options</h4>
+                  </header>
+                  
+                  
+                  <p>The following elements must be placed within the following XML structure:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     ...</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;/raid_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;/partition&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">chunk_size</span></dt>
+                        <dd>
+                           
+                           <p>Can be expressed as a number with the corresponding units (for example, 32M) or just
+                              as a number. If the unit is omitted, kilobytes are used as the default unit. Do not
+                              specify <code class="literal">chunk_size</code> for RAID1. Keep in mind that <code class="literal">raid1</code> is the default type.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;chunk_size&gt;4&lt;/chunk_size&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">parity_algorithm</span></dt>
+                        <dd>
+                           
+                           <p>Possible values are:</p>
+                           
+                           <p><code class="literal">left_asymmetric</code>, <code class="literal">left_symmetric</code>, <code class="literal">right_asymmetric</code>, <code class="literal">right_symmetric</code>, <code class="literal">first</code>, <code class="literal">last</code>, <code class="literal">first_6</code>, <code class="literal">left_asymmetric_6</code>, <code class="literal">left_symmetric_6</code>, <code class="literal">right_asymmetric_6</code>, <code class="literal">right_symmetric_6</code>, <code class="literal">near_2</code>, <code class="literal">offset_2</code>, <code class="literal">far_2</code>, <code class="literal">near_3</code>, <code class="literal">offset_3</code> and <code class="literal">far_3</code>.</p>
+                           
+                           <p>For backwards compatibility with previous versions of AutoYaST, the following aliases
+                              are also recognized:</p>
+                           
+                           <p><code class="literal">parity_first</code>, <code class="literal">parity_last</code>, <code class="literal">parity_first_6</code>, <code class="literal">n2</code>, <code class="literal">o2</code>, <code class="literal">f2</code>, <code class="literal">n3</code>, <code class="literal">o3</code> and <code class="literal">f3</code>.</p>
+                           
+                           <p>The accepted values for each RAID depend on the RAID level (for example, <code class="literal">raid5</code>) and the number of devices in the RAID. Given that RAID0 or RAID1 do not provide
+                              any parity, do not specify this option for such devices.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;parity_algorithm&gt;left_asymmetric&lt;/parity_algorithm&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">raid_type</span></dt>
+                        <dd>
+                           
+                           <p>Possible values are: <code class="literal">raid0</code>, <code class="literal">raid1</code>, <code class="literal">raid5</code>, <code class="literal">raid6</code> and <code class="literal">raid10</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;raid_type&gt;raid1&lt;/raid_type&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>The default is <code class="literal">raid1</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">device_order</span></dt>
+                        <dd>
+                           
+                           <p>This list contains the order of the physical devices:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;device_order config:type="list"&gt;&lt;device&gt;/dev/sdb2&lt;/device&gt;&lt;device&gt;/dev/sda1&lt;/device&gt;...&lt;/device_order&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>This is optional, and the default is alphabetical order.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="ay-partition-multipath">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Multipath support</h3>
+               </header>
+               
+               
+               <p>AutoYaST can handle multipath devices. To take advantage of them, you need to enable
+                  multipath support, as shown in <a class="xref xref-example" href="#multipath-example">Example&nbsp;<span class="label">4<span class="sep">.</span>16</span>, “Using multipath devices”</a>. Alternatively, you can use the following parameter on the Kernel command line: <code class="literal">LIBSTORAGE_MULTIPATH_AUTOSTART=ON</code>.</p>
+               
+               <p>Unlike SUSE Linux Enterprise 12, it is not required to set the drive section type
+                  to <code class="literal">CT_DMMULTIPATH</code>. You should use <code class="literal">CT_DISK</code>, although for historical reasons, both values are equivalent.</p>
+               
+               <div class="example formalobject" id="multipath-example">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;general&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;storage&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;start_multipath config:type="boolean"&gt;true&lt;/start_multipath&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/storage&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/general&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;partitioning&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;20G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;auto&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type config:type="symbol"&gt;CT_DISK&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>16</span><span class="sep">.&nbsp;</span>Using multipath devices</div>
+                  </header>
+               </div>
+               
+               <p>If you want to specify the device, you could use the World Wide Identifier (WWID),
+                  its device name (for example, <code class="literal">/dev/dm-0</code>), any other path under <code class="literal">/dev/disk</code> that refers to the multipath device or any of its paths.</p>
+               
+               <p>For example, given the <code class="literal">multipath</code> listing from <a class="xref xref-example" href="#multipath-ll-output">Example&nbsp;<span class="label">4<span class="sep">.</span>17</span>, “Listing multipath devices”</a>, you could use <code class="literal">/dev/mapper/14945540000000000f86756dce9286158be4c6e3567e75ba5</code>, <code class="literal">/dev/dm-3</code>, any other corresponding path under <code class="literal">/dev/disk</code> (as shown in <a class="xref xref-example" href="#multipath-wwid-example">Example&nbsp;<span class="label">4<span class="sep">.</span>18</span>, “Using the WWID to identify a multipath device”</a>), or any of its paths (<code class="literal">/dev/sda</code> or <code class="literal">/dev/sdb</code>).</p>
+               
+               <div class="example formalobject" id="multipath-ll-output">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code># multipath -l</code></span></span>
+<span class="line"><span class="ld"><code>14945540000000000f86756dce9286158be4c6e3567e75ba5 dm-3 ATA,VIRTUAL-DISK</code></span></span>
+<span class="line"><span class="ld"><code>size=40G features='0' hwhandler='0' wp=rw</code></span></span>
+<span class="line"><span class="ld"><code>|-+- policy='service-time 0' prio=1 status=active</code></span></span>
+<span class="line"><span class="ld"><code>| `- 2:0:0:0 sda 8:0  active ready running</code></span></span>
+<span class="line"><span class="ld"><code>`-+- policy='service-time 0' prio=1 status=enabled</code></span></span>
+<span class="line"><span class="ld"><code>  `- 3:0:0:0 sdb 8:16 active ready running</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>17</span><span class="sep">.&nbsp;</span>Listing multipath devices</div>
+                  </header>
+               </div>
+               
+               <div class="example formalobject" id="multipath-wwid-example">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/mapper/14945540000000000f86756dce9286158be4c6e3567e75ba5&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;size&gt;20G&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;filesystem config:type="symbol"&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;type config:type="symbol"&gt;CT_DISK&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/drive&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>18</span><span class="sep">.&nbsp;</span>Using the WWID to identify a multipath device</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="ay-partition-bcache">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>
+                     <code class="resource systemitem">bcache</code> configuration</h3>
+               </header>
+               
+               
+               <p><code class="resource systemitem">bcache</code> is a caching system which allows the use of multiple fast drives to speed up the
+                  access to one or more slower drives. For example, you can improve the performance
+                  of a large (but slow) drive by using a fast one as a cache.</p>
+               
+               <p>For more information about bcache on <span class="phrase productname">SUSE Linux Enterprise Server</span>, also see the blog post at <a class="link" href="https://www.suse.com/c/combine-the-performance-of-solid-state-drive-with-the-capacity-of-a-hard-drive-with-bcache-and-yast/">https://www.suse.com/c/combine-the-performance-of-solid-state-drive-with-the-capacity-of-a-hard-drive-with-bcache-and-yast/</a>.</p>
+               
+               <p>To set up a <code class="resource systemitem">bcache</code> device, AutoYaST needs a profile that specifies the following:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>To set a (slow) block device as <em>backing device</em>, use the <code class="literal">bcache_backing_for</code> element.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>To set a (fast) block device as <em>caching device</em>, use the <code class="literal">bcache_caching_for</code> element. You can use the same device to speed up the access to several drives.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>To specify the layout of the <code class="resource systemitem">bcache</code> device, use a <code class="literal">drive</code> section and set the <code class="literal">type</code> element to <code class="literal">CT_BCACHE</code>. The layout of the <code class="resource systemitem">bcache</code> device may contain partitions.</p>
+                     </li>
+                  </ul>
+               
+               <div class="example formalobject" id="ay-partition-bcache_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type config:type="symbol"&gt;CT_DISK&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;enable_snapshots config:type="boolean"&gt;true&lt;/enable_snapshots&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;btrfs&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;create config:type="boolean"&gt;true&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;swap&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;create config:type="boolean"&gt;true&lt;/create&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;2GiB&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type config:type="symbol"&gt;CT_DISK&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdb&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;disklabel&gt;msdos&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;!-- It can serve as caching device for several bcaches --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;bcache_caching_for config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;listentry&gt;/dev/bcache0&lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/bcache_caching_for&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;max&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type config:type="symbol"&gt;CT_DISK&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdc&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;disklabel&gt;msdos&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;!-- It can serve as backing device for one bcache --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;bcache_backing_for&gt;/dev/bcache0&lt;/bcache_backing_for&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type config:type="symbol"&gt;CT_BCACHE&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/bcache0&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;bcache_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;cache_mode&gt;writethrough&lt;/cache_mode&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/bcache_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/data&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;20GiB&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;swap&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem config:type="symbol"&gt;swap&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;1GiB&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>19</span><span class="sep">.&nbsp;</span>
+                        <code class="resource systemitem">bcache</code> definition</div>
+                  </header>
+               </div>
+               
+               <p>For the time being, the only supported option in the <code class="literal">bcache_options</code> section is <code class="literal">cache_mode</code>, described below.</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">cache_mode</span></dt>
+                     <dd>
+                        
+                        <p>Cache mode for <code class="resource systemitem">bcache</code>. Possible values are:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="literal">writethrough</code></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">writeback</code></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">writearound</code></p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">none</code></p>
+                              </li>
+                           </ul>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cache_mode&gt;writethrough&lt;/cache_mode&gt;</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="ay-multidevice-btrfs">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Multi-device Btrfs configuration</h3>
+               </header>
+               
+               
+               <p>Btrfs supports creating a single volume that spans more than one storage device, offering
+                  similar features to software RAID implementations such as the Linux kernel's built-in
+                  <code class="command">mdraid</code> subsystem. <em>Multi-device Btrfs</em> offers advantages over some other RAID implementations. For example, you can dynamically
+                  migrate a multi-device Btrfs volume from one RAID level to another, RAID levels can
+                  be set on a per-file basis, and more. However, not all of these features are fully
+                  supported yet in <span class="phrase productname">SUSE Linux Enterprise Server</span>&nbsp;15&nbsp;SP7.</p>
+               
+               <p>With AutoYaST, a multi-device Btrfs can be configured by specifying a drive with the
+                  <code class="literal">CT_BTRFS</code> type. The <code class="literal">device</code> property is used as an arbitrary name to identify each multi-device Btrfs.</p>
+               
+               <p>As with RAID, you need to create all block devices first (for example, partitions,
+                  LVM logical volumes, etc.) and assign them to the Btrfs file system you want to create
+                  over such block devices.</p>
+               
+               <p>The following example shows a simple multi-device Btrfs configuration:</p>
+               
+               <div class="example formalobject" id="ay-multidevice-btrfs_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sda&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;disklabel&gt;none&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;btrfs_name&gt;root_fs&lt;/btrfs_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;/dev/sdb&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;disklabel&gt;gpt&lt;/disklabel&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partition_nr&gt;1&lt;/partition_nr&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;size&gt;4gb&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;filesystem&gt;ext4&lt;/filesystem&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;btrfs_name&gt;root_fs&lt;/btrfs_name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;device&gt;root_fs&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;type config:type="symbol"&gt;CT_BTRFS&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partition config:type="list&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;btrfs_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;raid_leve&gt;raid1&lt;/raid_level&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;metadata_raid_leve&gt;raid1&lt;/metadata_raid_level&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/btrfs_options&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>20</span><span class="sep">.&nbsp;</span>Multi-device Btrfs configuration</div>
+                  </header>
+               </div>
+               
+               <p>The supported data and metadata RAID levels are: <code class="literal">default</code>, <code class="literal">single</code>, <code class="literal">dup</code>, <code class="literal">raid0</code>, <code class="literal">raid1</code>, and <code class="literal">raid10</code>. By default, file system metadata is mirrored across two devices and data is striped
+                  across all of the devices. If only one device is present, metadata will be duplicated
+                  on that one device.</p>
+               
+               
+               <p>Keep the following in mind when configuring a multi-device Btrfs file system:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Devices need to indicate the <code class="literal">btrfs_name</code> property to be included into a multi-device Btrfs file system.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>All Btrfs-specific options are contained in the <code class="literal">btrfs_options</code> resource of a <code class="literal">CT_BTRFS</code> drive.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="ay-partition-nfs">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>NFS configuration</h3>
+               </header>
+               
+               
+               <p>AutoYaST allows to install <span class="phrase productname">SUSE Linux Enterprise Server</span> onto <em>Network File System</em> (NFS) shares. To do so, you must create a drive with the <code class="literal">CT_NFS</code> type and provide the NFS share name (<em class="replaceable">SERVER:PATH</em>) as device name. The information relative to the mount point is included as part
+                  of its first partition section. Note that for an NFS drive, only the first partition
+                  is taken into account.</p>
+               
+               <p>For more information on how to configure an NFS client and server after the system
+                  has been installed, refer to <a class="xref xref-sect1" href="bk05partiich01s21.html">the section called “NFS client and server”</a>.</p>
+               
+               <div class="example formalobject" id="ay-partition-nfs_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        &lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;device&gt;192.168.1.1:/exports/root_fs&lt;/device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;type config:type="symbol"&gt;CT_NFS&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;use&gt;all&lt;/use&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>              &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>                &lt;mount&gt;/&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>                &lt;fstopt&gt;nolock&lt;/fstopt&gt;</code></span></span>
+<span class="line"><span class="ld"><code>              &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;/drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>21</span><span class="sep">.&nbsp;</span>NFS share definition</div>
+                  </header>
+               </div>
+               </section>
+            
+            <section class="sect2" id="ay-partition-tmpfs">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>
+                     <code class="literal">tmpfs</code> configuration</h3>
+               </header>
+               
+               
+               <p>AutoYaST supports the definition of <code class="literal">tmpfs</code> virtual file systems by setting the <code class="literal">type</code> element to <code class="literal">CT_TMPFS</code>. Each <code class="literal">partition</code> section represents a <code class="literal">tmpfs</code> file system.</p>
+               
+               <div class="example formalobject" id="ay-partition-tmpfs_ex1">
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partitioning config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;type config:type="symbol"&gt;CT_TMPFS&lt;/type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;partitions config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>              &lt;mount&gt;/srv&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>              &lt;fstopt&gt;size=512M&lt;/fstopt&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>              &lt;mount&gt;/temp&lt;/mount&gt;</code></span></span>
+<span class="line"><span class="ld"><code>            &lt;/partition&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;/partitions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;drive&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;partitioning&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <header>
+                     <div class="title">Example&nbsp;<span class="label">4<span class="sep">.</span>22</span><span class="sep">.&nbsp;</span>
+                        <code class="literal">tmpfs</code> definition</div>
+                  </header>
+               </div>
+               
+               <p><code class="literal">tmpfs</code> devices are different from regular file systems like Ext4 or Btrfs. Therefore, the
+                  only relevant elements are <code class="literal">mount</code>, which is mandatory, and <code class="literal">fstopt</code>. The latter is used to set file system attributes like its size limit, mode, and
+                  so on. You can find additional information about the known options in the <code class="literal">tmpfs</code> man page.</p>
+               </section>
+            
+            <section class="sect2" id="ay-partition-s390">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>IBM&nbsp;Z specific configuration</h3>
+               </header>
+               
+               
+               <section class="sect3" id="ay-partition-s390-dasd">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>12<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring DASD disks</h4>
+                  </header>
+                  
+                  
+                  <p>The elements listed below must be placed within the following XML structure:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;dasd&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;devices config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   ...</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/devices&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/dasd&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>tags in the &lt;profile&gt; section. Each disk needs to be configured in a separate &lt;listentry&gt;
+                     ... &lt;/listentry&gt; section.</p>
+                  
+                  <div class="variablelist">
+                     <header>
+                        <div class="title">DASD configuration</div>
+                     </header>
+                     <dl class="variablelist">
+                        <div class="varlistentry">
+                           <dt><span class="term">device</span></dt>
+                           <dd>
+                              
+                              <p><code class="literal">DASD</code> is the only value allowed.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;device&gt;DASD&lt;/dev_name&gt;</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">dev_name</span></dt>
+                           <dd>
+                              
+                              <p>Specify the device (<code class="literal">dasd<em class="replaceable">N</em></code>) you want to configure in this section.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;dev_name&gt;/dev/dasda&lt;/dev_name&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>Optional but recommended. If left out, AutoYaST tries to guess the device.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">channel</span></dt>
+                           <dd>
+                              
+                              <p>Channel by which the disk is accessed.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;channel&gt;0.0.0150&lt;/channel&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>Mandatory.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">diag</span></dt>
+                           <dd>
+                              
+                              <p>Enable or disable the use of <code class="literal">DIAG</code>. Possible values are <code class="literal">true</code> (enable) or <code class="literal">false</code> (disable).</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;diagconfig:type="boolean"&gt;true&lt;/diag&gt;</code></span></span></pre>
+                              </div>
+                              
+                              <p>Optional.</p>
+                              </dd>
+                        </div>
+                     </dl>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="ay-partition-s390-zfcp">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>12<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring zFCP disks</h4>
+                  </header>
+                  
+                  
+                  <p>The following elements must be placed within the following XML structure:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;profile&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;zfcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;devices config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        ...</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/listentry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/devices&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/zfcp&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;profile&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>Each disk needs to be configured in a separate <code class="literal">listentry</code> section, which needs to provide the following elements:</p>
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">controller_id</span></dt>
+                        <dd>
+                           
+                           <p>Channel number</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;controller_id&gt;0.0.fc00&lt;/controller_id&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">wwpn</span></dt>
+                        <dd>
+                           
+                           <p>Worldwide port number, the target port through which the SCSI device is attached</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;wwpn&gt;0x500507630300c562&lt;/wwpn&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">fcp_lun</span></dt>
+                        <dd>
+                           
+                           <p>Logical unit number</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;fcp_lun&gt;0x4010403200000000&lt;/fcp_lun&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>See the IBM documentation for more information, <a class="link" href="%20https://www.ibm.com/docs/en/linux-on-systems?topic=wsd-configuring-devices"> https://www.ibm.com/docs/en/linux-on-systems?topic=wsd-configuring-devices</a>.</p>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partiich01s05.html">Prev</a></td>
+                  <td class="up"><a href="bk05partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk05partiich01s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>The Systemd boot loader</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>iSCSI initiator overview</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

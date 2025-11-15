@@ -1,0 +1,368 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.3.&nbsp;Debugging and profiling with Valgrind</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvich01s02.html" rel="prev">
+      <link href="bk07partvich01s04.html" rel="next">
+      <link href="bk07partvich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvich01.html">Up</a> <a href="bk07partvich01s04.html">Next</a> <a href="bk07partvich01s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvich01s03.html" db-id="d616951e221900" id="sec-tuning-tracing-valgrind">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Debugging and profiling with Valgrind</h2>
+            </header>
+            
+            
+            <p>Valgrind is a set of tools to debug and profile your programs so that they can run
+               both faster and with fewer errors. Valgrind can detect problems related to memory
+               management and threading, or can also serve as a framework for building new debugging
+               tools. It is well known that this tool can incur high overhead, causing, for example,
+               higher runtimes or changing the normal program behavior under concurrent workloads
+               based on timing.</p>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-install">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installation</h3>
+               </header>
+               
+               
+               <p>Valgrind is not shipped with standard <span class="phrase productname">SUSE Linux Enterprise Server</span> distribution. To install it on your system, you need to obtain SUSE Software Development
+                  Kit, and either install it and run</p>
+               
+               <p><code class="command">zypper</code><code class="option">install <em class="replaceable">VALGRIND</em></code></p>
+               
+               <p>or browse through the SUSE Software Development Kit directory tree, locate the Valgrind
+                  package and install it with</p>
+               
+               <p><code class="command">rpm</code><code class="option">-i</code> valgrind-<em class="replaceable">VERSION_ARCHITECTURE</em>.rpm</p>
+               
+               <p>The SDK is a module for SUSE Linux Enterprise and is available via an online channel
+                  from the SUSE Customer Center. Refer to <a class="xref xref-article" href="bk11ar02.html">Modules and Extensions Quick Start</a> for details.</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-supparch">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Supported architectures</h3>
+               </header>
+               
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> supports Valgrind on the following architectures:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p>AMD64/Intel&nbsp;64</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>POWER</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>IBM&nbsp;Z</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-core">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>General information</h3>
+               </header>
+               
+               
+               <p>The main advantage of Valgrind is that it works with existing compiled executables.
+                  You do not need to recompile or modify your programs to use it. Run Valgrind like
+                  this:</p>
+               
+               <p><code class="command">valgrind</code><em class="replaceable">VALGRIND_OPTIONS</em> your-prog <em class="replaceable">YOUR-PROGRAM-OPTIONS</em></p>
+               
+               <p>Valgrind consists of several tools, and each provides specific functionality. Information
+                  in this section is general and valid regardless of the used tool. The most important
+                  configuration option is <code class="option">--tool</code>. This option tells Valgrind which tool to run. If you omit this option, <code class="systemitem">memcheck</code> is selected by default. For example, to run <code class="command">find ~</code><code class="option">-name</code> .bashrc with Valgrind's <code class="systemitem">memcheck</code> tools, enter the following in the command line:</p>
+               
+               <p><code class="command">valgrind</code><code class="option">--tool</code>=memcheck find ~ -name .bashrc</p>
+               
+               <p>A list of standard Valgrind tools with a brief description follows:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">memcheck</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Detects memory errors. It helps you tune your programs to behave correctly.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">cachegrind</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Profiles cache prediction. It helps you tune your programs to run faster.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">callgrind</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Works in a similar way to <code class="systemitem">cachegrind</code> but also gathers additional cache-profiling information.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">exp-drd</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Detects thread errors. It helps you tune your multi-threaded programs to behave correctly.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">helgrind</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Another thread error detector. Similar to <code class="systemitem">exp-drd</code> but uses different techniques for problem analysis.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">massif</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>A heap profiler. Heap is an area of memory used for dynamic memory allocation. This
+                           tool helps you tune your program to use less memory.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="systemitem">lackey</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>An example tool showing instrumentation basics.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-defopts">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Default options</h3>
+               </header>
+               
+               
+               <p>Valgrind can read options at start-up. There are three places which Valgrind checks:</p>
+               
+               <ol class="orderedlist" type="1">
+                  
+                  <li>
+                     
+                     <p>The file <code class="filename">.valgrindrc</code> in the home directory of the user who runs Valgrind.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The environment variable <code class="literal">$VALGRIND_OPTS</code></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The file <code class="filename">.valgrindrc</code> in the current directory where Valgrind is run from.</p>
+                     </li>
+                  </ol>
+               
+               <p>These resources are parsed exactly in this order, while later given options take precedence
+                  over earlier processed options. Options specific to a particular Valgrind tool must
+                  be prefixed with the tool name and a colon. For example, if you want <code class="systemitem">cachegrind</code> to always write profile data to the <code class="filename">/tmp/cachegrind_<em class="replaceable">PID</em>.log</code>, add the following line to the <code class="filename">.valgrindrc</code> file in your home directory:</p>
+               
+               <p><code class="literal">--cachegrind:cachegrind-out-file=/tmp/cachegrind_%p.log</code></p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-howorks">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>How Valgrind works</h3>
+               </header>
+               
+               
+               <p>Valgrind takes control of your executable before it starts. It reads debugging information
+                  from the executable and related shared libraries. The executable's code is redirected
+                  to the selected Valgrind tool, and the tool adds its own code to handle its debugging.
+                  Then the code is handed back to the Valgrind core and the execution continues.</p>
+               
+               <p>For example, <code class="systemitem">memcheck</code> adds its code, which checks every memory access. As a consequence, the program runs
+                  much slower than in the native execution environment.</p>
+               
+               <p>Valgrind simulates every instruction of your program. Therefore, it not only checks
+                  the code of your program, but also all related libraries (including the C library),
+                  libraries used for graphical environment, and so on. If you try to detect errors with
+                  Valgrind, it also detects errors in associated libraries (like C, X11, or Gtk libraries).
+                  Because you do not need all these errors frequently, Valgrind can selectively suppress
+                  these error messages to suppression files. The <code class="option">--gen-suppressions=yes</code> tells Valgrind to report these suppressions which you can copy to a file.</p>
+               
+               <p>You should supply a real executable (machine code) as a Valgrind argument. If your
+                  application is run, for example, from a shell or Perl script, you can by mistake get
+                  error reports related to <code class="command">/bin/sh</code> (or <code class="command">/usr/bin/perl</code>). In such cases, you can use <code class="option">--trace-children=yes</code> to work around this issue. However, using the executable itself avoids any confusion
+                  over this issue.</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-messages">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Messages</h3>
+               </header>
+               
+               
+               <p>During its runtime, Valgrind reports messages with detailed errors and important events.
+                  The following example explains the messages:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>valgrind --tool=memcheck find ~ -name .bashrc</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>==6558== Conditional jump or move depends on uninitialised value(s)</code></span></span>
+<span class="line"><span class="ld"><code>==6558==    at 0x400AE79: _dl_relocate_object (in /lib64/ld-2.11.1.so)</code></span></span>
+<span class="line"><span class="ld"><code>==6558==    by 0x4003868: dl_main (in /lib64/ld-2.11.1.so)</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>==6558== Conditional jump or move depends on uninitialised value(s)</code></span></span>
+<span class="line"><span class="ld"><code>==6558==    at 0x400AE82: _dl_relocate_object (in /lib64/ld-2.11.1.so)</code></span></span>
+<span class="line"><span class="ld"><code>==6558==    by 0x4003868: dl_main (in /lib64/ld-2.11.1.so)</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>==6558== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)</code></span></span>
+<span class="line"><span class="ld"><code>==6558== malloc/free: in use at exit: 2,228 bytes in 8 blocks.</code></span></span>
+<span class="line"><span class="ld"><code>==6558== malloc/free: 235 allocs, 227 frees, 489,675 bytes allocated.</code></span></span>
+<span class="line"><span class="ld"><code>==6558== For counts of detected errors, rerun with: -v</code></span></span>
+<span class="line"><span class="ld"><code>==6558== searching for pointers to 8 not-freed blocks.</code></span></span>
+<span class="line"><span class="ld"><code>==6558== checked 122,584 bytes.</code></span></span>
+<span class="line"><span class="ld"><code>==6558==</code></span></span>
+<span class="line"><span class="ld"><code>==6558== LEAK SUMMARY:</code></span></span>
+<span class="line"><span class="ld"><code>==6558==    definitely lost: 0 bytes in 0 blocks.</code></span></span>
+<span class="line"><span class="ld"><code>==6558==      possibly lost: 0 bytes in 0 blocks.</code></span></span>
+<span class="line"><span class="ld"><code>==6558==    still reachable: 2,228 bytes in 8 blocks.</code></span></span>
+<span class="line"><span class="ld"><code>==6558==         suppressed: 0 bytes in 0 blocks.</code></span></span>
+<span class="line"><span class="ld"><code>==6558== Rerun with --leak-check=full to see details of leaked memory.</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="literal">==6558==</code> introduces Valgrind's messages and contains the process ID number (PID). You can
+                  easily distinguish Valgrind's messages from the output of the program itself, and
+                  decide which messages belong to a particular process.</p>
+               
+               <p>To make Valgrind's messages more detailed, use <code class="option">-v</code> or even <code class="option">-v -v</code>.</p>
+               
+               <p>You can make Valgrind send its messages to three different places:</p>
+               
+               <ol class="orderedlist" type="1">
+                  
+                  <li>
+                     
+                     <p>By default, Valgrind sends its messages to the file descriptor 2, which is the standard
+                        error output. You can tell Valgrind to send its messages to any other file descriptor
+                        with the <code class="option">--log-fd=<em class="replaceable">FILE_DESCRIPTOR_NUMBER</em></code> option.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The second, and a more useful way, is to send Valgrind's messages to a file with <code class="option">--log-file=<em class="replaceable">FILENAME</em></code>. This option accepts several variables, for example, <code class="literal">%p</code> gets replaced with the PID of the currently profiled process. This way you can send
+                        messages to different files based on their PID. <code class="literal">%q{env_var}</code> is replaced with the value of the related <code class="literal">env_var</code> environment variable.</p>
+                     
+                     <p>The following example checks for possible memory errors during the Apache Web server
+                        restart, while following children processes and writing detailed Valgrind's messages
+                        to separate files distinguished by the current process PID:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>valgrind -v --tool=memcheck --trace-children=yes \</code></span></span>
+<span class="line"><span class="ld"><code>--log-file=valgrind_pid_%p.log systemctl restart apache2.service</code></span></span></pre>
+                     </div>
+                     
+                     <p>This process created 52 log files in the testing system, and took 75 seconds instead
+                        of the usual 7 seconds needed to run <code class="command">sudo systemctl restart apache2.service</code> without Valgrind, which is approximately 10 times more.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -1 valgrind_pid_*log</code></span></span>
+<span class="line"><span class="ld"><code>valgrind_pid_11780.log</code></span></span>
+<span class="line"><span class="ld"><code>valgrind_pid_11782.log</code></span></span>
+<span class="line"><span class="ld"><code>valgrind_pid_11783.log</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>valgrind_pid_11860.log</code></span></span>
+<span class="line"><span class="ld"><code>valgrind_pid_11862.log</code></span></span>
+<span class="line"><span class="ld"><code>valgrind_pid_11863.log</code></span></span></pre>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>You may also prefer to send the Valgrind's messages over the network. You need to
+                        specify the <code class="literal">aa.bb.cc.dd</code> IP address and <code class="literal">port_num</code> port number of the network socket with the <code class="option">--log-socket=<em class="replaceable">AA.BB.CC.DD:PORT_NUM</em></code> option. If you omit the port number, 1500 is used.</p>
+                     
+                     <p>It is useless to send Valgrind's messages to a network socket if no application is
+                        capable of receiving them on the remote machine. That is why <code class="command">valgrind-listener</code>, a simple listener, is shipped together with Valgrind. It accepts connections on
+                        the specified port and copies everything it receives to the standard output.</p>
+                     </li>
+                  </ol>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-tracing-valgrind-error">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Error messages</h3>
+               </header>
+               
+               
+               <p>Valgrind remembers all error messages, and if it detects a new error, the error is
+                  compared against old error messages. This way Valgrind checks for duplicate error
+                  messages. In case of a duplicate error, it is recorded but no message is shown. This
+                  mechanism prevents you from being overwhelmed by millions of duplicate errors.</p>
+               
+               <p>The <code class="option">-v</code> option adds a summary of all reports (sorted by their total count) to the end of
+                  the Valgrind's execution output. Moreover, Valgrind stops collecting errors if it
+                  detects either 1000 different errors, or 10 000 000 errors in total. To suppress this
+                  limit and see all error messages, use <code class="option">--error-limit=no</code>.</p>
+               
+               <p>Certain errors cause other errors. Therefore, fix errors in the same order as they
+                  appear and re-check the program continuously.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvich01s02.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvich01.html">Up</a></td>
+                  <td class="next"><a href="bk07partvich01s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Tracing library calls with ltrace</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

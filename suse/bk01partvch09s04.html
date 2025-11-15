@@ -1,0 +1,528 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>46.4.&nbsp;Advanced SFCB tasks</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch09s03.html" rel="prev">
+      <link href="bk01partvch09s05.html" rel="next">
+      <link href="bk01partvch09.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch09.html">Up</a> <a href="bk01partvch09s05.html">Next</a> <a href="bk01partvch09s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch09s04.html" db-id="d616951e69572" id="sec-wbem-advanced">
+            <header>
+               <h2><span class="label">46<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Advanced SFCB tasks</h2>
+            </header>
+            
+            
+            <p>This chapter covers more advanced topics related to SFCB usage. To understand them,
+               you need to have basic knowledge of the Linux file system and experience with the
+               Linux command line. This chapter includes the following tasks:</p>
+            
+            <ul class="itemizedlist" db-mark="bullet">
+               
+               <li>
+                  
+                  <p>Installing CMPI providers</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Testing SFCB</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Using <code class="command">wbemcli</code> CIM client</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="sec-wbem-advanced-cmpinst">
+               <header>
+                  <h3><span class="label">46<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installing CMPI providers</h3>
+               </header>
+               
+               
+               <p>To install a CMPI provider, you need to make sure that its shared library is copied
+                  into one of the directories specified by <code class="literal">providerDirs</code> configuration option, see <a class="xref xref-sect3" href="bk01partvch09s03.html#sec-wbem-config-confile-16">the section called “providerDirs”</a>. The provider must also be properly registered using <code class="command">sfcbstage</code> and <code class="command">sfcbrepos</code> commands.</p>
+               
+               <p>The provider package is prepared for SFCB, so that its installation takes care of
+                  the proper registration. Most SBLIM providers are prepared for SFCB.</p>
+               
+               <section class="sect3" id="sec-wbem-advanced-cmpinst-crep">
+                  <header>
+                     <h4><span class="label">46<span class="sep">.</span>4<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Class repository</h4>
+                  </header>
+                  
+                  
+                  <p><em>Class repository</em> is a place where SFCB stores information about CIM classes. It consists of a directory
+                     tree with namespace components. Typical CIM namespaces are <code class="literal">root/cimv2</code> or <code class="literal">root/interop</code>, which respectively translate to the class repository directory path on the file
+                     system</p>
+                  
+                  <p><code class="filename">/var/lib/sfcb/registration/repository/root/cimv2</code></p>
+                  
+                  <p>and</p>
+                  
+                  <p><code class="filename">/var/lib/sfcb/registration/repository/root/interop</code></p>
+                  
+                  <p>Each namespace directory contains the file <code class="filename">classSchemas</code>. The file has a compiled binary representation of all the CIM classes registered
+                     under that namespace. It also contains necessary information about their CIM superclasses.</p>
+                  
+                  <p>Each namespace directory may contain a file <code class="filename">qualifiers</code> which contains all qualifiers for the namespace. When sfcbd restarts, the class provider
+                     will scan the directory <code class="filename">/var/lib/sfcb/registration/repository/</code> and all its subdirectories to determine the registered namespaces. Then <code class="filename">classSchemas</code> files are decoded and the class hierarchy for each namespace is built.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-wbem-advanced-cmpinst-classadd">
+                  <header>
+                     <h4><span class="label">46<span class="sep">.</span>4<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Adding new classes</h4>
+                  </header>
+                  
+                  
+                  <p>SFCB cannot make live CIM class manipulations. You need to add, change or remove classes
+                     offline and restart SFCB service with <code class="command">systemctl restart sfcb</code> to register the changes.</p>
+                  
+                  <p>To store providers class and registration information, SFCB uses a place called <em>staging area</em>. On SUSE® Linux Enterprise Server systems, it is the directory structure under <code class="filename">/var/lib/sfcb/stage/</code>.</p>
+                  
+                  <p>To add a new provider, you need to:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>Copy the provider class definition files to the <code class="filename">./mofs</code> subdirectory of staging area directory (<code class="filename">/var/lib/sfcb/stage/mofs</code>).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Copy a registration file which contains the name of the class or classes and type
+                           of provider, and the name of the executable library file into the <code class="filename">./regs</code> subdirectory.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>There are two default <q>mof</q> (class definition) files in the staging directory: <code class="filename">indication.mof</code> and <code class="filename">interop.mof</code>. MOF files under the root stage directory <code class="filename">/var/lib/sfcb/stage/mofs</code> will be copied into each namespace after running <code class="filename">sfcbrepos</code> command. The <code class="filename">interop.mof</code> will only be compiled into the <em>interop</em> namespace.</p>
+                  
+                  <p>The directory layout may look like the following example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls /var/lib/sfcb/stage</code></span></span>
+<span class="line"><span class="ld"><code>default.reg  mofs  regs</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls /var/lib/sfcb/stage/mofs</code></span></span>
+<span class="line"><span class="ld"><code>indication.mof  root</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls /var/lib/sfcb/stage/mofs/root</code></span></span>
+<span class="line"><span class="ld"><code>cimv2  interop  suse  virt</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -1 /var/lib/sfcb/stage/mofs/root/cimv2 | less</code></span></span>
+<span class="line"><span class="ld"><code>Linux_ABIParameter.mof</code></span></span>
+<span class="line"><span class="ld"><code>Linux_BaseIndication.mof</code></span></span>
+<span class="line"><span class="ld"><code>Linux_Base.mof</code></span></span>
+<span class="line"><span class="ld"><code>Linux_DHCPElementConformsToProfile.mof</code></span></span>
+<span class="line"><span class="ld"><code>Linux_DHCPEntity.mof</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span>
+<span class="line"><span class="ld"><code>OMC_StorageSettingWithHints.mof</code></span></span>
+<span class="line"><span class="ld"><code>OMC_StorageVolumeDevice.mof</code></span></span>
+<span class="line"><span class="ld"><code>OMC_StorageVolume.mof</code></span></span>
+<span class="line"><span class="ld"><code>OMC_StorageVolumeStorageSynchronized.mof</code></span></span>
+<span class="line"><span class="ld"><code>OMC_SystemStorageCapabilities.mof</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -1 /var/lib/sfcb/stage/mofs/root/interop</code></span></span>
+<span class="line"><span class="ld"><code>ComputerSystem.mof</code></span></span>
+<span class="line"><span class="ld"><code>ElementConformsToProfile.mof</code></span></span>
+<span class="line"><span class="ld"><code>HostSystem.mof</code></span></span>
+<span class="line"><span class="ld"><code>interop.mof</code></span></span>
+<span class="line"><span class="ld"><code>Linux_DHCPElementConformsToProfile.mof</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span>
+<span class="line"><span class="ld"><code>OMC_SMIElementSoftwareIdentity.mof</code></span></span>
+<span class="line"><span class="ld"><code>OMC_SMISubProfileRequiresProfile.mof</code></span></span>
+<span class="line"><span class="ld"><code>OMC_SMIVolumeManagementSoftware.mof</code></span></span>
+<span class="line"><span class="ld"><code>ReferencedProfile.mof</code></span></span>
+<span class="line"><span class="ld"><code>RegisteredProfile.mof</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>ls -1 /var/lib/sfcb/stage/regs</code></span></span>
+<span class="line"><span class="ld"><code>AllocationCapabilities.reg</code></span></span>
+<span class="line"><span class="ld"><code>Linux_ABIParameter.reg</code></span></span>
+<span class="line"><span class="ld"><code>Linux_BaseIndication.reg</code></span></span>
+<span class="line"><span class="ld"><code>Linux_DHCPGlobal.reg</code></span></span>
+<span class="line"><span class="ld"><code>Linux_DHCPRegisteredProfile.reg</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span>
+<span class="line"><span class="ld"><code>OMC_Base.sfcb.reg</code></span></span>
+<span class="line"><span class="ld"><code>OMC_CopyServices.sfcb.reg</code></span></span>
+<span class="line"><span class="ld"><code>OMC_PowerManagement.sfcb.reg</code></span></span>
+<span class="line"><span class="ld"><code>OMC_Server.sfcb.reg</code></span></span>
+<span class="line"><span class="ld"><code>RegisteredProfile.reg</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /var/lib/sfcb/stage/regs/Linux_DHCPRegisteredProfile.reg</code></span></span>
+<span class="line"><span class="ld"><code>[Linux_DHCPRegisteredProfile]</code></span></span>
+<span class="line"><span class="ld"><code>   provider: Linux_DHCPRegisteredProfileProvider</code></span></span>
+<span class="line"><span class="ld"><code>   location: cmpiLinux_DHCPRegisteredProfile</code></span></span>
+<span class="line"><span class="ld"><code>   type: instance</code></span></span>
+<span class="line"><span class="ld"><code>   namespace: root/interop</code></span></span>
+<span class="line"><span class="ld"><code>#</code></span></span>
+<span class="line"><span class="ld"><code>[Linux_DHCPElementConformsToProfile]</code></span></span>
+<span class="line"><span class="ld"><code>   provider: Linux_DHCPElementConformsToProfileProvider</code></span></span>
+<span class="line"><span class="ld"><code>   location: cmpiLinux_DHCPElementConformsToProfile</code></span></span>
+<span class="line"><span class="ld"><code>   type: instance association</code></span></span>
+<span class="line"><span class="ld"><code>   namespace: root/cimv2</code></span></span>
+<span class="line"><span class="ld"><code>#</code></span></span>
+<span class="line"><span class="ld"><code>[Linux_DHCPElementConformsToProfile]</code></span></span>
+<span class="line"><span class="ld"><code>   provider: Linux_DHCPElementConformsToProfileProvider</code></span></span>
+<span class="line"><span class="ld"><code>   location: cmpiLinux_DHCPElementConformsToProfile</code></span></span>
+<span class="line"><span class="ld"><code>   type: instance association</code></span></span>
+<span class="line"><span class="ld"><code>   namespace: root/interop</code></span></span></pre>
+                  </div>
+                  
+                  <p>SFCB uses a custom provider registration file for each provider.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">SBLIM providers registration files</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>All SBLIM providers on the SBLIM Web site already include a registration file that
+                                 is used to generate the .reg file for SFCB.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>The format of SFCB registration file is:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[&lt;class-name&gt;]</code></span></span>
+<span class="line"><span class="ld"><code>   provider: &lt;provide-name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   location: &lt;library-name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   type: [instance] [association] [method] [indication]</code></span></span>
+<span class="line"><span class="ld"><code>   group: &lt;group-name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   unload: never</code></span></span>
+<span class="line"><span class="ld"><code>   namespace: &lt;namespace-for-class&gt; ...</code></span></span></pre>
+                  </div>
+                  
+                  <p>where:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">&lt;class-name&gt;</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The CIM class name (required)</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">&lt;provider-name&gt;</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The CMPI provider name (required)</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">&lt;location-name&gt;</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The name of the provider library (required)</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">type</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The type of the provider (required). This can be any combination of: <code class="literal">instance</code>, <code class="literal">association</code>, <code class="literal">method</code> or <code class="literal">indication</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">&lt;group-name&gt;</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Multiple providers can be grouped together and run under a single process to further
+                              minimize runtime resources. All providers registered under the same &lt;group-name&gt; will
+                              be executed under the same process. By default each provider will be run as a separate
+                              process.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">unload</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the unload policy for the provider. Currently the only supported option
+                              is <code class="option">never</code>, which specifies that the provider will not be monitored for idle times and will
+                              never be unloaded. By default each provider will be unloaded when its idle times exceed
+                              the value specified in the configuration file.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">namespace</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>List of namespaces for which this provider can be executed. This is required, although
+                              for most providers this will be <code class="literal">root/cimv2</code>.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>Once all the class definitions and provider registration files are stored in the staging
+                     area, you need to rebuild the SFCB class repository with the command <code class="command">sfcbrepos</code><code class="option">-f</code>.</p>
+                  
+                  <p>You can add, change or remove classes this way. After rebuilding the class repository,
+                     restart SFCB with command <code class="command">systemctl restart sfcb</code>.</p>
+                  
+                  <p>Alternatively, the SFCB package contains a utility that will copy provider class mof
+                     files and registration files to the correct locations in the staging area.</p>
+                  
+                  <p><code class="command">sfcbstage</code><code class="option">-r</code><code class="literal">[provider.reg] [class1.mof] [class2.mof] ...</code></p>
+                  
+                  <p>After running this command you still need to rebuild the class repository and restart
+                     SFCB service.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-wbem-advanced-testing">
+               <header>
+                  <h3><span class="label">46<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Testing SFCB</h3>
+               </header>
+               
+               
+               <p>The SFCB package includes two testing scripts: <code class="command">wbemcat</code> and <code class="command">xmltest</code>.</p>
+               
+               <p><code class="command">wbemcat</code> sends raw CIM-XML data via HTTP protocol to the specified SFCB host (localhost by
+                  default) listening on port 5988. Then it displays the returned results. The following
+                  file contains the CIM-XML representation of a standard EnumerateClasses request:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CIM CIMVERSION="2.0" DTDVERSION="2.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;MESSAGE ID="4711" PROTOCOLVERSION="1.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;SIMPLEREQ&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;IMETHODCALL NAME="EnumerateClasses"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;LOCALNAMESPACEPATH&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;NAMESPACE NAME="root"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;NAMESPACE NAME="cimv2"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/LOCALNAMESPACEPATH&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;IPARAMVALUE NAME="ClassName"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;CLASSNAME NAME=""/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;IPARAMVALUE NAME="DeepInheritance"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;VALUE&gt;TRUE&lt;/VALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;IPARAMVALUE NAME="LocalOnly"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;VALUE&gt;FALSE&lt;/VALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;IPARAMVALUE NAME="IncludeQualifiers"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;VALUE&gt;FALSE&lt;/VALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;IPARAMVALUE NAME="IncludeClassOrigin"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>          &lt;VALUE&gt;TRUE&lt;/VALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>        &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;/IMETHODCALL&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/SIMPLEREQ&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/MESSAGE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/CIM&gt;</code></span></span></pre>
+               </div>
+               
+               <p>Sending this request to SFCB CIMOM returns a list of all supported classes for which
+                  there is a registered provider. Suppose you save the file as <code class="filename">cim_xml_test.xml</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>wbemcat cim_xml_test.xml | less</code></span></span>
+<span class="line"><span class="ld"><code>HTTP/1.1 200 OK</code></span></span>
+<span class="line"><span class="ld"><code>Content-Type: application/xml; charset="utf-8"</code></span></span>
+<span class="line"><span class="ld"><code>Content-Length: 337565</code></span></span>
+<span class="line"><span class="ld"><code>Cache-Control: no-cache</code></span></span>
+<span class="line"><span class="ld"><code>CIMOperation: MethodResponse</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;?xml version="1.0" encoding="utf-8" ?&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CIM CIMVERSION="2.0" DTDVERSION="2.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;MESSAGE ID="4711" PROTOCOLVERSION="1.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;SIMPLERSP&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IMETHODRESPONSE NAME="EnumerateClasses"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CLASS NAME="Linux_DHCPParamsForEntity" SUPERCLASS="CIM_Component"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY.REFERENCE NAME="GroupComponent" REFERENCECLASS="Linux_DHCPEntity"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY.REFERENCE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY.REFERENCE NAME="PartComponent" REFERENCECLASS="Linux_DHCPParams"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY.REFERENCE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/CLASS&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/IRETURNVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/IMETHODRESPONSE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/SIMPLERSP&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/MESSAGE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/CIM&gt;</code></span></span></pre>
+               </div>
+               
+               <p>The classes listed will vary depending on what providers are installed on your system.</p>
+               
+               <p>The second script <code class="command">xmltest</code> is also used to send a raw CIM-XML test file to the SFCB CIMOM. It then compares
+                  the returned results against a previously saved <q>OK</q> result file. If there does not yet exist a corresponding <q>OK</q> file, it will be created for later use:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>xmltest cim_xml_test.xml</code></span></span>
+<span class="line"><span class="ld"><code>Running test cim_xml_test.xml ... OK</code></span></span>
+<span class="line"><span class="ld"><code>        Saving response as cim_xml_test.OK</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>xmltest cim_xml_test.xml</code></span></span>
+<span class="line"><span class="ld"><code>Running test cim_xml_test.xml ... Passed</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-wbem-advanced-wbemcli">
+               <header>
+                  <h3><span class="label">46<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Command line CIM client: wbemcli</h3>
+               </header>
+               
+               
+               <p>Besides <code class="command">wbemcat</code> and <code class="command">xmltest</code>, the SBLIM project includes a more advanced command line CIM client <code class="command">wbemcli</code>. The client is used to send CIM requests to SFCB server and display returned results.
+                  It is independent of CIMOM library and can be used with all WBEM compliant implementations.</p>
+               
+               <p>For example, if you need to list all the classes implemented by SBLIM providers registered
+                  to your SFCB, send the <q>EnumerateClasses</q> (ec) request to SFCB:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>wbemcli -dx ec http://localhost/root/cimv2</code></span></span>
+<span class="line"><span class="ld"><code>To server: &lt;?xml version="1.0" encoding="utf-8" ?&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CIM CIMVERSION="2.0" DTDVERSION="2.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;MESSAGE ID="4711" PROTOCOLVERSION="1.0"&gt;&lt;SIMPLEREQ&gt;&lt;IMETHODCALL \</code></span></span>
+<span class="line"><span class="ld"><code>    NAME="EnumerateClasses"&gt;&lt;LOCALNAMESPACEPATH&gt;&lt;NAMESPACE NAME="root"&gt; \</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/NAMESPACE&gt;&lt;NAMESPACE NAME="cimv2"&gt;&lt;/NAMESPACE&gt; \</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/LOCALNAMESPACEPATH&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IPARAMVALUE NAME="DeepInheritance"&gt;&lt;VALUE&gt;TRUE&lt;/VALUE&gt; \</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IPARAMVALUE NAME="LocalOnly"&gt;&lt;VALUE&gt;FALSE&lt;/VALUE&gt;&lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IPARAMVALUE NAME="IncludeQualifiers"&gt;&lt;VALUE&gt;FALSE&lt;/VALUE&gt; \</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IPARAMVALUE NAME="IncludeClassOrigin"&gt;&lt;VALUE&gt;TRUE&lt;/VALUE&gt; \</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/IPARAMVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/IMETHODCALL&gt;&lt;/SIMPLEREQ&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/MESSAGE&gt;&lt;/CIM&gt;</code></span></span>
+<span class="line"><span class="ld"><code>From server: Content-Type: application/xml; charset="utf-8"</code></span></span>
+<span class="line"><span class="ld"><code>From server: Content-Length: 337565</code></span></span>
+<span class="line"><span class="ld"><code>From server: Cache-Control: no-cache</code></span></span>
+<span class="line"><span class="ld"><code>From server: CIMOperation: MethodResponse</code></span></span>
+<span class="line"><span class="ld"><code>From server: &lt;?xml version="1.0" encoding="utf-8" ?&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CIM CIMVERSION="2.0" DTDVERSION="2.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;MESSAGE ID="4711" PROTOCOLVERSION="1.0"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;SIMPLERSP&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IMETHODRESPONSE NAME="EnumerateClasses"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;IRETURNVALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CLASS NAME="CIM_ResourcePool" SUPERCLASS="CIM_LogicalElement"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="Generation" TYPE="uint64"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="ElementName" TYPE="string"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="Description" TYPE="string"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="Caption" TYPE="string"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="InstallDate" TYPE="datetime"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span>
+<span class="line"><span class="ld"><code>&lt;CLASS NAME="Linux_Ext4FileSystem" SUPERCLASS="CIM_UnixLocalFileSystem"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="FSReservedCapacity" TYPE="uint64"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="TotalInodes" TYPE="uint64"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="FreeInodes" TYPE="uint64"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="ResizeIncrement" TYPE="uint64"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;VALUE&gt;0&lt;/VALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;PROPERTY NAME="IsFixedSize" TYPE="uint16"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;VALUE&gt;0&lt;/VALUE&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/PROPERTY&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[..]</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="option">-dx</code> option shows you the actual XML sent to SFCB by <code class="command">wbemcli</code> and the actual XML received. In the above example, the first of many returned classes
+                  was <code class="literal">CIM_ResourcePool</code> followed by <code class="literal">Linux_Ext4FileSystem</code>. Similar entries will appear for all other registered classes.</p>
+               
+               <p>If you omit the <code class="option">-dx</code> option, <code class="command">wbemcli</code> will display only a compact representation of the returned data:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>wbemcli ec http://localhost/root/cimv2</code></span></span>
+<span class="line"><span class="ld"><code>localhost:5988/root/cimv2:CIM_ResourcePool Generation=,ElementName=, \</code></span></span>
+<span class="line"><span class="ld"><code>    Description=,Caption=,InstallDate=,Name=,OperationalStatus=, \</code></span></span>
+<span class="line"><span class="ld"><code>    StatusDescriptions=,Status=,HealthState=,PrimaryStatus=, \</code></span></span>
+<span class="line"><span class="ld"><code>    DetailedStatus=,OperatingStatus=,CommunicationStatus=,InstanceID=, \</code></span></span>
+<span class="line"><span class="ld"><code>    PoolID=,Primordial=,Capacity=,Reserved=,ResourceType=, \</code></span></span>
+<span class="line"><span class="ld"><code>    OtherResourceType=,ResourceSubType=, \AllocationUnits=</code></span></span>
+<span class="line"><span class="ld"><code>localhost:5988/root/cimv2:Linux_Ext4FileSystem FSReservedCapacity=, \</code></span></span>
+<span class="line"><span class="ld"><code>    TotalInodes=,FreeInodes=,ResizeIncrement=,IsFixedSize=,NumberOfFiles=, \</code></span></span>
+<span class="line"><span class="ld"><code>    OtherPersistenceType=,PersistenceType=,FileSystemType=,ClusterSize=, \</code></span></span>
+<span class="line"><span class="ld"><code>    MaxFileNameLength=,CodeSet=,CasePreserved=,CaseSensitive=, \</code></span></span>
+<span class="line"><span class="ld"><code>    CompressionMethod=,EncryptionMethod=,ReadOnly=,AvailableSpace=, \</code></span></span>
+<span class="line"><span class="ld"><code>    FileSystemSize=,BlockSize=,Root=,Name=,CreationClassName=,CSName=, \</code></span></span>
+<span class="line"><span class="ld"><code>    CSCreationClassName=,Generation=,ElementName=,Description=,Caption=, \</code></span></span>
+<span class="line"><span class="ld"><code>    InstanceID=,InstallDate=,OperationalStatus=,StatusDescriptions=, \</code></span></span>
+<span class="line"><span class="ld"><code>    Status=,HealthState=,PrimaryStatus=,DetailedStatus=,OperatingStatus= \</code></span></span>
+<span class="line"><span class="ld"><code>    ,CommunicationStatus=,EnabledState=,OtherEnabledState=,RequestedState= \</code></span></span>
+<span class="line"><span class="ld"><code>    ,EnabledDefault=,TimeOfLastStateChange=,AvailableRequestedStates=, \</code></span></span>
+<span class="line"><span class="ld"><code>    TransitioningToState=,PercentageSpaceUse=</code></span></span>
+<span class="line"><span class="ld"><code>    [..]</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch09s03.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch09.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch09s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">46<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>SFCB CIMOM configuration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">46<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>11.2.&nbsp;Configuration</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partivch03.html" rel="prev">
+      <link href="bk07partivch03s03.html" rel="next">
+      <link href="bk07partivch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partivch03.html">Up</a> <a href="bk07partivch03s03.html">Next</a> <a href="bk07partivch03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partivch03s02.html" db-id="d616951e212408" id="sec-tuning-numactl-configuration">
+            <header>
+               <h2><span class="label">11<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuration</h2>
+            </header>
+            
+            
+            <p>Static configuration has been the recommended way of tuning workloads on NUMA hardware.
+               To do this, memory policies can be set with <code class="command">numactl</code>, <code class="command">taskset</code> or <code class="command">cpusets</code>. NUMA-aware applications can use special APIs. In cases where the static policies
+               have already been created, automatic NUMA balancing should be disabled as the data
+               access should already be local.</p>
+            
+            <p><code class="command">numactl</code><code class="option">--hardware</code> shows the memory configuration of the machine and whether it supports NUMA or not.
+               This is example output from a 4-node machine.</p>
+            
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>numactl --hardware</code></span></span>
+<span class="line"><span class="ld"><code>available: 4 nodes (0-3)</code></span></span>
+<span class="line"><span class="ld"><code>node 0 cpus: 0 4 8 12 16 20 24 28 32 36 40 44</code></span></span>
+<span class="line"><span class="ld"><code>node 0 size: 16068 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 0 free: 15909 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 1 cpus: 1 5 9 13 17 21 25 29 33 37 41 45</code></span></span>
+<span class="line"><span class="ld"><code>node 1 size: 16157 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 1 free: 15948 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 2 cpus: 2 6 10 14 18 22 26 30 34 38 42 46</code></span></span>
+<span class="line"><span class="ld"><code>node 2 size: 16157 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 2 free: 15981 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 3 cpus: 3 7 11 15 19 23 27 31 35 39 43 47</code></span></span>
+<span class="line"><span class="ld"><code>node 3 size: 16157 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 3 free: 16028 MB</code></span></span>
+<span class="line"><span class="ld"><code>node distances:</code></span></span>
+<span class="line"><span class="ld"><code>node   0   1   2   3</code></span></span>
+<span class="line"><span class="ld"><code>  0:  10  20  20  20</code></span></span>
+<span class="line"><span class="ld"><code>  1:  20  10  20  20</code></span></span>
+<span class="line"><span class="ld"><code>  2:  20  20  10  20</code></span></span>
+<span class="line"><span class="ld"><code>  3:  20  20  20  10</code></span></span></pre>
+            </div>
+            
+            <p>Automatic NUMA balancing can be enabled or disabled for the current session by writing
+               <code class="literal">1</code> or <code class="literal">0</code> to <code class="filename">/proc/sys/kernel/numa_balancing</code> which enables or disables the feature respectively. To permanently enable or disable
+               it, use the kernel command line option <code class="literal">numa_balancing=[enable|disable]</code>.</p>
+            
+            <p>If Automatic NUMA Balancing is enabled, the task scanner behavior can be configured.
+               The task scanner balances the overhead of Automatic NUMA Balancing with the amount
+               of time it takes to identify the best placement of data.</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">numa_balancing_scan_delay_ms</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The amount of CPU time a thread must consume before its data is scanned. This prevents
+                        creating overhead because of short-lived processes.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">numa_balancing_scan_period_min_ms</code> and <code class="literal">numa_balancing_scan_period_max_ms</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Controls how frequently a task's data is scanned. Depending on the locality of the
+                        faults, the scan rate increases or decreases. These settings control the min and max
+                        scan rates.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="literal">numa_balancing_scan_size_mb</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Controls how much address space is scanned when the task scanner is active.</p>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partivch03.html">Prev</a></td>
+                  <td class="up"><a href="bk07partivch03.html">Up</a></td>
+                  <td class="next"><a href="bk07partivch03s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">11</span><span class="sep">.&nbsp;</span>Automatic Non-Uniform Memory Access (NUMA) balancing</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">11<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Monitoring</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

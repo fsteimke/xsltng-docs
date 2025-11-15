@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.4.&nbsp;Enabling Snapper in user home directories</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10s03.html" rel="prev">
+      <link href="bk01partich10s05.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s05.html">Next</a> <a href="bk01partich10s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s04.html" db-id="d616951e19118" id="sec-snapper-homedirs">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Enabling Snapper in user home directories</h2>
+            </header>
+            
+            
+            <p>You may enable snapshots for users' <code class="filename">/home</code> directories, which supports several use cases:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Individual users may manage their own snapshots and rollbacks.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>System users, for example, database, system, and network admins who want to track
+                     copies of configuration files, documentation, and so on.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Samba shares with home directories and Btrfs back-end.</p>
+                  </li>
+               </ul>
+            
+            <p>Each user's directory is a Btrfs subvolume of <code class="filename">/home</code>. It is possible to set this up manually (see <a class="xref xref-sect2" href="#sec-snapper-manual-home-config">the section called “Manually enabling snapshots in home directories”</a>). However, a more convenient way is to use <code class="literal">pam_snapper</code>. The <code class="literal">pam_snapper</code> package installs the <code class="literal">pam_snapper.so</code> module and helper scripts, which automate user creation and Snapper configuration.</p>
+            
+            <p><code class="literal">pam_snapper</code> provides integration with the <code class="command">useradd</code> command, pluggable authentication modules (PAM), and Snapper. By default it creates
+               snapshots at user login and logout, and also creates time-based snapshots as certain
+               users remain logged in for extended periods of time. You may change the defaults using
+               the normal Snapper commands and configuration files.</p>
+            
+            <section class="sect2" id="sec-snapper-install-pam-snapper">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installing pam_snapper and creating users</h3>
+               </header>
+               
+               
+               <p>The easiest way is to start with a new <code class="filename">/home</code> directory formatted with Btrfs, and no existing users. Install <code class="literal">pam_snapper</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>zypper in pam_snapper</code></span></span></pre>
+               </div>
+               
+               <p>Add this line to <code class="filename">/etc/pam.d/common-session</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>session optional pam_snapper.so</code></span></span></pre>
+               </div>
+               
+               <p>Use the <code class="command">/usr/lib/pam_snapper/pam_snapper_useradd.sh</code> script to create a new user and home directory. By default the script performs a
+                  dry run. Edit the script to change <code class="literal">DRYRUN=1</code> to <code class="literal">DRYRUN=0</code>. Now you can create a new user:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>/usr/lib/pam_snapper/pam_snapper_useradd.sh \</code></span></span>
+<span class="line"><span class="ld"><code><em class="replaceable">username</em><em class="replaceable">group</em> passwd=<em class="replaceable">password</em></code></span></span>
+<span class="line"><span class="ld"><code>Create subvolume '/home/username'</code></span></span>
+<span class="line"><span class="ld"><code>useradd: warning: the home directory already exists.</code></span></span>
+<span class="line"><span class="ld"><code>Not copying any file from skel directory into it.</code></span></span></pre>
+               </div>
+               
+               <p>The files from <code class="filename">/etc/skel</code> will be copied into the user's home directory at their first login. Verify that the
+                  user's configuration was created by listing your Snapper configurations:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>snapper list --all</code></span></span>
+<span class="line"><span class="ld"><code>Config: home_username, subvolume: /home/username</code></span></span>
+<span class="line"><span class="ld"><code>Type   | # | Pre # | Date | User | Cleanup | Description | Userdata</code></span></span>
+<span class="line"><span class="ld"><code>-------+---+-------+------+------+---------+-------------+---------</code></span></span>
+<span class="line"><span class="ld"><code>single | 0 |       |      | root |         | current     |</code></span></span></pre>
+               </div>
+               
+               <p>Over time, this output will become populated with a list of snapshots, which the user
+                  can manage with the standard Snapper commands.</p>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-remove-user">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Removing users</h3>
+               </header>
+               
+               
+               <p>Remove users with the <code class="command">/usr/lib/pam_snapper/pam_snapper_userdel.sh</code> script. By default it performs a dry run, so edit it to change <code class="literal">DRYRUN=1</code> to <code class="literal">DRYRUN=0</code>. This removes the user, the user's home subvolume, Snapper configuration, and deletes
+                  all snapshots.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>/usr/lib/pam_snapper/pam_snapper_userdel.sh username</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-snapper-manual-home-config">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Manually enabling snapshots in home directories</h3>
+               </header>
+               
+               
+               <p>These are the steps for manually setting up users' home directories with Snapper.
+                  <code class="filename">/home</code> must be formatted with Btrfs, and the users not yet created.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs subvol create /home/<em class="replaceable">username</em><span class="prompt root">#</span>snapper -c home_<em class="replaceable">username</em> create-config /home/<em class="replaceable">username</em><span class="prompt root">#</span>sed -i -e "s/ALLOW_USERS=\"\"/ALLOW_USERS=\"<em class="replaceable">username</em>\"/g" \</code></span></span>
+<span class="line"><span class="ld"><code>/etc/snapper/configs/home_<em class="replaceable">username</em><span class="prompt root">#</span>yast users add username=<em class="replaceable">username</em> home=/home/<em class="replaceable">username</em> password=<em class="replaceable">password</em><span class="prompt root">#</span>chown <em class="replaceable">username</em>.<em class="replaceable">group</em> /home/<em class="replaceable">username</em><span class="prompt root">#</span>chmod 755 /home/<em class="replaceable">username</em>/.snapshots</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10s03.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System rollback by booting from snapshots</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Creating and modifying Snapper configurations</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

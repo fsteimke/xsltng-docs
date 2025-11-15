@@ -1,0 +1,613 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>9.2.&nbsp;Creating a complex RAID 10</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partiiich03.html" rel="prev">
+      <link href="bk09partiiich04.html" rel="next">
+      <link href="bk09partiiich03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partiiich03.html">Up</a> <a href="bk09partiiich04.html">Next</a> <a href="bk09partiiich03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partiiich03s02.html" db-id="d616951e244450" id="sec-raid10-complex">
+            <header>
+               <h2><span class="label">9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating a complex RAID 10</h2>
+            </header>
+            
+            
+            <p>YaST (and <code class="command">mdadm</code> with the <code class="option">--level=10</code> option) creates a single complex software RAID&nbsp;10 that combines features of both
+               RAID 0 (striping) and RAID 1 (mirroring). Multiple copies of all data blocks are arranged
+               on multiple drives following a striping discipline. Component devices should be the
+               same size.</p>
+            
+            <p>The complex RAID&nbsp;10 is similar in purpose to a nested RAID&nbsp;10 (1+0), but differs in
+               the following ways:</p>
+            
+            <div class="formalobject table" id="sec-raid10-complex_tab1">
+               <header>
+                  <div class="title">Table&nbsp;<span class="label">9<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Complex RAID 10 compared to nested RAID 10</div>
+               </header>
+               <table>
+                  <colgroup>
+                     <col style="width: 34%">
+                     <col style="width: 33%">
+                     <col style="width: 33%">
+                  </colgroup>
+                  <thead>
+                     
+                     <tr>
+                        <th class="bleft btop colsep rowsep">
+                           <p>Feature</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Complex RAID&nbsp;10</p>
+                        </th>
+                        <th class="btop colsep rowsep">
+                           <p>Nested RAID&nbsp;10 (1+0)</p>
+                        </th>
+                     </tr>
+                     </thead>
+                  <tbody>
+                     
+                     <tr>
+                        <td class="bleft btop colsep rowsep">
+                           <p>Number of devices</p>
+                        </td>
+                        <td class="btop colsep rowsep">
+                           <p>Allows an even or odd number of component devices</p>
+                        </td>
+                        <td class="btop colsep rowsep">
+                           <p>Requires an even number of component devices</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>Component devices</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Managed as a single RAID device</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Manage as a nested RAID device</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>Striping</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Striping occurs in the near or far layout on component devices.</p>
+                           <p>The far layout provides sequential read throughput that scales by number of drives,
+                              rather than number of RAID 1 pairs.</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Striping occurs consecutively across component devices</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>Multiple copies of data</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Two or more copies, up to the number of devices in the array</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Copies on each mirrored segment</p>
+                        </td>
+                     </tr>
+                     
+                     <tr>
+                        <td class="bleft colsep rowsep">
+                           <p>Hot spare devices</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>A single spare can service all component devices</p>
+                        </td>
+                        <td class="colsep rowsep">
+                           <p>Configure a spare for each underlying mirrored array, or configure a spare to serve
+                              a spare group that serves all mirrors.</p>
+                        </td>
+                     </tr>
+                     </tbody>
+               </table>
+            </div>
+            
+            <section class="sect2" id="sec-raid10-complex-replicas">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Number of devices and replicas in the complex RAID&nbsp;10</h3>
+               </header>
+               
+               
+               <p>When configuring a complex RAID&nbsp;10 array, you must specify the number of replicas
+                  of each data block that are required. The default number of replicas is two, but the
+                  value can be two to the number of devices in the array.</p>
+               
+               <p>You must use at least as many component devices as the number of replicas you specify.
+                  However, the number of component devices in a RAID&nbsp;10 array does not need to be a
+                  multiple of the number of replicas of each data block. The effective storage size
+                  is the number of devices divided by the number of replicas.</p>
+               
+               <p>For example, if you specify two replicas for an array created with five component
+                  devices, a copy of each block is stored on two different devices. The effective storage
+                  size for one copy of all data is 5/2 or 2.5 times the size of a component device.</p>
+               </section>
+            
+            <section class="sect2" id="sec-raid10-complex-layout">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Layout</h3>
+               </header>
+               
+               
+               <p>The complex RAID&nbsp;10 setup supports three different layouts which define how the data
+                  blocks are arranged on the disks. The available layouts are near (default), far and
+                  offset. They have different performance characteristics, so it is important to choose
+                  the right layout for your workload.</p>
+               
+               <section class="sect3" id="sec-raid10-complex-layout-near">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Near layout</h4>
+                  </header>
+                  
+                  
+                  <p>With the near layout, copies of a block of data are striped near each other on different
+                     component devices. That is, multiple copies of one data block are at similar offsets
+                     in different devices. Near is the default layout for RAID&nbsp;10. For example, if you
+                     use an odd number of component devices and two copies of data, some copies are perhaps
+                     one chunk further into the device.</p>
+                  
+                  <p>The near layout for the complex RAID&nbsp;10 yields read and write performance similar
+                     to RAID&nbsp;0 over half the number of drives.</p>
+                  
+                  <p>Near layout with an even number of disks and two replicas:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sda1 sdb1 sdc1 sde1</code></span></span>
+<span class="line"><span class="ld"><code>  0    0    1    1</code></span></span>
+<span class="line"><span class="ld"><code>  2    2    3    3</code></span></span>
+<span class="line"><span class="ld"><code>  4    4    5    5</code></span></span>
+<span class="line"><span class="ld"><code>  6    6    7    7</code></span></span>
+<span class="line"><span class="ld"><code>  8    8    9    9</code></span></span></pre>
+                  </div>
+                  
+                  <p>Near layout with an odd number of disks and two replicas:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sda1 sdb1 sdc1 sde1 sdf1</code></span></span>
+<span class="line"><span class="ld"><code>  0    0    1    1    2</code></span></span>
+<span class="line"><span class="ld"><code>  2    3    3    4    4</code></span></span>
+<span class="line"><span class="ld"><code>  5    5    6    6    7</code></span></span>
+<span class="line"><span class="ld"><code>  7    8    8    9    9</code></span></span>
+<span class="line"><span class="ld"><code>  10   10   11   11   12</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-raid10-complex-layout-far">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Far layout</h4>
+                  </header>
+                  
+                  
+                  <p>The far layout stripes data over the early part of all drives, then stripes a second
+                     copy of the data over the later part of all drives, making sure that all copies of
+                     a block are on different drives. The second set of values starts halfway through the
+                     component drives.</p>
+                  
+                  <p>With a far layout, the read performance of the complex RAID&nbsp;10 is similar to a RAID&nbsp;0
+                     over the full number of drives, but write performance is substantially slower than
+                     a RAID&nbsp;0 because there is more seeking of the drive heads. It is best used for read-intensive
+                     operations such as for read-only file servers.</p>
+                  
+                  <p>The speed of the RAID&nbsp;10 for writing is similar to other mirrored RAID types, like
+                     RAID&nbsp;1 and RAID&nbsp;10 using near layout, as the elevator of the file system schedules
+                     the writes in a more optimal way than raw writing. Using RAID&nbsp;10 in the far layout
+                     is well suited for mirrored writing applications.</p>
+                  
+                  <p>Far layout with an even number of disks and two replicas:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sda1 sdb1 sdc1 sde1</code></span></span>
+<span class="line"><span class="ld"><code>  0    1    2    3</code></span></span>
+<span class="line"><span class="ld"><code>  4    5    6    7</code></span></span>
+<span class="line"><span class="ld"><code>  . . .</code></span></span>
+<span class="line"><span class="ld"><code>  3    0    1    2</code></span></span>
+<span class="line"><span class="ld"><code>  7    4    5    6</code></span></span></pre>
+                  </div>
+                  
+                  <p class="intro">Far layout with an odd number of disks and two replicas:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sda1 sdb1 sdc1 sde1 sdf1</code></span></span>
+<span class="line"><span class="ld"><code>  0    1    2    3    4</code></span></span>
+<span class="line"><span class="ld"><code>  5    6    7    8    9</code></span></span>
+<span class="line"><span class="ld"><code>  . . .</code></span></span>
+<span class="line"><span class="ld"><code>  4    0    1    2    3</code></span></span>
+<span class="line"><span class="ld"><code>  9    5    6    7    8</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-raid10-complex-layout-offset">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Offset layout</h4>
+                  </header>
+                  
+                  
+                  <p>The offset layout duplicates stripes so that the multiple copies of a given chunk
+                     are laid out on consecutive drives and at consecutive offsets. Effectively, each stripe
+                     is duplicated and the copies are offset by one device. This should give similar read
+                     characteristics to a far layout if a suitably large chunk size is used, but without
+                     as much seeking for writes.</p>
+                  
+                  <p>Offset layout with an even number of disks and two replicas:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sda1 sdb1 sdc1 sde1</code></span></span>
+<span class="line"><span class="ld"><code>  0    1    2    3</code></span></span>
+<span class="line"><span class="ld"><code>  3    0    1    2</code></span></span>
+<span class="line"><span class="ld"><code>  4    5    6    7</code></span></span>
+<span class="line"><span class="ld"><code>  7    4    5    6</code></span></span>
+<span class="line"><span class="ld"><code>  8    9   10   11</code></span></span>
+<span class="line"><span class="ld"><code> 11    8    9   10</code></span></span></pre>
+                  </div>
+                  
+                  <p>Offset layout with an odd number of disks and two replicas:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>sda1 sdb1 sdc1 sde1 sdf1</code></span></span>
+<span class="line"><span class="ld"><code>  0    1    2    3    4</code></span></span>
+<span class="line"><span class="ld"><code>  4    0    1    2    3</code></span></span>
+<span class="line"><span class="ld"><code>  5    6    7    8    9</code></span></span>
+<span class="line"><span class="ld"><code>  9    5    6    7    8</code></span></span>
+<span class="line"><span class="ld"><code> 10   11   12   13   14</code></span></span>
+<span class="line"><span class="ld"><code> 14   10   11   12   13</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-raid10-complex-layout-parameter">
+                  <header>
+                     <h4><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Specifying the number of replicas and the layout with YaST and mdadm</h4>
+                  </header>
+                  
+                  
+                  <p>The number of replicas and the layout is specified as <span class="guimenu">Parity Algorithm</span> in YaST or with the <code class="option">--layout</code> parameter for mdadm. The following values are accepted:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">n<em class="replaceable">N</em>
+                                 </code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specify <code class="literal">n</code> for near layout and replace <em class="replaceable">N</em> with the number of replicas. <code class="literal">n2</code> is the default that is used when not configuring layout and the number of replicas.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">f<em class="replaceable">N</em>
+                                 </code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specify <code class="literal">f</code> for far layout and replace <em class="replaceable">N</em> with the number of replicas.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">o<em class="replaceable">N</em>
+                                 </code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specify <code class="literal">o</code> for offset layout and replace <em class="replaceable">N</em> with the number of replicas.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Number of replicas</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>YaST automatically offers a selection of all possible values for the <span class="guimenu">Parity Algorithm</span> parameter.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-raid10-complex-yast">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating a complex RAID&nbsp;10 with the YaST partitioner</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="sec-raid10-complex-yast_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Launch YaST and open the Partitioner.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If necessary, create partitions that should be used with your RAID configuration.
+                           Do not format them and set the partition type to <span class="guimenu">0xFD Linux RAID</span>. When using existing partitions it is not necessary to change their partition type—YaST
+                           will automatically do so. Refer to <a class="xref xref-sect1" href="bk02partiich04.html#sec-expert-partitioner">the section called “Using the <span class="guimenu">Expert Partitioner</span>
+                              ”</a> for details.</p>
+                        
+                        <p>For RAID&nbsp;10 at least four partitions are needed. It is strongly recommended to use
+                           partitions stored on different hard disks to decrease the risk of losing data if one
+                           is defective. It is recommended to use only partitions of the same size because each
+                           segment can contribute only the same amount of space as the smallest sized partition.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In the left panel, select <span class="guimenu">RAID</span>.</p>
+                        
+                        <p>A list of existing RAID configurations opens in the right panel.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>At the lower left of the RAID page, click <span class="guimenu">Add RAID</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Under <span class="guimenu">RAID Type</span>, select <span class="guimenu">RAID 10 (Mirroring and Striping)</span>.</p>
+                        
+                        <p>You can optionally assign a <span class="guimenu">RAID Name</span> to your RAID. It will make it available as <code class="filename">/dev/md/<em class="replaceable">NAME</em></code>. See <a class="xref xref-sect2" href="bk09partiiich01s02.html#sec-raid-yast-names">the section called “RAID names”</a> for more information.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>In the <span class="guimenu">Available Devices</span> list, select the desired partitions, then click <span class="guimenu">Add</span> to move them to the <span class="guimenu">Selected Devices</span> list.</p>
+                        
+                        <div class="informalfigure informalobject" id="sec-raid10-complex-yast_proc1_step6_informalfigure1">
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:556px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/raid10_a.png" style="width:556px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>(Optional) Click <span class="guimenu">Classify</span> to specify the preferred order of the disks in the RAID array.</p>
+                        
+                        <p>For RAID types such as RAID&nbsp;10, where the order of added disks matters, you can specify
+                           the order in which the devices will be used. This will ensure that one half of the
+                           array resides on one disk subsystem and the other half of the array resides on a different
+                           disk subsystem. For example, if one disk subsystem fails, the system keeps running
+                           from the second disk subsystem.</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>Select each disk in turn and click one of the <span class="guimenu">Class X</span> buttons, where X is the letter you want to assign to the disk. Available classes
+                                    are A, B, C, D and E but for many cases fewer classes are needed (only A and B, for
+                                    example). Assign all available RAID disks this way.</p>
+                                 
+                                 <p>You can press the <span class="control keycap">Ctrl</span> or <span class="keycap shift">Shift</span> key to select multiple devices. You can also right-click a selected device and choose
+                                    the appropriate class from the context menu.</p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>Specify the order of the devices by selecting one of the sorting options:</p>
+                                 
+                                 <p class="formalpara"><span class="title titlepunct">
+                                       <span class="guimenu">Sorted</span>:</span><span class="para">Sorts all devices of class A before all devices of class B and so on. For example:
+                                       <code class="literal">AABBCC</code>.</span></p>
+                                 
+                                 <p class="formalpara"><span class="title titlepunct">
+                                       <span class="guimenu">Interleaved</span>:</span><span class="para">Sorts devices by the first device of class A, then first device of class B, then all
+                                       the following classes with assigned devices. Then the second device of class A, the
+                                       second device of class B, and so on follows. All devices without a class are sorted
+                                       to the end of the devices list. For example: <code class="literal">ABCABC</code>.</span></p>
+                                 
+                                 <p class="formalpara"><span class="title titlepunct">Pattern file:</span><span class="para">Select an existing file that contains multiple lines, where each is a regular expression
+                                       and a class name (<code class="literal">"sda.* A"</code>). All devices that match the regular expression are assigned to the specified class
+                                       for that line. The regular expression is matched against the kernel name (<code class="filename">/dev/sda1</code>), the udev path name (<code class="filename">/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0-part1</code>) and then the udev ID (<code class="filename">dev/disk/by-id/ata-ST3500418AS_9VMN8X8L-part1</code>). The first match made determines the class if a device’s name matches more than
+                                       one regular expression.</span></p>
+                                 </li>
+                              
+                              <li class="step">
+                                 
+                                 <p>At the bottom of the dialog, click <span class="guimenu">OK</span> to confirm the order.</p>
+                                 
+                                 <div class="informalfigure informalobject" id="sec-raid10-complex-yast_proc1_step7_substeps1_step3_informalfigure1">
+                                    
+                                    <div class="mediaobject">
+                                       <div class="media image"><span class="viewport-table" style="width:556px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/raid10_classify_a.png" style="width:556px;"></picture></span></span></span></span></span></div>
+                                    </div>
+                                    </div>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Next</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Under <span class="guimenu">RAID Options</span>, specify the <span class="guimenu">Chunk Size</span> and <span class="guimenu">Parity Algorithm</span>, then click <span class="guimenu">Next</span>.</p>
+                        
+                        <p>For a RAID 10, the parity options are n (near), f (far), and o (offset). The number
+                           indicates the number of replicas of each data block that are required. Two is the
+                           default. For information, see <a class="xref xref-sect2" href="#sec-raid10-complex-layout">the section called “Layout”</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Add a file system and mount options to the RAID device, then click <span class="guimenu">Finish</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Next</span>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify the changes to be made, then click <span class="guimenu">Finish</span> to create the RAID.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-raid10-complex-yast-mdadm">
+               <header>
+                  <h3><span class="label">9<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Creating a complex RAID 10 with mdadm</h3>
+               </header>
+               
+               
+               <p>The procedure in this section uses the device names shown in the following table.
+                  Ensure that you modify the device names with the names of your own devices.</p>
+               
+               <div class="formalobject table" id="sec-raid10-complex-yast-mdadm_tab1">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">9<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Scenario for creating a RAID&nbsp;10 using mdadm</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 50%">
+                        <col style="width: 50%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Raw Devices</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>RAID&nbsp;10</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p><code class="filename">/dev/sdf1</code></p>
+                              <p><code class="filename">/dev/sdg1</code></p>
+                              <p><code class="filename">/dev/sdh1</code></p>
+                              <p><code class="filename">/dev/sdi1</code></p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <p><code class="filename">/dev/md3</code></p>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               <div class="informalobject procedure" id="sec-raid10-complex-yast-mdadm_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Open a terminal.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If necessary, create at least four 0xFD Linux RAID partitions of equal size using
+                           a disk partitioner such as parted.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a RAID&nbsp;10 by entering the following command.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm --create /dev/md3 --run --level=10 --chunk=32 --raid-devices=4 \</code></span></span>
+<span class="line"><span class="ld"><code>/dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1</code></span></span></pre>
+                        </div>
+                        
+                        <p>Make sure to adjust the value for <code class="option">--raid-devices</code> and the list of partitions according to your setup.</p>
+                        
+                        <p>The command creates an array with near layout and two replicas. To change any of the
+                           two values, use the <code class="option">--layout</code> as described in <a class="xref xref-sect3" href="#sec-raid10-complex-layout-parameter">the section called “Specifying the number of replicas and the layout with YaST and
+                              mdadm”</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a file system on the RAID&nbsp;10 device <code class="filename">/dev/md3</code>, for example an XFS file system:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkfs.xfs /dev/md3</code></span></span></pre>
+                        </div>
+                        
+                        <p>Modify the command to use a different file system.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit the <code class="filename">/etc/mdadm.conf</code> file or create it, if it does not exist (for example by running <code class="command">sudo vi /etc/mdadm.conf</code>). Add the following lines (if the file exists, the first line probably already exists,
+                           too).</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>DEVICE containers partitions</code></span></span>
+<span class="line"><span class="ld"><code>ARRAY /dev/md3 UUID=<em class="replaceable">UUID</em></code></span></span></pre>
+                        </div>
+                        
+                        <p>The UUID of the device can be retrieved with the following command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mdadm -D /dev/md3 | grep UUID</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit the <code class="filename">/etc/fstab</code> file to add an entry for the RAID&nbsp;10 device <code class="filename">/dev/md3</code>. The following example shows an entry for a RAID device with the XFS file system
+                           and <code class="filename">/data</code> as a mount point.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/dev/md3 /data xfs defaults 1 2</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Mount the RAID device:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mount /data</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partiiich03.html">Prev</a></td>
+                  <td class="up"><a href="bk09partiiich03.html">Up</a></td>
+                  <td class="next"><a href="bk09partiiich04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">9</span><span class="sep">.&nbsp;</span>Creating software RAID&nbsp;10 devices</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">10</span><span class="sep">.&nbsp;</span>Creating a degraded RAID array</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

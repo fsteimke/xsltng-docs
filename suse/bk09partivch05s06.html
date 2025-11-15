@@ -1,0 +1,606 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.6.&nbsp;Multipath management tools</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s05.html" rel="prev">
+      <link href="bk09partivch05s07.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s07.html">Next</a> <a href="bk09partivch05s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s06.html" db-id="d616951e253497" id="sec-multipath-mpiotools">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Multipath management tools</h2>
+            </header>
+            
+            
+            <p>The multipathing support in <span class="phrase productname">SUSE Linux Enterprise Server</span> is based on the Device Mapper Multipath module of the Linux kernel and the <code class="systemitem">multipath-tools</code> user space package.</p>
+            
+            <p>The generic multipathing capability is handled by the Device Mapper Multipath (DM-MP)
+               module. For details, refer to <a class="xref xref-sect2" href="#sec-multipath-mpiotools-dm">the section called “Device mapper multipath module”</a>.</p>
+            
+            <p>The packages <code class="resource systemitem">multipath-tools</code> and <code class="resource systemitem">kpartx</code> provide tools that handle automatic path discovery and grouping. The tools are the
+               following:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">multipathd</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The daemon to set up and monitor multipath maps, and a command-line client to communicate
+                        with the daemon process. See <a class="xref xref-sect2" href="#sec-multipath-mpiotools-multipathd">the section called “The <code class="command">multipathd</code> daemon”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">multipath</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The command-line tool for multipath operations. See <a class="xref xref-sect2" href="#sec-multipath-mpiotools-multipath">the section called “The <code class="command">multipath</code> command”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">kpartx</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The command-line tool for managing “partitions” on multipath devices. See <a class="xref xref-sect2" href="bk09partivch05s07.html#sec-multipath-configuration-partitioning">the section called “Partitions on multipath devices and <code class="command">kpartx</code>
+                           ”</a>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="command">mpathpersist</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The command-line tool for managing SCSI persistent reservations. See <a class="xref xref-sect2" href="#sec-multipath-mpiotools-mpathpersist">the section called “SCSI persistent reservations and <code class="command">mpathpersist</code>
+                           ”</a>.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <section class="sect2" id="sec-multipath-mpiotools-dm">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Device mapper multipath module</h3>
+               </header>
+               
+               
+               <p>The Device Mapper Multipath (DM-MP) module <code class="filename">dm-multipath.ko</code> provides the generic multipathing capability for Linux. DM-MPIO is the preferred
+                  solution for multipathing on <span class="phrase productname">SUSE Linux Enterprise Server</span> for SCSI and DASD devices, and can be used for NVMe devices as well.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Using DM-MP for NVMe devices</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Since <span class="phrase productname">SUSE Linux Enterprise Server</span> 15, native NVMe multipathing (see <a class="xref xref-sect2" href="bk09partivch05s02.html#sec-multipath-hardware-implementations">the section called “Multipath implementations: device mapper and NVMe”</a>) has been recommended for NVMe and used by default. To disable native NVMe multipathing
+                              and use device mapper multipath instead (<em>not recommended</em>), boot with the kernel parameter <code class="literal">nvme-core.multipath=0</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The Device Mapper Multipath module handles the following tasks:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Distributing load over multiple paths inside the active path group.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Noticing I/O errors on path devices, and marking these as failed, so that no I/O will
+                        be sent to them.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Switching path groups when all paths in the active path group have failed.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Either failing or queuing I/O on the multipath device if all paths have failed, depending
+                        on configuration.</p>
+                     </li>
+                  </ul>
+               
+               <p>The following tasks are handled by the user-space components in the <code class="systemitem">multipath-tools</code> package, not by the Device Mapper Multipath module:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Discovering devices representing different paths to the same storage device and assembling
+                        multipath maps from them.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Collecting path devices with similar properties into path groups.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Monitoring path devices actively for failure or reinstantiation.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Monitoring of addition and removal of path devices.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The Device Mapper Multipath module does not provide an easy-to-use user interface
+                        for setup and configuration.</p>
+                     </li>
+                  </ul>
+               
+               <p>For details about the components from the <code class="systemitem">multipath-tools</code> package, refer to <a class="xref xref-sect2" href="#sec-multipath-mpiotools-multipathd">the section called “The <code class="command">multipathd</code> daemon”</a>.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Failures that multipath prevents</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>DM-MPIO protects against failures in the paths to the device, and not failures in
+                              the device itself, such as media errors. The latter kind of errors must be prevented
+                              by other means, such as replication.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-mpiotools-multipathd">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>The <code class="command">multipathd</code> daemon</h3>
+               </header>
+               
+               
+               <p><code class="command">multipathd</code> is the most important part of a modern Linux device mapper multipath setup. It is
+                  normally started through the systemd service <code class="filename">multipathd.service</code> (see <a class="xref xref-sect2" href="bk09partivch05s07.html#sec-multipath-configuration-start">the section called “Enabling, starting, and stopping multipath services”</a>).</p>
+               
+               <p><code class="command">multipathd</code> serves the following tasks (some of them depend on the configuration):</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>On startup, detects path devices and sets up multipath maps from detected devices.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Monitors uevents and device mapper events, adding or removing path mappings to multipath
+                        maps as necessary and initiating failover or failback operations.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Sets up new maps on the fly when new path devices are discovered.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Checks path devices at regular intervals to detect failure, and tests failed paths
+                        to reinstate them if they become operational again.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>When all paths fail, <code class="command">multipathd</code> either fails the map, or switches the map device to queuing mode for a given time
+                        interval.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Handles path state changes and switches path groups or regroups paths, as necessary.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Tests paths for “marginal” state, i.e. shaky fabrics conditions that cause path state
+                        flipping between operational and non-operational.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Handles SCSI persistent reservation keys for path devices if configured. See <a class="xref xref-sect2" href="#sec-multipath-mpiotools-mpathpersist">the section called “SCSI persistent reservations and <code class="command">mpathpersist</code>
+                           ”</a>.</p>
+                     </li>
+                  </ul>
+               
+               <p><code class="command">multipathd</code> also serves as a command-line client to process interactive commands by sending them
+                  to the running daemon. The general syntax to send commands to the daemon is as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd <em class="replaceable">COMMAND</em></code></span></span></pre>
+               </div>
+               
+               <p>or</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd -k'<em class="replaceable">COMMAND</em>'</code></span></span></pre>
+               </div>
+               
+               <p>There is also an interactive mode that allows sending multiple subsequent commands:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> multipathd -k</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">How multipath and multipathd work together</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Many <code class="command">multipathd</code> commands have <code class="command">multipath</code> equivalents. For example, <code class="command">multipathd show topology</code> does the same thing as <code class="command">multipath -ll</code>. The notable difference is that the multipathd command inquires the internal state
+                              of the running <code class="command">multipathd</code> daemon, whereas multipath obtains information directly from the kernel and I/O operations.</p>
+                           
+                           <p>If the multipath daemon is running, we recommend making modifications to the system
+                              by using the <code class="command">multipathd</code> commands. Otherwise, the daemon may notice configuration changes and react to them.
+                              In some situations, the daemon might even try to undo the applied changes. <code class="command">multipath</code> automatically delegates certain possibly dangerous commands, like destroying and
+                              flushing maps, to <code class="command">multipathd</code> if a running daemon is detected.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The list below describes frequently used <code class="command">multipathd</code> commands:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">show topology</span></dt>
+                     <dd>
+                        
+                        <p>Shows the current map topology and properties. See <a class="xref xref-sect2" href="bk09partivch05s14.html#sec-multipath-best-practice-status">the section called “Interpreting multipath I/O status”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">show paths</span></dt>
+                     <dd>
+                        
+                        <p>Shows the currently known path devices.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">show paths format "<em class="replaceable">FORMAT STRING</em>"</span></dt>
+                     <dd>
+                        
+                        <p>Shows the currently known path devices using a format string. Use <code class="command">show wildcards</code> to see a list of supported format specifiers.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">show maps</span></dt>
+                     <dd>
+                        
+                        <p>Shows the currently configured map devices.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">show maps format <em class="replaceable">FORMAT STRING</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Shows the currently configured map devices using a format string. Use <code class="command">show wildcards</code> to see a list of supported format specifiers.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">show config local</span></dt>
+                     <dd>
+                        
+                        <p>Shows the current configuration that multipathd is using.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">reconfigure</span></dt>
+                     <dd>
+                        
+                        <p>Rereads configuration files, rescans devices, and sets up maps again. This is basically
+                           equivalent to a restart of <code class="command">multipathd</code>. A few options cannot be modified without a restart. They are mentioned in the man
+                           page <code class="systemitem">multipath.conf(5)</code>. The <code class="option">reconfigure</code> command reloads only map devices that have changed in some way. To force the reloading
+                           of every map device, use <code class="command">reconfigure all</code> (available since SUSE Linux Enterprise Server&nbsp;15 SP4; on previous versions, <code class="option">reconfigure</code> reloaded every map).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">del map <em class="replaceable">MAP DEVICE NAME</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Unconfigure and delete the given map device and its partitions. <em class="replaceable">MAP DEVICE NAME</em> can be a device node name like <code class="filename">dm-0</code>, a WWID, or a map name. The command fails if the device is in use.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">switchgroup map <em class="replaceable">MAP DEVICE NAME</em> group <em class="replaceable">N</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Switch to the path group with the given numeric index (starting at 1). This is useful
+                           for maps with manual failback (see <a class="xref xref-sect1" href="bk09partivch05s09.html">the section called “Configuring policies for failover, queuing, and failback”</a>).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>Additional commands are available to modify path states, enable or disable queuing,
+                  and more. See <code class="systemitem">multipathd(8)</code> for details.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-mpiotools-multipath">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The <code class="command">multipath</code> command</h3>
+               </header>
+               
+               
+               <p>Even though multipath setup is mostly automatic and handled by <code class="command">multipathd</code>, <code class="command">multipath</code> is still useful for some administration tasks. Several examples of the command usage
+                  follow:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath</span></dt>
+                     <dd>
+                        
+                        <p>Detects path devices and configures all multipath maps that it finds.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -d</span></dt>
+                     <dd>
+                        
+                        <p>Similar to <code class="command">multipath</code>, but does not set up any maps (“dry run”).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath <em class="replaceable">DEVICENAME</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Configures a specific multipath device. <em class="replaceable">DEVICENAME</em> can denote a member path device by its device node name (<code class="filename">/dev/sdb</code>) or device number in <code class="literal">major:minor</code> format. Alternatively, it can be the WWID or name of a multipath map.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -f <em class="replaceable">DEVICENAME</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Unconfigures ("flushes") a multipath map and its partition mappings. The command will
+                           fail if the map or one of its partitions is in use. See above for possible values
+                           of <em class="replaceable">DEVICENAME</em>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -F</span></dt>
+                     <dd>
+                        
+                        <p>Unconfigures ("flushes") all multipath maps and their partition mappings. The command
+                           will fail for maps in use.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -ll</span></dt>
+                     <dd>
+                        
+                        <p>Displays the status and topology of all currently configured multipath devices. See
+                           <a class="xref xref-sect2" href="bk09partivch05s14.html#sec-multipath-best-practice-status">the section called “Interpreting multipath I/O status”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -ll <em class="replaceable">DEVICENAME</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Displays the status of a specified multipath device. See above for possible values
+                           of <em class="replaceable">DEVICENAME</em>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -t</span></dt>
+                     <dd>
+                        
+                        <p>Shows the internal hardware table and the active configuration of multipath. Refer
+                           to <code class="systemitem">multipath.conf(5)</code> for details about the configuration parameters.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">multipath -T</span></dt>
+                     <dd>
+                        
+                        <p>Has a similar function to the <code class="command">multipath -t</code> command but shows only hardware entries matching the hardware detected on the host.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>The option <code class="option">-v</code> controls the verbosity of the output. The provided value overrides the <code class="option">verbosity</code> option in <code class="filename">/etc/multipath.conf</code>. See <a class="xref xref-sect1" href="bk09partivch05s13.html">the section called “Miscellaneous options”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-mpiotools-mpathpersist">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>SCSI persistent reservations and <code class="command">mpathpersist</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The <code class="command">mpathpersist</code> utility is used to manage SCSI persistent reservations on Device Mapper Multipath
+                  devices. Persistent reservations serve to restrict access to SCSI Logical Units to
+                  certain SCSI initiators. In multipath configurations, it is important to use the same
+                  reservation keys for all I_T nexuses (paths) for a given volume; otherwise, creating
+                  a reservation on one path device would cause I/O errors on other paths.</p>
+               
+               <p>Use this utility with the <code class="literal">reservation_key</code> attribute in the <code class="filename">/etc/multipath.conf</code> file to set persistent reservations for SCSI devices. If (and only if) this option
+                  is set, the <code class="command">multipathd</code> daemon checks persistent reservations for newly discovered paths or reinstated paths.</p>
+               
+               <p>You can add the attribute to the <code class="literal">defaults</code> section or the <code class="literal">multipaths</code> section of <code class="filename">multipath.conf</code>. For example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>multipaths {</code></span></span>
+<span class="line"><span class="ld"><code>    multipath {</code></span></span>
+<span class="line"><span class="ld"><code>        wwid             3600140508dbcf02acb448188d73ec97d</code></span></span>
+<span class="line"><span class="ld"><code>        alias            yellow</code></span></span>
+<span class="line"><span class="ld"><code>        reservation_key  0x123abc</code></span></span>
+<span class="line"><span class="ld"><code>    }</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+               </div>
+               
+               <p>After setting the <code class="literal">reservation_key</code> parameter for all mpath devices applicable for persistent management, reload the
+                  configuration using <code class="command">multipathd reconfigure</code>.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Using “<code class="option">reservation_key file</code>”</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If the special value <code class="literal">reservation_key file</code> is used in the <code class="literal">defaults</code> section of <code class="filename">multipath.conf</code>, reservation keys can be managed dynamically in the file <code class="filename">/etc/multipath/prkeys</code> using <code class="command">mpathpersist</code>.</p>
+                           
+                           <p>This is the recommended way to handle persistent reservations with multipath maps.
+                              It is available from <span class="phrase productname">SUSE Linux Enterprise Server</span> 12 SP4.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Use the command <code class="command">mpathpersist</code> to query and set persistent reservations for multipath maps consisting of SCSI devices.
+                  Refer to the manual page <code class="systemitem">mpathpersist(8)</code> for details. The command-line options are the same as those of the <code class="command">sg_persist</code> from the <code class="systemitem">sg3_utils</code> package. The <code class="systemitem">sg_persist(8)</code> manual page explains the semantics of the options in detail.</p>
+               
+               <p>In the following examples, <em class="replaceable">DEVICE</em> denotes a device mapper multipath device like <code class="filename">/dev/mapper/mpatha</code>. The commands below are listed with long options for better readability. All options
+                  have single-letter replacements, like in <code class="command">mpathpersist -oGS 123abc <em class="replaceable">DEVICE</em></code>.</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mpathpersist --in --read-keys <em class="replaceable">DEVICE</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Read the registered reservation keys for the device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mpathpersist --in --read-reservation <em class="replaceable">DEVICE</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Show existing reservations for the device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mpathpersist --out --register --param-sark=123abc <em class="replaceable">DEVICE</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Register a reservation key for the device. This will add the reservation key for all
+                           I_T nexuses (path devices) on the host.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mpathpersist --out --reserve --param-rk=123abc --prout-type=5 <em class="replaceable">DEVICE</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Create a reservation of type 5 (“write exclusive - registrants only”) for the device,
+                           using the previously registered key.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mpathpersist --out --release --param-rk=123abc --prout-type=5 <em class="replaceable">DEVICE</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Release a reservation of type 5 for the device.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">mpathpersist --out --register-ignore --param-sark=0 <em class="replaceable">DEVICE</em>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Delete a previously existing reservation key from the device.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s05.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Updating SLE on multipath systems</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Configuring the system for multipathing</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

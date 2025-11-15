@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.3.&nbsp;The PAM configuration of sshd</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich01s02.html" rel="prev">
+      <link href="bk06partich01s04.html" rel="next">
+      <link href="bk06partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich01.html">Up</a> <a href="bk06partich01s04.html">Next</a> <a href="bk06partich01s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich01s03.html" db-id="d616951e154528" id="sec-pam-struc-format">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>The PAM configuration of sshd</h2>
+            </header>
+            
+            
+            <p>Consider the PAM configuration of sshd as an example:</p>
+            
+            <div class="example formalobject" id="dat-pam-sshd">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#%PAM-1.0 <span class="co" id="co-security-pam-sshd-pam-line">⠈</span></code></span></span>
+<span class="line"><span class="ld"><code>auth     requisite      pam_nologin.so                              <span class="co" id="co-security-pam-sshd-pam-nologin">⠉</span></code></span></span>
+<span class="line"><span class="ld"><code>auth     include        common-auth                                 <span class="co" id="co-security-pam-sshd-common-auth">⠊</span></code></span></span>
+<span class="line"><span class="ld"><code>account  requisite      pam_nologin.so                              <span class="co">⠉</span></code></span></span>
+<span class="line"><span class="ld"><code>account  include        common-account                              <span class="co">⠊</span></code></span></span>
+<span class="line"><span class="ld"><code>password include        common-password                             <span class="co">⠊</span></code></span></span>
+<span class="line"><span class="ld"><code>session  required       pam_loginuid.so                             <span class="co" id="co-security-pam-sshd-pam-loginuid">⠋</span></code></span></span>
+<span class="line"><span class="ld"><code>session  include        common-session                              <span class="co">⠊</span></code></span></span>
+<span class="line"><span class="ld"><code>session  optional       pam_lastlog.so   silent noupdate showfailed <span class="co" id="co-security-pam-sshd-lastlog">⠌</span></code></span></span></pre>
+               </div>
+               
+               <div class="calloutlist">
+                  <dl>
+                     <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-pam-line">⠈</a></dt>
+                     <dd>
+                        
+                        <p>Declares the version of this configuration file for PAM 1.0. This is merely a convention,
+                           but could be used in the future to check the version.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-pam-nologin">⠉</a></dt>
+                     <dd>
+                        
+                        <p>Checks, if <code class="filename">/etc/nologin</code> exists. If it does, no user other than <code class="systemitem username">root</code> may log in.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-common-auth">⠊</a></dt>
+                     <dd>
+                        
+                        <p>Refers to the configuration files of four module types: <code class="filename">common-auth</code>, <code class="filename">common-account</code>, <code class="filename">common-password</code>, and <code class="filename">common-session</code>. These four files hold the default configuration for each module type.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-pam-loginuid">⠋</a></dt>
+                     <dd>
+                        
+                        <p>Sets the login UID process attribute for the process that was authenticated.</p>
+                        </dd>
+                     <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-lastlog">⠌</a></dt>
+                     <dd>
+                        
+                        <p>Displays information about the last login of a user.</p>
+                        </dd>
+                  </dl>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>PAM configuration for sshd (<code class="filename">/etc/pam.d/sshd</code>)</div>
+               </header>
+            </div>
+            
+            <p>By including the configuration files instead of adding each module separately to the
+               respective PAM configuration, you automatically get an updated PAM configuration when
+               an administrator changes the defaults. Formerly, you needed to adjust all configuration
+               files manually for all applications when changes to PAM occurred or a new application
+               was installed. Now the PAM configuration is made with central configuration files
+               and all changes are automatically inherited by the PAM configuration of each service.</p>
+            
+            <p>The first include file (<code class="filename">common-auth</code>) calls three modules of the <code class="literal">auth</code> type: <code class="library systemitem">pam_env.so</code>, <code class="library systemitem">pam_gnome_keyring.so</code> and <code class="library systemitem">pam_unix.so</code>. See <a class="xref xref-example" href="#dat-pam-common-auth">Example&nbsp;<span class="label">2<span class="sep">.</span>2</span>, “Default configuration for the <code class="literal">auth</code> section (<code class="filename">common-auth</code>)”</a>.</p>
+            
+            <div class="example formalobject" id="dat-pam-common-auth">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>auth  required  pam_env.so                   <span class="co" id="co-security-pam-sshd-pam-env">⠍</span></code></span></span>
+<span class="line"><span class="ld"><code>auth  optional  pam_gnome_keyring.so         <span class="co" id="co-security-pam-sshd-gnome">⠎</span></code></span></span>
+<span class="line"><span class="ld"><code>auth  required  pam_unix.so  try_first_pass <span class="co" id="co-security-pam-sshd-pam-unix">⠏</span></code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Default configuration for the <code class="literal">auth</code> section (<code class="filename">common-auth</code>)</div>
+               </header>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-pam-env">⠍</a></dt>
+                  <dd>
+                     
+                     <p><code class="library systemitem">pam_env.so</code> loads <code class="filename">/etc/security/pam_env.conf</code> to set the environment variables as specified in this file. It can be used to set
+                        the <code class="envar">DISPLAY</code> variable to the correct value, because the <code class="library systemitem">pam_env</code> module knows about the location from which the login is taking place.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-gnome">⠎</a></dt>
+                  <dd>
+                     
+                     <p><code class="library systemitem">pam_gnome_keyring.so</code> checks the user's login and password against the GNOME key ring</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#co-security-pam-sshd-pam-unix">⠏</a></dt>
+                  <dd>
+                     
+                     <p><code class="library systemitem">pam_unix</code> checks the user's login and password against <code class="filename">/etc/passwd</code> and <code class="filename">/etc/shadow</code>.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <p>The whole stack of <code class="literal">auth</code> modules is processed before <code class="daemon systemitem">sshd</code> gets any feedback about whether the login has succeeded. All modules of the stack
+               having the <code class="literal">required</code> control flag must be processed successfully before <code class="daemon systemitem">sshd</code> receives a message about the positive result. If one of the modules is not successful,
+               the entire module stack is still processed and only then is <code class="daemon systemitem">sshd</code> notified about the negative result.</p>
+            
+            <p>When all modules of the <code class="literal">auth</code> type have been successfully processed, another include statement is processed, in
+               this case, that in <a class="xref xref-example" href="#dat-pam-common-account">Example&nbsp;<span class="label">2<span class="sep">.</span>3</span>, “Default configuration for the <code class="literal">account</code> section (<code class="filename">common-account</code>)”</a>. <code class="filename">common-account</code> contains only one module, <code class="literal">pam_unix</code>. If <code class="literal">pam_unix</code> returns the result that the user exists, sshd receives a message announcing this
+               success and the next stack of modules (<code class="literal">password</code>) is processed, shown in <a class="xref xref-example" href="#dat-pam-common-password">Example&nbsp;<span class="label">2<span class="sep">.</span>4</span>, “Default configuration for the <code class="literal">password</code> section (<code class="filename">common-password</code>)”</a>.</p>
+            
+            <div class="example formalobject" id="dat-pam-common-account">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>account  required  pam_unix.so  try_first_pass</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Default configuration for the <code class="literal">account</code> section (<code class="filename">common-account</code>)</div>
+               </header>
+            </div>
+            
+            <div class="example formalobject" id="dat-pam-common-password">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>password  requisite  pam_cracklib.so</code></span></span>
+<span class="line"><span class="ld"><code>password  optional   pam_gnome_keyring.so  use_authtok</code></span></span>
+<span class="line"><span class="ld"><code>password  required   pam_unix.so  use_authtok nullok shadow try_first_pass</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Default configuration for the <code class="literal">password</code> section (<code class="filename">common-password</code>)</div>
+               </header>
+            </div>
+            
+            <p>Again, the PAM configuration of <code class="daemon systemitem">sshd</code> involves only an include statement referring to the default configuration for <code class="literal">password</code> modules located in <code class="filename">common-password</code>. These modules must successfully be completed (control flags <code class="literal">requisite</code> and <code class="literal">required</code>) whenever the application requests the change of an authentication token.</p>
+            
+            <p>Changing a password or another authentication token requires a security check. This
+               is achieved with the <code class="filename">pam_cracklib</code> module. The <code class="filename">pam_unix</code> module used afterward carries over any old and new passwords from <code class="filename">pam_cracklib</code>, so the user does not need to authenticate again after changing the password. This
+               procedure makes it impossible to circumvent the checks carried out by <code class="filename">pam_cracklib</code>. Whenever the <code class="literal">account</code> or the <code class="literal">auth</code> type are configured to complain about expired passwords, the <code class="literal">password</code> modules should also be used.</p>
+            
+            <div class="example formalobject" id="dat-pam-common-session">
+               
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>session  required  pam_limits.so</code></span></span>
+<span class="line"><span class="ld"><code>session  required  pam_unix.so  try_first_pass</code></span></span>
+<span class="line"><span class="ld"><code>session  optional  pam_umask.so</code></span></span>
+<span class="line"><span class="ld"><code>session  optional  pam_systemd.so</code></span></span>
+<span class="line"><span class="ld"><code>session  optional  pam_gnome_keyring.so auto_start only_if=gdm,gdm-password,lxdm,lightdm</code></span></span>
+<span class="line"><span class="ld"><code>session  optional  pam_env.so</code></span></span></pre>
+               </div>
+               
+               <header>
+                  <div class="title">Example&nbsp;<span class="label">2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Default configuration for the <code class="literal">session</code> section (<code class="filename">common-session</code>)</div>
+               </header>
+            </div>
+            
+            <p>As the final step, the modules of the <code class="literal">session</code> type (bundled in the <code class="filename">common-session</code> file) are called to configure the session according to the settings for the user
+               in question. The <code class="filename">pam_limits</code> module loads the file <code class="filename">/etc/security/limits.conf</code>, which may define limits on the use of certain system resources. The <code class="filename">pam_unix</code> module is processed again. The <code class="filename">pam_umask</code> module can be used to set the file mode creation mask. Since this module carries
+               the <code class="literal">optional</code> flag, a failure of this module would not affect the successful completion of the
+               entire session module stack. The <code class="literal">session</code> modules are called a second time when the user logs out.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich01s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich01.html">Up</a></td>
+                  <td class="next"><a href="bk06partich01s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Structure of a PAM configuration file</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuration of PAM modules</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

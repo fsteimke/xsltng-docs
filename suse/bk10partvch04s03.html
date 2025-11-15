@@ -1,0 +1,942 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>37.3.&nbsp;Using devices in QEMU</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partvch04s02.html" rel="prev">
+      <link href="bk10partvch04s04.html" rel="next">
+      <link href="bk10partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partvch04.html">Up</a> <a href="bk10partvch04s04.html">Next</a> <a href="bk10partvch04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partvch04s03.html" db-id="d616951e299096" id="cha-qemu-running-devices">
+            <header>
+               <h2><span class="label">37<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Using devices in QEMU</h2>
+            </header>
+            
+            
+            <p>QEMU virtual machines emulate all devices needed to run a VM Guest. QEMU supports,
+               for example, several types of network cards, block devices (hard and removable drives),
+               USB devices, character devices (serial and parallel ports), or multimedia devices
+               (graphic and sound cards). This section introduces options to configure multiple types
+               of supported devices.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Tip</div>
+                     </header>
+                     <div>
+                        
+                        <p>If your device, such as <code class="literal">-drive</code>, needs a special driver and driver properties to be set, specify them with the <code class="literal">-device</code> option, and identify with <code class="literal">drive=</code> suboption. For example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -drive if=none,id=drive0,format=raw \</code></span></span>
+<span class="line"><span class="ld"><code>-device virtio-blk-pci,drive=drive0,scsi=off ...</code></span></span></pre>
+                        </div>
+                        
+                        <p>To get help on available drivers and their properties, use <code class="option">-device ?</code> and <code class="option">-device <em class="replaceable">DRIVER</em>,?</code>.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="cha-qemu-running-devices-block">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Block devices</h3>
+               </header>
+               
+               
+               <p>Block devices are vital for virtual machines. These are fixed or removable storage
+                  media called <em>drives</em>. One of the connected hard disks typically holds the guest operating system to be
+                  virtualized.</p>
+               
+               <p><a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-vm"><span class="label">Virtual Machine</span></a> drives are defined with <code class="literal">-drive</code>. This option has many sub-options, so me of which are described in this section.
+                  For the complete list, see the man page (<code class="command">man 1 qemu</code>).</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Sub-options for the <code class="literal">-drive</code> option</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">file=image_fname</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the path to the disk image that to be used with this drive. If not specified,
+                              an empty (removable) drive is assumed.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">if=drive_interface</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the type of interface to which the drive is connected. Currently only <code class="literal">floppy</code>, <code class="literal">scsi</code>, <code class="literal">ide</code>, or <code class="literal">virtio</code> are supported by SUSE. <code class="literal">virtio</code> defines a paravirtualized disk driver. Default is <code class="literal">ide</code>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">index=index_of_connector</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the index number of a connector on the disk interface (see the <code class="literal">if</code> option) where the drive is connected. If not specified, the index is automatically
+                              incremented.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">media=type</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the type of media. Can be <code class="literal">disk</code> for hard disks, or <code class="literal">cdrom</code> for removable CD-ROM drives.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">format=img_fmt</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the format of the connected disk image. If not specified, the format is
+                              autodetected. Currently, SUSE supports <code class="literal">raw</code> and <code class="literal">qcow2</code> formats.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">cache=method</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Specifies the caching method for the drive. Possible values are <code class="literal">unsafe</code>, <code class="literal">writethrough</code>, <code class="literal">writeback</code>, <code class="literal">directsync</code>, or <code class="literal">none</code>. To improve performance when using the <code class="literal">qcow2</code> image format, select <code class="literal">writeback</code>. <code class="literal">none</code> disables the host page cache and, therefore, is the safest option. Default for image
+                              files is <code class="literal">writeback</code>. For more information, see <a class="xref xref-chapter" href="bk10partiiich01.html">Chapter&nbsp;<span class="label">19</span>, Disk cache modes</a>.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>To simplify defining block devices, QEMU understands several shortcuts which you may
+                              find handy when entering the <code class="literal">qemu-system-ARCH</code> command line.</p>
+                           
+                           <p>You can use</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -cdrom /images/cdrom.iso</code></span></span></pre>
+                           </div>
+                           
+                           <p>instead of</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -drive format=raw,file=/images/cdrom.iso,index=2,media=cdrom</code></span></span></pre>
+                           </div>
+                           
+                           <p>and</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -hda /images/imagei1.raw -hdb /images/image2.raw -hdc \</code></span></span>
+<span class="line"><span class="ld"><code>/images/image3.raw -hdd /images/image4.raw</code></span></span></pre>
+                           </div>
+                           
+                           <p>instead of</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -drive format=raw,file=/images/image1.raw,index=0,media=disk \</code></span></span>
+<span class="line"><span class="ld"><code>-drive format=raw,file=/images/image2.raw,index=1,media=disk \</code></span></span>
+<span class="line"><span class="ld"><code>-drive format=raw,file=/images/image3.raw,index=2,media=disk \</code></span></span>
+<span class="line"><span class="ld"><code>-drive format=raw,file=/images/image4.raw,index=3,media=disk</code></span></span></pre>
+                           </div>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Using host drives instead of images</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>As an alternative to using disk images (see <a class="xref xref-sect1" href="bk10partvch03s02.html">the section called “Managing disk images with <code class="command">qemu-img</code>
+                                 ”</a>) you can also use existing VM Host Server disks, connect them as drives, and access
+                              them from VM Guest. Use the host disk device directly instead of disk image file names.</p>
+                           
+                           <p>To access the host CD-ROM drive, use</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -drive file=/dev/cdrom,media=cdrom</code></span></span></pre>
+                           </div>
+                           
+                           <p>To access the host hard disk, use</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -drive file=/dev/hdb,media=disk</code></span></span></pre>
+                           </div>
+                           
+                           <p>A host drive used by a VM Guest must not be accessed concurrently by the VM Host Server
+                              or another VM Guest.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <section class="sect3" id="kvm-freedisk">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Freeing unused guest disk space</h4>
+                  </header>
+                  
+                  
+                  <p>A <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-storage-sparse"><span class="label">Sparse image file</span></a> is a type of disk image file that grows in size as the user adds data to it, taking
+                     up only as much disk space as is stored in it. For example, if you copy 1&nbsp;GB of data
+                     inside the sparse disk image, its size grows by 1 GB. If you then delete, for example,
+                     500&nbsp;MB of the data, the image size does not by default decrease as expected.</p>
+                  
+                  <p>This is why the <code class="option">discard=on</code> option is introduced on the KVM command line. It tells the hypervisor to automatically
+                     free the <q>holes</q> after deleting data from the sparse guest image. This option is valid only for the
+                     <code class="literal">if=scsi</code> drive interface:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -drive format=<em class="replaceable">img_format</em>,file=<em class="replaceable">/path/to/file.img</em>,if=scsi,discard=on</code></span></span></pre>
+                  </div>
+                  
+                  <div class="admonition important">
+                     <div>
+                        <div class="icon">☝</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Support status</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p><code class="option">if=scsi</code> is not supported. This interface does not map to <em>virtio-scsi</em>, but rather to the <em>lsi SCSI adapter</em>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="kvm-iothreads">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>IOThreads</h4>
+                  </header>
+                  
+                  
+                  <p>IOThreads are dedicated event loop threads for virtio devices to perform I/O requests
+                     to improve scalability, especially on an SMP VM Host Server with SMP VM Guests using
+                     many disk devices. Instead of using QEMU's main event loop for I/O processing, IOThreads
+                     allow spreading I/O work across multiple CPUs and can improve latency when properly
+                     configured.</p>
+                  
+                  <p>IOThreads are enabled by defining IOThread objects. virtio devices can then use the
+                     objects for their I/O event loops. Many virtio devices can use a single IOThread object,
+                     or virtio devices and IOThread objects can be configured in a 1:1 mapping. The following
+                     example creates a single IOThread with ID <code class="literal">iothread0</code> which is then used as the event loop for two virtio-blk devices.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -object iothread,id=iothread0\</code></span></span>
+<span class="line"><span class="ld"><code>-drive if=none,id=drive0,cache=none,aio=native,\</code></span></span>
+<span class="line"><span class="ld"><code>format=raw,file=filename -device virtio-blk-pci,drive=drive0,scsi=off,\</code></span></span>
+<span class="line"><span class="ld"><code>iothread=iothread0 -drive if=none,id=drive1,cache=none,aio=native,\</code></span></span>
+<span class="line"><span class="ld"><code>format=raw,file=filename -device virtio-blk-pci,drive=drive1,scsi=off,\</code></span></span>
+<span class="line"><span class="ld"><code>iothread=iothread0 [...]</code></span></span></pre>
+                  </div>
+                  
+                  <p>The following qemu command line example illustrates a 1:1 virtio device to IOThread
+                     mapping:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -object iothread,id=iothread0\</code></span></span>
+<span class="line"><span class="ld"><code>-object iothread,id=iothread1 -drive if=none,id=drive0,cache=none,aio=native,\</code></span></span>
+<span class="line"><span class="ld"><code>format=raw,file=filename -device virtio-blk-pci,drive=drive0,scsi=off,\</code></span></span>
+<span class="line"><span class="ld"><code>iothread=iothread0 -drive if=none,id=drive1,cache=none,aio=native,\</code></span></span>
+<span class="line"><span class="ld"><code>format=raw,file=filename -device virtio-blk-pci,drive=drive1,scsi=off,\</code></span></span>
+<span class="line"><span class="ld"><code>    iothread=iothread1 [...]</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="kvm-virtio-blk-use-bio">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Bio-based I/O path for virtio-blk</h4>
+                  </header>
+                  
+                  
+                  <p>For better performance of I/O-intensive applications, a new I/O path was introduced
+                     for the virtio-blk interface in kernel version 3.7. This bio-based block device driver
+                     skips the I/O scheduler, and thus shortens the I/O path in guest and has lower latency.
+                     It is especially useful for high-speed storage devices, such as SSD disks.</p>
+                  
+                  <p>The driver is disabled by default. To use it, do the following:</p>
+                  
+                  <div class="informalobject procedure" id="kvm-virtio-blk-use-bio_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Append <code class="option">virtio_blk.use_bio=1</code> to the kernel command line on the guest. You can do so via <span class="menuchoice"><span class="guimenu">YaST</span><span class="guimenu">System</span><span class="guimenu">Boot Loader</span></span>.</p>
+                           
+                           <p>You can do it also by editing <code class="filename">/etc/default/grub</code>, searching for the line that contains <code class="option">GRUB_CMDLINE_LINUX_DEFAULT=</code>, and adding the kernel parameter at the end. Then run <code class="command">grub2-mkconfig &gt;/boot/grub2/grub.cfg</code> to update the grub2 boot menu.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Reboot the guest with the new kernel command line active.</p>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <div class="admonition tip">
+                     <div>
+                        <div class="icon">☞</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Bio-based driver on slow devices</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The bio-based virtio-blk driver does not help on slow devices such as spin hard disks.
+                                 The reason is that the benefit of scheduling is larger than what the shortened bio
+                                 path offers. Do not use the bio-based driver on slow devices.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-qemu-running-devices-block-iscsi">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Accessing iSCSI resources directly</h4>
+                  </header>
+                  
+                  
+                  
+                  <p>QEMU now integrates with <code class="literal">libiscsi</code>. This allows QEMU to access iSCSI resources directly and use them as virtual machine
+                     block devices. This feature does not require any host iSCSI initiator configuration,
+                     as is needed for a libvirt iSCSI target based storage pool setup. Instead it directly
+                     connects guest storage interfaces to an iSCSI target LUN via the user space library
+                     libiscsi. iSCSI-based disk devices can also be specified in the libvirt XML configuration.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">RAW image format</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>This feature is only available using the RAW image format, as the iSCSI protocol has
+                                 certain technical limitations.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  
+                  <p>The following is the QEMU command line interface for iSCSI connectivity.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">virt-manager limitation</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>The use of libiscsi based storage provisioning is not yet exposed by the virt-manager
+                                 interface, but instead it would be configured by directly editing the guest xml. This
+                                 new way of accessing iSCSI based storage is to be done at the command line.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -machine accel=kvm \</code></span></span>
+<span class="line"><span class="ld"><code>  -drive file=iscsi://192.168.100.1:3260/iqn.2016-08.com.example:314605ab-a88e-49af-b4eb-664808a3443b/0,\</code></span></span>
+<span class="line"><span class="ld"><code>  format=raw,if=none,id=mydrive,cache=none \</code></span></span>
+<span class="line"><span class="ld"><code>  -device ide-hd,bus=ide.0,unit=0,drive=mydrive ...</code></span></span></pre>
+                  </div>
+                  
+                  <p>Here is an example snippet of guest domain xml which uses the protocol based iSCSI:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;devices&gt;</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;disk type='network' device='disk'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;driver name='qemu' type='raw'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;source protocol='iscsi' name='iqn.2013-07.com.example:iscsi-nopool/2'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;host name='example.com' port='3260'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;auth username='myuser'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;secret type='iscsi' usage='libvirtiscsi'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/auth&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;target dev='vda' bus='virtio'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/disk&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/devices&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>Contrast that with an example which uses the host based iSCSI initiator which virt-manager
+                     sets up:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;devices&gt;</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;disk type='block' device='disk'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;driver name='qemu' type='raw' cache='none' io='native'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;source dev='/dev/disk/by-path/scsi-0:0:0:0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;target dev='hda' bus='ide'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='drive' controller='0' bus='0' target='0' unit='0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/disk&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;controller type='ide' index='0'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address type='pci' domain='0x0000' bus='0x00' slot='0x01'</code></span></span>
+<span class="line"><span class="ld"><code>             function='0x1'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/controller&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/devices&gt;</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="qemu-devices-block-rbd">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using RADOS block devices with QEMU</h4>
+                  </header>
+                  
+                  
+                  <p>RADOS Block Devices (RBD) store data in a Ceph cluster. They allow snapshotting, replication
+                     and data consistency. You can use an RBD from your KVM-managed VM Guests similarly
+                     to how you use other block devices.</p>
+                  
+                  <p>For more details, refer to the <a class="link" href="https://documentation.suse.com/ses/html/ses-all/cha-ceph-kvm.html">SUSE Enterprise Storage <cite class="citetitle">Administration Guide</cite>, chapter <cite class="citetitle">Ceph as a Back-end for QEMU KVM Instance</cite></a>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="cha-qemu-running-devices-graphic">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Graphic devices and display options</h3>
+               </header>
+               
+               
+               <p>This section describes QEMU options affecting the type of the emulated video card
+                  and the way VM Guest graphical output is displayed.</p>
+               
+               <section class="sect3" id="cha-qemu-running-devices-graphic-vga">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Defining video cards</h4>
+                  </header>
+                  
+                  
+                  <p>QEMU uses <code class="literal">-vga</code> to define a video card used to display VM Guest graphical output. The <code class="literal">-vga</code> option understands the following values:</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">none</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Disables video cards on VM Guest (no video card is emulated). You can still access
+                              the running VM Guest via the serial console.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">std</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Emulates a standard VESA 2.0 VBE video card. Use it if you intend to use high display
+                              resolution on VM Guest.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">qxl</span></dt>
+                        <dd>
+                           
+                           <p>QXL is a paravirtual graphic card. It is VGA compatible (including VESA 2.0 VBE support).
+                              <code class="literal">qxl</code> is recommended when using the <code class="literal">spice</code> video protocol.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">virtio</span></dt>
+                        <dd>
+                           
+                           <p>Paravirtual VGA graphic card.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="cha-qemu-running-devices-graphic-display">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Display options</h4>
+                  </header>
+                  
+                  
+                  <p>The following options affect the way VM Guest graphical output is displayed.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-display gtk</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Display video output in a GTK window. This interface provides UI elements to configure
+                              and control the VM during runtime.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-display sdl</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Display video output via SDL in a separate graphics window. For more information,
+                              see the SDL documentation.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-spice option[,option[,...]]</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Enables the spice remote desktop protocol.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-display vnc</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Refer to <a class="xref xref-sect1" href="bk10partvch04s05.html">the section called “Viewing a VM Guest with&nbsp;VNC”</a> for more information.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-nographic</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Disables QEMU's graphical output. The emulated serial port is redirected to the console.</p>
+                           
+                           <p>After starting the virtual machine with <code class="literal">-nographic</code>, press <span class="keycombo"><span class="control keycap">Ctrl</span><span class="keycap">A</span></span><span class="keycap">H</span> in the virtual console to view the list of other useful shortcuts, for example, to
+                              toggle between the console and the QEMU monitor.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 -hda /images/sles_base.raw -nographic</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>C-a h    print this help</code></span></span>
+<span class="line"><span class="ld"><code>C-a x    exit emulator</code></span></span>
+<span class="line"><span class="ld"><code>C-a s    save disk data back to file (if -snapshot)</code></span></span>
+<span class="line"><span class="ld"><code>C-a t    toggle console timestamps</code></span></span>
+<span class="line"><span class="ld"><code>C-a b    send break (magic sysrq)</code></span></span>
+<span class="line"><span class="ld"><code>C-a c    switch between console and monitor</code></span></span>
+<span class="line"><span class="ld"><code>C-a C-a  sends C-a</code></span></span>
+<span class="line"><span class="ld"><code>(pressed C-a c)</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>QEMU 2.3.1 monitor - type 'help' for more information</code></span></span>
+<span class="line"><span class="ld"><code>(qemu)</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-no-frame</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Disables decorations for the QEMU window. Convenient for dedicated desktop work space.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-full-screen</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Starts QEMU graphical output in full screen mode.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-no-quit</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Disables the close button of the QEMU window and prevents it from being closed by
+                              force.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">-alt-grab</code>, <code class="literal">-ctrl-grab</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>By default, the QEMU window releases the <q>captured</q> mouse after pressing <span class="keycombo"><span class="control keycap">Ctrl</span><span class="alt keycap">Alt</span></span>. You can change the key combination to either <span class="keycombo"><span class="control keycap">Ctrl</span><span class="alt keycap">Alt</span><span class="keycap shift">Shift</span></span> (<code class="literal">-alt-grab</code>), or the right <span class="control keycap">Ctrl</span> key (<code class="literal">-ctrl-grab</code>).</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="cha-qemu-running-devices-usb">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>USB devices</h3>
+               </header>
+               
+               
+               <p>There are two ways to create USB devices usable by the VM Guest in KVM: you can either
+                  emulate new USB devices inside a VM Guest, or assign an existing host USB device to
+                  a VM Guest. To use USB devices in QEMU you first need to enable the generic USB driver
+                  with the <code class="option">-usb</code> option. Then you can specify individual devices with the <code class="option">-usbdevice</code> option.</p>
+               
+               <section class="sect3" id="kvm-usb-emulate">
+                  <header>
+                     <h4><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Emulating USB devices in VM Guest</h4>
+                  </header>
+                  
+                  
+                  <p>SUSE currently supports the following types of USB devices: <code class="literal">disk</code>, <code class="literal">host</code>, <code class="literal">serial</code>, <code class="literal">braille</code>, <code class="literal">net</code>, <code class="literal">mouse</code>, and <code class="literal">tablet</code>.</p>
+                  
+                  <div class="long-terms variablelist">
+                     <header>
+                        <div class="title">Types of USB devices for the <code class="literal">-usbdevice</code> option</div>
+                     </header>
+                     <dl class="long-terms variablelist">
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">disk</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Emulates a mass storage device based on file. The optional <code class="literal">format</code> option is used rather than detecting the format.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -usbdevice</code></span></span>
+<span class="line"><span class="ld"><code>        disk:format=raw:/virt/usb_disk.raw</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">host</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Pass through the host device (identified by bus.addr).</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">serial</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Serial converter to a host character device.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">braille</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Emulates a braille device using BrlAPI to display the braille output.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">net</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Emulates a network adapter that supports CDC Ethernet and RNDIS protocols.</p>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">mouse</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Emulates a virtual USB mouse. This option overrides the default PS/2 mouse emulation.
+                                 The following example shows the hardware status of a mouse on VM Guest started with
+                                 <code class="literal">qemu-system-ARCH [...] -usbdevice mouse</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> hwinfo --mouse</code></span></span>
+<span class="line"><span class="ld"><code>20: USB 00.0: 10503 USB Mouse</code></span></span>
+<span class="line"><span class="ld"><code>[Created at usb.122]</code></span></span>
+<span class="line"><span class="ld"><code>UDI: /org/freedesktop/Hal/devices/usb_device_627_1_1_if0</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>Hardware Class: mouse</code></span></span>
+<span class="line"><span class="ld"><code>Model: "Adomax QEMU USB Mouse"</code></span></span>
+<span class="line"><span class="ld"><code>Hotplug: USB</code></span></span>
+<span class="line"><span class="ld"><code>Vendor: usb 0x0627 "Adomax Technology Co., Ltd"</code></span></span>
+<span class="line"><span class="ld"><code>Device: usb 0x0001 "QEMU USB Mouse"</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <code class="literal">tablet</code>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p>Emulates a pointer device that uses absolute coordinates (such as touchscreen). This
+                                 option overrides the default PS/2 mouse emulation. The tablet device is useful if
+                                 you are viewing VM Guest via the VNC protocol. See <a class="xref xref-sect1" href="bk10partvch04s05.html">the section called “Viewing a VM Guest with&nbsp;VNC”</a> for more information.</p>
+                              </dd>
+                        </div>
+                     </dl>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="cha-qemu-running-devices-char">
+               <header>
+                  <h3><span class="label">37<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Character devices</h3>
+               </header>
+               
+               
+               <p>Use <code class="literal">-chardev</code> to create a new character device. The option uses the following general syntax:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>qemu-system-x86_64 [...] -chardev <em class="replaceable">BACKEND_TYPE</em>,id=<em class="replaceable">ID_STRING</em></code></span></span></pre>
+               </div>
+               
+               <p>where <em class="replaceable">BACKEND_TYPE</em> can be one of <code class="literal">null</code>, <code class="literal">socket</code>, <code class="literal">udp</code>, <code class="literal">msmouse</code>, <code class="literal">vc</code>, <code class="literal">file</code>, <code class="literal">pipe</code>, <code class="literal">console</code>, <code class="literal">serial</code>, <code class="literal">pty</code>, <code class="literal">stdio</code>, <code class="literal">braille</code>, <code class="literal">tty</code>, or <code class="literal">parport</code>. All character devices must have a unique identification string up to 127 characters
+                  long. It is used to identify the device in other related directives. For the complete
+                  description of all back-end's sub-options, see the man page (<code class="command">man 1 qemu</code>). A brief description of the available <code class="literal">back-ends</code> follows:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">null</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates an empty device that outputs no data and drops any data it receives.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">stdio</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Connects to QEMU's process standard input and standard output.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">socket</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a two-way stream socket. If <em class="replaceable">PATH</em> is specified, a Unix socket is created:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -chardev \</code></span></span>
+<span class="line"><span class="ld"><code>socket,id=unix_socket1,path=/tmp/unix_socket1,server</code></span></span></pre>
+                        </div>
+                        
+                        <p>The <em class="replaceable">SERVER</em> suboption specifies that the socket is a listening socket.</p>
+                        
+                        <p>If <em class="replaceable">PORT</em> is specified, a TCP socket is created:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -chardev \</code></span></span>
+<span class="line"><span class="ld"><code>socket,id=tcp_socket1,host=localhost,port=7777,server,nowait</code></span></span></pre>
+                        </div>
+                        
+                        <p>The command creates a local listening (<code class="literal">server</code>) TCP socket on port 7777. QEMU does not block waiting for a client to connect to
+                           the listening port (<code class="literal">nowait</code>).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">udp</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Sends all network traffic from VM Guest to a remote host over the UDP protocol.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-chardev udp,id=udp_fwd,host=mercury.example.com,port=7777</code></span></span></pre>
+                        </div>
+                        
+                        <p>The command binds port 7777 on the remote host mercury.example.com and sends VM Guest
+                           network traffic there.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">vc</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Creates a new QEMU text console. You can optionally specify the dimensions of the
+                           virtual console:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] -chardev vc,id=vc1,width=640,height=480 \</code></span></span>
+<span class="line"><span class="ld"><code>-mon chardev=vc1</code></span></span></pre>
+                        </div>
+                        
+                        <p>The command creates a new virtual console called <code class="literal">vc1</code> of the specified size, and connects the QEMU monitor to it.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">file</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Logs all traffic from VM Guest to a file on VM Host Server. The <code class="literal">path</code> is required and is automatically created if it does not exist.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> qemu-system-x86_64 [...] \</code></span></span>
+<span class="line"><span class="ld"><code>-chardev file,id=qemu_log1,path=/var/log/qemu/guest1.log</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>By default QEMU creates a set of character devices for serial and parallel ports,
+                  and a special console for QEMU monitor. However, you can create your own character
+                  devices and use them for the mentioned purposes. The following options may help you:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">-serial <em class="replaceable">CHAR_DEV</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Redirects the VM Guest's virtual serial port to a character device <em class="replaceable">CHAR_DEV</em> on VM Host Server. By default, it is a virtual console (<code class="literal">vc</code>) in graphical mode, and <code class="literal">stdio</code> in non-graphical mode. The <code class="literal">-serial</code> understands many sub-options. See the man page <code class="command">man 1 qemu</code> for a complete list of them.</p>
+                        
+                        <p>You can emulate up to four serial ports. Use <code class="literal">-serial none</code> to disable all serial ports.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">-parallel <em class="replaceable">DEVICE</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Redirects the VM Guest's parallel port to a <em class="replaceable">DEVICE</em>. This option supports the same devices as <code class="literal">-serial</code>.</p>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Tip</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>With SUSE Linux Enterprise Server as a VM Host Server, you can directly use the hardware
+                                       parallel port devices <code class="filename">/dev/parportN</code> where <code class="literal">N</code> is the number of the port.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <p>You can emulate up to three parallel ports. Use <code class="literal">-parallel none</code> to disable all parallel ports.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="literal">-monitor <em class="replaceable">CHAR_DEV</em>
+                              </code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>Redirects the QEMU monitor to a character device <em class="replaceable">CHAR_DEV</em> on VM Host Server. This option supports the same devices as <code class="literal">-serial</code>. By default, it is a virtual console (<code class="literal">vc</code>) in a graphical mode, and <code class="literal">stdio</code> in non-graphical mode.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>For a complete list of available character devices back-ends, see the man page (<code class="command">man 1 qemu</code>).</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partvch04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk10partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk10partvch04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">37<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>General <code class="command">qemu-system-ARCH</code> options</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">37<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Networking in QEMU</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

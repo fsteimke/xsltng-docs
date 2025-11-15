@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>17.5.&nbsp;Step-by-step example</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich10s04.html" rel="prev">
+      <link href="bk10partiich11.html" rel="next">
+      <link href="bk10partiich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich10.html">Up</a> <a href="bk10partiich11.html">Next</a> <a href="bk10partiich10s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich10s05.html" db-id="d616951e285657" id="sec-libvirt-migrate-stepbstep">
+            <header>
+               <h2><span class="label">17<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Step-by-step example</h2>
+            </header>
+            
+            
+            <section class="sect2" id="sec-migrate-stepbstep-export">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Exporting the storage</h3>
+               </header>
+               
+               
+               <p>First, you need to export the storage to share the guest image between hosts. This
+                  can be done by an NFS server. In the following example, we want to share the <code class="filename">/volume1/VM</code> directory for all machines that are on the network 10.0.1.0/24. We are using a SUSE
+                  Linux Enterprise NFS server. As root user, edit the <code class="filename">/etc/exports</code> file and add:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/volume1/VM 10.0.1.0/24  (rw,sync,no_root_squash)</code></span></span></pre>
+               </div>
+               
+               <p>You need to restart the NFS server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl restart nfsserver</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> exportfs</code></span></span>
+<span class="line"><span class="ld"><code>/volume1/VM      10.0.1.0/24</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-migrate-stepbstep-pool">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Defining the pool on the target hosts</h3>
+               </header>
+               
+               
+               <p>On each host where you want to migrate the VM Guest, the pool must be defined to be
+                  able to access the volume (that contains the Guest image). Our NFS server IP address
+                  is 10.0.1.99, its share is the <code class="filename">/volume1/VM</code> directory, and we want to get it mounted in the <code class="filename">/var/lib/libvirt/images/VM</code> directory. The pool name is <em>VM</em>. To define this pool, create a <code class="filename">VM.xml</code> file with the following content:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;pool type='netfs'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;name&gt;VM&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;host name='10.0.1.99'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;dir path='/volume1/VM'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;format type='auto'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;target&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;path&gt;/var/lib/libvirt/images/VM&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;permissions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;mode&gt;0755&lt;/mode&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;owner&gt;-1&lt;/owner&gt;</code></span></span>
+<span class="line"><span class="ld"><code>      &lt;group&gt;-1&lt;/group&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;/permissions&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/target&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/pool&gt;</code></span></span></pre>
+               </div>
+               
+               <p>Then load it into <code class="library systemitem">libvirt</code> using the <code class="command">pool-define</code> command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh pool-define VM.xml</code></span></span></pre>
+               </div>
+               
+               <p>An alternative way to define this pool is to use the <code class="command">virsh</code> command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh pool-define-as VM --type netfs --source-host 10.0.1.99 \</code></span></span>
+<span class="line"><span class="ld"><code>     --source-path /volume1/VM --target /var/lib/libvirt/images/VM</code></span></span>
+<span class="line"><span class="ld"><code>Pool VM created</code></span></span></pre>
+               </div>
+               
+               <p>The following commands assume that you are in the interactive shell of <code class="command">virsh</code>, which can also be reached by using the command <code class="command">virsh</code> without any arguments. Then the pool can be set to start automatically at host boot
+                  (autostart option):</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">virsh #</span>pool-autostart VM</code></span></span>
+<span class="line"><span class="ld"><code>Pool VM marked as autostarted</code></span></span></pre>
+               </div>
+               
+               <p>To disable the autostart:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">virsh #</span>pool-autostart VM --disable</code></span></span>
+<span class="line"><span class="ld"><code>Pool VM unmarked as autostarted</code></span></span></pre>
+               </div>
+               
+               <p>Check if the pool is present:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">virsh #</span>pool-list --all</code></span></span>
+<span class="line"><span class="ld"><code> Name                 State      Autostart</code></span></span>
+<span class="line"><span class="ld"><code>-------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code> default              active     yes</code></span></span>
+<span class="line"><span class="ld"><code> VM                   active     yes</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">virsh #</span>pool-info VM</code></span></span>
+<span class="line"><span class="ld"><code>Name:           VM</code></span></span>
+<span class="line"><span class="ld"><code>UUID:           42efe1b3-7eaa-4e24-a06a-ba7c9ee29741</code></span></span>
+<span class="line"><span class="ld"><code>State:          running</code></span></span>
+<span class="line"><span class="ld"><code>Persistent:     yes</code></span></span>
+<span class="line"><span class="ld"><code>Autostart:      yes</code></span></span>
+<span class="line"><span class="ld"><code>Capacity:       2,68 TiB</code></span></span>
+<span class="line"><span class="ld"><code>Allocation:     2,38 TiB</code></span></span>
+<span class="line"><span class="ld"><code>Available:      306,05 GiB</code></span></span></pre>
+               </div>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Pool needs to exist on all target hosts</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Remember: this pool must be defined on each host where you want to be able to migrate
+                              your VM Guest.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-migrate-stepbstep-volume">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating the volume</h3>
+               </header>
+               
+               
+               <p>The pool has been defined—now we need a volume which contains the disk image:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">virsh #</span>vol-create-as VM sled12.qcow2 8G --format qcow2</code></span></span>
+<span class="line"><span class="ld"><code>Vol sled12.qcow2 created</code></span></span></pre>
+               </div>
+               
+               <p>The volume names shown are used later to install the guest with virt-install.</p>
+               </section>
+            
+            <section class="sect2" id="sec-migrate-stepbstep-guest">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Creating the VM Guest</h3>
+               </header>
+               
+               
+               <p>Let us create a <span class="phrase productname">SUSE Linux Enterprise Server</span> VM Guest with the <code class="command">virt-install</code> command. The <em>VM</em> pool is specified with the <code class="command">--disk</code> option, <em>cache=none</em> is recommended if you do not want to use the <code class="command">--unsafe</code> option while doing the migration.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>virt-install --connect qemu:///system --virt-type kvm --name \</code></span></span>
+<span class="line"><span class="ld"><code>   sles15 --memory 1024 --disk vol=VM/sled12.qcow2,cache=none --cdrom \</code></span></span>
+<span class="line"><span class="ld"><code>   /mnt/install/ISO/SLE-15-Server-DVD-x86_64-Build0327-Media1.iso --graphics \</code></span></span>
+<span class="line"><span class="ld"><code>   vnc --os-variant sled15</code></span></span>
+<span class="line"><span class="ld"><code>Starting install...</code></span></span>
+<span class="line"><span class="ld"><code>Creating domain...</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-migrate-stepbstep-migrate">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>5<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Migrate the VM Guest</h3>
+               </header>
+               
+               
+               <p>Everything is ready to do the migration now. Run the <code class="command">migrate</code> command on the VM Host Server that is currently hosting the VM Guest, and choose
+                  the target.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>virsh # migrate --live sled12 --verbose qemu+ssh://<em class="replaceable">IP/Hostname</em>/system</code></span></span>
+<span class="line"><span class="ld"><code>Password:</code></span></span>
+<span class="line"><span class="ld"><code>Migration: [ 12 %]</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich10s04.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich10.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich11.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">17<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Migrating with <code class="command">virsh</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">18</span><span class="sep">.&nbsp;</span>Xen to KVM migration guide</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

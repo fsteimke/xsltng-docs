@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.6.&nbsp;Troubleshooting iSCSI</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch02s05.html" rel="prev">
+      <link href="bk09partivch02s07.html" rel="next">
+      <link href="bk09partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch02.html">Up</a> <a href="bk09partivch02s07.html">Next</a> <a href="bk09partivch02s05.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch02s06.html" db-id="d616951e250516" id="sec-iscsi-trouble">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Troubleshooting iSCSI</h2>
+            </header>
+            
+            
+            <p>This section describes some known issues and possible solutions for iSCSI target and
+               iSCSI initiator issues.</p>
+            
+            <section class="sect2" id="sec-iscsi-trouble-no-service">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Portal error when setting up target LUNs on an iSCSI LIO target server</h3>
+               </header>
+               
+               
+               <p>When adding or editing an iSCSI LIO target group, you get an error:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Problem setting network portal <em class="replaceable">IP_ADDRESS</em>:3260</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="filename">/var/log/YasT2/y2log</code> log file contains the following error:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>find: `/sys/kernel/config/target/iscsi': No such file or directory</code></span></span></pre>
+               </div>
+               
+               <p>This problem occurs if the iSCSI LIO Target Server software is not currently running.
+                  To resolve this issue, exit YaST, manually start iSCSI LIO at the command line with
+                  <code class="command">systemctl start targetcli</code>, then try again.</p>
+               
+               <p>You can also enter the following to check if <code class="command">configfs</code>, <code class="command">iscsi_target_mod</code>, and <code class="command">target_core_mod</code> are loaded. A sample response is shown.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lsmod | grep iscsi</code></span></span>
+<span class="line"><span class="ld"><code>iscsi_target_mod      295015  0</code></span></span>
+<span class="line"><span class="ld"><code>target_core_mod       346745  4</code></span></span>
+<span class="line"><span class="ld"><code>iscsi_target_mod,target_core_pscsi,target_core_iblock,target_core_file</code></span></span>
+<span class="line"><span class="ld"><code>configfs               35817  3 iscsi_target_mod,target_core_mod</code></span></span>
+<span class="line"><span class="ld"><code>scsi_mod              231620  16</code></span></span>
+<span class="line"><span class="ld"><code>iscsi_target_mod,target_core_pscsi,target_core_mod,sg,sr_mod,mptctl,sd_mod,</code></span></span>
+<span class="line"><span class="ld"><code>scsi_dh_rdac,scsi_dh_emc,scsi_dh_alua,scsi_dh_hp_sw,scsi_dh,libata,mptspi,</code></span></span>
+<span class="line"><span class="ld"><code>mptscsih,scsi_transport_spi</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-iscsi-trouble-not-visible">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>iSCSI LIO targets are not visible from other computers</h3>
+               </header>
+               
+               
+               <p>If you use a firewall on the target server, you must open the iSCSI port that you
+                  are using to allow other computers to see the iSCSI LIO targets. For information,
+                  see <a class="xref xref-sect2" href="bk09partivch02s02.html#sec-iscsi-target-start">the section called “iSCSI LIO target service start-up and firewall settings”</a>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-iscsi-trouble-package-loss">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Data packets dropped for iSCSI traffic</h3>
+               </header>
+               
+               
+               <p>A firewall might drop packets if it gets too busy. The default for the SUSE Firewall
+                  is to drop packets after three minutes. If you find that iSCSI traffic packets are
+                  being dropped, consider configuring the SUSE Firewall to queue packets instead of
+                  dropping them when it gets too busy.</p>
+               </section>
+            
+            <section class="sect2" id="sec-iscsi-trouble-lvm">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using iSCSI volumes with LVM</h3>
+               </header>
+               
+               
+               <p>Use the troubleshooting tips in this section when using LVM on iSCSI targets.</p>
+               
+               <section class="sect3" id="sec-iscsi-trouble-lvm-boot-initiator">
+                  <header>
+                     <h4><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Check if the iSCSI initiator discovery occurs at boot</h4>
+                  </header>
+                  
+                  
+                  <p>When you set up the iSCSI Initiator, ensure that you enable discovery at boot time
+                     so that udev can discover the iSCSI devices at boot time and set up the devices to
+                     be used by LVM.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-iscsi-trouble-lvm-boot-target">
+                  <header>
+                     <h4><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Check that iSCSI target discovery occurs at boot</h4>
+                  </header>
+                  
+                  
+                  <p>Remember that <code class="filename">udev</code> provides the default setup for devices. Ensure that all of the applications that
+                     create devices are started at boot time so that <code class="command">udev</code> can recognize and assign devices for them at system start-up. If the application
+                     or service is not started until later, <code class="command">udev</code> does not create the device automatically as it would at boot time.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-iscsi-trouble-mount">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>6<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>iSCSI targets are mounted when the configuration file is set to manual</h3>
+               </header>
+               
+               
+               <p>When Open-iSCSI starts, it can mount the targets even if the <code class="literal">node.startup</code> option is set to manual in the <code class="filename">/etc/iscsi/iscsid.conf</code> file if you manually modified the configuration file.</p>
+               
+               <p>Check the <code class="filename">/etc/iscsi/nodes/<em class="replaceable">TARGET_NAME</em>/<em class="replaceable">IP_ADDRESS</em>,<em class="replaceable">PORT</em>/default</code> file. It contains a <code class="literal">node.startup</code> setting that overrides the <code class="filename">/etc/iscsi/iscsid.conf</code> file. Setting the mount option to manual by using the YaST interface also sets <code class="literal">node.startup = manual</code> in the <code class="filename">/etc/iscsi/nodes/<em class="replaceable">TARGET_NAME</em>/<em class="replaceable">IP_ADDRESS</em>,<em class="replaceable">PORT</em>/default</code>files.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch02s05.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch02s07.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using iSCSI disks when installing</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>iSCSI LIO target terminology</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

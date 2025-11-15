@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>36.3.&nbsp;Rest for the hard disk</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partivch05s02.html" rel="prev">
+      <link href="bk01partivch05s04.html" rel="next">
+      <link href="bk01partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partivch05.html">Up</a> <a href="bk01partivch05s04.html">Next</a> <a href="bk01partivch05s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partivch05s03.html" db-id="d616951e54371" id="sec-power-mgmt-silenthd">
+            <header>
+               <h2><span class="label">36<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Rest for the hard disk</h2>
+            </header>
+            
+            
+            <p>In Linux, the hard disk can be put to sleep entirely if it is not needed or it can
+               be run in a more economic or quieter mode. On modern laptops, you do not need to switch
+               off the hard disks manually, because they automatically enter an economic operating
+               mode whenever they are not needed. However, if you want to maximize power savings,
+               test the following methods, using the <code class="command">hdparm</code> command.</p>
+            
+            <p>It can be used to modify hard disk settings. The option <code class="option">-y</code> instantly switches the hard disk to the standby mode. <code class="option">-Y</code> puts it to sleep. <code class="command">hdparm</code><code class="option">-S</code><em class="replaceable">X</em> causes the hard disk to be spun down after a certain period of inactivity. Replace
+               <em class="replaceable">X</em> as follows: <code class="literal">0</code> disables this mechanism, causing the hard disk to run continuously. Values from <code class="literal">1</code> to <code class="literal">240</code> are multiplied by 5 seconds. Values from <code class="literal">241</code> to <code class="literal">251</code> correspond to 1 to 11 times 30 minutes.</p>
+            
+            <p>Internal power saving options of the hard disk can be controlled with the option <code class="literal">-B</code>. Select a value from <code class="literal">0</code> to <code class="literal">255</code> for maximum saving to maximum throughput. The result depends on the hard disk used
+               and is difficult to assess. To make a hard disk quieter, use the option <code class="literal">-M</code>. Select a value from <code class="literal">128</code> to <code class="literal">254</code> for quiet to fast.</p>
+            
+            <p>Often, it is not so easy to put the hard disk to sleep. In Linux, multiple processes
+               write to the hard disk, waking it up repeatedly. Therefore, it is important to understand
+               how Linux handles data that needs to be written to the hard disk. First, all data
+               is buffered in the RAM. This buffer is monitored by the <code class="daemon systemitem">pdflush</code> daemon. When the data reaches a certain age limit or when the buffer is filled to
+               a certain degree, the buffer content is flushed to the hard disk. The buffer size
+               is dynamic and depends on the size of the memory and the system load. By default,
+               pdflush is set to short intervals to achieve maximum data integrity. It checks the
+               buffer every 5 seconds and writes the data to the hard disk. The following variables
+               are interesting:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/proc/sys/vm/dirty_writeback_centisecs</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Contains the delay until a pdflush thread wakes up (in hundredths of a second).</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/proc/sys/vm/dirty_expire_centisecs</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Defines after which timeframe a dirty page should be written at latest. Default is
+                        <code class="literal">3000</code>, which means 30 seconds.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/proc/sys/vm/dirty_background_ratio</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>Maximum percentage of dirty pages until pdflush begins to write them. Default is <code class="literal">5</code>%.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <code class="filename">/proc/sys/vm/dirty_ratio</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>When the dirty pages exceed this percentage of the total memory, processes are forced
+                        to write dirty buffers during their time slice instead of continuing to write.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <div class="admonition warning">
+               <div>
+                  <div class="icon">🛑</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Data integrity risk</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Changes to the <code class="daemon systemitem">pdflush</code> daemon settings can compromise data integrity.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>Apart from these processes, journaling file systems, like <code class="filesystem systemitem">Btrfs</code>, <code class="filesystem systemitem">Ext3</code>, <code class="filesystem systemitem">Ext4</code> and others write their metadata independently from <code class="daemon systemitem">pdflush</code>, which also prevents the hard disk from spinning down.</p>
+            
+            <p>Another important factor is the way active programs behave. For example, good editors
+               regularly write hidden backups of the currently modified file to the hard disk, causing
+               the disk to wake up. Features like this can be disabled at the expense of data integrity.</p>
+            
+            <p>In this connection, the mail daemon postfix uses the variable <code class="systemitem">POSTFIX_LAPTOP</code>. If this variable is set to <code class="literal">yes</code>, postfix accesses the hard disk far less frequently.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partivch05s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk01partivch05s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">36<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Advanced configuration and power interface (ACPI)</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">36<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Troubleshooting</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

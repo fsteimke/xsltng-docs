@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;8.&nbsp;
+      libvirt daemons</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partii.html" rel="prev">
+      <link href="bk10partiich01s02.html" rel="next">
+      <link href="bk10partii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partii.html">Up</a> <a href="bk10partiich01s02.html">Next</a> <a href="bk10partii.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partiich01.html" db-id="d616951e269586" id="cha-libvirt-overview" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">8</span><span class="sep">.&nbsp;</span>
+                  <code class="library systemitem">libvirt</code> daemons</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>A <code class="library systemitem">libvirt</code> deployment for accessing KVM or Xen requires one or more daemons to be installed
+                  and active on the host. <code class="library systemitem">libvirt</code> provides two daemon deployment options: monolithic or modular daemons. <code class="library systemitem">libvirt</code> has always provided the single monolithic daemon <code class="daemon systemitem">libvirtd</code>. It includes the primary hypervisor drivers and all secondary drivers needed for
+                  managing storage, networking, node devices, etc. The monolithic <code class="daemon systemitem">libvirtd</code> also provides secure remote access for external clients. Over time, <code class="library systemitem">libvirt</code> added support for modular daemons, where each driver runs in its own daemon, allowing
+                  users to customize their <code class="library systemitem">libvirt</code> deployment. Modular daemons are enabled by default, but a deployment can be switched
+                  to the traditional monolithic daemon by disabling the individual daemons and enabling
+                  <code class="daemon systemitem">libvirtd</code>.</p>
+               
+               <p>The modular daemon deployment is useful in scenarios where minimal <code class="library systemitem">libvirt</code> support is needed. For example, if virtual machine storage and networking is not
+                  provided by <code class="library systemitem">libvirt</code>, the <code class="package">libvirt-daemon-driver-storage</code> and <code class="package">libvirt-daemon-driver-network</code> packages are not required. Kubernetes is an example of an extreme case, where it
+                  handles all networking, storage, cgroups and namespace integration, etc. Only the
+                  <code class="package">libvirt-daemon-driver-QEMU</code> package, providing <code class="daemon systemitem">virtqemud</code>, needs to be installed. Modular daemons allow configuring a custom <code class="library systemitem">libvirt</code> deployment containing only the components required for the use case.</p>
+               </div>
+            <section class="sect1" id="libvirt-modular-daemon">
+               <header>
+                  <h2><span class="label">8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Starting and stopping the modular daemons</h2>
+               </header>
+               
+               
+               <p>The modular daemons are named after the driver which they are running, with the pattern
+                  <q>virt<em class="replaceable">DRIVER</em>d</q>. They are configured via the files <code class="filename">/etc/libvirt/virt<em class="replaceable">DRIVER</em>d.conf</code>. SUSE supports the <code class="daemon systemitem">virtqemud</code> and <code class="daemon systemitem">virtxend</code> hypervisor daemons, along with all the secondary daemons:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><em>virtnetworkd</em> - The virtual network management daemon which provides <code class="library systemitem">libvirt</code>'s virtual network management APIs. For example, virtnetworkd can be used to create
+                        a NAT virtual network on the host for use by virtual machines.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtnodedevd</em> - The host physical device management daemon which provides <code class="library systemitem">libvirt</code>'s node device management APIs. For example, virtnodedevd can be used to detach a
+                        PCI device from the host for use by a virtual machine.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtnwfilterd</em> - The host firewall management daemon which provides <code class="library systemitem">libvirt</code>'s firewall management APIs. For example, virtnwfilterd can be used to configure network
+                        traffic filtering rules for virtual machines.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtsecretd</em> - The host secret management daemon which provides <code class="library systemitem">libvirt</code>'s secret management APIs. For example, virtsecretd can be used to store a key associated
+                        with a LUKs volume.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtstoraged</em> - The host storage management daemon which provides <code class="library systemitem">libvirt</code>'s storage management APIs. virtstoraged can be used to create storage pools and create
+                        volumes from those pools.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtinterfaced</em> - The host NIC management daemon which provides <code class="library systemitem">libvirt</code>'s host network interface management APIs. For example, virtinterfaced can be used
+                        to create a bonded network device on the host. SUSE discourages the use of <code class="library systemitem">libvirt</code>'s interface management APIs in favor of default networking tools like wicked or NetworkManager.
+                        It is recommended to disable virtinterfaced.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtproxyd</em> - A daemon to proxy connections between the traditional <code class="daemon systemitem">libvirtd</code> sockets and the modular daemon sockets. With a modular <code class="library systemitem">libvirt</code> deployment, virtproxyd allows remote clients to access the <code class="library systemitem">libvirt</code> APIs similar to the monolithic <code class="daemon systemitem">libvirtd</code>. It can also be used by local clients that connect to the monolithic <code class="daemon systemitem">libvirtd</code> sockets.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtlogd</em> - A daemon to manage logs from virtual machine consoles. virtlogd is also used by
+                        the monolithic <code class="daemon systemitem">libvirtd</code>. The monolithic daemon and virtqemud <code class="daemon systemitem">systemd</code> unit files require virtlogd, so it is not necessary to explicitly start virtlogd.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virtlockd</em> - A daemon to manage locks held against virtual machine resources such as disks.
+                        virtlockd is also used by the monolithic <code class="daemon systemitem">libvirtd</code>. The monolithic daemon, virtqemud, and virtxend <code class="daemon systemitem">systemd</code> unit files require virtlockd, so it is not necessary to explicitly start virtlockd.</p>
+                     </li>
+                  </ul>
+               
+               <p><code class="daemon systemitem">virtlogd</code> and <code class="daemon systemitem">virtlockd</code> are also used by the monolithic <code class="daemon systemitem">libvirtd</code>. These daemons have always been separate from <code class="daemon systemitem">libvirtd</code> for security reasons.</p>
+               
+               <p>By default, the modular daemons listen for connections on the <code class="filename">/var/run/libvirt/virt<em class="replaceable">DRIVER</em>d-sock</code> and <code class="filename">/var/run/libvirt/virt<em class="replaceable">DRIVER</em>d-sock-ro</code> Unix Domain Sockets. The client library prefers these sockets over the traditional
+                  <code class="filename">/var/run/libvirt/libvirtd-sock</code>. The virtproxyd daemon is available for remote clients or local clients expecting
+                  the traditional <code class="daemon systemitem">libvirtd</code> socket.</p>
+               
+               <p>The <code class="daemon systemitem">virtqemud</code> and <code class="daemon systemitem">virtxend</code> services are enabled in the <code class="daemon systemitem">systemd</code> presets. The sockets for <code class="daemon systemitem">virtnetworkd</code>, <code class="daemon systemitem">virtnodedevd</code>, <code class="daemon systemitem">virtnwfilterd</code>, <code class="daemon systemitem">virtstoraged</code> and <code class="daemon systemitem">virtsecretd</code> are also enabled in the presets, ensuring the daemons are enabled and available when
+                  the corresponding packages are installed. Although enabled in presets for convenience,
+                  the modular daemons can also be managed with their <code class="daemon systemitem">systemd</code> unit files:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><em>virt<em class="replaceable">DRIVER</em>d.service</em> - The main unit file for launching the virt<em class="replaceable">DRIVER</em>d daemon. We recommend configuring the service to start on boot if VMs are also configured
+                        to start on host boot.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virt<em class="replaceable">DRIVER</em>d.socket</em> - The unit file corresponding to the main read-write UNIX socket <code class="filename">/var/run/libvirt/virt<em class="replaceable">DRIVER</em>d-sock</code>. We recommend starting this socket on boot by default.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virt<em class="replaceable">DRIVER</em>d-ro.socket</em> - The unit file corresponding to the main read-only UNIX socket <code class="filename">/var/run/libvirt/virt<em class="replaceable">DRIVER</em>d-sock-ro</code>. We recommend starting this socket on boot by default.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>virt<em class="replaceable">DRIVER</em>d-admin.socket</em> - The unit file corresponding to the administrative UNIX socket <code class="filename">/var/run/libvirt/virt<em class="replaceable">DRIVER</em>d-admin-sock</code>. We recommend starting this socket on boot by default.</p>
+                     </li>
+                  </ul>
+               
+               <p>When <code class="daemon systemitem">systemd</code> socket activation is used, several configuration settings in virt<em class="replaceable">DRIVER</em>d.conf are no longer honored. Instead, these settings must be controlled via the system
+                  unit files:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><em>unix_sock_group</em> - UNIX socket group owner, controlled via the <code class="option">SocketGroup</code> parameter in the <code class="filename">virt<em class="replaceable">DRIVER</em>d.socket</code> and <code class="filename">virt<em class="replaceable">DRIVER</em>d-ro.socket</code> unit files.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>unix_sock_ro_perms</em> - Read-only UNIX socket permissions, controlled via the <code class="option">SocketMode</code> parameter in the <code class="filename">virt<em class="replaceable">DRIVER</em>d-ro.socket</code> unit file.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>unix_sock_rw_perms</em> - Read-write UNIX socket permissions, controlled via the <code class="option">SocketMode</code> parameter in the <code class="filename">virt<em class="replaceable">DRIVER</em>d.socket</code> unit file.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>unix_sock_admin_perms</em> - Admin UNIX socket permissions, controlled via the <code class="option">SocketMode</code> parameter in the <code class="filename">virt<em class="replaceable">DRIVER</em>d-admin.socket</code> unit file.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>unix_sock_dir</em> - Directory in which all UNIX sockets are created, independently controlled via the
+                        <code class="option">ListenStream</code> parameter in any of the <code class="filename">virt<em class="replaceable">DRIVER</em>d.socket</code>, <code class="filename">virt<em class="replaceable">DRIVER</em>d-ro.socket</code> and <code class="filename">virt<em class="replaceable">DRIVER</em>d-admin.socket</code> unit files.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partii.html">Prev</a></td>
+                  <td class="up"><a href="bk10partii.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich01s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Part&nbsp;<span class="label">II</span><span class="sep">.&nbsp;</span>Managing virtual machines with <code class="library systemitem">libvirt</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Starting and stopping the monolithic daemon</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>22.2.&nbsp;Using PTP</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partviich01.html" rel="prev">
+      <link href="bk07partviich01s03.html" rel="next">
+      <link href="bk07partviich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partviich01.html">Up</a> <a href="bk07partviich01s03.html">Next</a> <a href="bk07partviich01.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partviich01s02.html" db-id="d616951e224817" id="tuning-ptp-using">
+            <header>
+               <h2><span class="label">22<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using PTP</h2>
+            </header>
+            
+            
+            <section class="sect2" id="tuning-ptp-driver-support">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Network driver and hardware support</h3>
+               </header>
+               
+               
+               <p>PTP requires that the used kernel network driver supports either software or hardware
+                  time stamping. Moreover, the NIC must support time stamping in the physical hardware.
+                  You can verify the driver and NIC time stamping capabilities with <code class="command">ethtool</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ethtool -T eth0</code></span></span>
+<span class="line"><span class="ld"><code>Time stamping parameters for eth0:</code></span></span>
+<span class="line"><span class="ld"><code>Capabilities:</code></span></span>
+<span class="line"><span class="ld"><code>hardware-transmit     (SOF_TIMESTAMPING_TX_HARDWARE)</code></span></span>
+<span class="line"><span class="ld"><code>        software-transmit     (SOF_TIMESTAMPING_TX_SOFTWARE)</code></span></span>
+<span class="line"><span class="ld"><code>        hardware-receive      (SOF_TIMESTAMPING_RX_HARDWARE)</code></span></span>
+<span class="line"><span class="ld"><code>        software-receive      (SOF_TIMESTAMPING_RX_SOFTWARE)</code></span></span>
+<span class="line"><span class="ld"><code>        software-system-clock (SOF_TIMESTAMPING_SOFTWARE)</code></span></span>
+<span class="line"><span class="ld"><code>        hardware-raw-clock    (SOF_TIMESTAMPING_RAW_HARDWARE)</code></span></span>
+<span class="line"><span class="ld"><code>PTP Hardware Clock: 0</code></span></span>
+<span class="line"><span class="ld"><code>Hardware Transmit Timestamp Modes:</code></span></span>
+<span class="line"><span class="ld"><code>        off                   (HWTSTAMP_TX_OFF)</code></span></span>
+<span class="line"><span class="ld"><code>        on                    (HWTSTAMP_TX_ON)</code></span></span>
+<span class="line"><span class="ld"><code>Hardware Receive Filter Modes:</code></span></span>
+<span class="line"><span class="ld"><code>        none                  (HWTSTAMP_FILTER_NONE)</code></span></span>
+<span class="line"><span class="ld"><code>        all                   (HWTSTAMP_FILTER_ALL)</code></span></span></pre>
+               </div>
+               
+               <p>Software time stamping requires the following parameters:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SOF_TIMESTAMPING_SOFTWARE</code></span></span>
+<span class="line"><span class="ld"><code>SOF_TIMESTAMPING_TX_SOFTWARE</code></span></span>
+<span class="line"><span class="ld"><code>SOF_TIMESTAMPING_RX_SOFTWARE</code></span></span></pre>
+               </div>
+               
+               <p>Hardware time stamping requires the following parameters:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SOF_TIMESTAMPING_RAW_HARDWARE</code></span></span>
+<span class="line"><span class="ld"><code>SOF_TIMESTAMPING_TX_HARDWARE</code></span></span>
+<span class="line"><span class="ld"><code>SOF_TIMESTAMPING_RX_HARDWARE</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="tuning-ptp-ptp41">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using <code class="command">ptp4l</code>
+                     </h3>
+               </header>
+               
+               
+               <p><code class="command">ptp4l</code> uses hardware time stamping by default. As <code class="systemitem username">root</code>, you need to specify the network interface capable of hardware time stamping with
+                  the <code class="option">-i</code> option. The <code class="option">-m</code> tells <code class="command">ptp4l</code> to print its output to the standard output instead of the system's logging facility:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ptp4l -m -i eth0</code></span></span>
+<span class="line"><span class="ld"><code>selected eth0 as PTP clock</code></span></span>
+<span class="line"><span class="ld"><code>port 1: INITIALIZING to LISTENING on INITIALIZE</code></span></span>
+<span class="line"><span class="ld"><code>port 0: INITIALIZING to LISTENING on INITIALIZE</code></span></span>
+<span class="line"><span class="ld"><code>port 1: new foreign master 00a152.fffe.0b334d-1</code></span></span>
+<span class="line"><span class="ld"><code>selected best master clock 00a152.fffe.0b334d</code></span></span>
+<span class="line"><span class="ld"><code>port 1: LISTENING to UNCALIBRATED on RS_SLAVE</code></span></span>
+<span class="line"><span class="ld"><code>master offset -25937 s0 freq +0 path delay       12340</code></span></span>
+<span class="line"><span class="ld"><code>master offset -27887 s0 freq +0 path delay       14232</code></span></span>
+<span class="line"><span class="ld"><code>master offset -38802 s0 freq +0 path delay       13847</code></span></span>
+<span class="line"><span class="ld"><code>master offset -36205 s1 freq +0 path delay       10623</code></span></span>
+<span class="line"><span class="ld"><code>master offset  -6975 s2 freq -30575 path delay   10286</code></span></span>
+<span class="line"><span class="ld"><code>port 1: UNCALIBRATED to SLAVE on MASTER_CLOCK_SELECTED</code></span></span>
+<span class="line"><span class="ld"><code>master offset  -4284 s2 freq -30135 path delay    9892</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="literal">master offset</code> value represents the measured offset from the master (in nanoseconds).</p>
+               
+               <p>The <code class="literal">s0</code>, <code class="literal">s1</code> and <code class="literal">s2</code> indicators show the different states of the clock servo: <code class="literal">s0</code> is unlocked, <code class="literal">s1</code> is clock step, and <code class="literal">s2</code> is locked. If the servo is in the locked state (<code class="literal">s2</code>), the clock is not stepped (only slowly adjusted) if the <code class="option">pi_offset_const</code> option is set to a negative value in the configuration file (see <code class="command">man 8 ptp4l</code> for more information).</p>
+               
+               <p>The <code class="literal">freq</code> value represents the frequency adjustment of the clock (in parts per billion, ppb).</p>
+               
+               <p>The <code class="literal">path delay</code> value represents the estimated delay of the synchronization messages sent from the
+                  master (in nanoseconds).</p>
+               
+               <p>Port 0 is a Unix domain socket used for local PTP management. Port 1 is the <code class="systemitem">eth0</code> interface.</p>
+               
+               <p><code class="literal">INITIALIZING</code>, <code class="literal">LISTENING</code>, <code class="literal">UNCALIBRATED</code> and <code class="literal">SLAVE</code> are examples of port states which change on <code class="literal">INITIALIZE</code>, <code class="literal">RS_SLAVE</code>, and <code class="literal">MASTER_CLOCK_SELECTED</code> events. When the port state changes from <code class="literal">UNCALIBRATED</code> to <code class="literal">SLAVE</code>, the computer has successfully synchronized with a PTP master clock.</p>
+               
+               <p>You can enable software time stamping with the <code class="option">-S</code> option.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ptp4l -m -S -i eth3</code></span></span></pre>
+               </div>
+               
+               <p>You can also run <code class="command">ptp4l</code> as a service:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl start ptp4l</code></span></span></pre>
+               </div>
+               
+               <p>In this case, <code class="command">ptp4l</code> reads its options from the <code class="filename">/etc/sysconfig/ptp4l</code> file. By default, this file tells <code class="command">ptp4l</code> to read the configuration options from <code class="filename">/etc/ptp4l.conf</code>. For more information on <code class="command">ptp4l</code> options and the configuration file settings, see <code class="command">man 8 ptp4l</code>.</p>
+               
+               <p>To enable the <code class="command">ptp4l</code> service permanently, run the following:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable ptp4l</code></span></span></pre>
+               </div>
+               
+               <p>To disable it, run</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl disable ptp4l</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="tuning-ptp-confile">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>
+                     <code class="command">ptp4l</code> configuration file</h3>
+               </header>
+               
+               
+               <p><code class="command">ptp4l</code> can read its configuration from an optional configuration file. As no configuration
+                  file is used by default, you need to specify it with <code class="option">-f</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ptp4l -f /etc/ptp4l.conf</code></span></span></pre>
+               </div>
+               
+               <p>The configuration file is divided into sections. The global section (indicated as
+                  <code class="literal">[global]</code>) sets the program options, clock options and default port options. Other sections
+                  are port specific, and they override the default port options. The name of the section
+                  is the name of the configured port—for example, <code class="literal">[eth0]</code>. An empty port section can be used to replace the command line option.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[global]</code></span></span>
+<span class="line"><span class="ld"><code>verbose               1</code></span></span>
+<span class="line"><span class="ld"><code>time_stamping         software</code></span></span>
+<span class="line"><span class="ld"><code>[eth0]</code></span></span></pre>
+               </div>
+               
+               <p>The example configuration file is an equivalent of the following command's options:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> ptp4l -i eth0 -m -S</code></span></span></pre>
+               </div>
+               
+               <p>For a complete list of <code class="command">ptp4l</code> configuration options, see <code class="command">man 8 ptp4l</code>.</p>
+               </section>
+            
+            <section class="sect2" id="tuning-ptp-delay-measurement">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Delay measurement</h3>
+               </header>
+               
+               
+               <p><code class="command">ptp4l</code> measures time delay in two different ways: <em>peer-to-peer</em> (P2P) or <em>end-to-end</em> (E2E).</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">P2P</span></dt>
+                     <dd>
+                        
+                        <p>This method is specified with <code class="option">-P</code>.</p>
+                        
+                        <p>It reacts to changes in the network environment faster and is more accurate in measuring
+                           the delay. It is only used in networks where each port exchanges PTP messages with
+                           one other port. P2P needs to be supported by all hardware on the communication path.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">E2E</span></dt>
+                     <dd>
+                        
+                        <p>This method is specified with <code class="option">-E</code>. This is the default.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Automatic method selection</span></dt>
+                     <dd>
+                        
+                        <p>This method is specified with <code class="option">-A</code>. The automatic option starts <code class="command">ptp4l</code> in E2E mode, and changes to P2P mode if a peer delay request is received.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition important">
+                  <div>
+                     <div class="icon">☝</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Common measurement method</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>All clocks on a single PTP communication path must use the same method to measure
+                              the time delay. A warning is printed if either a peer delay request is received on
+                              a port using the E2E mechanism, or an E2E delay request is received on a port using
+                              the P2P mechanism.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="tuning-ptp-pmc">
+               <header>
+                  <h3><span class="label">22<span class="sep">.</span>2<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>PTP management client: <code class="command">pmc</code>
+                     </h3>
+               </header>
+               
+               
+               <p>You can use the <code class="command">pmc</code> client to obtain more detailed information about <code class="command">ptp41</code>. It reads from the standard input—or from the command line—actions specified by name
+                  and management ID. Then it sends the actions over the selected transport, and prints
+                  any received replies. There are three actions supported: <code class="command">GET</code> retrieves the specified information, <code class="command">SET</code> updates the specified information, and <code class="command">CMD</code> (or <code class="command">COMMAND</code>) initiates the specified event.</p>
+               
+               <p>By default, the management commands are addressed to all ports. The <code class="command">TARGET</code> command can be used to select a particular clock and port for the subsequent messages.
+                  For a complete list of management IDs, run <code class="command">pmc help</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> pmc -u -b 0 'GET TIME_STATUS_NP'</code></span></span>
+<span class="line"><span class="ld"><code>sending: GET TIME_STATUS_NP</code></span></span>
+<span class="line"><span class="ld"><code>        90f2ca.fffe.20d7e9-0 seq 0 RESPONSE MANAGEMENT TIME_STATUS_NP</code></span></span>
+<span class="line"><span class="ld"><code>                master_offset              283</code></span></span>
+<span class="line"><span class="ld"><code>                ingress_time               1361569379345936841</code></span></span>
+<span class="line"><span class="ld"><code>                cumulativeScaledRateOffset   +1.000000000</code></span></span>
+<span class="line"><span class="ld"><code>                scaledLastGmPhaseChange    0</code></span></span>
+<span class="line"><span class="ld"><code>                gmTimeBaseIndicator        0</code></span></span>
+<span class="line"><span class="ld"><code>                lastGmPhaseChange          0x0000'0000000000000000.0000</code></span></span>
+<span class="line"><span class="ld"><code>                gmPresent                  true</code></span></span>
+<span class="line"><span class="ld"><code>                gmIdentity                 00b058.feef.0b448a</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="option">-b</code> option specifies the boundary hops value in sent messages. Setting it to zero limits
+                  the boundary to the local <code class="command">ptp4l</code> instance. Increasing the value retrieves the messages also from PTP nodes that are
+                  further from the local instance. The returned information may include:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">stepsRemoved</span></dt>
+                     <dd>
+                        
+                        <p>The number of communication nodes to the grandmaster clock.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">offsetFromMaster, master_offset</span></dt>
+                     <dd>
+                        
+                        <p>The last measured offset of the clock from the master clock (nanoseconds).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">meanPathDelay</span></dt>
+                     <dd>
+                        
+                        <p>The estimated delay of the synchronization messages sent from the master clock (nanoseconds).</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">gmPresent</span></dt>
+                     <dd>
+                        
+                        <p>If <code class="literal">true</code>, the PTP clock is synchronized to the master clock; the local clock is not the grandmaster
+                           clock.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">gmIdentity</span></dt>
+                     <dd>
+                        
+                        <p>This is the grandmaster's identity.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <p>For a complete list of <code class="command">pmc</code> command line options, see <code class="command">man 8 pmc</code>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partviich01.html">Prev</a></td>
+                  <td class="up"><a href="bk07partviich01.html">Up</a></td>
+                  <td class="next"><a href="bk07partviich01s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">22</span><span class="sep">.&nbsp;</span>Precision Time Protocol</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">22<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Synchronizing the clocks with <code class="command">phc2sys</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

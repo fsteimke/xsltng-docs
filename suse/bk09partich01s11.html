@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>1.11.&nbsp;Blocked file systems</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partich01s10.html" rel="prev">
+      <link href="bk09partich01s12.html" rel="next">
+      <link href="bk09partich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partich01.html">Up</a> <a href="bk09partich01s12.html">Next</a> <a href="bk09partich01s10.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partich01s11.html" db-id="d616951e236102" id="sec-blacklist-filsystem">
+            <header>
+               <h2><span class="label">1<span class="sep">.</span>11</span><span class="sep">.&nbsp;</span>Blocked file systems</h2>
+            </header>
+            
+            
+            <p>Due to security reasons, some file systems have been blocked from automatic mounting.
+               These file systems are usually not maintained anymore and are not in common use. However,
+               the kernel module for this file system can be loaded, because the in-kernel API is
+               still compatible. A combination of user-mountable file systems and the automatic mounting
+               of file systems on removable devices could result in the situation where unprivileged
+               users might trigger the automatic loading of kernel modules, and the removable devices
+               could store potentially malicious data.</p>
+            
+            <p>To get a list of file systems that are not allowed to be mounted automatically, run
+               the following command:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> rpm -ql suse-module-tools  | sed -nE 's/.*blacklist_fs-(.*)\.conf/\1/p'</code></span></span></pre>
+            </div>
+            
+            <p>If you try to mount a device with a blocked file system using the <code class="command">mount</code>command, the command outputs an error message, for example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>mount: /mnt/mx: unknown filesystem type 'minix' (hint: possibly blacklisted, see mount(8)).</code></span></span></pre>
+            </div>
+            
+            <p>Even though a file system cannot be mounted automatically, you can load the corresponding
+               kernel module for the file system directly using <code class="command">modprobe</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> modprobe <em class="replaceable">FILESYSTEM</em></code></span></span></pre>
+            </div>
+            
+            <p>For example, for the <code class="systemitem">cramfs</code> file system, the output looks as follows:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>unblacklist: loading cramfs file system module</code></span></span>
+<span class="line"><span class="ld"><code>unblacklist: Do you want to un-blacklist cramfs permanently (&lt;y&gt;es/&lt;n&gt;o/n&lt;e&gt;ver)? y</code></span></span>
+<span class="line"><span class="ld"><code>unblacklist: cramfs un-blacklisted by creating /etc/modprobe.d/60-blacklist_fs-cramfs.conf</code></span></span></pre>
+            </div>
+            
+            <p>Here you have the following options:</p>
+            
+            <dl class="long-terms variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <span class="keycap">y</span> for <code class="literal">yes</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The module will be loaded and removed from the blacklist. Therefore, the module will
+                        be loaded automatically in future without any other prompt.</p>
+                     
+                     <p>The configuration file <code class="filename">/etc/modprobe.d/60-blacklist_fs-${MODULE}.conf</code> is created. Remove the file to undo the changes you performed.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <span class="keycap">n</span> for <code class="literal">no</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The module will be loaded, but it is not removed from the blacklist. Therefore, on
+                        a subsequent module loading you will see the prompt above again.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <span class="keycap">e</span> for <code class="literal">ever</code>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>The module will be loaded, but autoloading is disabled even for future use, and the
+                        prompt will no longer be displayed.</p>
+                     
+                     <p>The configuration file <code class="filename">/etc/modprobe.d/60-blacklist_fs-${MODULE}.conf</code> is created. Remove the file to undo the changes you performed.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">
+                        <span class="keycombo">
+                           <span class="control keycap">Ctrl</span>
+                           <span class="keycap">c</span>
+                           </span>
+                        </span></dt>
+                  <dd>
+                     
+                     <p>This option is used to interrupt the module loading.</p>
+                     </dd>
+               </div>
+               </dl>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partich01s10.html">Prev</a></td>
+                  <td class="up"><a href="bk09partich01.html">Up</a></td>
+                  <td class="next"><a href="bk09partich01s12.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">1<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Other supported file systems</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">1<span class="sep">.</span>12</span><span class="sep">.&nbsp;</span>Large file support in Linux</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

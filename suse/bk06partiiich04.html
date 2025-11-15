@@ -1,0 +1,247 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;24.&nbsp;Configuring a VPN server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partiiich03s06.html" rel="prev">
+      <link href="bk06partiiich04s02.html" rel="next">
+      <link href="bk06partiii.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partiii.html">Up</a> <a href="bk06partiiich04s02.html">Next</a> <a href="bk06partiiich03s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk06partiiich04.html" db-id="d616951e179978" id="cha-security-vpnserver" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">24</span><span class="sep">.&nbsp;</span>Configuring a VPN server</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               
+               </div>
+            <section class="sect1" id="sec-security-vpn-overview">
+               <header>
+                  <h2><span class="label">24<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Conceptual overview</h2>
+               </header>
+               
+               
+               <p>This section defines some terms regarding VPN and gives a brief overview of some scenarios.</p>
+               
+               <section class="sect2" id="sec-security-vpn-terminology">
+                  <header>
+                     <h3><span class="label">24<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Terminology</h3>
+                  </header>
+                  
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Endpoint</span></dt>
+                        <dd>
+                           
+                           <p>The two <q>ends</q> of a tunnel, the source or destination client.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Tap device</span></dt>
+                        <dd>
+                           
+                           <p>A tap device simulates an Ethernet device (layer 2 packets in the OSI model, such
+                              as Ethernet frames). A tap device is used for creating a network bridge. It works
+                              with Ethernet frames.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Tun device</span></dt>
+                        <dd>
+                           
+                           <p>A tun device simulates a point-to-point network (layer 3 packets in the OSI model,
+                              such as IP packets). A tun device is used with routing and works with IP frames.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Tunnel</span></dt>
+                        <dd>
+                           
+                           <p>Linking two locations through a primarily public network. From a more technical viewpoint,
+                              it is a connection between the client's device and the server's device. A tunnel is
+                              encrypted, but it does need to be by definition.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect2" id="sec-security-vpn-scenarios">
+                  <header>
+                     <h3><span class="label">24<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VPN scenarios</h3>
+                  </header>
+                  
+                  
+                  <p>Whenever you set up a VPN connection, your IP packets are transferred over a secured
+                     <em>tunnel</em>. A tunnel can use either a <em>tun</em> or <em>tap</em> device. They are virtual network kernel drivers which implement the transmission
+                     of Ethernet frames or IP frames/packets.</p>
+                  
+                  <p>Any user space program, such as OpenVPN, can attach itself to a tun or tap device
+                     to receive packets sent by your operating system. The program is also able to write
+                     packets to the device.</p>
+                  
+                  <p>There are many solutions to set up and build a VPN connection. This section focuses
+                     on the OpenVPN package. Compared to other VPN software, OpenVPN can be operated in
+                     two modes:</p>
+                  
+                  
+                  <dl class="variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Routed VPN</span></dt>
+                        <dd>
+                           
+                           <p>Routing is an easy solution to set up. It is more efficient and scales better than
+                              a bridged VPN. Furthermore, it allows the user to tune MTU (Maximum Transfer Unit)
+                              to raise efficiency. However, in a heterogeneous environment, if you do not have a
+                              Samba server on the gateway, NetBIOS broadcasts do not work. If you need IPv6, the
+                              drivers for the tun devices on both ends must support this protocol explicitly. This
+                              scenario is depicted in <a class="xref xref-figure" href="#fig-vpn-scenario-routed-1">Figure&nbsp;<span class="label">24<span class="sep">.</span>1</span>, “Routed VPN”</a>.</p>
+                           
+                           
+                           <div class="figure formalobject" id="fig-vpn-scenario-routed-1">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:441px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/vpn_routed1.png" style="width:441px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">24<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Routed VPN</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">Bridged VPN</span></dt>
+                        <dd>
+                           
+                           <p>Bridging is a more complex solution. It is recommended when you need to browse Windows
+                              file shares across the VPN without setting up a Samba or WINS server. Bridged VPN
+                              uses network TAP devices, that simulate a link layer between the VPN endpoints and
+                              operate in layer 2 carrying Ethernet frames. This makes it possible to use non-IP
+                              protocols (such as IPX) or applications relying on network broadcasts. However, it
+                              is less efficient than routed VPN. Another disadvantage is that it does not scale
+                              well. This scenario is depicted in the following figures.</p>
+                           
+                           <dl class="variablelist">
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">Scenario 1</span></dt>
+                                 <dd>
+                                    
+                                    <p>The TAP devices are only available on the VPN endpoints themselves. Layer 2 VPN traffic
+                                       comes only directly from the Server (Machine 1) side or the Client (Machine 2).</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">Scenario 2</span></dt>
+                                 <dd>
+                                    
+                                    <p>The TAP device <code class="systemitem">tap0</code> on the Server (Machine 1) side is bridged to the <code class="systemitem">eth1</code> network interface connected to LAN 1. Layer 2 traffic reaching <code class="systemitem">tap0</code> via the bridge <code class="systemitem">br0</code> will be forwarded via the VPN bridge to the Client (Machine 2) system.</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">Scenario 3</span></dt>
+                                 <dd>
+                                    
+                                    <p>On both sides, the Server (Machine 1) and Client (Machine 2), the TAP device <code class="systemitem">tap0</code> is bridged to a local network interface <code class="systemitem">eth1</code>. Layer 2 traffic from the client network LAN 2 will be forwarded to the server network
+                                       LAN 1 and vice versa.</p>
+                                    </dd>
+                              </div>
+                              </dl>
+                           
+                           
+                           <div class="figure formalobject" id="fig-vpn-scenario-briged-1">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:441px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/vpn_bridged1.png" style="width:441px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">24<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Bridged VPN - scenario 1</div>
+                              </header>
+                           </div>
+                           
+                           
+                           <div class="figure formalobject" id="fig-vpn-scenario-briged-2">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:441px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/vpn_bridged2.png" style="width:441px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">24<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Bridged VPN - scenario 2</div>
+                              </header>
+                           </div>
+                           
+                           
+                           <div class="figure formalobject" id="fig-vpn-scenario-briged-3">
+                              
+                              
+                              <div class="mediaobject">
+                                 <div class="media image"><span class="viewport-table" style="width:441px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/vpn_bridged3.png" style="width:441px;"></picture></span></span></span></span></span></div>
+                              </div>
+                              
+                              <header>
+                                 <div class="title">Figure&nbsp;<span class="label">24<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Bridged VPN - scenario 3</div>
+                              </header>
+                           </div>
+                           </dd>
+                     </div>
+                     </dl>
+                  
+                  <p>The major difference between bridging and routing is that a routed VPN cannot IP-broadcast
+                     while a bridged VPN can.</p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partiiich03s06.html">Prev</a></td>
+                  <td class="up"><a href="bk06partiii.html">Up</a></td>
+                  <td class="next"><a href="bk06partiiich04s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">23<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">24<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up a simple test scenario</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

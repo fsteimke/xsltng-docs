@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.4.&nbsp;Configuring CPU</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich08s03.html" rel="prev">
+      <link href="bk10partiich08s05.html" rel="next">
+      <link href="bk10partiich08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich08.html">Up</a> <a href="bk10partiich08s05.html">Next</a> <a href="bk10partiich08s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich08s04.html" db-id="d616951e281580" id="libvirt-cpu-virsh">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring CPU</h2>
+            </header>
+            
+            
+            <p>Many aspects of the virtual CPUs presented to VM Guests are configurable with <code class="command">virsh</code>. The number of current and maximum CPUs allocated to a VM Guest can be changed, as
+               well as the model of the CPU and its feature set. The following subsections describe
+               how to change the common CPU settings of a VM Guest.</p>
+            
+            <section class="sect2" id="sec-libvirt-cpu-num-virsh">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring the number of CPUs</h3>
+               </header>
+               
+               
+               <p>The number of allocated CPUs is stored in the VM Guest's XML configuration file in
+                  <code class="filename">/etc/libvirt/qemu/</code> in the <code class="tag tag-attribute">vcpu</code> element:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;vcpu placement='static'&gt;1&lt;/vcpu&gt;</code></span></span></pre>
+               </div>
+               
+               <p>In this example, the VM Guest has only one allocated CPU. The following procedure
+                  shows how to change the number of allocated CPUs for the VM Guest:</p>
+               
+               <div class="informalobject procedure" id="sec-libvirt-cpu-num-virsh_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Check whether your VM Guest is inactive:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh list --inactive</code></code></span></span>
+<span class="line"><span class="ld"><code>Id    Name                           State</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>-     sles15                         shut off</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Edit the configuration for an existing VM Guest:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh edit sles15</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Change the number of allocated CPUs:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;vcpu placement='static'&gt;2&lt;/vcpu&gt;</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Restart the VM Guest:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh start sles15</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check if the number of CPUs in the VM has changed.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh vcpuinfo sled15</code></code></span></span>
+<span class="line"><span class="ld"><code>VCPU:           0</code></span></span>
+<span class="line"><span class="ld"><code>CPU:            N/A</code></span></span>
+<span class="line"><span class="ld"><code>State:          N/A</code></span></span>
+<span class="line"><span class="ld"><code>CPU time        N/A</code></span></span>
+<span class="line"><span class="ld"><code>CPU Affinity:   yy</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>VCPU:           1</code></span></span>
+<span class="line"><span class="ld"><code>CPU:            N/A</code></span></span>
+<span class="line"><span class="ld"><code>State:          N/A</code></span></span>
+<span class="line"><span class="ld"><code>CPU time        N/A</code></span></span>
+<span class="line"><span class="ld"><code>CPU Affinity:   yy</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>You can also change the number of CPUs while the VM Guest is running. CPUs can be
+                  hotplugged until the maximum number configured at VM Guest start is reached. Likewise,
+                  they can be hot-unplugged until the lower limit of 1 is reached. The following example
+                  shows changing the active CPU count from 2 to a predefined maximum of 4.</p>
+               
+               <div class="informalobject procedure" id="sec-libvirt-cpu-num-virsh_proc2">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Check the current live vcpu count:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh vcpucount sles15 | grep live</code></code></span></span>
+<span class="line"><span class="ld"><code>maximum      live           4</code></span></span>
+<span class="line"><span class="ld"><code>current      live           2</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Change the current, or active, number of CPUs to 4:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh setvcpus sles15 --count 4 --live</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check that the current live vcpu count is now 4:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh vcpucount sles15 | grep live</code></code></span></span>
+<span class="line"><span class="ld"><code>maximum      live           4</code></span></span>
+<span class="line"><span class="ld"><code>current      live           4</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-libvirt-cpu-model-virsh">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring the CPU model</h3>
+               </header>
+               
+               
+               <p>The CPU model exposed to a VM Guest can often influence the workload running within
+                  it. The default CPU model is derived from a CPU mode known as <code class="literal">host-model</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cpu mode='host-model'/&gt;</code></span></span></pre>
+               </div>
+               
+               <p>When starting a VM Guest with the CPU mode <code class="literal">host-model</code>, <code class="library systemitem">libvirt</code> copies its model of the host CPU into the VM Guest definition. The host CPU model
+                  and features copied to the VM Guest definition can be observed in the output of the
+                  <code class="command">virsh capabilities</code>.</p>
+               
+               <p>Another interesting CPU mode is <code class="literal">host-passthrough</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cpu mode='host-passthrough'/&gt;</code></span></span></pre>
+               </div>
+               
+               <p>When starting a VM Guest with the CPU mode <code class="literal">host-passthrough</code>, it is presented with a CPU that is exactly the same as the VM Host Server CPU. This
+                  can be useful when the VM Guest workload requires CPU features not available in <code class="library systemitem">libvirt</code>'s simplified <code class="literal">host-model</code> CPU. The <code class="literal">host-passthrough</code> CPU mode comes with the disadvantage of reduced migration flexibility. A VM Guest
+                  with <code class="literal">host-passthrough</code> CPU mode can only be migrated to a VM Host Server with identical hardware.</p>
+               
+               <p>When using the <code class="literal">host-passthrough</code> CPU mode, it is still possible to disable undesirable features. The following configuration
+                  presents the VM Guest with a CPU that is exactly the same as the host CPU but with
+                  the <code class="literal">vmx</code> feature disabled.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;cpu mode='host-passthrough'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='disable' name='vmx'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/cpu&gt;</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="literal">custom</code> CPU mode is another common mode used to define a normalized CPU that can be migrated
+                  throughout dissimilar hosts in a cluster. For example, in a cluster with hosts containing
+                  Nehalem, IvyBridge and SandyBridge CPUs, the VM Guest can be configured with a <code class="literal">custom</code> CPU mode that contains a Nehalem CPU model.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;cpu mode='custom' match='exact'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;model fallback='allow'&gt;Nehalem&lt;/model&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='vme'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='ds'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='acpi'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='ss'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='ht'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='tm'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='pbe'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='dtes64'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='monitor'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='ds_cpl'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='vmx'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='est'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='tm2'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='xtpr'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='pdcm'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='dca'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='rdtscp'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature policy='require' name='invtsc'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/cpu&gt;</code></span></span></pre>
+               </div>
+               
+               <p>For more information on <code class="library systemitem">libvirt</code>'s CPU model and topology options, see the <cite class="citetitle">CPU model and topology</cite> documentation at <a class="link" href="https://libvirt.org/formatdomain.html#cpu-model-and-topology">https://libvirt.org/formatdomain.html#cpu-model-and-topology</a>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich08s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich08.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich08s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring hypervisor features</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Changing boot options</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

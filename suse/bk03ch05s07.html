@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.7.&nbsp;Rolling back a service pack</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk03ch05s06.html" rel="prev">
+      <link href="bk03ch05s08.html" rel="next">
+      <link href="bk03ch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk03ch05.html">Up</a> <a href="bk03ch05s08.html">Next</a> <a href="bk03ch05s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk03ch05s07.html" db-id="d616951e107468" id="sec-upgrade-online-rollback">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Rolling back a service pack</h2>
+            </header>
+            
+            
+            <p>If a service pack does not work for you, SUSE Linux Enterprise supports reverting
+               the system to the state before the service pack migration was started. Prerequisite
+               is a Btrfs root partition with snapshots enabled (this has been the default since
+               SLES&nbsp;12). See <a class="xref xref-chapter" href="bk01partich10.html">Chapter&nbsp;<span class="label">10</span>, System recovery and snapshot management with Snapper</a> for details.</p>
+            
+            <div class="informalobject procedure" id="pro-upgrade-online-rollback">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Get a list of all Snapper snapshots:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper list</code></span></span></pre>
+                     </div>
+                     
+                     <p>Review the output to locate the snapshot that was created immediately before the service
+                        pack migration was started. The column <span class="guimenu">Description</span> contains a corresponding statement and the snapshot is marked as <code class="literal">important</code> in the column <span class="guimenu">Userdata</span>. Memorize the snapshot number from the column <span class="guimenu">#</span> and its date from the column <span class="guimenu">Date</span>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Reboot the system. From the boot menu, select <span class="guimenu">Start boot loader from a read-only snapshot</span> and then choose the snapshot with the date and number you memorized in the previous
+                        step. A second boot menu (the one from the snapshot) is loaded. Select the entry starting
+                        with SLES&nbsp;<span class="phrase productnumber">15 SP7</span> and boot it.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>The system boots into the previous state with the system partition mounted read-only.
+                        Log in as <code class="systemitem username">root</code> and check whether you have chosen the correct snapshot. Also make sure everything
+                        works as expected. Note that since the root file system is mounted read-only, restrictions
+                        in functionality may apply.</p>
+                     
+                     <p>In case of problems or if you have booted the wrong snapshot, reboot and choose a
+                        different snapshot to boot from—up to this point no permanent changes have been made.
+                        If the snapshot is correct and works as expected, make the change permanent by running
+                        the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper rollback</code></span></span></pre>
+                     </div>
+                     
+                     <p>Reboot the machine. On the boot screen, choose the default boot entry to reboot into
+                        the reinstated system.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Check if the repository configuration has been properly reset. Furthermore, check
+                        if all products are properly registered. If either one is not the case, updating the
+                        system at a later point in time may no longer work, or the system may be updated using
+                        the wrong package repositories.</p>
+                     
+                     <p>Make sure the system can access the Internet before starting this procedure.</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Refresh services and repositories by running</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper ref -fs</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Get a list of active repositories by running</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper lr</code></span></span></pre>
+                              </div>
+                              
+                              <p>Carefully check the output of this command. No services and repositories that were
+                                 added for the update should be listed. For example, if you are rolling back from SLES&nbsp;<span class="phrase productnumber">15 SP7</span> to SLES15 GA, the list must contain the <code class="literal">SLES15-GA</code> repositories, and not the <code class="literal">SLES15-SP7</code> repositories.</p>
+                              
+                              <p>If wrong repositories are listed, delete them and, if necessary, replace them with
+                                 the versions matching your product or service pack version. For a list of repositories
+                                 for the supported migration paths refer to <a class="xref xref-sect1" href="bk03ch01s03.html">the section called “Module dependencies and lifecycles”</a>. (Note that manual intervention should not be necessary, as the repositories should
+                                 be updated automatically, but it is a best practice to verify and make any necessary
+                                 corrections.)</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Last, check the registration status for all products installed by running</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> SUSEConnect --status</code></span></span></pre>
+                              </div>
+                              
+                              <p>All products should be reported as being <code class="literal">Registered</code>. If this is not the case, repair the registration by running</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> SUSEConnect --rollback</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Now you have successfully reverted the system to the state that was captured immediately
+               before the service pack migration was started.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk03ch05s06.html">Prev</a></td>
+                  <td class="up"><a href="bk03ch05.html">Up</a></td>
+                  <td class="next"><a href="bk03ch05s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Upgrading with plain Zypper</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Upgrading with SUSE Multi-Linux Manager</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

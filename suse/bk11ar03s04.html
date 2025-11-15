@@ -1,0 +1,1695 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.&nbsp;VM Host Server configuration and resource allocation</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk11ar03s03.html" rel="prev">
+      <link href="bk11ar03s05.html" rel="next">
+      <link href="bk11ar03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk11ar03.html">Up</a> <a href="bk11ar03s05.html">Next</a> <a href="bk11ar03s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk11ar03s04.html" db-id="d616951e316665" id="sec-vt-best-hostlevel">
+            <header>
+               <h2><span class="label">4</span><span class="sep">.&nbsp;</span>VM Host Server configuration and resource allocation</h2>
+            </header>
+            
+            
+            <p>Allocation of resources for VM Guests is a crucial point when administrating virtual
+               machines. When assigning resources to VM Guests, be aware that overcommitting resources
+               may affect the performance of the VM Host Server and the VM Guests. If all VM Guests
+               request all their resources simultaneously, the host needs to provide them all. If
+               not, the host's performance is negatively affected and this in turn also has negative
+               effects on the VM Guest's performance.</p>
+            
+            <section class="sect2" id="sec-vt-best-mem">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Memory</h3>
+               </header>
+               
+               
+               <p>Linux manages memory in units called pages. On most systems the default page size
+                  is 4 KB. Linux and the CPU need to know which pages belong to which process. That
+                  information is stored in a page table. If a lot of processes are running, it takes
+                  more time to find where the memory is mapped, because of the time required to search
+                  the page table. To speed up the search, the TLB (Translation Lookaside Buffer) was
+                  invented. But on a system with a lot of memory, the TLB is not enough. To avoid any
+                  fallback to normal page table (resulting in a cache miss, which is time consuming),
+                  huge pages can be used. Using huge pages will reduce TLB overhead and TLB misses (pagewalk).
+                  A host with 32&nbsp;GB (32*1014*1024 = 33,554,432&nbsp;KB) of memory and a 4&nbsp;KB page size has
+                  a TLB with <em>33,554,432/4 = 8,388,608</em> entries. Using a 2&nbsp;MB (2048&nbsp;KB) page size, the TLB only has <em>33554432/2048 = 16384</em> entries, considerably reducing the TLB misses.</p>
+               
+               <section class="sect3" id="sec-vt-best-mem-huge-pages">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuring the VM Host Server and the VM Guest to use huge pages</h4>
+                  </header>
+                  
+                  
+                  <p>The AMD64/Intel&nbsp;64 CPU architecture supports larger pages than 4 KB: huge pages. To
+                     determine the size of huge pages available on your system (could be 2&nbsp;MB or 1&nbsp;GB),
+                     check the <code class="literal">flags</code> line in the output of <code class="filename">/proc/cpuinfo</code> for occurrences of <code class="literal">pse</code> and/or <code class="literal">pdpe1gb</code>.</p>
+                  
+                  <div class="formalobject table" id="sec-vt-best-mem-huge-pages_tab1">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">1</span><span class="sep">.&nbsp;</span>Determine the available huge pages size</div>
+                     </header>
+                     <table>
+                        <colgroup>
+                           <col style="width: 30%">
+                           <col style="width: 70%">
+                        </colgroup>
+                        <thead>
+                           
+                           <tr>
+                              <th class="bleft btop colsep rowsep">
+                                 <p>CPU flag</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>Huge pages size available</p>
+                              </th>
+                           </tr>
+                           </thead>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep rowsep">
+                                 <p>Empty string</p>
+                              </td>
+                              <td class="btop colsep rowsep">
+                                 <p>No huge pages available</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>pse</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>2 MB</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep">
+                                 <p>pdpe1gb</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>1 GB</p>
+                              </td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  
+                  <p>Using huge pages improves the performance of VM Guests and reduces host memory consumption.</p>
+                  
+                  <p>By default, the system uses THP. To make huge pages available on your system, activate
+                     it at boot time with <code class="option">hugepages=1</code>, and—optionally—add the huge pages size with, for example, <code class="option">hugepagesz=2MB</code>.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">1&nbsp;GB huge pages</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>1&nbsp;GB pages can only be allocated at boot time and cannot be freed afterward.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <p>To allocate and use the huge page table (HugeTlbPage), you need to mount <code class="filename">hugetlbfs</code> with correct permissions.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Restrictions of huge pages</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Even if huge pages provide the best performance, they do come with some drawbacks.
+                                 You lose features such as Memory ballooning (see <a class="xref xref-sect3" href="bk11ar03s06.html#sec-vt-best-vmguests-virtio-balloon">the section called “virtio balloon”</a>), KSM (see <a class="xref xref-sect3" href="#sec-vt-best-perf-ksm">the section called “KSM and page sharing”</a>), and huge pages cannot be swapped.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-mem-huge-pages_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">1</span><span class="sep">.&nbsp;</span>Configuring the use of huge pages</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Mount <code class="literal">hugetlbfs</code> to <code class="filename">/dev/hugepages</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  mount -t hugetlbfs hugetlbfs /dev/hugepages</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>To reserve memory for huge pages, use the <code class="command">sysctl</code> command. If your system has a huge page size of 2&nbsp;MB (2048&nbsp;KB), and you want to reserve
+                              1&nbsp;GB (1,048,576&nbsp;KB) for your VM Guest, you need <em>1,048,576/2048=512</em> pages in the pool:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  sysctl vm.nr_hugepages=<em class="replaceable">512</em></code></span></span></pre>
+                           </div>
+                           
+                           <p>The value is written to <code class="filename">/proc/sys/vm/nr_hugepages</code> and represents the current number of <em>persistent</em> huge pages in the kernel's huge page pool. <em>Persistent</em> huge pages are returned to the huge page pool when freed by a task.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Add the <code class="literal">memoryBacking</code> element in the VM Guest configuration file (by running <code class="command">virsh edit <em class="replaceable">CONFIGURATION</em></code>).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;memoryBacking&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;hugepages/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/memoryBacking&gt;</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Start your VM Guest and check on the host whether it uses hugepages:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /proc/meminfo | grep HugePages_</code></span></span>
+<span class="line"><span class="ld"><code>HugePages_Total:<span class="co" id="co-hp-total">⥛</span>     512</code></span></span>
+<span class="line"><span class="ld"><code>HugePages_Free:<span class="co" id="co-hp-free">⥜</span>       92</code></span></span>
+<span class="line"><span class="ld"><code>HugePages_Rsvd:<span class="co" id="co-hp-rsvd">⥝</span>        0</code></span></span>
+<span class="line"><span class="ld"><code>HugePages_Surp:<span class="co" id="co-hp-surp">⥞</span>        0</code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#co-hp-total">⥛</a></dt>
+                                 <dd>
+                                    
+                                    <p>Size of the pool of huge pages</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-hp-free">⥜</a></dt>
+                                 <dd>
+                                    
+                                    <p>Number of huge pages in the pool that are not yet allocated</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-hp-rsvd">⥝</a></dt>
+                                 <dd>
+                                    
+                                    <p>Number of huge pages for which a commitment to allocate from the pool has been made,
+                                       but no allocation has yet been made</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#co-hp-surp">⥞</a></dt>
+                                 <dd>
+                                    
+                                    <p>Number of huge pages in the pool above the value in <code class="filename">/proc/sys/vm/nr_hugepages</code>. The maximum number of surplus huge pages is controlled by <code class="filename">/proc/sys/vm/nr_overcommit_hugepages</code></p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-mem-thp">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Transparent huge pages</h4>
+                  </header>
+                  
+                  
+                  <p>Transparent huge pages (THP) provide a way to dynamically allocate huge pages with
+                     the <code class="command">khugepaged</code> kernel thread, rather than manually managing their allocation and use. Workloads
+                     with contiguous memory access patterns can benefit greatly from THP. A 1000 fold decrease
+                     in page faults can be observed when running synthetic workloads with contiguous memory
+                     access patterns. Conversely, workloads with sparse memory access patterns (like databases)
+                     may perform poorly with THP. In such cases, it may be preferable to disable THP by
+                     adding the kernel parameter <code class="option">transparent_hugepage=never</code>, rebuild your grub2 configuration, and reboot. Verify if THP is disabled with:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /sys/kernel/mm/transparent_hugepage/enabled</code></span></span>
+<span class="line"><span class="ld"><code>always madvise [never]</code></span></span></pre>
+                  </div>
+                  
+                  <p>If disabled, the value <code class="literal">never</code> is shown in square brackets like in the example above.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Xen</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>THP is not available under Xen.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-mem-xen">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Xen-specific memory notes</h4>
+                  </header>
+                  
+                  
+                  <section class="sect4" id="sec-vt-best-mem-xen-dom-0">
+                     <header>
+                        <h5><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Managing domain-0 memory</h5>
+                     </header>
+                     
+                     
+                     <p>In previous versions of SUSE Linux Enterprise Server, the default memory allocation
+                        scheme of a Xen host was to allocate all host physical memory to Dom0 and enable auto-ballooning.
+                        Memory was automatically ballooned from Dom0 when additional domains were started.
+                        This behavior has always been error prone and disabling it was strongly encouraged.
+                        Starting in SUSE Linux Enterprise Server 15 SP1, auto-ballooning has been disabled
+                        by default and Dom0 is given 10% of host physical memory + 1&nbsp;GB. For example, on a
+                        host with 32&nbsp;GB of physical memory, 4.2&nbsp;GB of memory is allocated to Dom0.</p>
+                     
+                     <p>The use of <code class="option">dom0_mem</code> Xen command-line option in <code class="filename">/etc/default/grub</code> is still supported and encouraged (see <a class="xref xref-sect2" href="bk11ar03s07.html#sec-vt-best-kernel-parameter">the section called “Change kernel parameters at boot time”</a> for more information). You can restore the old behavior by setting <code class="option">dom0_mem</code> to the host physical memory size and enabling the <code class="option">autoballoon</code> setting in <code class="filename">/etc/xen/xl.conf</code>.</p>
+                     </section>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-perf-ksm">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>KSM and page sharing</h4>
+                  </header>
+                  
+                  
+                  <p>Kernel Samepage Merging is a kernel feature that reduces memory consumption on the
+                     VM Host Server by sharing blocks of memory that VM Guests have in common. The KSM
+                     daemon <code class="daemon systemitem">ksmd</code> periodically scans user memory, looking for pages with identical contents, which
+                     can be replaced by a single write-protected page. To enable the KSM service, first
+                     make sure that the package <code class="package">qemu-ksm</code> is installed, then run the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  systemctl enable --now ksm.service</code></span></span></pre>
+                  </div>
+                  
+                  <p>Alternatively, it can also be started by running the command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> echo 1 &gt; /sys/kernel/mm/ksm/run</code></span></span></pre>
+                  </div>
+                  
+                  <p>One advantage of using KSM from a VM Guest's perspective is that all guest memory
+                     is backed by host anonymous memory. You can share <em>pagecache</em>, <em>tmpfs</em> or any kind of memory allocated in the guest.</p>
+                  
+                  <p>KSM is controlled by <code class="systemitem">sysfs</code>. You can check KSM's values in <code class="filename">/sys/kernel/mm/ksm/</code>:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p><code class="literal">pages_shared</code>: the number of shared pages that are being used (read-only).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">pages_sharing</code>: the number of sites sharing the pages (read-only).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">pages_unshared</code>: the number of pages that are unique and repeatedly checked for merging (read-only).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">pages_volatile</code>: the number of pages that are changing too fast to be considered for merging (read-only).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">full_scans</code>: the number of times all mergeable areas have been scanned (read-only).</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">sleep_millisecs</code>: the number of milliseconds <code class="daemon systemitem">ksmd</code> should sleep before the next scan. A low value will overuse the CPU, consuming CPU
+                           time that could be used for other tasks. We recommend a value greater than <code class="literal">1000</code>.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">pages_to_scan</code>: the number of present pages to scan before ksmd goes to sleep. A high value will
+                           overuse the CPU. We recommend starting with a value of <code class="literal">1000</code> and then adjusting based on the KSM results observed while testing your deployment.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">merge_across_nodes</code>: by default, the system merges pages across NUMA nodes. Set this option to <code class="literal">0</code> to disable this behavior.</p>
+                        </li>
+                     </ul>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Use cases</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>KSM is a good technique to over-commit host memory when running multiple instances
+                                 of the same application or VM Guest. When applications and VM Guest are heterogeneous
+                                 and do not share any common data, it is preferable to disable KSM. To do that, run:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  systemctl disable --now ksm.service</code></span></span></pre>
+                              </div>
+                              
+                              <p>Alternatively, it can also be disabled by running the command:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> echo 0 &gt; /sys/kernel/mm/ksm/run</code></span></span></pre>
+                              </div>
+                              
+                              <p>In a mixed heterogeneous and homogeneous environment, KSM can be enabled on the host
+                                 but disabled on a per VM Guest basis. Use <code class="command">virsh edit</code> to disable page sharing of a VM Guest by adding the following to the guest's XML
+                                 configuration:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;memoryBacking&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;nosharepages/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/memoryBacking&gt;</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Avoid out-of-memory conditions</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>KSM can free up certain memory on the host system, but the administrator should reserve
+                                 enough swap to avoid out-of-memory conditions if that shareable memory decreases.
+                                 If the amount of shareable memory decreases, the use of physical memory is increased.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">KSM as a side channel</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>Because of its nature, KSM can form a side channel between otherwise isolated guests.
+                                 It is discouraged to enable KSM in environments where guests from different security
+                                 domains are executed.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Memory access latencies</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>By default, KSM will merge common pages across NUMA nodes. If the merged, common page
+                                 is now located on a distant NUMA node (relative to the node running the VM Guest vCPUs),
+                                 this may degrade VM Guest performance. If increased memory access latencies are noticed
+                                 in the VM Guest, disable cross-node merging with the <code class="literal">merge_across_nodes</code> sysfs control:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> echo 0 &gt; /sys/kernel/mm/ksm/merge_across_nodes</code></span></span></pre>
+                              </div>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-mem-hot">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>1<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>VM Guest: memory hotplug</h4>
+                  </header>
+                  
+                  
+                  <p>To optimize the usage of your host memory, it may be useful to hotplug more memory
+                     for a running VM Guest when required. To support memory hotplugging, you must first
+                     configure the <code class="literal">&lt;maxMemory&gt;</code> tag in the VM Guest's configuration file:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;maxMemory<span class="co" id="co-mem-hot-max">⥟</span> slots='16'<span class="co" id="co-mem-hot-slots">⥠</span> unit='KiB'&gt;20971520<span class="co" id="co-mem-hot-size">⥡</span>&lt;/maxMemory&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;memory<span class="co" id="co-mem-hot-mem">⥢</span> unit='KiB'&gt;1048576&lt;/memory&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;currentMemory<span class="co" id="co-mem-hot-curr">⥣</span> unit='KiB'&gt;1048576&lt;/currentMemory&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-hot-max">⥟</a></dt>
+                        <dd>
+                           
+                           <p>Runtime maximum memory allocation of the guest</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-hot-slots">⥠</a></dt>
+                        <dd>
+                           
+                           <p>Number of slots available for adding memory to the guest</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-hot-size">⥡</a></dt>
+                        <dd>
+                           
+                           <p>Valid units are:</p>
+                           
+                           <ul class="itemizedlist">
+                              
+                              <li>
+                                 
+                                 <p><q>KB</q> for kilobytes (1,000 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>k</q> or <q>KiB</q> for kibibytes (1,024 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>MB</q> for megabytes (1,000,000 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>M</q> or <q>MiB</q> for mebibytes (1,048,576 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>GB</q> for gigabytes (1,000,000,000 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>G</q> or <q>GiB</q> for gibibytes (1,073,741,824 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>TB</q> for terabytes (1,000,000,000,000 bytes)</p>
+                                 </li>
+                              
+                              <li>
+                                 
+                                 <p><q>T</q> or <q>TiB</q> for tebibytes (1,099,511,627,776 bytes)</p>
+                                 </li>
+                              </ul>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-hot-mem">⥢</a></dt>
+                        <dd>
+                           
+                           <p>Maximum allocation of memory for the guest at boot time</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-hot-curr">⥣</a></dt>
+                        <dd>
+                           
+                           <p>Actual allocation of memory for the guest</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <p>To hotplug memory devices into the slots, create a file <code class="filename">mem-dev.xml</code> like the following:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;memory model='dimm'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;target&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;size unit='KiB'&gt;524287&lt;/size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;node&gt;0&lt;/node&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/target&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/memory&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <p>And attach it with the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh attach-device vm-name mem-dev.xml</code></span></span></pre>
+                  </div>
+                  
+                  <p>For memory device hotplug, the guest must have at least 1 NUMA cell defined (see <a class="xref xref-sect4" href="#sec-vt-best-perf-numa-vmguest-topo">the section called “VM Guest virtual NUMA topology”</a>).</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-perf-swap">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Swap</h3>
+               </header>
+               
+               
+               <p><em>Swap</em> is used by the system to store underused physical memory (low usage, or not accessed
+                  for a long time). To prevent the system from running out of memory, setting up a minimum
+                  swap is highly recommended.</p>
+               
+               <section class="sect3" id="sec-vt-best-perf-swap-swappiness">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>
+                        <code class="literal">swappiness</code>
+                        </h4>
+                  </header>
+                  
+                  
+                  <p>The <code class="literal">swappiness</code> setting controls your system's swap behavior. It defines how memory pages are swapped
+                     to disk. A high value of <em>swappiness</em> results in a system that swaps more often. Available values range from <code class="literal">0</code> to <code class="literal">200</code>. A value of <code class="literal">200</code> tells the system to find inactive pages and put them in swap. A value of <code class="option">0</code> disables swapping. </p>
+                  
+                  <p>To test on a live system, change the value of <code class="filename">/proc/sys/vm/swappiness</code> on the fly and check the memory usage afterward:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> echo 35 &gt; /proc/sys/vm/swappiness</code></span></span></pre>
+                  </div>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>free -h</code></span></span>
+<span class="line"><span class="ld"><code>total       used       free     shared    buffers     cached</code></span></span>
+<span class="line"><span class="ld"><code>Mem:      24616680    4991492   19625188     167056     144340    2152408</code></span></span>
+<span class="line"><span class="ld"><code>-/+ buffers/cache:    2694744   21921936</code></span></span>
+<span class="line"><span class="ld"><code>Swap:      6171644          0    6171644</code></span></span></pre>
+                  </div>
+                  
+                  <p>To permanently set a swappiness value, add a line in <code class="filename">/etc/systcl.conf</code>, for example:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>vm.swappiness = 35</code></span></span></pre>
+                  </div>
+                  
+                  <p>You can also control the swap by using the <code class="literal">swap_hard_limit</code> element in the XML configuration of your VM Guest. Before setting this parameter
+                     and using it in a production environment, test it because the host can stop the domain
+                     if the value is too low.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;memtune&gt;<span class="co" id="co-mem-1">⥤</span></code></span></span>
+<span class="line"><span class="ld"><code>  &lt;hard_limit unit='G'&gt;1&lt;/hard_limit&gt;<span class="co" id="co-mem-hard">⥥</span></code></span></span>
+<span class="line"><span class="ld"><code>  &lt;soft_limit unit='M'&gt;128&lt;/soft_limit&gt;<span class="co" id="co-mem-soft">⥦</span></code></span></span>
+<span class="line"><span class="ld"><code>  &lt;swap_hard_limit unit='G'&gt;2&lt;/swap_hard_limit&gt;<span class="co" id="co-mem-swap">⥧</span></code></span></span>
+<span class="line"><span class="ld"><code>&lt;/memtune&gt;</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-1">⥤</a></dt>
+                        <dd>
+                           
+                           <p>This element provides memory tunable parameters for the domain. If this is omitted,
+                              it defaults to the defaults provided b the operating system.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-hard">⥥</a></dt>
+                        <dd>
+                           
+                           <p>Maximum memory the guest can use. To avoid any problems on the VM Guest, we strongly
+                              recommend not to use this parameter.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-soft">⥦</a></dt>
+                        <dd>
+                           
+                           <p>The memory limit to enforce during memory contention.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-mem-swap">⥧</a></dt>
+                        <dd>
+                           
+                           <p>The maximum memory plus swap the VM Guest can use.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-io">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>I/O</h3>
+               </header>
+               
+               
+               <section class="sect3" id="sec-vt-best-perf-io">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>I/O scheduler</h4>
+                  </header>
+                  
+                  
+                  <p>The I/O scheduler for SUSE Linux Enterprise 15 SP2 and up is Budget Fair Queueing
+                     (BFQ). The main aim of the BFQ scheduler is to provide a fair allocation of the disk
+                     I/O bandwidth for all processes that request an I/O operation. You can have different
+                     I/O schedulers for different devices.</p>
+                  
+                  <p>To get better performance in host and VM Guest, use <code class="literal">none</code> in the VM Guest (disable the I/O scheduler) and the <code class="literal">mq-deadline</code> scheduler for a virtualization host.</p>
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-perf-io_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">2</span><span class="sep">.&nbsp;</span>Checking and changing the I/O scheduler at runtime</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>To check your current I/O scheduler for your disk (replace <em class="replaceable">sdX</em> by the disk you want to check), run:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /sys/block/<em class="replaceable">sdX</em>/queue/scheduler</code></span></span>
+<span class="line"><span class="ld"><code>mq-deadline kyber [bfq] none</code></span></span></pre>
+                           </div>
+                           
+                           <p>The value in square brackets is the one currently selected (<code class="literal">bfq</code> in the example above).</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>You can change the scheduler at runtime by running the following command as <code class="systemitem username">root</code>:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> echo mq-deadline &gt; /sys/block/<em class="replaceable">sdX</em>/queue/scheduler</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>If you need to specify different I/O schedulers for each disk, create the file <code class="filename">/usr/lib/tmpfiles.d/IO_ioscheduler.conf</code> with content similar to the following example. It defines the <code class="literal">mq-deadline</code> scheduler for <code class="filename">/dev/sda</code> and the <code class="literal">none</code> scheduler for <code class="filename">/dev/sdb</code>. Keep in mind that the device name can be different depending on the device type.
+                     This feature is available on SLE 12 and up.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>w /sys/block/sda/queue/scheduler - - - - mq-deadline</code></span></span>
+<span class="line"><span class="ld"><code>w /sys/block/sdb/queue/scheduler - - - - none</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-io-async">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Asynchronous I/O</h4>
+                  </header>
+                  
+                  
+                  <p>Many of the virtual disk back-ends use Linux Asynchronous I/O (aio) in their implementation.
+                     By default, the maximum number of aio contexts is set to 65536, which can be exceeded
+                     when running hundreds of VM Guests using virtual disks serviced by Linux Asynchronous
+                     I/O. When running large numbers of VM Guests on a VM Host Server, consider increasing
+                     /proc/sys/fs/aio-max-nr.</p>
+                  
+                  <div class="formalobject procedure" id="sec-vt-best-io-async_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">3</span><span class="sep">.&nbsp;</span>Checking and changing aio-max-nr at runtime</div>
+                     </header>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>To check your current aio-max-nr setting run:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /proc/sys/fs/aio-max-nr</code></span></span>
+<span class="line"><span class="ld"><code>65536</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>You can change aio-max-nr at runtime with the following command:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span> echo 131072 &gt; /proc/sys/fs/aio-max-nr</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  
+                  <p>To permanently set <code class="option">aio-max-nr</code>, add an entry to a custom sysctl file. For example, include the following to <code class="filename">/etc/sysctl.d/aio-max-nr.conf</code>:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>fs.aio-max-nr = 1048576</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-io-techniques">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>I/O Virtualization</h4>
+                  </header>
+                  
+                  
+                  <p>SUSE products support multiple I/O virtualization technologies. The following table
+                     lists advantages and disadvantages of each technology. For more information about
+                     I/O in virtualization refer to the <a class="xref xref-sect1" href="bk10partich01s04.html">the section called “I/O virtualization”</a>.</p>
+                  
+                  <div class="formalobject table" id="sec-vt-best-io-techniques_tab1">
+                     <header>
+                        <div class="title">Table&nbsp;<span class="label">2</span><span class="sep">.&nbsp;</span>I/O Virtualization solutions</div>
+                     </header>
+                     <table>
+                        <colgroup>
+                           <col style="width: 20%">
+                           <col style="width: 40%">
+                           <col style="width: 40%">
+                        </colgroup>
+                        <thead>
+                           
+                           <tr>
+                              <th class="bleft btop colsep rowsep">
+                                 <p>Technology</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>Advantage</p>
+                              </th>
+                              <th class="btop colsep rowsep">
+                                 <p>Disadvantage</p>
+                              </th>
+                           </tr>
+                           </thead>
+                        <tbody>
+                           
+                           <tr>
+                              <td class="bleft btop colsep rowsep" rowspan="4">
+                                 <p>Device Assignment (pass-through)</p>
+                              </td>
+                              <td class="btop colsep rowsep">
+                                 <p>Device accessed directly by the guest</p>
+                              </td>
+                              <td class="btop colsep rowsep">
+                                 <p>No sharing among multiple guests</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">
+                                 <p>High performance</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Live migration is complex</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep"></td>
+                              <td class="colsep rowsep">
+                                 <p>PCI device limit is 8 per guest</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep"></td>
+                              <td class="colsep rowsep">
+                                 <p>Limited number of slots on a server</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep" rowspan="2">
+                                 <p>Full virtualization (IDE, SATA, SCSI, e1000)</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>VM Guest compatibility</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Bad performance</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">
+                                 <p>Easy for live migration</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Emulated operation</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="bleft colsep rowsep" rowspan="3">
+                                 <p>Para-virtualization (virtio-blk, virtio-net, virtio-scsi)</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Good performance</p>
+                              </td>
+                              <td class="colsep rowsep">
+                                 <p>Modified guest (PV drivers)</p>
+                              </td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">
+                                 <p>Easy for live migration</p>
+                              </td>
+                              <td class="colsep rowsep"></td>
+                           </tr>
+                           
+                           <tr>
+                              <td class="colsep rowsep">
+                                 <p>Efficient host communication with VM Guest</p>
+                              </td>
+                              <td class="colsep rowsep"></td>
+                           </tr>
+                           </tbody>
+                     </table>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-fs">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Storage and file system</h3>
+               </header>
+               
+               
+               <p>Storage space for VM Guests can either be a block device, for example, a partition
+                  on a physical disk, or an image file on the file system:</p>
+               
+               <div class="formalobject table" id="sec-vt-best-fs_tab1">
+                  <header>
+                     <div class="title">Table&nbsp;<span class="label">3</span><span class="sep">.&nbsp;</span>Block devices compared to disk images</div>
+                  </header>
+                  <table>
+                     <colgroup>
+                        <col style="width: 10%">
+                        <col style="width: 45%">
+                        <col style="width: 45%">
+                     </colgroup>
+                     <thead>
+                        
+                        <tr>
+                           <th class="bleft btop colsep rowsep">
+                              <p>Technology</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Advantages</p>
+                           </th>
+                           <th class="btop colsep rowsep">
+                              <p>Disadvantages</p>
+                           </th>
+                        </tr>
+                        </thead>
+                     <tbody>
+                        
+                        <tr>
+                           <td class="bleft btop colsep rowsep">
+                              <p>Block devices</p>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <ul class="itemizedlist">
+                                 <li>
+                                    <p>Better performance</p>
+                                 </li>
+                                 <li>
+                                    <p>Use standard tools for administration/disk modification</p>
+                                 </li>
+                                 <li>
+                                    <p>Accessible from host (pro and con)</p>
+                                 </li>
+                              </ul>
+                           </td>
+                           <td class="btop colsep rowsep">
+                              <ul class="itemizedlist">
+                                 <li>
+                                    <p>Device management</p>
+                                 </li>
+                              </ul>
+                           </td>
+                        </tr>
+                        
+                        <tr>
+                           <td class="bleft colsep rowsep">
+                              <p>Image files</p>
+                           </td>
+                           <td class="colsep rowsep">
+                              <ul class="itemizedlist">
+                                 <li>
+                                    <p>Easier system management</p>
+                                 </li>
+                                 <li>
+                                    <p>Easily move, clone, expand, back up domains</p>
+                                 </li>
+                                 <li>
+                                    <p>Comprehensive toolkit (guestfs) for image manipulation</p>
+                                 </li>
+                                 <li>
+                                    <p>Reduce overhead through sparse files</p>
+                                 </li>
+                                 <li>
+                                    <p>Fully allocate for best performance</p>
+                                 </li>
+                              </ul>
+                           </td>
+                           <td class="colsep rowsep">
+                              <ul class="itemizedlist">
+                                 <li>
+                                    <p>Lower performance than block devices</p>
+                                 </li>
+                              </ul>
+                           </td>
+                        </tr>
+                        </tbody>
+                  </table>
+               </div>
+               
+               
+               <p>For detailed information about image formats and maintaining images, refer to <a class="xref xref-sect1" href="bk11ar03s05.html">the section called “VM Guest images”</a>.</p>
+               
+               <p>If your image is stored on an NFS share, check certain server and client parameters
+                  to improve access to the VM Guest image.</p>
+               
+               <section class="sect3" id="sec-vt-best-fs-nfs-rw">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NFS read/write (client)</h4>
+                  </header>
+                  
+                  
+                  <p>Options <code class="option">rsize</code> and <code class="option">wsize</code> specify the size of the chunks of data that the client and server pass back and forth
+                     to each other. You should ensure NFS read/write sizes are sufficiently large, especially
+                     for large I/O. Change the <code class="option">rsize</code> and <code class="option">wsize</code> parameter in your <code class="filename">/etc/fstab</code> by increasing the value to 16 KB. This will ensure that all operations can be frozen
+                     if there is any instance of hanging.</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>nfs_server:/exported/vm_images<span class="co" id="co-nfs-server">⥨</span> /mnt/images<span class="co" id="co-nfs-mnt">⥩</span> nfs<span class="co" id="co-nfs-nfs">⥪</span> rw<span class="co" id="co-nfs-rw">⥫</span>,hard<span class="co" id="co-nfs-hard">⥬</span>,sync<span class="co" id="co-nfs-sync">⥭</span>, rsize=8192<span class="co" id="co-nfs-rsize">⥮</span>,wsize=8192<span class="co" id="co-nfs-wsize">⥯</span> 0 0</code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-server">⥨</a></dt>
+                        <dd>
+                           
+                           <p>NFS server's host name and export path.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-mnt">⥩</a></dt>
+                        <dd>
+                           
+                           <p>Where to mount the NFS exported share.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-nfs">⥪</a></dt>
+                        <dd>
+                           
+                           <p>This is an <code class="option">nfs</code> mount point.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-rw">⥫</a></dt>
+                        <dd>
+                           
+                           <p>This mount point will be accessible in read/write.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-hard">⥬</a></dt>
+                        <dd>
+                           
+                           <p>Determines the recovery behavior of the NFS client after an NFS request times out.
+                              <code class="option">hard</code> is the best option to avoid data corruption.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-sync">⥭</a></dt>
+                        <dd>
+                           
+                           <p>Any system call that writes data to files on that mount point causes that data to
+                              be flushed to the server before the system call returns control to user space.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-rsize">⥮</a></dt>
+                        <dd>
+                           
+                           <p>Maximum number of bytes in each network READ request that the NFS client can receive
+                              when reading data from a file on an NFS server.</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-nfs-wsize">⥯</a></dt>
+                        <dd>
+                           
+                           <p>Maximum number of bytes per network WRITE request that the NFS client can send when
+                              writing data to a file on an NFS server.</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-fs-nfs-threads">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>NFS threads (server)</h4>
+                  </header>
+                  
+                  
+                  <p>Your NFS server should have enough NFS threads to handle multi-threaded workloads.
+                     Use the <code class="command">nfsstat</code> tool to get RPC statistics on your server:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  nfsstat -rc</code></span></span>
+<span class="line"><span class="ld"><code>Client rpc stats:</code></span></span>
+<span class="line"><span class="ld"><code>calls      retrans    authrefrsh</code></span></span>
+<span class="line"><span class="ld"><code>6401066    198          0          0</code></span></span></pre>
+                  </div>
+                  
+                  <p>If the <code class="literal">retrans</code> is equal to 0, everything is fine. Otherwise, the client needs to retransmit, so
+                     increase the <code class="envar">USE_KERNEL_NFSD_NUMBER</code> variable in <code class="filename">/etc/sysconfig/nfs</code>, and adjust accordingly until <code class="literal">retrans</code> is equal to <code class="literal">0</code>.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-perf-cpu">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>CPUs</h3>
+               </header>
+               
+               
+               <p>Host CPU <q>components</q> will be <q>translated</q> to virtual CPUs in a VM Guest when being assigned. These components can either be:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><em>CPU processor</em>: this describes the main CPU unit, which normally has multiple cores and may support
+                        Hyper-Threading.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>CPU core</em>: a main CPU unit can provide more than one core, and the proximity of cores speeds
+                        up the computation process and reduces energy costs.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><em>CPU Hyper-Threading</em>: this implementation is used to improve the parallelization of computations, but
+                        this is not as efficient as a dedicated core.</p>
+                     </li>
+                  </ul>
+               
+               <section class="sect3" id="sec-vt-best-perf-cpu-assign">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Assigning CPUs</h4>
+                  </header>
+                  
+                  
+                  <p>CPU overcommit occurs when the cumulative number of virtual CPUs of all VM Guests
+                     becomes higher than the number of host CPUs. Best performance is achieved when there
+                     is no overcommit and each virtual CPU matches one hardware processor or core on the
+                     VM Host Server. VM Guests running on an overcommitted host will experience increased
+                     latency and a negative effect on per-VM Guest throughput is often observed. Therefore,
+                     try to avoid overcommitting CPUs.</p>
+                  
+                  <p>Deciding whether to allow CPU overcommit or not requires good a priori knowledge of
+                     workload as a whole. For example, if you know that all the VM Guests' virtual CPUs
+                     will not be loaded over 50%, then you can assume that overcommitting the host by a
+                     factor of 2 (which means having 128 virtual CPUs in total, on a host with 64 CPUs)
+                     will work well. However, if you know that all the virtual CPUs of the VM Guests will
+                     try to run at 100% for most of the time, then even having one virtual CPU more than
+                     the host has CPUs is already a misconfiguration.</p>
+                  
+                  <p>Overcommitting to a point where the cumulative number of virtual CPUs is higher than
+                     8 times the number of physical cores of the VM Host Server may lead to a malfunctioning
+                     and unstable system and should hence be avoided.</p>
+                  
+                  <p>Unless you know exactly how many virtual CPUs are required for a VM Guest, start with
+                     one. Target a CPU workload of approximately 70% inside your VM (see <a class="xref xref-sect1" href="bk07partiich01s03.html">the section called “Processes”</a> for information on monitoring tools). If you allocate more processors than needed
+                     in the VM Guest, this will negatively affect the performance of host and guest. Cycle
+                     efficiency will be degraded, as the unused vCPU will still cause timer interrupts.
+                     In case you primarily run single threaded applications on a VM Guest, a single virtual
+                     CPU is the best choice.</p>
+                  
+                  <p>A single VM Guest with more virtual CPUs than the VM Host Server has CPUs is always
+                     a misconfiguration.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-perf-cpu-guests">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>VM Guest CPU configuration</h4>
+                  </header>
+                  
+                  
+                  <p>This section describes how to choose and configure a CPU type for a VM Guest. You
+                     will also learn how to pin virtual CPUs to physical CPUs on the host system. For more
+                     information about virtual CPU configuration and tuning parameters, refer to the libvirt
+                     documentation at <a class="link" href="https://libvirt.org/formatdomain.html#elementsCPU">https://libvirt.org/formatdomain.html#elementsCPU</a>.</p>
+                  
+                  <section class="sect4" id="sec-vt-best-perf-cpu-guests-model">
+                     <header>
+                        <h5><span class="label">4<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Virtual CPU models and features</h5>
+                     </header>
+                     
+                     
+                     <p>The CPU model and topology can be specified individually for each VM Guest. Configuration
+                        options range from selecting specific CPU models to excluding certain CPU features.
+                        Predefined CPU models are listed in files in the directory <code class="filename">/usr/share/libvirt/cpu_map/</code>. A CPU model and topology that is similar to the host generally provides the best
+                        performance. The host system CPU model and topology can be displayed by running <code class="command">virsh capabilities</code>.</p>
+                     
+                     <p>Changing the default virtual CPU configuration will require a VM Guest shutdown when
+                        migrating it to a host with different hardware. More information on VM Guest migration
+                        is available in <a class="xref xref-chapter" href="bk10partiich10.html">Chapter&nbsp;<span class="label">17</span>, Migrating VM Guests</a>.</p>
+                     
+                     <p>To specify a particular CPU model for a VM Guest, add a respective entry to the VM
+                        Guest configuration file. The following example configures a Broadwell CPU with the
+                        invariant TSC feature:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cpu mode='custom' match='exact'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;model&gt;Broadwell&lt;/model&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;feature name='invtsc'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/cpu&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <p>For a virtual CPU that most closely resembles the host physical CPU, <code class="literal">&lt;cpu mode='host-passthrough'&gt;</code> can be used. A <code class="literal">host-passthrough</code> CPU model may not exactly resemble the host physical CPU, since, by default, KVM
+                        will mask any non-migratable features. For example, invtsc is not included in the
+                        virtual CPU feature set. Changing the default KVM behavior is not directly supported
+                        through libvirt, although it does allow arbitrary pass-through of KVM command-line
+                        arguments. Continuing with the <code class="literal">invtsc</code> example, you can achieve pass-through of the host CPU (including <code class="literal">invtsc</code>) with the following command-line pass-through in the VM Guest configuration file:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;qemu:commandline&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;qemu:arg value='-cpu'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;qemu:arg value='host,migratable=off,+invtsc'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;/qemu:commandline&gt;</code></span></span>
+<span class="line"><span class="ld"><code>     ...</code></span></span>
+<span class="line"><span class="ld"><code>     &lt;/domain&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">The <code class="literal">host-passthrough</code> mode</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Since <code class="literal">host-passthrough</code> exposes the physical CPU details to the virtual CPU, migration to dissimilar hardware
+                                    is not possible. See <a class="xref xref-sect4" href="#sec-vt-best-perf-cpu-guests-vcpumigration">the section called “Virtual CPU migration considerations”</a> for more information.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-vt-best-perf-cpu-guests-vcpupin">
+                     <header>
+                        <h5><span class="label">4<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Virtual CPU pinning</h5>
+                     </header>
+                     
+                     
+                     <p>Virtual CPU pinning is used to constrain virtual CPU threads to a set of physical
+                        CPUs. The <code class="literal">vcpupin</code> element specifies the physical host CPUs that a virtual CPU can use. If this element
+                        is not set and the attribute <code class="literal">cpuset</code> of the <code class="literal">vcpu</code> element is not specified, the virtual CPU is free to use any of the physical CPUs.</p>
+                     
+                     <p>CPU intensive workloads can benefit from virtual CPU pinning by increasing the physical
+                        CPU cache hit ratio. To pin a virtual CPU to a specific physical CPU, run the following
+                        commands:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>virsh vcpupin <em class="replaceable">DOMAIN_ID</em> --vcpu <em class="replaceable">vCPU_NUMBER</em></code></span></span>
+<span class="line"><span class="ld"><code>VCPU: CPU Affinity</code></span></span>
+<span class="line"><span class="ld"><code>----------------------------------</code></span></span>
+<span class="line"><span class="ld"><code>0: 0-7</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>virsh vcpupin SLE15 --vcpu 0 0 --config</code></span></span></pre>
+                     </div>
+                     
+                     <p>The last command generates the following entry in the XML configuration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cputune&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;vcpupin vcpu='0' cpuset='0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/cputune&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Virtual CPU pinning on NUMA nodes</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>To confine a VM Guest's CPUs and its memory to a NUMA node, you can use virtual CPU
+                                    pinning and memory allocation policies on a NUMA system. See <a class="xref xref-sect2" href="#sec-vt-best-perf-numa">the section called “NUMA tuning”</a> for more information related to NUMA tuning.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div class="admonition warning">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Virtual CPU pinning and live migration</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Even though <code class="literal">vcpupin</code> can improve performance, it can complicate live migration. See <a class="xref xref-sect4" href="#sec-vt-best-perf-cpu-guests-vcpumigration">the section called “Virtual CPU migration considerations”</a> for more information on virtual CPU migration considerations.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-vt-best-perf-cpu-guests-vcpumigration">
+                     <header>
+                        <h5><span class="label">4<span class="sep">.</span>5<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Virtual CPU migration considerations</h5>
+                     </header>
+                     
+                     
+                     <p>Selecting a virtual CPU model containing all the latest features may improve performance
+                        of a VM Guest workload, but often at the expense of migratability. Unless all hosts
+                        in the cluster contain the latest CPU features, migration can fail when a destination
+                        host lacks the new features. If migratability of a virtual CPU is preferred over the
+                        latest CPU features, a normalized CPU model and feature set should be used. The <code class="command">virsh cpu-baseline</code> command can help define a normalized virtual CPU that can be migrated across all
+                        hosts. The following command, when run on each host in the migration cluster, illustrates
+                        the collection of all hosts' capabilities in <code class="literal">all-hosts-caps.xml</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  virsh capabilities &gt;&gt; all-hosts-cpu-caps.xml</code></span></span></pre>
+                     </div>
+                     
+                     <p>With the capabilities of each host collected in all-hosts-caps.xml, use <code class="command">virsh cpu-baseline</code> to create a virtual CPU definition that will be compatible across all hosts.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  virsh cpu-baseline all-hosts-caps.xml</code></span></span></pre>
+                     </div>
+                     
+                     <p>The resulting virtual CPU definition can be used as the <code class="literal">cpu</code> element in the VM Guest configuration file.</p>
+                     
+                     <p>At a logical level, virtual CPU pinning is a form of hardware pass-through. CPU pinning
+                        couples physical resources to virtual resources, which can also be problematic for
+                        migration. For example, the migration will fail if the requested physical resources
+                        are not available on the destination host, or if the source and destination hosts
+                        have different NUMA topologies. For more recommendations about Live Migration, see
+                        <a class="xref xref-sect1" href="bk10partiich10s02.html">the section called “Migration requirements”</a>.</p>
+                     </section>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-vt-best-perf-numa">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>NUMA tuning</h3>
+               </header>
+               
+               
+               <p>NUMA is an acronym for Non Uniform Memory Access. A NUMA system has multiple physical
+                  CPUs, each with local memory attached. Each CPU can also access other CPUs' memory,
+                  known as <q>remote memory access</q>, but it is much slower than accessing local memory. NUMA systems can negatively affect
+                  VM Guest performance if not tuned properly. Although ultimately tuning is workload
+                  dependent, this section describes controls that should be considered when deploying
+                  VM Guests on NUMA hosts. Always consider your host topology when configuring and deploying
+                  VMs.</p>
+               
+               <p><span class="phrase productname">SUSE Linux Enterprise Server</span> contains a NUMA auto-balancer that strives to reduce remote memory access by placing
+                  memory on the same NUMA node as the CPU processing it. Standard tools such as <code class="command">cgset</code> and virtualization tools such as libvirt provide mechanisms to constrain VM Guest
+                  resources to physical resources.</p>
+               
+               <p><code class="command">numactl</code> is used to check for host NUMA capabilities:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  numactl --hardware</code></span></span>
+<span class="line"><span class="ld"><code>available: 4 nodes (0-3)</code></span></span>
+<span class="line"><span class="ld"><code>node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 72 73 74 75 76 77 78</code></span></span>
+<span class="line"><span class="ld"><code>79 80 81 82 83 84 85 86 87 88 89</code></span></span>
+<span class="line"><span class="ld"><code>node 0 size: 31975 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 0 free: 31120 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 1 cpus: 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 90 91 92 93</code></span></span>
+<span class="line"><span class="ld"><code>94 95 96 97 98 99 100 101 102 103 104 105 106 107</code></span></span>
+<span class="line"><span class="ld"><code>node 1 size: 32316 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 1 free: 31673 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 2 cpus: 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 108 109 110</code></span></span>
+<span class="line"><span class="ld"><code>111 112 113 114 115 116 117 118 119 120 121 122 123 124 125</code></span></span>
+<span class="line"><span class="ld"><code>node 2 size: 32316 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 2 free: 31726 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 3 cpus: 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 126 127 128</code></span></span>
+<span class="line"><span class="ld"><code>129 130 131 132 133 134 135 136 137 138 139 140 141 142 143</code></span></span>
+<span class="line"><span class="ld"><code>node 3 size: 32314 MB</code></span></span>
+<span class="line"><span class="ld"><code>node 3 free: 31387 MB</code></span></span>
+<span class="line"><span class="ld"><code>node distances:</code></span></span>
+<span class="line"><span class="ld"><code>node   0   1   2   3</code></span></span>
+<span class="line"><span class="ld"><code>0:  10  21  21  21</code></span></span>
+<span class="line"><span class="ld"><code>1:  21  10  21  21</code></span></span>
+<span class="line"><span class="ld"><code>2:  21  21  10  21</code></span></span>
+<span class="line"><span class="ld"><code>3:  21  21  21  10</code></span></span></pre>
+               </div>
+               
+               <p>The <code class="command">numactl</code> output shows this is a NUMA system with 4 nodes or cells, each containing 36 CPUs
+                  and approximately 32G memory. <code class="command">virsh capabilities</code> can also be used to examine the systems NUMA capabilities and CPU topology.</p>
+               
+               <section class="sect3" id="sec-vt-best-perf-numa-balancing">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NUMA balancing</h4>
+                  </header>
+                  
+                  
+                  <p>On NUMA machines, there is a performance penalty if remote memory is accessed by a
+                     CPU. Automatic NUMA balancing scans a task's address space and unmaps pages. By doing
+                     so, it detects whether pages are properly placed or whether to migrate the data to
+                     a memory node local to where the task is running. In defined intervals (configured
+                     with <code class="literal">numa_balancing_scan_delay_ms</code>), the task scans the next scan size number of pages (configured with <code class="literal">numa_balancing_scan_size_mb</code>) in its address space. When the end of the address space is reached, the scanner
+                     restarts from the beginning.</p>
+                  
+                  <p>Higher scan rates cause higher system overhead as page faults must be trapped and
+                     data needs to be migrated. However, the higher the scan rate, the more quickly a task's
+                     memory migrates to a local node when the workload pattern changes. This minimizes
+                     the performance impact caused by remote memory accesses. These <code class="command">sysctl</code> directives control the thresholds for scan delays and the number of pages scanned:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  sysctl -a | grep numa_balancing</code></span></span>
+<span class="line"><span class="ld"><code>kernel.numa_balancing = 1<span class="co" id="co-numa-balancing">⥰</span></code></span></span>
+<span class="line"><span class="ld"><code>kernel.numa_balancing_scan_delay_ms = 1000<span class="co" id="co-numa-delay">⥱</span></code></span></span>
+<span class="line"><span class="ld"><code>kernel.numa_balancing_scan_period_max_ms = 60000<span class="co" id="co-numa-pmax">⥲</span></code></span></span>
+<span class="line"><span class="ld"><code>kernel.numa_balancing_scan_period_min_ms = 1000<span class="co" id="co-numa-pmin">⥳</span></code></span></span>
+<span class="line"><span class="ld"><code>kernel.numa_balancing_scan_size_mb = 256<span class="co" id="co-numa-size">⥴</span></code></span></span></pre>
+                  </div>
+                  
+                  <div class="calloutlist">
+                     <dl>
+                        <dt class="callout"><a class="callout-bug" href="#co-numa-balancing">⥰</a></dt>
+                        <dd>
+                           
+                           <p>Enables/disables automatic page fault-based NUMA balancing</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-numa-delay">⥱</a></dt>
+                        <dd>
+                           
+                           <p>Starting scan delay used for a task when it initially forks</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-numa-pmax">⥲</a></dt>
+                        <dd>
+                           
+                           <p>Maximum time in milliseconds to scan a task's virtual memory</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-numa-pmin">⥳</a></dt>
+                        <dd>
+                           
+                           <p>Minimum time in milliseconds to scan a task's virtual memory</p>
+                           </dd>
+                        <dt class="callout"><a class="callout-bug" href="#co-numa-size">⥴</a></dt>
+                        <dd>
+                           
+                           <p>Size in megabytes' worth of pages to be scanned for a given scan</p>
+                           </dd>
+                     </dl>
+                  </div>
+                  
+                  <p>For more information, see <a class="xref xref-chapter" href="bk07partivch03.html">Chapter&nbsp;<span class="label">11</span>, Automatic Non-Uniform Memory Access (NUMA) balancing</a>.</p>
+                  
+                  <p>The main goal of automatic NUMA balancing is either to reschedule tasks on the same
+                     node's memory (so the CPU follows the memory), or to copy the memory's pages to the
+                     same node (so the memory follows the CPU).</p>
+                  
+                  <div class="admonition warning">
+                     <div>
+                        <div class="icon">🛑</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Task placement</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>There are no rules to define the best place to run a task, because tasks could share
+                                 memory with other tasks. For the best performance, we recommend to group tasks sharing
+                                 memory on the same node. Check NUMA statistics with <code class="command"># cat /proc/vmstat | grep numa_</code>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-perf-numa-cpuset">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Memory allocation control with the CPUset controller</h4>
+                  </header>
+                  
+                  
+                  <p>The cgroups cpuset controller can be used confine memory used by a process to a NUMA
+                     node. There are three cpuset memory policy modes available:</p>
+                  
+                  <ul class="itemizedlist">
+                     
+                     <li>
+                        
+                        <p><code class="literal">interleave</code>: this is a memory placement policy which is also known as round-robin. This policy
+                           can provide substantial improvements for jobs that need to place thread local data
+                           on the corresponding node. When the interleave destination is not available, it will
+                           be moved to another node.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">bind</code>: this will place memory only on one node, which means in case of insufficient memory,
+                           the allocation will fail.</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p><code class="literal">preferred</code>: this policy will apply a preference to allocate memory to a node. If there is not
+                           enough space for memory on this node, it will fall back to another node.</p>
+                        </li>
+                     </ul>
+                  
+                  <p>You can change the memory policy mode with the <code class="command">cgset</code> tool from the <code class="package">libcgroup-tools</code> package:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code>  cgset -r cpuset.mems=<em class="replaceable">NODE</em> sysdefault/libvirt/qemu/<em class="replaceable">KVM_NAME</em>/emulator</code></span></span></pre>
+                  </div>
+                  
+                  <p>To migrate pages to a node, use the <code class="command">migratepages</code> tool:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>migratepages <em class="replaceable">PID</em><em class="replaceable">FROM-NODE</em><em class="replaceable">TO-NODE</em></code></span></span></pre>
+                  </div>
+                  
+                  <p>To check everything is fine. use: <code class="command">cat /proc/<em class="replaceable">PID</em>/status | grep Cpus</code>.</p>
+                  
+                  <div class="admonition note">
+                     <div>
+                        <div class="icon">ⓘ</div>
+                        <div class="body">
+                           <header>
+                              <div class="title">Kernel NUMA/cpuset memory policy</div>
+                           </header>
+                           <div>
+                              
+                              
+                              <p>For more information, see <a class="link" href="https://www.kernel.org/doc/Documentation/vm/numa_memory_policy.txt">Kernel NUMA memory policy</a> and <a class="link" href="https://www.kernel.org/doc/Documentation/cgroup-v1/cpusets.txt">cpusets memory policy</a>. Check also the <a class="link" href="https://libvirt.org/formatdomain.html#elementsNUMATuning">Libvirt NUMA Tuning documentation</a>.</p>
+                              </div>
+                        </div>
+                     </div>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="sec-vt-best-perf-numa-vmguest">
+                  <header>
+                     <h4><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>VM Guest: NUMA related configuration</h4>
+                  </header>
+                  
+                  
+                  <p><code class="library systemitem">libvirt</code> allows to set up virtual NUMA and memory access policies. Configuring these settings
+                     is not supported by <code class="command">virt-install</code> or <code class="command">virt-manager</code> and needs to be done manually by editing the VM Guest configuration file with <code class="command">virsh edit</code>.</p>
+                  
+                  <section class="sect4" id="sec-vt-best-perf-numa-vmguest-topo">
+                     <header>
+                        <h5><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>VM Guest virtual NUMA topology</h5>
+                     </header>
+                     
+                     
+                     <p>Creating a VM Guest virtual NUMA (vNUMA) policy that resembles the host NUMA topology
+                        can often increase performance of traditional large, scale-up workloads. VM Guest
+                        vNUMA topology can be specified using the <code class="literal">numa</code> element in the XML configuration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cpu&gt;</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;numa&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;cell<span class="co" id="co-numa-cell">⥵</span> id="0"<span class="co" id="co-numa-id">⥶</span> cpus='0-1'<span class="co" id="co-numa-cpus">⥷</span> memory='512000' unit='KiB'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;cell id="1" cpus='2-3' memory='256000'<span class="co" id="co-numa-mem">⥸</span></code></span></span>
+<span class="line"><span class="ld"><code>    unit='KiB'<span class="co" id="co-numa-unit">⥹</span> memAccess='shared'<span class="co" id="co-numa-memaccess">⥺</span>/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/numa&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  ...</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/cpu&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#co-numa-cell">⥵</a></dt>
+                           <dd>
+                              
+                              <p>Each <code class="literal">cell</code> element specifies a vNUMA cell or node</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numa-id">⥶</a></dt>
+                           <dd>
+                              
+                              <p>All cells should have an <code class="literal">id</code> attribute, allowing to reference the cell in other configuration blocks. Otherwise,
+                                 cells are assigned IDs in ascending order starting from 0.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numa-cpus">⥷</a></dt>
+                           <dd>
+                              
+                              <p>The CPU or range of CPUs that are part of the node</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numa-mem">⥸</a></dt>
+                           <dd>
+                              
+                              <p>The node memory</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numa-unit">⥹</a></dt>
+                           <dd>
+                              
+                              <p>Units in which node memory is specified</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numa-memaccess">⥺</a></dt>
+                           <dd>
+                              
+                              <p>Optional attribute which can control whether the memory is to be mapped as <code class="option">shared</code> or <code class="option">private</code>. This is valid only for hugepages-backed memory.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     
+                     <p>To find where the VM Guest has allocated its pages. use: <code class="command">cat /proc/<em class="replaceable">PID</em>/numa_maps</code> and <code class="command">cat /sys/fs/cgroup/memory/sysdefault/libvirt/qemu/<em class="replaceable">KVM_NAME</em>/memory.numa_stat</code>.</p>
+                     
+                     <div class="admonition warning">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">NUMA specification</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>The <code class="library systemitem">libvirt</code> VM Guest NUMA specification is currently only available for QEMU/KVM.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  
+                  <section class="sect4" id="sec-vt-best-perf-numa-vmguest-alloc-libvirt">
+                     <header>
+                        <h5><span class="label">4<span class="sep">.</span>6<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Memory allocation control with <code class="library systemitem">libvirt</code>
+                           </h5>
+                     </header>
+                     
+                     
+                     <p>If the VM Guest has a vNUMA topology (see <a class="xref xref-sect4" href="#sec-vt-best-perf-numa-vmguest-topo">the section called “VM Guest virtual NUMA topology”</a>), memory can be pinned to host NUMA nodes using the <code class="literal">numatune</code> element. This method is currently only available for QEMU/KVM guests. See <a class="xref xref-important" href="#sec-vt-best-perf-numa-alloc-libvirt-non-vnuma">Non-vNUMA VM Guest</a> for how to configure non-vNUMA VM Guests.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;numatune&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;memory mode="strict"<span class="co" id="co-numat-mode">⥻</span> nodeset="1-4,^3"<span class="co" id="co-numat-nodeset">⥼</span>/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;memnode<span class="co" id="co-numat-memnode">⥽</span> cellid="0"<span class="co" id="co-numat-cellid">⥾</span> mode="strict" nodeset="1"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;memnode cellid="2" placement="strict"<span class="co" id="co-numat-placement">⥿</span> mode="preferred" nodeset="2"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/numatune&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <div class="calloutlist">
+                        <dl>
+                           <dt class="callout"><a class="callout-bug" href="#co-numat-mode">⥻</a></dt>
+                           <dd>
+                              
+                              <p>Policies available are: <code class="literal">interleave</code> (round-robin like), <code class="literal">strict</code> (default) or <code class="literal">preferred</code>.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numat-nodeset">⥼</a></dt>
+                           <dd>
+                              
+                              <p>Specify the NUMA nodes.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numat-memnode">⥽</a></dt>
+                           <dd>
+                              
+                              <p>Specify memory allocation policies for each guest NUMA node (if this element is not
+                                 defined, then this will fall back and use the <code class="literal">memory</code> element).</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numat-cellid">⥾</a></dt>
+                           <dd>
+                              
+                              <p>Addresses the guest NUMA node for which the settings are applied.</p>
+                              </dd>
+                           <dt class="callout"><a class="callout-bug" href="#co-numat-placement">⥿</a></dt>
+                           <dd>
+                              
+                              <p>The placement attribute can be used to indicate the memory placement mode for a domain
+                                 process, the value can be <code class="literal">auto</code> or <code class="literal">strict</code>.</p>
+                              </dd>
+                        </dl>
+                     </div>
+                     
+                     <div class="admonition important" id="sec-vt-best-perf-numa-alloc-libvirt-non-vnuma">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Non-vNUMA VM Guest</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>On a non-vNUMA VM Guest, pinning memory to host NUMA nodes is done as in the following
+                                    example:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;numatune&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   &lt;memory mode="strict" nodeset="0-1"/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/numatune&gt;</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>In this example, memory is allocated from the host nodes <code class="literal">0</code> and <code class="literal">1</code>. If these memory requirements cannot be fulfilled, starting the VM Guest will fail.
+                                    <code class="command">virt-install</code> also supports this configuration with the <code class="option">--numatune</code> option.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div class="admonition warning">
+                        <div>
+                           <div class="icon">🛑</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Memory and CPU across NUMA nodes</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>You should avoid allocating VM Guest memory across NUMA nodes, and prevent virtual
+                                    CPUs from floating across NUMA nodes.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </section>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk11ar03s03.html">Prev</a></td>
+                  <td class="up"><a href="bk11ar03.html">Up</a></td>
+                  <td class="next"><a href="bk11ar03s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3</span><span class="sep">.&nbsp;</span>Recommendations</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5</span><span class="sep">.&nbsp;</span>VM Guest images</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

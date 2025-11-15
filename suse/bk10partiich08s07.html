@@ -1,0 +1,263 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>15.7.&nbsp;Adding a PCI device</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiich08s06.html" rel="prev">
+      <link href="bk10partiich08s08.html" rel="next">
+      <link href="bk10partiich08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiich08.html">Up</a> <a href="bk10partiich08s08.html">Next</a> <a href="bk10partiich08s06.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiich08s07.html" db-id="d616951e282172" id="sec-libvirt-config-pci-virsh">
+            <header>
+               <h2><span class="label">15<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Adding a PCI device</h2>
+            </header>
+            
+            
+            <p>To assign a PCI device to VM Guest with <code class="command">virsh</code>, follow these steps:</p>
+            
+            <div class="informalobject procedure" id="sec-libvirt-config-pci-virsh_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Identify the host PCI device to assign to the VM Guest. In the following example,
+                        we are assigning a DEC network card to the guest:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">lspci -nn</code></code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code><strong class="bold">03:07.0</strong> Ethernet controller [0200]: Digital Equipment Corporation DECchip \</code></span></span>
+<span class="line"><span class="ld"><code>21140 [FasterNet] [1011:0009] (rev 22)</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span></pre>
+                     </div>
+                     
+                     <p>Write down the device ID, <code class="literal">03:07.0</code> in this example.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Gather detailed information about the device using <code class="command">virsh nodedev-dumpxml <em class="replaceable">ID</em></code>. To get the <em class="replaceable">ID</em>, replace the colon and the period in the device ID (<code class="literal">03:07.0</code>) with underscores. Prefix the result with <q>pci_0000_</q>: <code class="literal">pci_0000_03_07_0</code>.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh nodedev-dumpxml pci_0000_03_07_0</code></code></span></span>
+<span class="line"><span class="ld"><code>&lt;device&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;name&gt;pci_0000_03_07_0&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;path&gt;/sys/devices/pci0000:00/0000:00:14.4/0000:03:07.0&lt;/path&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;parent&gt;pci_0000_00_14_4&lt;/parent&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;driver&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;name&gt;tulip&lt;/name&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/driver&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;capability type='pci'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    <strong class="bold">&lt;domain&gt;0&lt;/domain&gt; &lt;bus&gt;3&lt;/bus&gt; &lt;slot&gt;7&lt;/slot&gt; &lt;function&gt;0&lt;/function&gt;</strong></code></span></span>
+<span class="line"><span class="ld"><code>    &lt;product id='0x0009'&gt;DECchip 21140 [FasterNet]&lt;/product&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;vendor id='0x1011'&gt;Digital Equipment Corporation&lt;/vendor&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;numa node='0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/capability&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/device&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <p>Write down the values for domain, bus and function (see the previous XML code printed
+                        in bold).</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Detach the device from the host system before attaching it to the VM Guest:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh nodedev-detach pci_0000_03_07_0</code></code></span></span>
+<span class="line"><span class="ld"><code>  Device pci_0000_03_07_0 detached</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Multi-function PCI devices</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>When using a multi-function PCI device that does not support FLR (function level reset)
+                                    or PM (power management) reset, you need to detach all its functions from the VM Host
+                                    Server. The whole device must be reset for security reasons. <code class="systemitem">libvirt</code> refuses to assign the device if one of its functions is still in use by the VM Host
+                                    Server or another VM Guest.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Convert the domain, bus, slot, and function value from decimal to hexadecimal. In
+                        our example, domain = 0, bus = 3, slot = 7, and function = 0. Ensure that the values
+                        are inserted in the right order:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">printf "&lt;address domain='0x%x' bus='0x%x' slot='0x%x' function='0x%x'/&gt;\n" 0 3 7 0</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>This results in:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;address domain='0x0' bus='0x3' slot='0x7' function='0x0'/&gt;</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Run <code class="command">virsh edit</code> on your domain, and add the following device entry in the <code class="literal">&lt;devices&gt;</code> section using the result from the previous step:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;hostdev mode='subsystem' type='pci' managed='yes'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;address domain='0x0' bus='0x03' slot='0x07' function='0x0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/source&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/hostdev&gt;</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition tip" id="tip-libvirt-config-pci-virsh-managed">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">
+                                    <code class="literal">managed</code> compared to <code class="literal">unmanaged</code>
+                                    </div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p><code class="systemitem">libvirt</code> recognizes two modes for handling PCI devices: they can be <code class="literal">managed</code> or <code class="literal">unmanaged</code>. In the managed case, <code class="systemitem">libvirt</code> handles all details of unbinding the device from the existing driver if needed, resetting
+                                    the device, binding it to <code class="systemitem">vfio-pci</code> before starting the domain, etc. When the domain is terminated or the device is removed
+                                    from the domain, <code class="systemitem">libvirt</code> unbinds from <code class="systemitem">vfio-pci</code> and rebinds to the original driver when using a managed device. If the device is
+                                    unmanaged, the user must ensure that all these management aspects of the device are
+                                    done before assigning it to a domain, and after the device is no longer used by the
+                                    domain.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <p>In the example above, the <code class="literal">managed='yes'</code> option means that the device is managed. To switch the device mode to unmanaged,
+                        set <code class="literal">managed='no'</code> in the listing above. If you do so, you need to take care of the related driver with
+                        the <code class="command">virsh nodedev-detach</code> and <code class="command">virsh nodedev-reattach</code> commands. Before starting the VM Guest, you need to detach the device from the host
+                        by running <code class="command">virsh nodedev-detach pci_0000_03_07_0</code>. In case the VM Guest is not running, you can make the device available for the host
+                        by running <code class="command">virsh nodedev-reattach pci_0000_03_07_0</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Shut down the VM Guest and disable SELinux if it is running on the host.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">setsebool -P virt_use_sysfs 1</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start your VM Guest to make the assigned PCI device available:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">virsh start sles15</code></code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">SLES11 SP4 KVM guests</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>On a newer QEMU machine type (pc-i440fx-2.0 or higher) with SLES&nbsp;11 SP4 KVM guests,
+                           the <code class="resource systemitem">acpiphp</code> module is not loaded by default in the guest. This module must be loaded to enable
+                           hotplugging of disk and network devices. To load the module manually, use the command
+                           <code class="command">modprobe acpiphp</code>. It is also possible to autoload the module by adding <code class="literal">install acpiphp /bin/true</code> to the <code class="filename">/etc/modprobe.conf.local</code> file.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="admonition important">
+               <div>
+                  <div class="icon">☝</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">KVM guests using QEMU Q35 machine type</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>KVM guests using the QEMU Q35 machine type have a PCI topology that includes a <code class="literal">pcie-root</code> controller and seven <code class="literal">pcie-root-port</code> controllers. The <code class="literal">pcie-root</code> controller does not support hotplugging. Each <code class="literal">pcie-root-port</code> controller supports hotplugging a single PCIe device. PCI controllers cannot be hotplugged,
+                           so plan accordingly and add more <code class="literal">pcie-root-port</code>s to hotplug more than seven PCIe devices. A <code class="literal">pcie-to-pci-bridge</code> controller can be added to support hotplugging legacy PCI devices. See <a class="link" href="https://libvirt.org/pci-hotplug.html">https://libvirt.org/pci-hotplug.html</a> for more information about PCI topology between QEMU machine types.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="tip-libvirt-config-zpci">
+               <header>
+                  <h3><span class="label">15<span class="sep">.</span>7<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>PCI Pass-Through for IBM&nbsp;Z</h3>
+               </header>
+               
+               
+               <p>To support IBM&nbsp;Z, QEMU extended PCI representation by allowing the user to configure
+                  extra attributes. Two more attributes—<code class="option">uid</code> and <code class="option">fid</code>—were added to the <code class="literal">&lt;zpci/&gt;</code><code class="library systemitem">libvirt</code> specification. <code class="option">uid</code> represents user-defined identifier, while <code class="option">fid</code> represents PCI function identifier. These attributes are optional and if you do not
+                  specify them, they are automatically generated with non-conflicting values.</p>
+               
+               <p>To include zPCI attribute in your domain specification, use the following example
+                  definition:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;controller type='pci' index='0' model='pci-root'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;controller type='pci' index='1' model='pci-bridge'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;model name='pci-bridge'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;target chassisNr='1'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;zpci uid='0x0001' fid='0x00000000'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/address&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/controller&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;interface type='bridge'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;source bridge='virbr0'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;model type='virtio'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;address type='pci' domain='0x0000' bus='0x01' slot='0x01' function='0x0'&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;zpci uid='0x0007' fid='0x00000003'/&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/address&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/interface&gt;</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiich08s06.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiich08.html">Up</a></td>
+                  <td class="next"><a href="bk10partiich08s08.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">15<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Configuring memory allocation</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">15<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Adding a USB device</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

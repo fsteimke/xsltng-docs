@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.8.&nbsp;Showing exclusive disk space used by snapshots</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10s07.html" rel="prev">
+      <link href="bk01partich10s09.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s09.html">Next</a> <a href="bk01partich10s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s08.html" db-id="d616951e21380" id="cha-snapper_s1_8">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Showing exclusive disk space used by snapshots</h2>
+            </header>
+            
+            
+            <p>Snapshots share data, for efficient use of storage space, so using ordinary commands
+               like <code class="command">du</code> and <code class="command">df</code> will not measure used disk space accurately. When you want to free up disk space
+               on Btrfs with quotas enabled, you need to know how much exclusive disk space is used
+               by each snapshot, rather than shared space. Snapper 0.6 and up reports the used disk
+               space for each snapshot in the <code class="literal">Used Space</code> column:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>snapper --iso list</code></span></span>
+<span class="line"><span class="ld"><code>  # | Type   | Pre # | Date                | User | Used Space | Cleanup | Description           | Userdata     </code></span></span>
+<span class="line"><span class="ld"><code>----+--------+-------+---------------------+------+------------+---------+-----------------------+--------------</code></span></span>
+<span class="line"><span class="ld"><code> 0  | single |       |                     | root |            |         | current               |              </code></span></span>
+<span class="line"><span class="ld"><code> 1* | single |       | 2019-07-22 13:08:38 | root |  16.00 KiB |         | first root filesystem |              </code></span></span>
+<span class="line"><span class="ld"><code> 2  | single |       | 2019-07-22 14:21:05 | root |  14.23 MiB | number  | after installation    | important=yes</code></span></span>
+<span class="line"><span class="ld"><code> 3  | pre    |       | 2019-07-22 14:26:03 | root | 144.00 KiB | number  | zypp(zypper)          | important=no </code></span></span>
+<span class="line"><span class="ld"><code> 4  | post   |     3 | 2019-07-22 14:26:04 | root | 112.00 KiB | number  |                       | important=no </code></span></span>
+<span class="line"><span class="ld"><code> 5  | pre    |       | 2019-07-23 08:19:36 | root | 128.00 KiB | number  | zypp(zypper)          | important=no </code></span></span>
+<span class="line"><span class="ld"><code> 6  | post   |     5 | 2019-07-23 08:19:43 | root |  80.00 KiB | number  |                       | important=no </code></span></span>
+<span class="line"><span class="ld"><code> 7  | pre    |       | 2019-07-23 08:20:50 | root | 256.00 KiB | number  | yast sw_single        |              </code></span></span>
+<span class="line"><span class="ld"><code> 8  | pre    |       | 2019-07-23 08:23:22 | root | 112.00 KiB | number  | zypp(ruby.ruby2.5)    | important=no </code></span></span>
+<span class="line"><span class="ld"><code> 9  | post   |     8 | 2019-07-23 08:23:35 | root |  64.00 KiB | number  |                       | important=no </code></span></span>
+<span class="line"><span class="ld"><code>10  | post   |     7 | 2019-07-23 08:24:05 | root |  16.00 KiB | number  |                       |              </code></span></span></pre>
+            </div>
+            
+            <p>The <code class="command">btrfs</code> command provides another view of space used by snapshots:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs qgroup show -p /</code></span></span>
+<span class="line"><span class="ld"><code>qgroupid         rfer         excl parent  </code></span></span>
+<span class="line"><span class="ld"><code>--------         ----         ---- ------  </code></span></span>
+<span class="line"><span class="ld"><code>0/5          16.00KiB     16.00KiB ---     </code></span></span>
+<span class="line"><span class="ld"><code>[...]    </code></span></span>
+<span class="line"><span class="ld"><code>0/272         3.09GiB     14.23MiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/273         3.11GiB    144.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/274         3.11GiB    112.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/275         3.11GiB    128.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/276         3.11GiB     80.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/277         3.11GiB    256.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/278         3.11GiB    112.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/279         3.12GiB     64.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>0/280         3.12GiB     16.00KiB 1/0     </code></span></span>
+<span class="line"><span class="ld"><code>1/0           3.33GiB    222.95MiB --- </code></span></span></pre>
+            </div>
+            
+            <p>The <code class="literal">qgroupid</code> column displays the identification number for each subvolume, assigning a qgroup
+               level/ID combination.</p>
+            
+            <p>The <code class="literal">rfer</code> column displays the total amount of data referred to in the subvolume.</p>
+            
+            <p>The <code class="literal">excl</code> column displays the exclusive data in each subvolume.</p>
+            
+            <p>The <code class="literal">parent</code> column shows the parent qgroup of the subvolumes.</p>
+            
+            <p>The final item, <code class="literal">1/0</code>, shows the totals for the parent qgroup. In the above example, 222.95 MiB will be
+               freed if all subvolumes are removed. Run the following command to see which snapshots
+               are associated with each subvolume:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>btrfs subvolume list -st /</code></span></span>
+<span class="line"><span class="ld"><code>ID	gen	top level	path	</code></span></span>
+<span class="line"><span class="ld"><code>--	---	---------	----	</code></span></span>
+<span class="line"><span class="ld"><code>267	298	266		@/.snapshots/1/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>272	159	266		@/.snapshots/2/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>273	170	266		@/.snapshots/3/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>274	171	266		@/.snapshots/4/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>275	287	266		@/.snapshots/5/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>276	288	266		@/.snapshots/6/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>277	292	266		@/.snapshots/7/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>278	296	266		@/.snapshots/8/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>279	297	266		@/.snapshots/9/snapshot</code></span></span>
+<span class="line"><span class="ld"><code>280	298	266		@/.snapshots/10/snapshot</code></span></span></pre>
+            </div>
+            
+            <p>Doing an upgrade from one service pack to another results in snapshots occupying a
+               lot of disk space on the system subvolumes. Manually deleting these snapshots after
+               they are no longer needed is recommended. See <a class="xref xref-sect2" href="bk01partich10s06.html#sec-snapper-manage-delete">the section called “Deleting snapshots”</a> for details.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10s07.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Automatic snapshot clean-up</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Frequently asked questions</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

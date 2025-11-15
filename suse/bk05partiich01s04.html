@@ -1,0 +1,529 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>4.4.&nbsp;The GRUB&nbsp;2 boot loader</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk05partiich01s03.html" rel="prev">
+      <link href="bk05partiich01s05.html" rel="next">
+      <link href="bk05partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk05partiich01.html">Up</a> <a href="bk05partiich01s05.html">Next</a> <a href="bk05partiich01s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk05partiich01s04.html" db-id="d616951e131719" id="CreateProfile-Bootloader" lang="">
+            <header>
+               <h2><span class="label">4<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>The GRUB&nbsp;2 boot loader</h2>
+            </header>
+            
+            
+            
+            <p>This documentation is for <code class="command">yast2-bootloader</code> and applies to GRUB&nbsp;2. For older product versions shipping with legacy GRUB, refer
+               to the documentation that comes with your distribution in <code class="filename">/usr/share/doc/packages/autoyast2/</code></p>
+            
+            <p>By default, AutoYaST proposes the same booting mechanism as used by the booting medium.
+               For example, if you boot using EFI, the GRUB 2 for EFI is installed. Therefore, you
+               can omit this section unless you have specific requirements. As the EFI boot requires
+               specific partitioning, we recommend using the automatic partitioning as described
+               in <a class="xref xref-sect2" href="bk05partiich01s06.html#CreateProfile-Automatic-Partitioning">the section called “Automatic partitioning”</a>, which will create all needed partitions automatically.</p>
+            
+            <p>If you need to adapt the default, use the <code class="literal">&lt;bootloader&gt;</code> part. Its general structure looks like the following snippet:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;bootloader&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;loader_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- boot loader type (grub2 or grub2-efi) --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/loader_type&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;global&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!--</code></span></span>
+<span class="line"><span class="ld"><code>      entries defining the installation settings for GRUB&nbsp;2 and</code></span></span>
+<span class="line"><span class="ld"><code>      the generic boot code</code></span></span>
+<span class="line"><span class="ld"><code>    --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/global&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;device_map config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;!-- entries defining the order of devices --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/device_map&gt;</code></span></span>
+<span class="line"><span class="ld"><code> &lt;/bootloader&gt;</code></span></span></pre>
+            </div>
+            
+            <p>You do not need to fill out all settings. Rather, you only need to define those that
+               you need to change. AutoYaST will then merge the default values with those specified
+               in the profile.</p>
+            
+            <section class="sect2" id="CreateProfile-Bootloader-type-Grub">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Loader type</h3>
+               </header>
+               
+               
+               <p>This defines which boot loader (UEFI or BIOS/legacy) to use. Not all architectures
+                  support both legacy and EFI variants of the boot loader. The safest (<code class="literal">default</code>) option is to leave the decision up to the installer.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;loader_type&gt;<em class="replaceable">LOADER_TYPE</em>&lt;/loader_type&gt;</code></span></span></pre>
+               </div>
+               
+               <p>Possible values for <em class="replaceable">LOADER_TYPE</em> are:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p><code class="literal">default</code>: The installer chooses the correct boot loader. This is the default when no option
+                        is defined.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">grub2</code>: Use the legacy BIOS boot loader.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">grub2-efi</code>: Use the EFI boot loader.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="literal">none</code>: The boot process is not managed and configured by the installer.</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-Bootloader-globals-Grub">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Globals</h3>
+               </header>
+               
+               
+               <p>This is an important if optional part. Define here where to install GRUB&nbsp;2 and how
+                  the boot process will work. Again, <code class="command">yast2-bootloader</code> will propose a configuration if you do not define one. Usually the AutoYaST control
+                  file includes only this part and all other parts are added automatically during installation
+                  by <code class="command">yast2-bootloader</code>. Unless you have some special requirements, do not specify the boot loader configuration
+                  in the XML file.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Hibernation</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>This is an important if optional part. Define here where to install GRUB&nbsp;2 and how
+                              the boot process will work. Again, <code class="command">yast2-bootloader</code> proposes a configuration if you do not define one. Usually, the AutoYaST control
+                              file includes only this part, and all other parts are added automatically during installation
+                              by <code class="command">yast2-bootloader</code>. Unless you have some special requirements, do not specify the boot loader configuration
+                              in the XML file.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Hibernation</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If there is a need for specific hibernation settings, then <code class="literal">resume</code> or <code class="literal">noresume</code> in the <code class="literal">append</code> configuration can be used.</p>
+                           
+                           <p>To disable hibernation regardless of what the installer proposes, specify <code class="literal">noresume</code> as a kernel parameter in the <code class="literal">append</code> section.</p>
+                           
+                           <p>To specify the hibernation device, use the <code class="literal">resume</code> key with the device path. The recommended way to get stable results is configuring
+                              your own partitioning and having a swap device with a label:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>        &lt;append&gt;quiet resume=/dev/disk/by-label/my_swap&lt;/append&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>If you do not use <code class="literal">resume</code> or <code class="literal">noresume</code>, or if <code class="literal">resume</code> specifies a device that will not exist on the installed system, then the installer
+                              may propose a correct value for <code class="literal">resume</code>, or it may remove the hibernation parameter completely, depending on installer logic.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;global&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;activate&gt;true&lt;/activate&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;timeout config:type="integer"&gt;10&lt;/timeout&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;terminal&gt;gfxterm&lt;/terminal&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;gfxmode&gt;1280x1024x24&lt;/gfxmode&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/global&gt;</code></span></span></pre>
+               </div>
+               
+               <div class="variablelist">
+                  <header>
+                     <div class="title">Boot loader global options</div>
+                  </header>
+                  <dl class="variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">activate</span></dt>
+                        <dd>
+                           
+                           <p>Set the boot flag on the boot partition. The boot partition can be <code class="filename">/</code> if there is no separate <code class="filename">/boot</code> partition. If the boot partition is on a logical partition, the boot flag is set
+                              to the extended partition.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;activate&gt;true&lt;/activate&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">append</span></dt>
+                        <dd>
+                           
+                           <p>Kernel parameters added at the end of boot entries for normal and recovery mode.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;append&gt;nomodeset vga=0x317&lt;/append&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">boot_boot</span></dt>
+                        <dd>
+                           
+                           <p>Write GRUB&nbsp;2 to a separate <code class="filename">/boot</code> partition. If no separate <code class="filename">/boot</code> partition exists, GRUB&nbsp;2 will be written to <code class="filename">/</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;boot_boot&gt;false&lt;/boot_boot&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">boot_custom</span></dt>
+                        <dd>
+                           
+                           <p>Write GRUB&nbsp;2 to a custom device.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;boot_custom&gt;/dev/sda3&lt;/boot_custom&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">boot_extended</span></dt>
+                        <dd>
+                           
+                           <p>Write GRUB&nbsp;2 to the extended partition (important if you want to use generic boot
+                              code and the <code class="filename">/boot</code> partition is logical). Note: if the boot partition is logical, you should use <code class="literal">boot_mbr</code> (write GRUB&nbsp;2 to MBR) rather than <code class="literal">generic_mbr</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;boot_extended&gt;false&lt;/boot_extended&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">boot_mbr</span></dt>
+                        <dd>
+                           
+                           <p>Write GRUB&nbsp;2 to the MBR of the first disk in the order. (<code class="filename">device.map</code> includes the order of the disks.)</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;boot_mbr&gt;false&lt;/boot_mbr&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">boot_root</span></dt>
+                        <dd>
+                           
+                           <p>Write GRUB&nbsp;2 to <code class="filename">/</code> partition.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;boot_root&gt;false&lt;/boot_root&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">cpu_mitigations</span></dt>
+                        <dd>
+                           
+                           <p>Lets you select a default setting of kernel boot command-line parameters for CPU mitigation
+                              (and, at the same time, strike a balance between security and performance).</p>
+                           
+                           <p>Possible values are:</p>
+                           
+                           <dl class="variablelist">
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">auto</span></dt>
+                                 <dd>
+                                    
+                                    <p>Enables all mitigations required for your CPU model, but does not protect against
+                                       cross-CPU thread attacks. This setting may impact performance to some degree, depending
+                                       on the workload.</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">nosmt</span></dt>
+                                 <dd>
+                                    
+                                    <p>Provides the full set of available security mitigations. Enables all mitigations required
+                                       for your CPU model. In addition, it disables Simultaneous Multithreading (SMT) to
+                                       avoid side-channel attacks across multiple CPU threads. This setting may further impact
+                                       performance, depending on the workload.</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">off</span></dt>
+                                 <dd>
+                                    
+                                    <p>Disables all mitigations. Side-channel attacks against your CPU are possible, depending
+                                       on the CPU model. This setting has no impact on performance.</p>
+                                    </dd>
+                              </div>
+                              
+                              <div class="varlistentry">
+                                 <dt><span class="term">manual</span></dt>
+                                 <dd>
+                                    
+                                    <p>Does not set any mitigation level. Specify your CPU mitigations manually by using
+                                       the kernel command line options.</p>
+                                    </dd>
+                              </div>
+                              </dl>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;cpu_mitigations&gt;auto&lt;/cpu_mitigations&gt;</code></span></span></pre>
+                           </div>
+                           
+                           <p>If not set in AutoYaST, the respective settings can be changed via kernel command
+                              line. By default, the (product-specific) settings in the <code class="filename">/control.xml</code> file on the installation medium are used (if nothing else is specified).</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">generic_mbr</span></dt>
+                        <dd>
+                           
+                           <p>Write generic boot code to the MBR (will be ignored if <code class="literal">boot_mbr</code> is set to <code class="literal">true</code>).</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;generic_mbr config:type="boolean"&gt;false&lt;/generic_mbr&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">gfxmode</span></dt>
+                        <dd>
+                           
+                           <p>Graphical resolution of the GRUB&nbsp;2 screen (requires &lt;terminal&gt; to be set to <code class="literal">gfxterm</code>).</p>
+                           
+                           <p>Valid entries are <code class="literal">auto</code>, <code class="literal"><em class="replaceable">HORIZONTAL</em>x<em class="replaceable">VERTICAL</em></code>, or <code class="literal"><em class="replaceable">HORIZONTAL</em>x<em class="replaceable">VERTICAL</em>x<em class="replaceable">COLOR DEPTH</em></code>. You can see the screen resolutions supported by GRUB&nbsp;2 on a particular system by
+                              using the <code class="command">vbeinfo</code> command at the GRUB&nbsp;2 command line in the running system.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;gfxmode&gt;1280x1024x24&lt;/gfxmode&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">os_prober</span></dt>
+                        <dd>
+                           
+                           <p>If set to <code class="literal">true</code>, automatically searches for operating systems already installed and generates boot
+                              entries for them during the installation.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;os_prober&gt;false&lt;/os_prober&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">password</span></dt>
+                        <dd>
+                           
+                           <p>If this is defined, it protects the boot loader with a password. The system will not
+                              boot until the password is entered.</p>
+                           
+                           <p>It has three subelements: <code class="literal">value</code>, <code class="literal">encrypted</code>, and <code class="literal">unrestricted</code>.</p>
+                           
+                           <p><code class="literal">value</code> holds the password. It can be either plain text, which YaST will encrypt, or a password
+                              already encrypted with <code class="command">grub-mkpasswd-pbkdf2</code>. Set <code class="literal">encrypted</code> to <code class="literal">true</code> when you use an already encrypted password.</p>
+                           
+                           <p>When <code class="literal">unrestricted</code> is set to <code class="literal">false</code>, users need the password defined by the <code class="literal">value</code> subelement to boot or edit GRUB&nbsp;2 menu entries (by pressing <span class="keycap">E</span> on a selected boot menu item). When it is set to <code class="literal">true</code>, users can boot the system without a password, but need a password to edit GRUB&nbsp;2
+                              menu entries. If the option is omitted, it defaults to <code class="literal">true</code>.</p>
+                           
+                           <p>For more information on managing boot passwords, see <a class="xref xref-varlistentry" href="bk01partiich03s03.html#vle-grub2-yast2-boot-password"><span class="label"><span class="term">
+                                       <span class="guimenu">Protect Boot Loader with Password</span>
+                                       </span></span></a>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;password&gt;&lt;value&gt;my_strong_password&lt;/value&gt;&lt;encrypted&gt;false&lt;/encrypted&gt;&lt;unrestricted&gt;false&lt;/unrestricted&gt;&lt;/password&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">suse_btrfs</span></dt>
+                        <dd>
+                           
+                           <p>Obsolete and no longer used. Booting from Btrfs snapshots is automatically enabled.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">serial</span></dt>
+                        <dd>
+                           
+                           <p>Command to execute if the GRUB&nbsp;2 terminal mode is set to <code class="literal">serial</code>.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;serial&gt;serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1&lt;/serials&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">secure_boot</span></dt>
+                        <dd>
+                           
+                           <p>If set to <code class="literal">false</code>, then UEFI secure boot is disabled. Works only for <code class="literal">grub2-efi</code> boot loader.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;secure_boot&gt;false&lt;/secure_boot&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">terminal</span></dt>
+                        <dd>
+                           
+                           <p>Specify the GRUB&nbsp;2 terminal mode to use. Valid entries are <code class="literal">console</code>, <code class="literal">gfxterm</code>, and <code class="literal">serial</code>. If set to <code class="literal">serial</code>, the serial command needs to be specified with &lt;serial&gt;, too.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;terminal&gt;serial&lt;/terminal&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">timeout</span></dt>
+                        <dd>
+                           
+                           <p>The timeout in seconds until the default boot entry is booted automatically.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;timeout config:type="integer"&gt;10&lt;/timeout&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">trusted_boot</span></dt>
+                        <dd>
+                           
+                           <p>If set to <code class="literal">true</code>, then Trusted GRUB is used. Trusted GRUB supports Trusted Platform Module (TPM).
+                              Works only for <code class="literal">grub2</code> boot loader.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;trusted_boot"&gt;true&lt;/trusted_boot&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">update_nvram</span></dt>
+                        <dd>
+                           
+                           <p>If set to <code class="literal">true</code>, then AutoYaST adds an NVRAM entry for the boot loader in the firmware. This is the
+                              desirable behavior unless you want to preserve a specific setting or you need to work
+                              around firmware issues.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;update_nvram&gt;true&lt;/update_nvram&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">vgamode</span></dt>
+                        <dd>
+                           
+                           <p>Adds the kernel parameter <code class="literal">vga=<em class="replaceable">VALUE</em></code> to the boot entries.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;vgamode&gt;0x317&lt;/vgamode&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">xen_append</span></dt>
+                        <dd>
+                           
+                           <p>Kernel parameters added at the end of boot entries for Xen guests.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;xen_append&gt;nomodeset vga=0x317&lt;/xen_append&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">xen_kernel_append</span></dt>
+                        <dd>
+                           
+                           <p>Kernel parameters added at the end of boot entries for Xen kernels on the VM Host
+                              Server.</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;xen_kernel_append&gt;dom0_mem=768M&lt;/xen_kernel_append&gt;</code></span></span></pre>
+                           </div>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            
+            <section class="sect2" id="CreateProfile-Bootloader-dev-map-Grub">
+               <header>
+                  <h3><span class="label">4<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Device map</h3>
+               </header>
+               
+               
+               <p>GRUB&nbsp;2 avoids mapping problems between BIOS drives and Linux devices by using device
+                  ID strings (UUIDs) or file system labels when generating its configuration files.
+                  GRUB&nbsp;2 utilities create a temporary device map on the fly, which is usually sufficient,
+                  particularly on single-disk systems. However, if you need to override the automatic
+                  device mapping mechanism, create your custom mapping in this section.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;device_map config:type="list"&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;device_map_entry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;firmware&gt;hd0&lt;/firmware&gt; &lt;!-- order of devices in target map  --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;linux&gt;/dev/disk/by-id/ata-ST3500418AS_6VM23FX0&lt;/linux&gt; &lt;!-- name of device (disk)  --&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  &lt;/device_map_entry&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/device_map&gt;</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk05partiich01s03.html">Prev</a></td>
+                  <td class="up"><a href="bk05partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk05partiich01s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>System registration and extension selection</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">4<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>The Systemd boot loader</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

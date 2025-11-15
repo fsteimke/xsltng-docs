@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.3.&nbsp;Importing SMT data to RMT</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk08ch03s02.html" rel="prev">
+      <link href="bk08ch04.html" rel="next">
+      <link href="bk08ch03.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk08ch03.html">Up</a> <a href="bk08ch04.html">Next</a> <a href="bk08ch03s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk08ch03s03.html" db-id="d616951e228700" id="sec-rmt-migrate-rmt-import">
+            <header>
+               <h2><span class="label">3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Importing SMT data to RMT</h2>
+            </header>
+            
+            
+            <div class="informalobject procedure" id="sec-rmt-migrate-rmt-import_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>To make sure your RMT installation is up to date, run <code class="command">zypper up</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Copy the exported <code class="literal">.tar.gz</code> file to an empty directory and unpack it. Then enter the new directory:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">mkdir <em class="replaceable">EMPTY_DIR</em></code><span class="prompt">&gt;</span><code class="command">cd <em class="replaceable">EMPTY_DIR</em></code><span class="prompt">&gt;</span><code class="command">tar xf <em class="replaceable">/PATH/TO/</em>smt-data-export.<em class="replaceable">TIMESTAMP</em>.tar.gz</code><span class="prompt">&gt;</span><code class="command">cd smt-data-export</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>If you chose to export the SSL certificates from SMT, copy the CA private key and
+                        certificate to <code class="filename">/etc/rmt/ssl/</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">cp ssl/cacert.key /etc/rmt/ssl/rmt-ca.key</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">cp ssl/cacert.pem /etc/rmt/ssl/rmt-ca.crt</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Run the YaST RMT configuration module as described in <a class="xref xref-sect1" href="bk08ch02s05.html">the section called “RMT configuration with YaST”</a>. If you imported the SMT CA certificate, add the domain of the SMT server to the
+                        common names of the new SSL certificate.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Run the RMT synchronization to get the products and repositories data from SUSE Customer
+                        Center.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rmt-cli sync</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Import the data from the SMT server.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rmt-data-import -d ./</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Optional: if the URL of the RMT server changed, change the URL parameter of clients
+                        in <code class="filename">/etc/SUSEConnect</code> to point to the new RMT server. Alternatively, change the DNS records to re-assign
+                        the host name to the RMT server.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Optional: move the mirrored repository data from SMT to RMT, and adjust the ownership
+                        of the copied data.</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">cp -r /var/www/htdocs/repo/* /usr/share/rmt/public/repo/</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">chown -R _rmt:nginx /usr/share/rmt/public/repo</code></code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Tip</div>
+                              </header>
+                              <div>
+                                 
+                                 <p>The path for storing custom repository data on the RMT server is different from that
+                                    of SMT. With RMT, it replicates the directory structure of the source server's URL
+                                    into a top level directory structure of the source server's URL into a top-level</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>http://download.opensuse.org/debug/distribution/leap/15.7/repo/oss </code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>its path on the RMT server corresponds to</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/usr/share/rmt/public/repo/debug/distribution/leap/15.7/repo/oss</code></span></span></pre>
+                                 </div>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Custom repositories on the SMT server are disabled by default. If you want to mirror
+                        them to the RMT, enable them before mirroring.</p>
+                     
+                     <div class="substeps">
+                        <ol class="procedure substeps" type="a">
+                           
+                           <li class="step">
+                              
+                              <p>Check for custom repositories by running:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rmt-cli repos custom list</code></code></span></span></pre>
+                              </div>
+                              
+                              <p>The command shows the table of all custom repositories. The first column contains
+                                 the <code class="literal">ID</code> of each repository and the <code class="literal">Mirror?</code> column shows <code class="literal">false</code>.</p>
+                              </li>
+                           
+                           <li class="step">
+                              
+                              <p>Enable each custom repository you want to mirror by running:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rmt-cli repos custom enable <em class="replaceable">ID</em></code></code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Update the packages in the repositories by starting the mirroring process:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">rmt-cli mirror</code></code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk08ch03s02.html">Prev</a></td>
+                  <td class="up"><a href="bk08ch03.html">Up</a></td>
+                  <td class="next"><a href="bk08ch04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Exporting SMT data</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">4</span><span class="sep">.&nbsp;</span>Mirroring repositories on the RMT server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

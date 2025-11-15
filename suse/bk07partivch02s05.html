@@ -1,0 +1,261 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.5.&nbsp;I/O control with cgroups</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partivch02s04.html" rel="prev">
+      <link href="bk07partivch02s06.html" rel="next">
+      <link href="bk07partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partivch02.html">Up</a> <a href="bk07partivch02s06.html">Next</a> <a href="bk07partivch02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partivch02s05.html" db-id="d616951e211979" id="sec-control-io-cgroups">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>I/O control with cgroups</h2>
+            </header>
+            
+            
+            <p>This section introduces using the Linux kernel's block I/O controller to prioritize
+               or throttle I/O operations. This leverages the means provided by systemd to configure
+               cgroups, and discusses probable pitfalls when dealing with proportional I/O control.</p>
+            
+            <section class="sect2" id="sec-cgroups-prerequisites">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Prerequisites</h3>
+               </header>
+               
+               
+               <p>The following subsections describe steps that you must take in advance when you design
+                  and configure your system, since those aspects cannot be changed during runtime.</p>
+               
+               <section class="sect3" id="sec-cgroups-filesystems">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>File system</h4>
+                  </header>
+                  
+                  
+                  <p>You should use a cgroup-writeback-aware file system (otherwise writeback charging
+                     is not possible). The recommended <span class="phrase productname">SUSE Linux Enterprise Server</span> file systems added support in the following upstream releases: </p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>Btrfs (v4.3)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Ext4 (v4.3)</p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>XFS (v5.3)</p>
+                        </li>
+                     </ul>
+                  
+                  <p>As of <span class="phrase productname">SUSE Linux Enterprise Server</span>&nbsp;15&nbsp;SP3, any of the named file systems can be used.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-cgroups-block-io-scheduler">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Block I/O scheduler</h4>
+                  </header>
+                  
+                  
+                  <p>The throttling policy is implemented higher in the stack, therefore it does not require
+                     any additional adjustments. The proportional I/O control policies have two different
+                     implementations: the BFQ controller, and the cost-based model. We describe the BFQ
+                     controller here. To exert its proportional implementation for a particular device,
+                     we must make sure that BFQ is the chosen scheduler. Check the current scheduler:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">cat /sys/class/block/<em class="replaceable">sda</em>/queue/scheduler</code></code></span></span>
+<span class="line"><span class="ld"><code>mq-deadline kyber bfq [none]</code></span></span></pre>
+                  </div>
+                  
+                  <p>Switch the scheduler to BFQ:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">echo bfq &gt; /sys/class/block/<em class="replaceable">sda</em>/queue/scheduler</code></code></span></span></pre>
+                  </div>
+                  
+                  <p>You must specify the disk device (not a partition). The optimal way to set this attribute
+                     is a udev rule specific to the device. <span class="phrase productname">SUSE Linux Enterprise Server</span> ships udev rules that already enable BFQ for rotational disk drives.</p>
+                  </section>
+               
+               <section class="sect3" id="sec-cgroups-hierarchy">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Cgroup hierarchy layout</h4>
+                  </header>
+                  
+                  
+                  <p>Normally, all tasks reside in the root cgroup and they compete against each other.
+                     When the tasks are distributed into the cgroup tree the competition occurs between
+                     sibling cgroups only. This applies to the proportional I/O control; the throttling
+                     hierarchically aggregates throughput of all descendants (see the following diagram).</p>
+                  
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>r</code></span></span>
+<span class="line"><span class="ld"><code>`-  a      IOWeight=100</code></span></span>
+<span class="line"><span class="ld"><code>    `- [c] IOWeight=300</code></span></span>
+<span class="line"><span class="ld"><code>    `-  d  IOWeight=100</code></span></span>
+<span class="line"><span class="ld"><code>`- [b]     IOWeight=200</code></span></span></pre>
+                  </div>
+                  
+                  <p>I/O is originating only from cgroups c and b. Even though c has a higher weight, it
+                     is treated with lower priority because it is level-competing with b.</p>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="sec-cgroups-configure-control-quantities">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Configuring control quantities</h3>
+               </header>
+               
+               
+               <p>You can apply the values to (long running) services permanently.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl set-property <em class="replaceable">fast.service</em> IOWeight=<em class="replaceable">400</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl set-property <em class="replaceable">slow.service</em> IOWeight=<em class="replaceable">50</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl set-property <em class="replaceable">throttled.service</em> IOReadBandwidthMax="<em class="replaceable">/dev/sda 1M</em>"</code></code></span></span></pre>
+               </div>
+               
+               <p>Alternatively, you can apply I/O control to individual commands, for example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemd-run --scope -p IOWeight=<em class="replaceable">400</em><em class="replaceable">high_prioritized_command</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemd-run --scope -p IOWeight=<em class="replaceable">50</em><em class="replaceable">low_prioritized_command</em></code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemd-run --scope -p IOReadBandwidthMax="<em class="replaceable">/dev/sda 1M</em>" <em class="replaceable">dd if=/dev/sda of=/dev/null bs=1M count=10</em></code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-cgroups-control-behavior">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>I/O control behavior and setting expectations</h3>
+               </header>
+               
+               
+               <p>The following list items describe I/O control behavior, and what you should expect
+                  under different conditions.</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>I/O control works best for direct I/O operations (bypassing page cache), the situations
+                        where the actual I/O is decoupled from the caller (typically writeback via page cache)
+                        may manifest variously. For example, delayed I/O control or even no observed I/O control
+                        (consider little bursts or competing workloads that happen to never <q>meet,</q> submitting I/O at the same time, and saturating the bandwidth). For these reasons,
+                        the resulting ratio of I/O throughputs does not strictly follow the ratio of configured
+                        weights.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>systemd performs scaling of configured weights (to adjust for narrower BFQ weight
+                        range), hence the resulting throughput ratios also differ.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The writeback activity depends on the amount of dirty pages, besides the global sysctl
+                        knobs (<code class="filename">vm.dirty_background_ratio</code> and <code class="filename">vm.dirty_ratio</code>)). Memory limits of individual cgroups come into play when the dirty limits are distributed
+                        among cgroups, and this in turn may affect I/O intensity of affected cgroups.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Not all storages are equal. The I/O control happens at the I/O scheduler layer, which
+                        has ramifications for setups with devices stacked on these that do no actual scheduling.
+                        Consider device mapper logical volumes spanning multiple physical devices, MD RAID,
+                        or even Btrfs RAID. I/O control over such setups may be challenging.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>There is no separate setting for proportional I/O control of reads and writes.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Proportional I/O control is only one of the policies that can interact with each other
+                        (but responsible resource design perhaps avoids that).</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>The I/O device bandwidth is not the only shared resource on the I/O path. Global file
+                        system structures are involved, which is relevant when I/O control is meant to guarantee
+                        certain bandwidth; it does not, and it may even lead to priority inversion (prioritized
+                        cgroup waiting for a transaction of slower cgroup).</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>So far, we have been discussing only explicit I/O of file system data, but swap-in
+                        and swap-out can also be controlled. Although if such a need arises, it points out
+                        to improperly provisioned memory (or memory limits).</p>
+                     </li>
+                  </ul>
+               </section>
+            
+            <section class="sect2" id="sec-cgroups-user-sessions">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Resource control in user sessions</h3>
+               </header>
+               
+               
+               <p>In order to apply cgroup resource control within user sessions, controllers must be
+                  delegated user instances of <code class="daemon systemitem">systemd</code>. <span class="phrase productname">SUSE Linux Enterprise Server</span> ships <code class="daemon systemitem">systemd</code> default configuration that delegates <em>no</em> controllers.</p>
+               
+               <p>You can use drop-in files to change the set of delegated controllers. For instance,
+                  <code class="filename">/etc/systemd/system/user@.service.d/60-delegate.conf</code> adds controllers to all users, while <code class="filename">/etc/systemd/system/user@<em class="replaceable">uid</em>.service.d/60-delegate.conf</code> adds controllers only to a particular user. The content of the file should be like
+                  the following:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Service]</code></span></span>
+<span class="line"><span class="ld"><code>Delegate=pids memory</code></span></span></pre>
+               </div>
+               
+               <p>Both the <code class="daemon systemitem">systemd</code> instance and the affected user instance must be notified to reload the new configuration.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl daemon-reload</code><span class="prompt">&gt;</span><code class="command">systemctl --user daemon-reexec</code></code></span></span></pre>
+               </div>
+               
+               <p>Alternatively, the affected user may log out and log in instead of applying the second
+                  line to restart their user instance.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partivch02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk07partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk07partivch02s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Preventing fork bombs with <code class="literal">TasksMax</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>More information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

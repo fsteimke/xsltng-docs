@@ -1,0 +1,342 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>20.4.&nbsp;Calculating crashkernel allocation size</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partvich02s03.html" rel="prev">
+      <link href="bk07partvich02s05.html" rel="next">
+      <link href="bk07partvich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partvich02.html">Up</a> <a href="bk07partvich02s05.html">Next</a> <a href="bk07partvich02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partvich02s04.html" db-id="d616951e222654" id="sec-tuning-kexec-crashkernel">
+            <header>
+               <h2><span class="label">20<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Calculating <code class="option">crashkernel</code> allocation size</h2>
+            </header>
+            
+            
+            <p>To use Kexec with a capture kernel and to use Kdump in any way, RAM needs to be allocated
+               for the capture kernel. The allocation size depends on the expected hardware configuration
+               of the computer, therefore you need to specify it.</p>
+            
+            <p>The allocation size also depends on the hardware architecture of your computer. Make
+               sure to follow the procedure intended for your system architecture.</p>
+            
+            <div class="formalobject procedure" id="sec-tuning-kexec-crashkernel_proc1">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">20<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Allocation size on AMD64/Intel&nbsp;64</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>To find out the base value for the computer, run the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">kdumptool</code> calibrate</code></span></span>
+<span class="line"><span class="ld"><code>Total: 49074</code></span></span>
+<span class="line"><span class="ld"><code>Low: 72</code></span></span>
+<span class="line"><span class="ld"><code>High: 180</code></span></span>
+<span class="line"><span class="ld"><code>MinLow: 72</code></span></span>
+<span class="line"><span class="ld"><code>MaxLow: 3085</code></span></span>
+<span class="line"><span class="ld"><code>MinHigh: 0</code></span></span>
+<span class="line"><span class="ld"><code>MaxHigh: 45824 </code></span></span></pre>
+                     </div>
+                     
+                     <p>All values are given in megabytes.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Take note of the values of <code class="literal">Low</code> and <code class="literal">High</code>.</p>
+                     
+                     <div class="admonition note">
+                        <div>
+                           <div class="icon">ⓘ</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Significance of <code class="literal">Low</code> and <code class="literal">High</code> values</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>On AMD64/Intel&nbsp;64 computers, the <code class="literal">High</code> value stands for the memory reservation for all available memory. The <code class="literal">Low</code> value stands for the memory reservation in the DMA32 zone, that is, all the memory
+                                    up to the 4 GB mark. </p>
+                                 
+                                 <p> SIZE_LOW is the amount of memory required by 32-bit-only devices. The kernel allocates
+                                    64M for DMA32 bounce buffers. If your server does not have any 32-bit-only devices,
+                                    everything should work with the default allocation of 72M for <code class="literal">SIZE_LOW</code>. A possible exception to this is on NUMA machines, which may make it appear that
+                                    more <code class="literal">Low</code> memory is needed. The Kdump kernel may be booted with <code class="literal">numa=off</code> to make sure normal kernel allocations do not use <code class="literal">Low</code> memory.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Adapt the <code class="literal">High</code> value from the previous step for the number of LUN kernel paths (paths to storage
+                        devices) attached to the computer. A sensible value in megabytes can be calculated
+                        using this formula:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SIZE_HIGH = <em class="replaceable">RECOMMENDATION</em> + (<em class="replaceable">LUNs</em> / 2)</code></span></span></pre>
+                     </div>
+                     
+                     <p>The following parameters are used in this formula:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p class="formalpara"><span class="title">SIZE_HIGH</span><span class="para">The resulting value for <code class="literal">High</code>.</span></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p class="formalpara"><span class="title">RECOMMENDATION</span><span class="para">The value recommended by <code class="command">kdumptool calibrate</code> for <code class="literal">High</code>.</span></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p class="formalpara"><span class="title">LUNs</span><span class="para">The maximum number of LUN kernel paths that you expect to ever create on the computer.
+                                 Exclude multipath devices from this number, as these are ignored. To get the <em>current</em> number of LUNs available on your system, run the following command:</span></p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span> cat /proc/scsi/scsi | grep Lun | wc -l</code></span></span></pre>
+                           </div>
+                           </li>
+                        </ul>
+                     </li>
+                  <li class="step">
+                     
+                     <p>If the drivers for your device make many reservations in the DMA32 zone, the <code class="literal">Low</code> value also needs to be adjusted. However, there is no simple formula to calculate
+                        these. Finding the right size can therefore be a process of trial and error.</p>
+                     
+                     <p>For the beginning, use the <code class="literal">Low</code> value recommended by <code class="command">kdumptool calibrate</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>The values now need to be set in the correct location.</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">If you are changing the kernel command line directly</span></dt>
+                           <dd>
+                              
+                              <p>Append the following kernel option to your boot loader configuration:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>crashkernel=<em class="replaceable">SIZE_HIGH</em>,high crashkernel=<em class="replaceable">SIZE_LOW</em>,low</code></span></span></pre>
+                              </div>
+                              
+                              <p>Replace the placeholders <em class="replaceable">SIZE_HIGH</em> and <em class="replaceable">SIZE_LOW</em> with the appropriate value from the previous steps and append the letter <code class="literal">M</code> (for megabytes).</p>
+                              
+                              <p>As an example, the following is valid:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>crashkernel=<em class="replaceable">36M</em>,high crashkernel=<em class="replaceable">72M</em>,low</code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">If you are using the YaST GUI:</span></dt>
+                           <dd>
+                              
+                              <p>Set <span class="guimenu">Kdump Low Memory</span> to the determined <code class="literal">Low</code> value.</p>
+                              
+                              <p>Set <span class="guimenu">Kdump High Memory</span> to the determined <code class="literal">High</code> value.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">If you are using the YaST command line interface:</span></dt>
+                           <dd>
+                              
+                              <p>Use the following command:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>yast kdump startup enable alloc_mem=<em class="replaceable">LOW</em>,<em class="replaceable">HIGH</em></code></span></span></pre>
+                              </div>
+                              
+                              <p>Replace <em class="replaceable">LOW</em> with the determined <code class="literal">Low</code> value. Replace <em class="replaceable">HIGH</em> with the determined <code class="literal">HIGH</code> value.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="formalobject procedure" id="sec-tuning-kexec-crashkernel_proc2">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">20<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Allocation size on POWER and IBM&nbsp;Z</div>
+               </header>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>To find out the basis value for the computer, run the following in a terminal:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">kdumptool</code> calibrate</code></span></span></pre>
+                     </div>
+                     
+                     <p>This command returns a list of values. All values are given in megabytes.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Write down the value of <code class="literal">Low</code>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Adapt the <code class="literal">Low</code> value from the previous step for the number of LUN kernel paths (paths to storage
+                        devices) attached to the computer. A sensible value in megabytes can be calculated
+                        using this formula:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SIZE_LOW = <em class="replaceable">RECOMMENDATION</em> + (<em class="replaceable">LUNs</em> / 2)</code></span></span></pre>
+                     </div>
+                     
+                     <p>The following parameters are used in this formula:</p>
+                     
+                     <ul class="itemizedlist">
+                        
+                        <li>
+                           
+                           <p class="formalpara"><span class="title">SIZE_LOW</span><span class="para">The resulting value for <code class="literal">Low</code>.</span></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p class="formalpara"><span class="title">RECOMMENDATION</span><span class="para">The value recommended by <code class="command">kdumptool calibrate</code> for <code class="literal">Low</code>.</span></p>
+                           </li>
+                        
+                        <li>
+                           
+                           <p class="formalpara"><span class="title">LUNs</span><span class="para">The maximum number of LUN kernel paths that you expect to ever create on the computer.
+                                 Exclude multipath devices from this number, as these are ignored.</span></p>
+                           </li>
+                        </ul>
+                     </li>
+                  <li class="step">
+                     
+                     <p>The values now need to be set in the correct location.</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">If you are working on the command line</span></dt>
+                           <dd>
+                              
+                              <p>Append the following kernel option to your boot loader configuration:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>crashkernel=<em class="replaceable">SIZE_LOW</em></code></span></span></pre>
+                              </div>
+                              
+                              <p>Replace the placeholder<em class="replaceable">SIZE_LOW</em> with the appropriate value from the previous step and append the letter <code class="literal">M</code> (for megabytes).</p>
+                              
+                              <p>As an example, the following is valid:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>crashkernel=<em class="replaceable">108M</em></code></span></span></pre>
+                              </div>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">If you are working in YaST</span></dt>
+                           <dd>
+                              
+                              <p>Set <span class="guimenu">Kdump Memory</span> to the determined <code class="literal">Low</code> value.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </li>
+               </ol>
+            </div>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Excluding unused and inactive CCW devices on IBM&nbsp;Z</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Depending on the number of available devices the calculated amount of memory specified
+                           by the <code class="option">crashkernel</code> kernel parameter may not be sufficient. Instead of increasing the value, you may
+                           alternatively limit the amount of devices visible to the kernel. This lowers the required
+                           amount of memory for the <em>crashkernel</em> setting.</p>
+                        
+                        <ol class="orderedlist" type="1">
+                           
+                           <li>
+                              
+                              <p>To ignore devices you can run the <code class="command">cio_ignore</code> tool to generate an appropriate stanza to ignore all devices, except the ones currently
+                                 active or in use.</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> cio_ignore -u -k</code></span></span>
+<span class="line"><span class="ld"><code>cio_ignore=all,!da5d,!f500-f502</code></span></span></pre>
+                              </div>
+                              
+                              <p>When you run <code class="command">cio_ignore -u -k</code>, the blocklist becomes active and replaces any existing blocklist immediately. Unused
+                                 devices are not being purged, so they still appear in the channel subsystem. But adding
+                                 new channel devices (via CP ATTACH under z/VM or dynamic I/O configuration change
+                                 in LPAR) treats them as blocked. To prevent this, preserve the original setting by
+                                 running <code class="command">sudo cio_ignore -l</code> first and reverting to that state after running <code class="command">cio_ignore -u -k</code>. As an alternative, add the generated stanza to the regular kernel boot parameters.</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Now add the <code class="option">cio_ignore</code> kernel parameter with the stanza from above to <code class="envar">KDUMP_CMDLINE_APPEND</code> in <code class="filename">/etc/sysconfig/kdump</code>, for example:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>KDUMP_COMMANDLINE_APPEND="cio_ignore=all,!da5d,!f500-f502"</code></span></span></pre>
+                              </div>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>Activate the setting by restarting <code class="service systemitem">kdump</code>:</p>
+                              
+                              <div class="pre-wrap screen-wrap">
+                                 <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>systemctl restart kdump.service</code></span></span></pre>
+                              </div>
+                              </li>
+                           </ol>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partvich02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk07partvich02.html">Up</a></td>
+                  <td class="next"><a href="bk07partvich02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">20<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Kexec internals</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">20<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Basic Kexec usage</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

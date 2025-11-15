@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>2.8.&nbsp;Files and file systems</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiich01s07.html" rel="prev">
+      <link href="bk07partiich01s09.html" rel="next">
+      <link href="bk07partiich01.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiich01.html">Up</a> <a href="bk07partiich01s09.html">Next</a> <a href="bk07partiich01s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partiich01s08.html" db-id="d616951e205197" id="sec-util-file">
+            <header>
+               <h2><span class="label">2<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Files and file systems</h2>
+            </header>
+            
+            
+            <p>For file system-specific information, refer to <a class="xref xref-book" href="bk09.html">Storage Administration Guide</a>.</p>
+            
+            <section class="sect2" id="sec-util-file-file">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Determine the file type: <code class="command">file</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The command <code class="command">file</code> determines the type of a file or a list of files by checking <code class="filename">/usr/share/misc/magic</code>.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>file /usr/bin/file</code></span></span>
+<span class="line"><span class="ld"><code>/usr/bin/file: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), \</code></span></span>
+<span class="line"><span class="ld"><code>    for GNU/Linux 2.6.4, dynamically linked (uses shared libs), stripped</code></span></span></pre>
+               </div>
+               
+               <p>The parameter <code class="option">-f <em class="replaceable">LIST</em></code> specifies a file with a list of file names to examine. The <code class="option">-z</code> allows <code class="command">file</code> to look inside compressed files:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>file /usr/share/man/man1/file.1.gz</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/man/man1/file.1.gz: gzip compressed data, from Unix, max compression</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt">&gt;</span>file -z /usr/share/man/man1/file.1.gz</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/man/man1/file.1.gz: troff or preprocessor input text \</code></span></span>
+<span class="line"><span class="ld"><code>    (gzip compressed data, from Unix, max compression)</code></span></span></pre>
+               </div>
+               
+               <p>The parameter <code class="option">-i</code> outputs a mime type string rather than the traditional description.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>file -i /usr/share/misc/magic</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/misc/magic: text/plain charset=utf-8</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-util-file-mount-dudf">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>8<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>File systems and their usage: <code class="command">mount</code>, <code class="command">df</code> and <code class="command">du</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The command <code class="command">mount</code> shows which file system (device and type) is mounted at which mount point:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>mount</code></span></span>
+<span class="line"><span class="ld"><code>/dev/sda2 on / type ext4 (rw,acl,user_xattr)</code></span></span>
+<span class="line"><span class="ld"><code>proc on /proc type proc (rw)</code></span></span>
+<span class="line"><span class="ld"><code>sysfs on /sys type sysfs (rw)</code></span></span>
+<span class="line"><span class="ld"><code>debugfs on /sys/kernel/debug type debugfs (rw)</code></span></span>
+<span class="line"><span class="ld"><code>devtmpfs on /dev type devtmpfs (rw,mode=0755)</code></span></span>
+<span class="line"><span class="ld"><code>tmpfs on /dev/shm type tmpfs (rw,mode=1777)</code></span></span>
+<span class="line"><span class="ld"><code>devpts on /dev/pts type devpts (rw,mode=0620,gid=5)</code></span></span>
+<span class="line"><span class="ld"><code>/dev/sda3 on /home type ext3 (rw)</code></span></span>
+<span class="line"><span class="ld"><code>securityfs on /sys/kernel/security type securityfs (rw)</code></span></span>
+<span class="line"><span class="ld"><code>fusectl on /sys/fs/fuse/connections type fusectl (rw)</code></span></span>
+<span class="line"><span class="ld"><code>gvfs-fuse-daemon on /home/tux/.gvfs type fuse.gvfs-fuse-daemon \</code></span></span>
+<span class="line"><span class="ld"><code>(rw,nosuid,nodev,user=tux)</code></span></span></pre>
+               </div>
+               
+               <p>Obtain information about total usage of the file systems with the command <code class="command">df</code>. The parameter <code class="option">-h</code> (or <code class="option">--human-readable</code>) transforms the output into a form understandable for common users.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>df -h</code></span></span>
+<span class="line"><span class="ld"><code>Filesystem            Size  Used Avail Use% Mounted on</code></span></span>
+<span class="line"><span class="ld"><code>/dev/sda2              20G  5,9G   13G  32% /</code></span></span>
+<span class="line"><span class="ld"><code>devtmpfs              1,6G  236K  1,6G   1% /dev</code></span></span>
+<span class="line"><span class="ld"><code>tmpfs                 1,6G  668K  1,6G   1% /dev/shm</code></span></span>
+<span class="line"><span class="ld"><code>/dev/sda3             208G   40G  159G  20% /home</code></span></span></pre>
+               </div>
+               
+               <p>Display the total size of all the files in a given directory and its subdirectories
+                  with the command <code class="command">du</code>. The parameter <code class="option">-s</code> suppresses the output of detailed information and gives only a total for each argument.
+                  <code class="option">-h</code> again transforms the output into a human-readable form:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>du -sh /opt</code></span></span>
+<span class="line"><span class="ld"><code>192M    /opt</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-util-file-readelf">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>8<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Additional information about ELF binaries</h3>
+               </header>
+               
+               
+               <p>Read the content of binaries with the <code class="command">readelf</code> utility. This even works with ELF files that were built for other hardware architectures:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>readelf --file-header /bin/ls</code></span></span>
+<span class="line"><span class="ld"><code>ELF Header:</code></span></span>
+<span class="line"><span class="ld"><code>  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00</code></span></span>
+<span class="line"><span class="ld"><code>  Class:                             ELF64</code></span></span>
+<span class="line"><span class="ld"><code>  Data:                              2's complement, little endian</code></span></span>
+<span class="line"><span class="ld"><code>  Version:                           1 (current)</code></span></span>
+<span class="line"><span class="ld"><code>  OS/ABI:                            UNIX - System V</code></span></span>
+<span class="line"><span class="ld"><code>  ABI Version:                       0</code></span></span>
+<span class="line"><span class="ld"><code>  Type:                              EXEC (Executable file)</code></span></span>
+<span class="line"><span class="ld"><code>  Machine:                           Advanced Micro Devices X86-64</code></span></span>
+<span class="line"><span class="ld"><code>  Version:                           0x1</code></span></span>
+<span class="line"><span class="ld"><code>  Entry point address:               0x402540</code></span></span>
+<span class="line"><span class="ld"><code>  Start of program headers:          64 (bytes into file)</code></span></span>
+<span class="line"><span class="ld"><code>  Start of section headers:          95720 (bytes into file)</code></span></span>
+<span class="line"><span class="ld"><code>  Flags:                             0x0</code></span></span>
+<span class="line"><span class="ld"><code>  Size of this header:               64 (bytes)</code></span></span>
+<span class="line"><span class="ld"><code>  Size of program headers:           56 (bytes)</code></span></span>
+<span class="line"><span class="ld"><code>  Number of program headers:         9</code></span></span>
+<span class="line"><span class="ld"><code>  Size of section headers:           64 (bytes)</code></span></span>
+<span class="line"><span class="ld"><code>  Number of section headers:         32</code></span></span>
+<span class="line"><span class="ld"><code>  Section header string table index: 31</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-util-file-stat">
+               <header>
+                  <h3><span class="label">2<span class="sep">.</span>8<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>File properties: <code class="command">stat</code>
+                     </h3>
+               </header>
+               
+               
+               <p>The command <code class="command">stat</code> displays file properties:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>stat /etc/profile</code></span></span>
+<span class="line"><span class="ld"><code>  File: `/etc/profile'</code></span></span>
+<span class="line"><span class="ld"><code>  Size: 9662            Blocks: 24         IO Block: 4096   regular file</code></span></span>
+<span class="line"><span class="ld"><code>Device: 802h/2050d      Inode: 132349      Links: 1</code></span></span>
+<span class="line"><span class="ld"><code>Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)</code></span></span>
+<span class="line"><span class="ld"><code>Access: 2009-03-20 07:51:17.000000000 +0100</code></span></span>
+<span class="line"><span class="ld"><code>Modify: 2009-01-08 19:21:14.000000000 +0100</code></span></span>
+<span class="line"><span class="ld"><code>Change: 2009-03-18 12:55:31.000000000 +0100</code></span></span></pre>
+               </div>
+               
+               <p>The parameter <code class="option">--file-system</code> produces details of the properties of the file system in which the specified file
+                  is located:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>stat /etc/profile --file-system</code></span></span>
+<span class="line"><span class="ld"><code>  File: "/etc/profile"</code></span></span>
+<span class="line"><span class="ld"><code>    ID: d4fb76e70b4d1746 Namelen: 255     Type: ext2/ext3</code></span></span>
+<span class="line"><span class="ld"><code>Block size: 4096       Fundamental block size: 4096</code></span></span>
+<span class="line"><span class="ld"><code>Blocks: Total: 2581445    Free: 1717327    Available: 1586197</code></span></span>
+<span class="line"><span class="ld"><code>Inodes: Total: 655776     Free: 490312</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiich01s07.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiich01.html">Up</a></td>
+                  <td class="next"><a href="bk07partiich01s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">2<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Hardware information</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">2<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>User information</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter&nbsp;27.&nbsp;Managing a virtualization environment</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partivch02s04.html" rel="prev">
+      <link href="bk10partivch03s02.html" rel="next">
+      <link href="bk10partiv.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="chapter component">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiv.html">Up</a> <a href="bk10partivch03s02.html">Next</a> <a href="bk10partivch02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="chapter component" db-chunk="bk10partivch03.html" db-id="d616951e291654" id="cha-xen-manage" lang="">
+            <header>
+               <h1>Chapter&nbsp;<span class="label">27</span><span class="sep">.&nbsp;</span>Managing a virtualization environment</h1>
+            </header>
+            <div class="db-bfs">
+               
+               
+               
+               <p>Apart from using the recommended <code class="library systemitem">libvirt</code> library (<a class="xref xref-part" href="bk10partii.html">Part&nbsp;<span class="label">II</span>, “Managing virtual machines with <code class="library systemitem">libvirt</code>
+                     ”</a>), you can manage Xen guest domains with the <code class="command">xl</code> tool from the command line.</p>
+               </div>
+            <section class="sect1" id="sec-xen-manage-xl">
+               <header>
+                  <h2><span class="label">27<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>XL—Xen management tool</h2>
+               </header>
+               
+               
+               <p>The <code class="command">xl</code> program is a tool for managing Xen guest domains. It is part of the <code class="package">xen-tools</code> package. <code class="command">xl</code> is based on the LibXenlight library, and can be used for general domain management,
+                  such as domain creation, listing, pausing or shutting down. You need to be <code class="systemitem username">root</code> to execute <code class="command">xl</code> commands.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p><code class="command">xl</code> can only manage running guest domains specified by their configuration file. If a
+                              guest domain is not running, you cannot manage it with <code class="command">xl</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Tip</div>
+                        </header>
+                        <div>
+                           
+                           <p>To allow users to continue to have managed guest domains in the way the obsolete <code class="command">xm</code> command allowed, we now recommend using <code class="library systemitem">libvirt</code>'s <code class="command">virsh</code> and <code class="command">virt-manager</code> tools. For more information, see <a class="xref xref-part" href="bk10partii.html">Part&nbsp;<span class="label">II</span>, “Managing virtual machines with <code class="library systemitem">libvirt</code>
+                                 ”</a>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p><code class="command">xl</code> operations rely upon <code class="systemitem">xenstored</code> and <code class="systemitem">xenconsoled</code> services. Make sure you start</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>systemctl start xencommons</code></span></span></pre>
+               </div>
+               
+               <p>at boot time to initialize all the daemons required by <code class="command">xl</code>.</p>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Set up a <code class="literal">xenbr0</code> network bridge in the host domain</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>In the most common network configuration, you need to set up a bridge in the host
+                              domain named <code class="literal">xenbr0</code> to have a working network for the guest domains.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>The basic structure of every <code class="command">xl</code> command is:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>xl &lt;subcommand&gt; [options] domain_id</code></span></span></pre>
+               </div>
+               
+               <p>where &lt;subcommand&gt; is the xl command to run, domain_id is the ID number assigned to
+                  a domain or the name of the virtual machine, and <code class="command">OPTIONS</code> indicates subcommand-specific options.</p>
+               
+               <p>For a complete list of the available <code class="command">xl</code> subcommands, run <code class="command">xl help</code>. For each command, there is a more detailed help available that is obtained with
+                  the extra parameter <code class="systemitem">--help</code>. More information about the respective subcommands is available in the man page of
+                  <code class="command">xl</code>.</p>
+               
+               <p>For example, the <code class="command">xl list --help</code> displays all options that are available to the list command. As an example, the <code class="command">xl list</code> command displays the status of all virtual machines.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> xl list</code></span></span>
+<span class="line"><span class="ld"><code>Name                                 ID    Mem VCPUs        State   Time(s)</code></span></span>
+<span class="line"><span class="ld"><code>Domain-0                              0    457     2       r-----   2712.9</code></span></span>
+<span class="line"><span class="ld"><code>sles12                                7    512     1       -b----     16.3</code></span></span>
+<span class="line"><span class="ld"><code>opensuse                                   512     1                  12.9</code></span></span></pre>
+               </div>
+               
+               <p>The <span class="guimenu">State</span> information indicates if a machine is running, and in which state it is. The most
+                  common flags are <code class="literal">r</code> (running) and <code class="literal">b</code> (blocked) where blocked means it is either waiting for IO, or sleeping because there
+                  is nothing to do. For more details about the state flags, see <code class="command">man 1 xl</code>.</p>
+               
+               <p>Other useful <code class="command">xl</code> commands include:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><code class="command">xl create</code> creates a virtual machine from a given configuration file.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="command">xl reboot</code>reboots a virtual machine.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="command">xl destroy</code> immediately terminates a virtual machine.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><code class="command">xl block-list</code> displays all virtual block devices attached to a virtual machine.</p>
+                     </li>
+                  </ul>
+               
+               <section class="sect2" id="sec-xen-manage-xl-cfg-file">
+                  <header>
+                     <h3><span class="label">27<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Guest domain configuration file</h3>
+                  </header>
+                  
+                  
+                  <p>When operating domains, <code class="command">xl</code> requires a domain configuration file for each domain. The default directory to store
+                     such configuration files is <code class="filename">/etc/xen/</code>.</p>
+                  
+                  <p>A domain configuration file is a plain text file. It consists of several <em class="replaceable">KEY</em>=<em class="replaceable">VALUE</em> pairs. Certain keys are mandatory. General keys apply to any guest, and specific
+                     ones apply only to a specific guest type (para or fully virtualized). A value can
+                     either be a <code class="literal">"string"</code> surrounded by single or double quotes, a number, a boolean value, or a list of several
+                     values enclosed in brackets <code class="literal">[ value1, value2, ... ]</code>.</p>
+                  
+                  <div class="example formalobject" id="sec-xen-manage-xl-cfg-file_ex1">
+                     
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>name= "sled12"</code></span></span>
+<span class="line"><span class="ld"><code>builder = "hvm"</code></span></span>
+<span class="line"><span class="ld"><code>vncviewer = 1</code></span></span>
+<span class="line"><span class="ld"><code>memory = 512</code></span></span>
+<span class="line"><span class="ld"><code>disk = [ '/var/lib/xen/images/sled12.raw,,hda', '/dev/cdrom,,hdc,cdrom' ]</code></span></span>
+<span class="line"><span class="ld"><code>vif = [ 'mac=00:16:3e:5f:48:e4,model=rtl8139,bridge=br0' ]</code></span></span>
+<span class="line"><span class="ld"><code>boot = "n"</code></span></span></pre>
+                     </div>
+                     
+                     <header>
+                        <div class="title">Example&nbsp;<span class="label">27<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Guest domain configuration file for SLED 12: <code class="filename">/etc/xen/sled12.cfg</code>
+                           </div>
+                     </header>
+                  </div>
+                  
+                  <p>To start such domain, run <code class="command">xl create /etc/xen/sled12.cfg</code>.</p>
+                  </section>
+               </section>
+            
+            
+            
+            
+            
+            
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partivch02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiv.html">Up</a></td>
+                  <td class="next"><a href="bk10partivch03s02.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">26<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Special configurations</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">27<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Automatic start of guest domains</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

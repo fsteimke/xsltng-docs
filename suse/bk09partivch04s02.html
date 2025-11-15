@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>17.2.&nbsp;Setting up an NVMe-oF host</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch04.html" rel="prev">
+      <link href="bk09partivch04s03.html" rel="next">
+      <link href="bk09partivch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch04.html">Up</a> <a href="bk09partivch04s03.html">Next</a> <a href="bk09partivch04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch04s02.html" db-id="d616951e251820" id="sec-nvmeof-host-configuration">
+            <header>
+               <h2><span class="label">17<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Setting up an NVMe-oF host</h2>
+            </header>
+            
+            
+            <p>To use NVMe-oF, a target must be available with one of the supported networking methods.
+               Supported are NVMe over Fibre Channel, TCP, and RDMA. The following sections describe
+               how to connect a host to an NVMe target.</p>
+            
+            <section class="sect2" id="sec-nvmeof-host-configuration-cli">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installing command line client</h3>
+               </header>
+               
+               
+               <p>To use NVMe-oF, you need the <code class="command">nvme</code> command line tool. Install it with <code class="command">zypper</code>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper in nvme-cli</code></code></span></span></pre>
+               </div>
+               
+               <p>Use <code class="command">nvme --help</code> to list all available subcommands. Man pages are available for <code class="command">nvme</code> subcommands. Consult them by executing <code class="command">man nvme-<em class="replaceable">SUBCOMMAND</em></code>. For example, to view the man page for the <code class="option">discover</code> subcommand, execute <code class="command">man nvme-discover</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-nvmeof-host-configuration-target-discovery">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Discovering NVMe-oF targets</h3>
+               </header>
+               
+               
+               <p>To list available NVMe subsystems on the NVMe-oF target, you need the discovery controller
+                  address and service ID.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">nvme discover -t <em class="replaceable">TRANSPORT</em> -a <em class="replaceable">DISCOVERY_CONTROLLER_ADDRESS</em> -s <em class="replaceable">SERVICE_ID</em></code></code></span></span></pre>
+               </div>
+               
+               <p>Replace <em class="replaceable">TRANSPORT</em> with the underlying transport medium: <code class="option">loop</code>, <code class="option">rdma</code>, <code class="option">tcp</code>, or <code class="option">fc</code>. Replace <em class="replaceable">DISCOVERY_CONTROLLER_ADDRESS</em> with the address of the discovery controller. For RDMA and TCP, this should be an
+                  IPv4 address. Replace <em class="replaceable">SERVICE_ID</em> with the transport service ID. If the service is IP based, like RDMA or TCP, service
+                  ID specifies the port number. For Fibre Channel, the service ID is not required.</p>
+               
+               <p>The NVMe hosts only see the subsystems they are allowed to connect to.</p>
+               
+               <p>Example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvme discover -t tcp -a 10.0.0.3 -s 4420</code></span></span></pre>
+               </div>
+               
+               <p>For the FC, the example looks as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvme discover --transport=fc \</code></span></span>
+<span class="line"><span class="ld"><code>                --traddr=nn-0x201700a09890f5bf:pn-0x201900a09890f5bf \</code></span></span>
+<span class="line"><span class="ld"><code>                --host-traddr=nn-0x200000109b579ef6:pn-0x100000109b579ef6</code></span></span></pre>
+               </div>
+               
+               <p>For more details, see <code class="command">man nvme-discover</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-nvmeof-host-configuration-connect-target">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>2<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Connecting to NVMe-oF targets</h3>
+               </header>
+               
+               
+               <p>After you have identified the NVMe subsystem, you can connect it with the <code class="command">nvme connect</code> command.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">nvme connect -t <em class="replaceable">transport</em> -a <em class="replaceable">DISCOVERY_CONTROLLER_ADDRESS</em> -s <em class="replaceable">SERVICE_ID</em> -n <em class="replaceable">SUBSYSTEM_NQN</em></code></code></span></span></pre>
+               </div>
+               
+               <p>Replace <em class="replaceable">TRANSPORT</em> with the underlying transport medium: <code class="option">loop</code>, <code class="option">rdma</code>, <code class="option">tcp</code> or <code class="option">fc</code>. Replace <em class="replaceable">DISCOVERY_CONTROLLER_ADDRESS</em> with the address of the discovery controller. For RDMA and TCP this should be an
+                  IPv4 address. Replace <em class="replaceable">SERVICE_ID</em> with the transport service ID. If the service is IP based, like RDMA or TCP, this
+                  specifies the port number. Replace <em class="replaceable">SUBSYSTEM_NQN</em> with the NVMe qualified name of the desired subsystem as found by the discovery command.
+                  <em>NQN</em> is the abbreviation for <em>NVMe Qualified Name</em>. The NQN must be unique.</p>
+               
+               <p>Example:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">nvme connect -t tcp -a 10.0.0.3 -s 4420 -n nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432</code></code></span></span></pre>
+               </div>
+               
+               <p>For the FC, the example looks as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvme connect --transport=fc \</code></span></span>
+<span class="line"><span class="ld"><code>             --traddr=nn-0x201700a09890f5bf:pn-0x201900a09890f5bf \</code></span></span>
+<span class="line"><span class="ld"><code>             --host-traddr=nn-0x200000109b579ef6:pn-0x100000109b579ef6 \</code></span></span>
+<span class="line"><span class="ld"><code>             --nqn=nqn.2014-08.org.nvmexpress:uuid:1a9e23dd-466e-45ca-9f43-a29aaf47cb21</code></span></span></pre>
+               </div>
+               
+               <p>Alternatively, use <code class="command">nvme connect-all</code> to connect to all discovered namespaces. For advanced usage, see <code class="command">man nvme-connect</code> and <code class="command">man nvme-connect-all</code>.</p>
+               
+               <p>In case of a path loss, the NVMe subsystem tries to reconnect for a time period, defined
+                  by the <code class="literal">ctrl-loss-tmo</code> option of the <code class="command">nvme connect</code> command. After this time (default value is 600s), the path is removed and the upper
+                  layers of the block layer (file system) are notified. By default, the file system
+                  is then mounted read-only, which usually is not the expected behavior. Therefore,
+                  it is recommended to set the <code class="literal">ctrl-loss-tmo</code> option so that the NVMe subsystem keeps trying to reconnect without a limit. To do
+                  so, run the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvme connect --ctrl-loss-tmo=-1</code></span></span></pre>
+               </div>
+               
+               <p>To make an NVMe over Fabrics subsystem available at boot, create a <code class="filename">/etc/nvme/discovery.conf</code> file on the host with the parameters passed to the <code class="command">discover</code> command (as described in <a class="xref xref-sect2" href="#sec-nvmeof-host-configuration-target-discovery">the section called “Discovering NVMe-oF targets”</a>. For example, if you use the <code class="command">discover</code> command as follows:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> nvme discover -t tcp -a 10.0.0.3 -s 4420</code></span></span></pre>
+               </div>
+               
+               <p>Add the parameters of the <code class="command">discover</code> command to the <code class="filename">/etc/nvme/discovery.conf</code> file:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>echo "-t tcp -a 10.0.0.3 -s 4420" | sudo tee -a /etc/nvme/discovery.conf</code></span></span></pre>
+               </div>
+               
+               <p>Then enable the <span class="guimenu">nvmf-autoconnect</span> service:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> systemctl enable nvmf-autoconnect.service</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-nvmeof-host-configuration-multipathing">
+               <header>
+                  <h3><span class="label">17<span class="sep">.</span>2<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Multipathing</h3>
+               </header>
+               
+               
+               <p>NVMe native multipathing is enabled by default. If the <code class="option">CMIC</code> option in the controller identity settings is set, the NVMe stack recognizes an NVME
+                  drive as a multipathed device by default.</p>
+               
+               <p>To manage the multipathing, you can use the following:</p>
+               
+               <div class="long-terms variablelist">
+                  <header>
+                     <div class="title">Managing multipathing</div>
+                  </header>
+                  <dl class="long-terms variablelist">
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">nvme list-subsys</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Prints the layout of the multipath devices.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="command">multipath -ll</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>The command has a compatibility mode and displays NVMe multipath devices. Bear in
+                              mind that you need to enable the <code class="literal">enable_foreign</code> option to use the command. For details, refer to <a class="xref xref-sect1" href="bk09partivch05s13.html">the section called “Miscellaneous options”</a>.</p>
+                           </dd>
+                     </div>
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="option">nvme-core.multipath=N</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>When the option is added as a boot parameter, the NVMe native multipathing will be
+                              disabled.</p>
+                           </dd>
+                     </div>
+                  </dl>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch04.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch04.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch04s03.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous">Chapter&nbsp;<span class="label">17</span><span class="sep">.&nbsp;</span>NVMe-oF</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">17<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Setting up an NVMe-oF target</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

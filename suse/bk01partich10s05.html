@@ -1,0 +1,393 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.5.&nbsp;Creating and modifying Snapper configurations</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partich10s04.html" rel="prev">
+      <link href="bk01partich10s06.html" rel="next">
+      <link href="bk01partich10.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partich10.html">Up</a> <a href="bk01partich10s06.html">Next</a> <a href="bk01partich10s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partich10s05.html" db-id="d616951e19335" id="sec-snapper-config">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Creating and modifying Snapper configurations</h2>
+            </header>
+            
+            
+            <p>The way Snapper behaves is defined in a configuration file that is specific for each
+               partition or <code class="literal">Btrfs</code> subvolume. These configuration files reside under <code class="filename">/etc/snapper/configs/</code>.</p>
+            
+            <p>In case the root file system is big enough (approximately 12 GB), snapshots are automatically
+               enabled for the root file system <code class="filename">/</code> upon installation. The corresponding default configuration is named <code class="filename">root</code>. It creates and manages the YaST and Zypper snapshot. See <a class="xref xref-sect3" href="#sec-snapper-config-modify-values">the section called “Configuration data”</a> for a list of the default values.</p>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Minimum root file system size for enabling snapshots</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>As explained in <a class="xref xref-sect1" href="bk01partich10.html#sec-snapper-setup">the section called “Default setup”</a>, enabling snapshots requires additional free space in the root file system. The amount
+                           depends on the amount of packages installed and the amount of changes made to the
+                           volume that is included in snapshots. The snapshot frequency and the number of snapshots
+                           that get archived also matter.</p>
+                        
+                        <p>There is a minimum root file system size that is required to automatically enable
+                           snapshots during the installation. Currently this size is approximately 12 GB. This
+                           value may change in the future, depending on architecture and the size of the base
+                           system. It depends on the values for the following tags in the file <code class="filename">/control.xml</code> from the installation media:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>&lt;root_base_size&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;btrfs_increase_percentage&gt;</code></span></span></pre>
+                        </div>
+                        
+                        <p>It is calculated with the following formula: <em class="replaceable">ROOT_BASE_SIZE</em> * (1 + <em class="replaceable">BTRFS_INCREASE_PERCENTAGE</em>/100)</p>
+                        
+                        <p>Keep in mind that this value is a minimum size. Consider using more space for the
+                           root file system. As a rule of thumb, double the size you would use when not having
+                           enabled snapshots.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>You may create your own configurations for other partitions formatted with <code class="literal">Btrfs</code> or existing subvolumes on a <code class="literal">Btrfs</code> partition. In the following example we will set up a Snapper configuration for backing
+               up the Web server data residing on a separate, <code class="literal">Btrfs</code>-formatted partition mounted at <code class="filename">/srv/www</code>.</p>
+            
+            <p>After a configuration has been created, you can either use <code class="command">snapper</code> itself or the YaST <span class="guimenu">Snapper</span> module to restore files from these snapshots. In YaST you need to select your <span class="guimenu">Current Configuration</span>, while you need to specify your configuration for <code class="command">snapper</code> with the global switch <code class="option">-c</code> (for example, <code class="command">snapper -c myconfig list</code>).</p>
+            
+            <p>To create a new Snapper configuration, run <code class="command">snapper create-config</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c www-data<span class="co" id="snapper-create-name">➍</span> create-config /srv/www<span class="co" id="snapper-create-volume">➎</span></code></span></span></pre>
+            </div>
+            
+            <div class="calloutlist">
+               <dl>
+                  <dt class="callout"><a class="callout-bug" href="#snapper-create-name">➍</a></dt>
+                  <dd>
+                     
+                     <p>Name of configuration file.</p>
+                     </dd>
+                  <dt class="callout"><a class="callout-bug" href="#snapper-create-volume">➎</a></dt>
+                  <dd>
+                     
+                     <p>Mount point of the partition or <code class="literal">Btrfs</code> subvolume on which to take snapshots.</p>
+                     </dd>
+               </dl>
+            </div>
+            
+            <p>This command will create a new configuration file <code class="filename">/etc/snapper/configs/www-data</code> with reasonable default values (taken from <code class="filename">/etc/snapper/config-templates/default</code>). Refer to <a class="xref xref-sect2" href="#sec-snapper-config-modify">the section called “Managing existing configurations”</a> for instructions on how to adjust these defaults.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Configuration defaults</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Default values for a new configuration are taken from <code class="filename">/etc/snapper/config-templates/default</code>. To use your own set of defaults, create a copy of this file in the same directory
+                           and adjust it to your needs. To use it, specify the <code class="option">-t</code> option with the create-config command:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c www-data create-config -t <em class="replaceable">MY_DEFAULTS</em> /srv/www</code></span></span></pre>
+                        </div>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <section class="sect2" id="sec-snapper-config-modify">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Managing existing configurations</h3>
+               </header>
+               
+               
+               <p>The <code class="command">snapper</code> command offers several subcommands for managing existing configurations. You can
+                  list, show, delete and modify them:</p>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Listing configurations</span></dt>
+                     <dd>
+                        
+                        <p>Use the subcommand <code class="command">snapper list-configs</code> to get all existing configurations:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper list-configs</code></span></span>
+<span class="line"><span class="ld"><code>Config | Subvolume</code></span></span>
+<span class="line"><span class="ld"><code>-------+----------</code></span></span>
+<span class="line"><span class="ld"><code>root   | /</code></span></span>
+<span class="line"><span class="ld"><code>usr    | /usr</code></span></span>
+<span class="line"><span class="ld"><code>local  | /local</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Showing a configuration</span></dt>
+                     <dd>
+                        
+                        <p>Use the subcommand <code class="command">snapper -c <em class="replaceable">CONFIG</em> get-config</code> to display the specified configuration. Replace <em class="replaceable">CONFIG</em> with one of the configuration names shown by <code class="command">snapper list-configs</code>. For more information about the configuration options, see <a class="xref xref-sect3" href="#sec-snapper-config-modify-values">the section called “Configuration data”</a>.</p>
+                        
+                        <p>To display the default configuration, run:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c root get-config</code></span></span></pre>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Modifying a configuration</span></dt>
+                     <dd>
+                        
+                        <p>Use the subcommand <code class="command">snapper -c <em class="replaceable">CONFIG</em> set-config <em class="replaceable">OPTION</em>=<em class="replaceable">VALUE</em></code> to modify an option in the specified configuration. Replace <em class="replaceable">CONFIG</em> with one of the configuration names shown by <code class="command">snapper list-configs</code>. Possible values for <em class="replaceable">OPTION</em> and <em class="replaceable">VALUE</em> are listed in <a class="xref xref-sect3" href="#sec-snapper-config-modify-values">the section called “Configuration data”</a>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Deleting a configuration</span></dt>
+                     <dd>
+                        
+                        <p>Use the subcommand <code class="command">snapper -c <em class="replaceable">CONFIG</em> delete-config</code> to delete a configuration. Replace <em class="replaceable">CONFIG</em> with one of the configuration names shown by <code class="command">snapper list-configs</code>.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <section class="sect3" id="sec-snapper-config-modify-values">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configuration data</h4>
+                  </header>
+                  
+                  
+                  <p>Each configuration contains a list of options that can be modified from the command
+                     line. The following list provides details for each option. To change a value, run
+                     <code class="command">snapper -c <em class="replaceable">CONFIG</em> set-config "<em class="replaceable">KEY</em>=<em class="replaceable">VALUE</em>"</code>.</p>
+                  
+                  <dl class="long-terms variablelist">
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">ALLOW_GROUPS</code>, <code class="literal">ALLOW_USERS</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Granting permissions to use snapshots to regular users. See <a class="xref xref-sect3" href="#sec-snapper-config-user">the section called “Using Snapper as regular user”</a> for more information.</p>
+                           
+                           <p>The default value is <code class="literal">""</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">BACKGROUND_COMPARISON</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Defines whether pre and post snapshots should be compared in the background after
+                              creation.</p>
+                           
+                           <p>The default value is <code class="literal">"yes"</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">EMPTY_*</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Defines the clean-up algorithm for snapshots pairs with identical pre and post snapshots.
+                              See <a class="xref xref-sect2" href="bk01partich10s07.html#sec-snapper-clean-up-empty">the section called “Cleaning up snapshot pairs that do not differ”</a> for details.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">FSTYPE</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>File system type of the partition. Do not change.</p>
+                           
+                           <p>The default value is <code class="literal">"btrfs"</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">NUMBER_*</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Defines the clean-up algorithm for installation and administration snapshots. See
+                              <a class="xref xref-sect2" href="bk01partich10s07.html#sec-snapper-clean-up-number">the section called “Cleaning up numbered snapshots”</a> for details.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">QGROUP</code> / <code class="literal">SPACE_LIMIT</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Adds quota support to the clean-up algorithms. See <a class="xref xref-sect2" href="bk01partich10s07.html#sec-snapper-clean-up-quota">the section called “Adding disk quota support”</a> for details.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">SUBVOLUME</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Mount point of the partition or subvolume to snapshot. Do not change.</p>
+                           
+                           <p>The default value is <code class="literal">"/"</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">SYNC_ACL</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If Snapper is used by regular users (see <a class="xref xref-sect3" href="#sec-snapper-config-user">the section called “Using Snapper as regular user”</a>), the users must be able to access the <code class="filename">.snapshot</code> directories and to read files within them. If SYNC_ACL is set to <code class="literal">yes</code>, Snapper automatically makes them accessible using ACLs for users and groups from
+                              the ALLOW_USERS or ALLOW_GROUPS entries.</p>
+                           
+                           <p>The default value is <code class="literal">"no"</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">TIMELINE_CREATE</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>If set to <code class="literal">yes</code>, hourly snapshots are created. Valid values: <code class="literal">yes</code>, <code class="literal">no</code>.</p>
+                           
+                           <p>The default value is <code class="literal">"no"</code>.</p>
+                           </dd>
+                     </div>
+                     
+                     <div class="varlistentry">
+                        <dt><span class="term">
+                              <code class="literal">TIMELINE_CLEANUP</code> / <code class="literal">TIMELINE_LIMIT_*</code>
+                              </span></dt>
+                        <dd>
+                           
+                           <p>Defines the clean-up algorithm for timeline snapshots. See <a class="xref xref-sect2" href="bk01partich10s07.html#sec-snapper-clean-up-timeline">the section called “Cleaning up timeline snapshots”</a> for details.</p>
+                           </dd>
+                     </div>
+                     </dl>
+                  </section>
+               
+               <section class="sect3" id="sec-snapper-config-user">
+                  <header>
+                     <h4><span class="label">10<span class="sep">.</span>5<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Using Snapper as regular user</h4>
+                  </header>
+                  
+                  
+                  <p>By default Snapper can only be used by <code class="systemitem username">root</code>. However, there are cases in which certain groups or users need to be able to create
+                     snapshots or undo changes by reverting to a snapshot:</p>
+                  
+                  <ul class="itemizedlist" db-mark="bullet">
+                     
+                     <li>
+                        
+                        <p>Web site administrators who want to take snapshots of <code class="filename">/srv/www</code></p>
+                        </li>
+                     
+                     <li>
+                        
+                        <p>Users who want to take a snapshot of their home directory</p>
+                        </li>
+                     </ul>
+                  
+                  <p>For these purposes, you can create Snapper configurations that grant permissions to
+                     users or/and groups. The corresponding <code class="filename">.snapshots</code> directory needs to be readable and accessible by the specified users. The easiest
+                     way to achieve this is to set the SYNC_ACL option to <code class="literal">yes</code>.</p>
+                  
+                  <div class="formalobject procedure" id="sec-snapper-config-user_proc1">
+                     <header>
+                        <div class="title">Procedure&nbsp;<span class="label">10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Enabling regular users to use Snapper</div>
+                     </header>
+                     <p>All steps in this procedure need to be run by <code class="systemitem username">root</code>.</p>
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>If a Snapper configuration does not exist yet, create one for the partition or subvolume
+                              on which the user should be able to use Snapper. Refer to <a class="xref xref-sect1" href="#sec-snapper-config">the section called “Creating and modifying Snapper configurations”</a> for instructions. Example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper --config web_data create /srv/www</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>The configuration file is created under <code class="filename">/etc/snapper/configs/<em class="replaceable">CONFIG</em></code>, where CONFIG is the value you specified with <code class="option">-c/--config</code> in the previous step (for example <code class="filename">/etc/snapper/configs/web_data</code>). Adjust it according to your needs. For more information, see <a class="xref xref-sect2" href="#sec-snapper-config-modify">the section called “Managing existing configurations”</a>.</p>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Set values for <code class="envar">ALLOW_USERS</code> and/or <code class="envar">ALLOW_GROUPS</code> to grant permissions to users and/or groups, respectively. Multiple entries need
+                              to be separated by <span class="keycap space">Spacebar</span>. To grant permissions to the user <code class="systemitem username">www_admin</code> for example, run:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> snapper -c web_data set-config "ALLOW_USERS=www_admin" SYNC_ACL="yes"</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>The given Snapper configuration can now be used by the specified users and/or groups.
+                              You can test it with the <code class="literal">list</code> command, for example:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">www_admin:~ &gt;</span>snapper -c web_data list</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partich10s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partich10.html">Up</a></td>
+                  <td class="next"><a href="bk01partich10s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Enabling Snapper in user home directories</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Manually creating and managing snapshots</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

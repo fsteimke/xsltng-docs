@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>24.5.&nbsp;Configuring CUPS with command line tools</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partiiich05s04.html" rel="prev">
+      <link href="bk01partiiich05s06.html" rel="next">
+      <link href="bk01partiiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partiiich05.html">Up</a> <a href="bk01partiiich05s06.html">Next</a> <a href="bk01partiiich05s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partiiich05s05.html" db-id="d616951e44083" id="sec-print-net-config-cmdl">
+            <header>
+               <h2><span class="label">24<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring CUPS with command line tools</h2>
+            </header>
+            
+            
+            <p>CUPS can be configured with command line tools like <code class="command">lpinfo</code>, <code class="command">lpadmin</code> and <code class="command">lpoptions</code>. You need a device URI consisting of a back-end, such as USB, and parameters. To
+               determine valid device URIs on your system use the command <code class="command">lpinfo -v | grep ":/"</code>:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpinfo -v | grep ":/"</code></span></span>
+<span class="line"><span class="ld"><code>direct usb://ACME/FunPrinter%20XL</code></span></span>
+<span class="line"><span class="ld"><code>network socket://192.168.2.253</code></span></span></pre>
+            </div>
+            
+            <p>With <code class="command">lpadmin</code> the CUPS server administrator can add, remove or manage print queues. To add a print
+               queue, use the following syntax:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpadmin -p <em class="replaceable">QUEUE</em> -v <em class="replaceable">DEVICE-URI</em> -P <em class="replaceable">PPD-FILE</em> -E</code></span></span></pre>
+            </div>
+            
+            <p>Then the device (<code class="option">-v</code>) is available as <em class="replaceable">QUEUE</em> (<code class="option">-p</code>), using the specified PPD file (<code class="option">-P</code>). This means that you must know the PPD file and the device URI to configure the
+               printer manually.</p>
+            
+            <p>Do not use <code class="option">-E</code> as the first option. For all CUPS commands, <code class="option">-E</code> as the first argument sets use of an encrypted connection. To enable the printer,
+               <code class="option">-E</code> must be used as shown in the following example:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpadmin -p ps -v usb://ACME/FunPrinter%20XL -P \</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/cups/model/Postscript.ppd.gz -E</code></span></span></pre>
+            </div>
+            
+            <p>The following example configures a network printer:</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpadmin -p ps -v socket://192.168.2.202:9100/ -P \</code></span></span>
+<span class="line"><span class="ld"><code>/usr/share/cups/model/Postscript-level1.ppd.gz -E</code></span></span></pre>
+            </div>
+            
+            <p>For more options of <code class="command">lpadmin</code>, see the man page of <code class="systemitem">lpadmin(8)</code>.</p>
+            
+            <p>During printer setup, certain options are set as default. These options can be modified
+               for every print job (depending on the print tool used). Changing these default options
+               with YaST is also possible. Using command line tools, set default options as follows:</p>
+            
+            <div class="informalobject procedure" id="sec-print-net-config-cmdl_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>First, list all options:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpoptions -p <em class="replaceable">QUEUE</em> -l</code></span></span></pre>
+                     </div>
+                     
+                     <p>Example:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Resolution/Output Resolution: 150dpi *300dpi 600dpi</code></span></span></pre>
+                     </div>
+                     
+                     <p>The activated default option is identified by a preceding asterisk (<code class="literal">*</code>).</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Change the option with <code class="command">lpadmin</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpadmin -p <em class="replaceable">QUEUE</em> -o Resolution=600dpi</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Check the new setting:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> lpoptions -p <em class="replaceable">QUEUE</em> -l</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Resolution/Output Resolution: 150dpi 300dpi *600dpi</code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>When a normal user runs <code class="command">lpoptions</code>, the settings are written to <code class="filename">~/.cups/lpoptions</code>. However, <code class="systemitem username">root</code> settings are written to <code class="filename">/etc/cups/lpoptions</code>.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partiiich05s04.html">Prev</a></td>
+                  <td class="up"><a href="bk01partiiich05.html">Up</a></td>
+                  <td class="next"><a href="bk01partiiich05s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">24<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Network printers</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">24<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Printing from the command line</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

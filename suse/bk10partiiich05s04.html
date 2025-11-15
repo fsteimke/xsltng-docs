@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>23.4.&nbsp;Using swtpm with QEMU</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10partiiich05s03.html" rel="prev">
+      <link href="bk10partiiich05s05.html" rel="next">
+      <link href="bk10partiiich05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10partiiich05.html">Up</a> <a href="bk10partiiich05s05.html">Next</a> <a href="bk10partiiich05s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10partiiich05s04.html" db-id="d616951e289310" id="tpm-qemu">
+            <header>
+               <h2><span class="label">23<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Using <code class="command">swtpm</code> with QEMU</h2>
+            </header>
+            
+            
+            <p><code class="command">swtpm</code> provides three types of interface: <code class="literal">socket</code>, <code class="literal">chardev</code>, and <code class="literal">cuse</code>. This procedure focuses on the <em>socket</em> interface.</p>
+            
+            <div class="informalobject procedure" id="tpm-qemu_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Create a directory <code class="filename">mytpm0</code> inside the VM directory to store the TPM states—for example, <code class="filename">/var/lib/libvirt/qemu/sle15sp3</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> mkdir /var/lib/libvirt/qemu/sle15sp3/mytpm0</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Start <code class="command">swtmp</code>. It creates a socket file that QEMU can use—for example, <code class="filename">/var/lib/libvirt/qemu/sle15sp3</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> swtpm socket</code></span></span>
+<span class="line"><span class="ld"><code>  --tpmstate dir=/var/lib/libvirt/qemu/sle15sp3/mytpm0 \</code></span></span>
+<span class="line"><span class="ld"><code>  --ctrl type=unixio,path=/var/lib/libvirt/qemu/sle15sp3/mytpm0/swtpm-sock \</code></span></span>
+<span class="line"><span class="ld"><code>  --log level=20</code></span></span></pre>
+                     </div>
+                     
+                     <div class="admonition tip">
+                        <div>
+                           <div class="icon">☞</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">TPM version 2.0</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>By default, <code class="command">swtpm</code> starts a TPM version 1.2 emulator and stores its states in the <code class="filename">tpm-00.permall</code> directory. To create a TPM 2.0 instance, run:</p>
+                                 
+                                 <div class="pre-wrap screen-wrap">
+                                    <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> swtpm socket</code></span></span>
+<span class="line"><span class="ld"><code>  --tpm2</code></span></span>
+<span class="line"><span class="ld"><code>  --tpmstate dir=/var/lib/libvirt/qemu/sle15sp3/mytpm0 \</code></span></span>
+<span class="line"><span class="ld"><code>  --ctrl type=unixio,path=/var/lib/libvirt/qemu/sle15sp3/mytpm0/swtpm-sock \</code></span></span>
+<span class="line"><span class="ld"><code>  --log level=20</code></span></span></pre>
+                                 </div>
+                                 
+                                 <p>TPM 2.0 states are stored in the <code class="filename">tpm2-00.permall</code> directory.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Add the following command line parameters to the <code class="command">qemu-system-<em class="replaceable">ARCH</em></code> command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>qemu-system-x86_64 \</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>-chardev socket,id=chrtpm,path=/var/lib/libvirt/qemu/sle15sp3/mytpm0/swtpm-sock \</code></span></span>
+<span class="line"><span class="ld"><code>-tpmdev emulator,id=tpm0,chardev=chrtpm \</code></span></span>
+<span class="line"><span class="ld"><code>-device tpm-tis,tpmdev=tpm0</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Verify that the TPM device is available in the guest by running the following command:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>tpm_version</code></span></span>
+<span class="line"><span class="ld"><code>TPM 1.2 Version Info:</code></span></span>
+<span class="line"><span class="ld"><code>Chip Version:        1.2.18.158</code></span></span>
+<span class="line"><span class="ld"><code>Spec Level:          2</code></span></span>
+<span class="line"><span class="ld"><code>Errata Revision:     3</code></span></span>
+<span class="line"><span class="ld"><code>TPM Vendor ID:       IBM</code></span></span>
+<span class="line"><span class="ld"><code>TPM Version:         01010000</code></span></span>
+<span class="line"><span class="ld"><code>Manufacturer Info:   49424d00</code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10partiiich05s03.html">Prev</a></td>
+                  <td class="up"><a href="bk10partiiich05.html">Up</a></td>
+                  <td class="next"><a href="bk10partiiich05s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">23<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Installation</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">23<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Using swtpm with <code class="library systemitem">libvirt</code>
+                     </td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

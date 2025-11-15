@@ -1,0 +1,396 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>19.3.&nbsp;Configuring NFS server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch06s02.html" rel="prev">
+      <link href="bk09partivch06s04.html" rel="next">
+      <link href="bk09partivch06.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch06.html">Up</a> <a href="bk09partivch06s04.html">Next</a> <a href="bk09partivch06s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch06s03.html" db-id="d616951e258505" id="sec-nfs-configuring-nfs-server">
+            <header>
+               <h2><span class="label">19<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring NFS server</h2>
+            </header>
+            
+            
+            <p>Configuring an NFS server can be done either through YaST or manually. For authentication,
+               NFS can also be combined with Kerberos.</p>
+            
+            <section class="sect2" id="sec-nfs-export-yast2">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Exporting file systems with YaST</h3>
+               </header>
+               
+               
+               <p>With YaST, turn a host in your network into an NFS server—a server that exports directories
+                  and files to all hosts granted access to it or to all members of a group. Thus, the
+                  server can also provide applications without installing the applications locally on
+                  every host.</p>
+               
+               <p>To set up such a server, proceed as follows:</p>
+               
+               <div class="formalobject procedure" id="pro-nfs-export-yast2-nfs">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Setting up an NFS server</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Start YaST and select <span class="menuchoice"><span class="guimenu">Network Services</span><span class="guimenu">NFS Server</span></span>; see <a class="xref xref-figure" href="#fig-inst-nfsserver1">Figure&nbsp;<span class="label">19<span class="sep">.</span>1</span>, “NFS server configuration tool”</a>. You may be prompted to install additional software.</p>
+                        
+                        <div class="figure formalobject" id="fig-inst-nfsserver1">
+                           
+                           
+                           <div class="mediaobject">
+                              <div class="media image"><span class="viewport-table" style="width:417px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/yast2_inst_nfsserver1.png" style="width:417px;"></picture></span></span></span></span></span></div>
+                           </div>
+                           
+                           <header>
+                              <div class="title">Figure&nbsp;<span class="label">19<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>NFS server configuration tool</div>
+                           </header>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click the <span class="guimenu">Start</span> radio button.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If <code class="daemon systemitem">firewalld</code> is active on your system, configure it separately for NFS (see <a class="xref xref-sect1" href="bk09partivch06s05.html">the section called “Operating an NFS server and clients behind a firewall”</a>). YaST does not yet have complete support for <code class="daemon systemitem">firewalld</code>, so ignore the "Firewall not configurable" message and continue.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Check whether you want to <span class="guimenu">Enable NFSv4</span>. If you deactivate NFSv4, YaST will only support NFSv3. For information about enabling
+                           NFSv2, see <a class="xref xref-note" href="#sec-nfs-export-manual-nsfv2">NFSv2</a>.</p>
+                        
+                        <div class="substeps">
+                           <ol class="procedure substeps" type="a">
+                              
+                              <li class="step">
+                                 
+                                 <p>If NFSv4 is selected, additionally enter the appropriate NFSv4 domain name. This parameter
+                                    is used by the <code class="daemon systemitem">idmapd</code> daemon that is required for Kerberos setups or if clients cannot work with numeric
+                                    user names. Leave it as <code class="literal">localdomain</code> (the default) if you do not run <code class="daemon systemitem">idmapd</code> or do not have any special requirements. For more information on the <code class="daemon systemitem">idmapd</code> daemon, see <a class="xref xref-varlistentry" href="#var-nfs-export-manual-idmapd"><span class="label"><span class="term">
+                                             <code class="filename">/etc/idmapd.conf</code>
+                                             </span></span></a>.</p>
+                                 
+                                 <div class="admonition important">
+                                    <div>
+                                       <div class="icon">☝</div>
+                                       <div class="body">
+                                          <header>
+                                             <div class="title">NFSv4 Domain Name</div>
+                                          </header>
+                                          <div>
+                                             
+                                             
+                                             <p>Note that the domain name needs to be configured on all NFSv4 clients as well. Only
+                                                clients that share the same domain name as the server can access the server. The default
+                                                domain name for server and clients is <code class="literal">localdomain</code>.</p>
+                                             </div>
+                                       </div>
+                                    </div>
+                                 </div>
+                                 </li>
+                              </ol>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Enable GSS Security</span> if you need secure access to the server. A prerequisite for this is to have Kerberos
+                           installed on your domain and to have both the server and the clients kerberized. 
+                           Click <span class="guimenu">Next</span> to proceed with the next configuration dialog.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Add Directory</span> in the upper half of the dialog to export your directory.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If you have not configured the allowed hosts already, another dialog for entering
+                           the client information and options pops up automatically. Enter the host wild card
+                           (usually you can leave the default settings as they are).</p>
+                        
+                        
+                        <p>There are four possible types of host wild cards that can be set for each host: a
+                           single host (name or IP address), netgroups, wild cards (such as <code class="literal">*</code> indicating all machines can access the server), and IP networks. For more information
+                           about these options, see the <code class="literal">exports</code> man page.</p>
+                        
+                        <p>On Btrfs, we strongly recommend changing the default option <code class="literal">no_subtree_check</code> to <code class="literal">subtree_check</code> for security reasons. When several exports with different security settings are performed
+                           on the same Btrfs file system, one client having access to one export can access all
+                           other exports, too. Using this option prevents such an attack. Alternatively, you
+                           can place each export on a separate file system.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Click <span class="guimenu">Finish</span> to complete the configuration.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            
+            <section class="sect2" id="sec-nfs-export-manual">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Exporting file systems manually</h3>
+               </header>
+               
+               
+               <p>The configuration files for the NFS export service are <code class="filename">/etc/exports</code> and <code class="filename">/etc/sysconfig/nfs</code>. In addition to these files, <code class="filename">/etc/idmapd.conf</code> is needed for the NFSv4 server configuration with kerberized NFS or if the clients
+                  cannot work with numeric user names.</p>
+               
+               <p>To start or restart the services, run the command <code class="command">systemctl restart nfs-server</code>. This also restarts the RPC port mapper that is required by the NFS server.</p>
+               
+               <p>To make sure the NFS server always starts at boot time, run <code class="command">sudo systemctl enable nfs-server</code>.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">NFSv4</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>NFSv4 is the latest version of the NFS protocol available on <span class="phrase productname">SUSE Linux Enterprise Server</span>. Configuring directories for export with NFSv4 is now the same as with NFSv3.</p>
+                           
+                           <p>On SUSE Linux Enterprise Server&nbsp;11, the bind mount in <code class="filename">/etc/exports</code> was mandatory. It is still supported, but now deprecated.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <dl class="long-terms variablelist">
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/etc/exports</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="filename">/etc/exports</code> file contains a list of entries. Each entry indicates a directory that is shared
+                           and how it is shared. A typical entry in <code class="filename">/etc/exports</code> consists of:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/<em class="replaceable">SHARED</em>/<em class="replaceable">DIRECTORY</em><em class="replaceable">HOST</em>(<em class="replaceable">OPTION_LIST</em>)</code></span></span></pre>
+                        </div>
+                        
+                        <p>For example:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>/nfs_exports/public *(rw,sync,root_squash,wdelay)</code></span></span>
+<span class="line"><span class="ld"><code>/nfs_exports/department1 *.department1.example.com(rw,sync,root_squash,wdelay)</code></span></span>
+<span class="line"><span class="ld"><code>/nfs_exports/team1 192.168.1.0/24(rw,sync,root_squash,wdelay)</code></span></span>
+<span class="line"><span class="ld"><code>/nfs_exports/tux 192.168.1.2(rw,sync,root_squash)</code></span></span></pre>
+                        </div>
+                        
+                        <p>In this example, the following values for <em class="replaceable">HOST</em> are used:</p>
+                        
+                        <ul class="itemizedlist">
+                           
+                           <li>
+                              
+                              <p><code class="literal">*</code>: exports to all clients on the network</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">*.department1.example.com</code>: only exports to clients on the *.department1.example.com domain</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">192.168.1.0/24</code>: only exports to clients with IP addresses in the range of 192.168.1.0/24</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p><code class="literal">192.168.1.2</code>: only exports to the machine with the IP address 192.168.1.2</p>
+                              </li>
+                           </ul>
+                        
+                        <p>If you are creating exports of a Btrfs file system, we strongly recommend adding the
+                           option <code class="literal">subtree_check</code> to each export for security reasons.</p>
+                        
+                        <p>In addition to the examples above, you can also restrict exports to netgroups (<code class="literal">@my-hosts</code>) defined in <code class="filename">/etc/netgroup</code>. For a detailed explanation of all options and their meanings, refer to the <code class="literal">man</code> page of <code class="filename">/etc/exports</code>: (<code class="command">man exports</code>).</p>
+                        
+                        <p>In case you have modified <code class="filename">/etc/exports</code> while the NFS server was running, you need to restart it for the changes to become
+                           active: <code class="command">sudo systemctl restart nfs-server</code>.</p>
+                        
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">
+                           <code class="filename">/etc/sysconfig/nfs</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="filename">/etc/sysconfig/nfs</code> file contains a few parameters that determine NFSv4 server daemon behavior. It is
+                           important to set the parameter <code class="systemitem">NFS4_SUPPORT</code> to <code class="literal">yes</code> (default). <code class="systemitem">NFS4_SUPPORT</code> determines whether the NFS server supports NFSv4 exports and clients.</p>
+                        
+                        <p>In case you have modified <code class="filename">/etc/sysconfig/nfs</code> while the NFS server was running, you need to restart it for the changes to become
+                           active: <code class="command">sudo systemctl restart nfs-server</code>.</p>
+                        
+                        <div class="admonition tip">
+                           <div>
+                              <div class="icon">☞</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Mount options</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>On SUSE Linux Enterprise Server&nbsp;11, the <code class="option">--bind</code> mount in <code class="filename">/etc/exports</code> was mandatory. It is still supported, but now deprecated. Configuring directories
+                                       for export with NFSv4 is now the same as with NFSv3.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        
+                        <div class="admonition note" id="sec-nfs-export-manual-nsfv2">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">NFSv2</div>
+                                 </header>
+                                 <div>
+                                    
+                                    
+                                    <p>If NFS clients still depend on NFSv2, enable it on the server in <code class="filename">/etc/sysconfig/nfs</code> by setting:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>NFSD_OPTIONS="-V2"</code></span></span>
+<span class="line"><span class="ld"><code>MOUNTD_OPTIONS="-V2"</code></span></span></pre>
+                                    </div>
+                                    
+                                    <p>After restarting the service, check whether version&nbsp;2 is available with the command:</p>
+                                    
+                                    <div class="pre-wrap screen-wrap">
+                                       <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /proc/fs/nfsd/versions</code></span></span>
+<span class="line"><span class="ld"><code>+2 +3 +4 +4.1 +4.2</code></span></span></pre>
+                                    </div>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry" id="var-nfs-export-manual-idmapd">
+                     <dt><span class="term">
+                           <code class="filename">/etc/idmapd.conf</code>
+                           </span></dt>
+                     <dd>
+                        
+                        <p>The <code class="daemon systemitem">idmapd</code> daemon is only required if Kerberos authentication is used or if clients cannot work
+                           with numeric user names. Linux clients can work with numeric user names since Linux
+                           kernel 2.6.39. The <code class="daemon systemitem">idmapd</code> daemon does the name-to-ID mapping for NFSv4 requests to the server and replies to
+                           the client.</p>
+                        
+                        <p>If required, <code class="daemon systemitem">idmapd</code> needs to run on the NFSv4 server. Name-to-ID mapping on the client will be done by
+                           <code class="command">nfsidmap</code> provided by the package <code class="package">nfs-client</code>.</p>
+                        
+                        <p>Make sure that there is a uniform way in which user names and IDs (UIDs) are assigned
+                           to users across machines that might be sharing file systems using NFS. This can be
+                           achieved by using NIS, LDAP, or any uniform domain authentication mechanism in your
+                           domain.</p>
+                        
+                        <p>The parameter <code class="literal">Domain</code> must be set in <code class="filename">/etc/idmapd.conf</code>. It must be the same for the server and all NFSv4 clients that access this server.
+                           Clients in a different NFSv4 domain cannot access the server. Sticking with the default
+                           domain <code class="literal">localdomain</code> is recommended. If you need to choose a different name, you may want to go with the
+                           FQDN of the host, minus the host name. A sample configuration file looks like the
+                           following:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[General]</code></span></span>
+<span class="line"><span class="ld"><code>Verbosity = 0</code></span></span>
+<span class="line"><span class="ld"><code>Pipefs-Directory = /var/lib/nfs/rpc_pipefs</code></span></span>
+<span class="line"><span class="ld"><code>Domain = localdomain</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Mapping]</code></span></span>
+<span class="line"><span class="ld"><code>Nobody-User = nobody</code></span></span>
+<span class="line"><span class="ld"><code>Nobody-Group = nobody</code></span></span></pre>
+                        </div>
+                        
+                        <p>To start the <code class="daemon systemitem">idmapd</code> daemon, run <code class="command">systemctl start nfs-idmapd</code>. In case you have modified <code class="filename">/etc/idmapd.conf</code> while the daemon was running, you need to restart it for the changes to become active:
+                           <code class="command">systemctl restart nfs-idmapd</code>.</p>
+                        
+                        <p>For more information, see the man pages of <code class="literal">idmapd</code> and <code class="literal">idmapd.conf</code> (<code class="literal">man idmapd</code> and <code class="literal">man idmapd.conf</code>).</p>
+                        </dd>
+                  </div>
+                  </dl>
+               </section>
+            
+            
+            <section class="sect2" id="sec-nfs-kerberos">
+               <header>
+                  <h3><span class="label">19<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>NFS with Kerberos</h3>
+               </header>
+               
+               
+               <p>To use Kerberos authentication for NFS, Generic Security Services (GSS) must be enabled.
+                  Select <span class="guimenu">Enable GSS Security</span> in the initial YaST NFS Server dialog. You must have a working Kerberos server to
+                  use this feature. YaST does not set up the server but only uses the provided functionality.
+                  To use Kerberos authentication in addition to the YaST configuration, complete at
+                  least the following steps before running the NFS configuration:</p>
+               
+               <div class="informalobject procedure" id="sec-nfs-kerberos_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Make sure that both the server and the client are in the same Kerberos domain. They
+                           must access the same KDC (Key Distribution Center) server and share their <code class="filename">krb5.keytab</code> file (the default location on any machine is <code class="filename">/etc/krb5.keytab</code>). For more information about Kerberos, see <a class="xref xref-chapter" href="bk06partich05.html">Chapter&nbsp;<span class="label">6</span>, Network authentication with Kerberos</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the gssd service on the client with <code class="command">systemctl start rpc-gssd.service</code>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Start the svcgssd service on the server with <code class="command">systemctl start rpc-svcgssd.service</code>.</p>
+                        </li>
+                  </ol>
+               </div>
+               
+               <p>Kerberos authentication also requires the <code class="daemon systemitem">idmapd</code> daemon to run on the server. For more information, refer to <a class="xref xref-varlistentry" href="#var-nfs-export-manual-idmapd"><span class="label"><span class="term">
+                           <code class="filename">/etc/idmapd.conf</code>
+                           </span></span></a>.</p>
+               
+               <p>For more information about configuring kerberized NFS, refer to the links in <a class="xref xref-sect1" href="bk09partivch06s07.html">the section called “More information”</a>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch06s02.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch06.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch06s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">19<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing NFS server</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">19<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring clients</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

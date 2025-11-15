@@ -1,0 +1,316 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>B.3.&nbsp;Configuring the host</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk10appbs02.html" rel="prev">
+      <link href="bk10appbs04.html" rel="next">
+      <link href="bk10appb.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk10appb.html">Up</a> <a href="bk10appbs04.html">Next</a> <a href="bk10appbs02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk10appbs03.html" db-id="d616951e304867" id="gpu-passthru-host">
+            <header>
+               <h2><span class="label">B<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Configuring the host</h2>
+            </header>
+            
+            
+            <section class="sect2" id="gpu-passthru-verify-host">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Verify the host environment</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="gpu-passthru-verify-host_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Verify that the host operating system is SLES 12 SP3 or newer:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>cat /etc/issue</code></span></span>
+<span class="line"><span class="ld"><code>Welcome to SUSE Linux Enterprise Server 15  (x86_64) - Kernel \r (\l).</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify that the host supports <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-vtd"><span class="label">VT-d</span></a> technology and that it is already enabled in the firmware settings:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>dmesg | grep -e "Directed I/O"</code></span></span>
+<span class="line"><span class="ld"><code>[   12.819760] DMAR: Intel(R) Virtualization Technology for Directed I/O</code></span></span></pre>
+                        </div>
+                        
+                        <p>If VT-d is not enabled in the firmware, enable it and reboot the host.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Verify that the host has an extra GPU or VGA card:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lspci | grep -i "vga"</code></span></span>
+<span class="line"><span class="ld"><code>07:00.0 VGA compatible controller: Matrox Electronics Systems Ltd. \</code></span></span>
+<span class="line"><span class="ld"><code>  MGA G200e [Pilot] ServerEngines (SEP1) (rev 05)</code></span></span></pre>
+                        </div>
+                        
+                        <p>With a Tesla V100 card:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lspci | grep -i nvidia</code></span></span>
+<span class="line"><span class="ld"><code>03:00.0 3D controller: NVIDIA Corporation GV100 [Tesla V100 PCIe] (rev a1)</code></span></span></pre>
+                        </div>
+                        
+                        <p>With a T1000 Mobile (available on Dell 5540):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lspci | grep -i nvidia</code></span></span>
+<span class="line"><span class="ld"><code>01:00.0 3D controller: NVIDIA Corporation TU117GLM [Quadro T1000 Mobile] (rev a1)</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-enable-iommu">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Enable <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-iommu"><span class="label">IOMMU</span></a>
+                     </h3>
+               </header>
+               
+               
+               <p><a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-iommu"><span class="label">IOMMU</span></a> is disabled by default. You need to enable it at boot time in the <code class="filename">/etc/default/grub</code> configuration file.</p>
+               
+               <div class="informalobject procedure" id="gpu-passthru-enable-iommu_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>For Intel-based hosts:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>GRUB_CMDLINE_LINUX="intel_iommu=on iommu=pt rd.driver.pre=vfio-pci"</code></span></span></pre>
+                        </div>
+                        
+                        <p>For AMD-based hosts:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>GRUB_CMDLINE_LINUX="iommu=pt amd_iommu=on rd.driver.pre=vfio-pci"</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>When you save the modified <code class="filename">/etc/default/grub</code> file, re-generate the main GRUB&nbsp;2 configuration file <code class="filename">/boot/grub2/grub.cfg</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> grub2-mkconfig -o /boot/grub2/grub.cfg</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot the host and verify that <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-iommu"><span class="label">IOMMU</span></a> is enabled:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>dmesg |  grep -e DMAR -e IOMMU</code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-blacklist-nouveau">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Blacklist the Nouveau driver</h3>
+               </header>
+               
+               
+               <p>To assign the NVIDIA card to a VM guest, we need to prevent the host OS from loading
+                  the built-in <code class="literal">nouveau</code> driver for NVIDIA GPUs. Create the file <code class="filename">/etc/modprobe.d/60-blacklist-nouveau.conf</code> with the following content:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist nouveau</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-configure-vfio">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configure <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-vfio"><span class="label">VFIO</span></a> and isolate the GPU used for pass-through</h3>
+               </header>
+               
+               
+               <div class="informalobject procedure" id="gpu-passthru-configure-vfio_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Find the card vendor and model IDs. Use the bus number identified in <a class="xref xref-sect2" href="#gpu-passthru-verify-host">the section called “Verify the host environment”</a>, for example, <code class="literal">03:00.0</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>lspci -nn | grep 03:00.0</code></span></span>
+<span class="line"><span class="ld"><code>03:00.0 3D controller [0302]: NVIDIA Corporation GV100 [Tesla V100 PCIe] [10de:1db4] (rev a1)</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create the file <code class="filename">/etc/modprobe.d/vfio.conf</code> with the following content:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options vfio-pci ids=10de:1db4</code></span></span></pre>
+                        </div>
+                        
+                        <div class="admonition note">
+                           <div>
+                              <div class="icon">ⓘ</div>
+                              <div class="body">
+                                 <header>
+                                    <div class="title">Note</div>
+                                 </header>
+                                 <div>
+                                    
+                                    <p>Verify that your card does not need an extra <code class="option">ids=</code> parameter. For certain cards, you must specify the audio device too, therefore device's
+                                       ID must also be added to the list, otherwise you cannot use the card.</p>
+                                    </div>
+                              </div>
+                           </div>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-load-vfio">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Load the <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-vfio"><span class="label">VFIO</span></a> driver</h3>
+               </header>
+               
+               
+               <p>There are three ways you can load the <a class="xref xref-glossentry" href="bk10gloss01.html#gloss-vt-acronym-vfio"><span class="label">VFIO</span></a> driver.</p>
+               
+               <section class="sect3" id="gpu-passthru-load-vfio-initrd">
+                  <header>
+                     <h4><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Including the driver in the initrd file</h4>
+                  </header>
+                  
+                  
+                  <div class="informalobject procedure" id="gpu-passthru-load-vfio-initrd_proc1">
+                     <ol class="procedure" type="1">
+                        <li class="step">
+                           
+                           <p>Create the file <code class="filename">/etc/dracut.conf.d/gpu-passthrough.conf</code> and add the following content (mind the leading whitespace):</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>add_drivers+=" vfio vfio_iommu_type1 vfio_pci vfio_virqfd"</code></span></span></pre>
+                           </div>
+                           </li>
+                        <li class="step">
+                           
+                           <p>Re-generate the initrd file:</p>
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut --force /boot/initrd $(uname -r)</code></span></span></pre>
+                           </div>
+                           </li>
+                     </ol>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="gpu-passthru-load-vfio-modules">
+                  <header>
+                     <h4><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Adding the driver to the list of auto-loaded modules</h4>
+                  </header>
+                  
+                  
+                  <p>Create the file <code class="filename">/etc/modules-load.d/vfio-pci.conf</code> and add the following content:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>vfio</code></span></span>
+<span class="line"><span class="ld"><code>vfio_iommu_type1</code></span></span>
+<span class="line"><span class="ld"><code>vfio_pci</code></span></span>
+<span class="line"><span class="ld"><code>kvm</code></span></span>
+<span class="line"><span class="ld"><code>kvm_intel</code></span></span></pre>
+                  </div>
+                  </section>
+               
+               <section class="sect3" id="gpu-passthru-load-vfio-manual">
+                  <header>
+                     <h4><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Loading the driver manually</h4>
+                  </header>
+                  
+                  
+                  <p>To load the driver manually at runtime, execute the following command:</p>
+                  
+                  <div class="pre-wrap screen-wrap">
+                     <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> modprobe vfio-pci</code></span></span></pre>
+                  </div>
+                  </section>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-disable-msr">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Disable MSR for Microsoft Windows guests</h3>
+               </header>
+               
+               
+               <p>For Microsoft Windows guests, we recommend disabling MSR (model-specific register)
+                  to avoid the guest crashing. Create the file <code class="filename">/etc/modprobe.d/kvm.conf</code> and add the following content:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>options kvm ignore_msrs=1</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-ovmf">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Install UEFI firmware</h3>
+               </header>
+               
+               
+               <p>For proper GPU pass-through functionality, the host needs to boot using UEFI firmware
+                  (that is, not using a legacy-style BIOS boot sequence). Install the <code class="package">qemu-ovmf</code> package if not already installed:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> zypper install qemu-ovmf</code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="gpu-passthru-reboot">
+               <header>
+                  <h3><span class="label">B<span class="sep">.</span>3<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Reboot the host machine</h3>
+               </header>
+               
+               
+               <p>For most of the changes in the above steps to take effect, you need to reboot the
+                  host machine:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> shutdown -r now</code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk10appbs02.html">Prev</a></td>
+                  <td class="up"><a href="bk10appb.html">Up</a></td>
+                  <td class="next"><a href="bk10appbs04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">B<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Prerequisites</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">B<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Configuring the guest</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

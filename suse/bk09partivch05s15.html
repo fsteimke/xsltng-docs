@@ -1,0 +1,374 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.15.&nbsp;Troubleshooting MPIO</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s14.html" rel="prev">
+      <link href="bk09partivch06.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch06.html">Next</a> <a href="bk09partivch05s14.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s15.html" db-id="d616951e257811" id="sec-multipath-trouble">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>15</span><span class="sep">.&nbsp;</span>Troubleshooting MPIO</h2>
+            </header>
+            
+            
+            <p>If a system runs into emergency mode on a system with multipath, printing messages
+               about missing devices, the reason is almost always one of these:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Inconsistent configuration of multipath device selection</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Use of non-existing device references</p>
+                  </li>
+               </ul>
+            
+            <section class="sect2" id="sec-multipath-trouble-select">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>15<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Understanding device selection issues</h3>
+               </header>
+               
+               
+               <p>A block device can only either be part of a multipath map or be used directly (mounted
+                  as file system, used as swap, LVM physical volume, or otherwise). If a device is already
+                  mounted, an attempt by multipathd to make it part of a multipath map will fail with
+                  a “Device or resource busy” error. Vice-versa, the same error results if <code class="command">systemd</code> attempts to mount a device that has already been made part of a multipath map.</p>
+               
+               <p>Storage device activation during boot is handled by a complex interaction between
+                  <code class="command">systemd</code>, <code class="systemitem">udev</code>, <code class="command">multipathd</code> and some other tools. <code class="systemitem">udev</code> rules play a central role. They set device properties that indicate to other subsystems
+                  how a device should be used. The multipath-related udev rules set the following properties
+                  for devices that are selected for multipathing:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>SYSTEMD_READY=0</code></span></span>
+<span class="line"><span class="ld"><code>DM_MULTIPATH_DEVICE_PATH=1</code></span></span></pre>
+               </div>
+               
+               <p>Partition devices inherit these properties from their parents.</p>
+               
+               <p>If these properties are not set correctly, if some tool does not respect them, or
+                  if they get set too late, a race condition between <code class="command">multipathd</code> and some other subsystem may result. Only one of the contenders can win the race;
+                  the other one will see a “Device or resource busy” error.</p>
+               
+               <p>One problem in this context is that the tools of the LVM2 suite do not evaluate udev
+                  properties by default. They rely on their own logic for determining whether a device
+                  is a multipath component, which sometimes does not match the logic of the rest of
+                  the system. A workaround for this is described in <a class="xref xref-sect2" href="bk09partivch05s14.html#sec-multipath-lvm">the section called “Using LVM2 on multipath devices”</a>.</p>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Example of boot deadlock</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Consider a system with multipathing where the root device is not multipathed, and
+                              no devices are excluded from multipath (see <a class="xref xref-varlistentry" href="bk09partivch05s03.html#vl-multipath-planning-type-noroot-noinitrd"><span class="label"><span class="term">Multipath disabled in the initramfs</span></span></a> in <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-noroot">the section called “Root file system on a local disk”</a>). The root file system is mounted in the initramfs. <code class="command">systemd</code> switches to the root file system and <code class="command">multipathd</code> starts up. Because the device is already mounted, <code class="command">multipathd</code> fails to set up the multipath map for it. Because the root device is not configured
+                              in <code class="literal">blacklist</code>, it is considered a multipath device, and <code class="literal">SYSTEMD_READY=0</code> is set for it.</p>
+                           
+                           <p>Later in the boot process, the system attempts to mount additional file systems like
+                              <code class="filename">/var</code> and <code class="filename">/home</code>. Usually, these file systems will be on the same device as the root file system,
+                              by default as BTRFS subvolumes of the root file system itself. But systemd cannot
+                              mount them because of <code class="literal">SYSTEMD_READY=0</code>. <em>We are in a deadlock</em>: The dm-multipath device cannot be created, and the underlying device is blocked
+                              for systemd. The additional file systems cannot be mounted, resulting in boot failure.</p>
+                           
+                           <p><strong class="bold">A solution to this problem already exists.</strong><code class="command">multipathd</code> detects this situation and releases the device to <code class="command">systemd</code> which can then proceed mounting the file system. However, it is important to understand
+                              the general problem, which can still occur in more subtle ways.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-trouble-ref">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>15<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Understanding device referencing issues</h3>
+               </header>
+               
+               
+               <p>An example of a device referencing issue has been given in <a class="xref xref-sect3" href="bk09partivch05s07.html#sec-multipath-initrd-persistent">the section called “Persistent device names in the initramfs”</a>. Typically, there are multiple symbolic links pointing to a device node (see <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-referring">the section called “Referring to multipath maps”</a>). But these links do not always exist; <code class="command">udev</code> creates them according to the current udev rules. For example, if multipathing is
+                  off, symbolic links under <code class="filename">/dev/mapper/</code> for multipath devices will be missing. Thus, any reference to a <code class="filename">/dev/mapper/</code> device will fail.</p>
+               
+               <p>Such references can appear in various places, notably in <code class="filename">/etc/fstab</code> and <code class="filename">/etc/crypttab</code>, in the initramfs, or even on the kernel command line.</p>
+               
+               <p>The safest way to circumvent this problem is to avoid using the kind of device references
+                  that are not persistent between boots or depend on system configuration. We generally
+                  recommend referring to file systems (and similar entities like swap space) by properties
+                  of the file system itself (like UUID or label) rather than the containing device.
+                  If such references are not available and device references are required, for example,
+                  in <code class="filename">/etc/crypttab</code>, the options should be evaluated carefully. For example, in <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-referring">the section called “Referring to multipath maps”</a>, the best option might be the <code class="filename">/dev/disk/by-id/wwn-</code> link because it would also work with <code class="literal">multipath=off</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-trouble-steps">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>15<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Troubleshooting steps in emergency mode</h3>
+               </header>
+               
+               
+               <p>As there are many error situations that differ in subtle ways, it is impossible to
+                  provide a step-by-step recovery guide. But with the background knowledge from the
+                  previous subsections, you should be able to figure out the problem if a system runs
+                  into emergency mode because of multipathing issues. Before you begin debugging, make
+                  sure you have checked the following questions:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Is the multipath service enabled?</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Is the multipath dracut module included in the initramfs?</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Is my root device configured as a multipath device? If not, is the root device properly
+                        excluded from multipath as described in <a class="xref xref-sect2" href="bk09partivch05s11.html#sec-multipath-blacklist">the section called “The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                           ”</a>, or are you relying on the absence of the multipath module in the initramfs (see
+                        <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-noroot">the section called “Root file system on a local disk”</a>)?</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Does the system enter emergency mode before or after switching to the real root file
+                        system?</p>
+                     </li>
+                  </ul>
+               
+               <p>If you are unsure with respect to the last question, here is a sample dracut emergency
+                  prompt as it would be printed before switching root:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Generating "/run/initramfs/rdsosreport.txt"</code></span></span>
+<span class="line"><span class="ld"><code>Entering emergency mode. Exit the shell to continue.</code></span></span>
+<span class="line"><span class="ld"><code>Type "journalctl" to view system logs.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>You might want to save "/run/initramfs/rdsosreport.txt" to a USB stick or /boot</code></span></span>
+<span class="line"><span class="ld"><code>after mounting them and attach it to a bug report.</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>Give root password for maintenance</code></span></span>
+<span class="line"><span class="ld"><code>(or press Control-D to continue):</code></span></span></pre>
+               </div>
+               
+               <p>The mention of <code class="filename">rdsosreport.txt</code> is a clear indication that the system is still running from the initramfs. If you
+                  are still uncertain, log in and check for the existence of the file <code class="filename">/etc/initrd-release</code>. This file exists only in an initramfs environment.</p>
+               
+               <p>If emergency mode is entered after switching root, the emergency prompt looks similar,
+                  but <code class="filename">rdsosreport.txt</code> is not mentioned:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Timed out waiting for device dev-disk-by\x2duuid-c4a...cfef77d.device.</code></span></span>
+<span class="line"><span class="ld"><code>[DEPEND] Dependency failed for Local File Systems.</code></span></span>
+<span class="line"><span class="ld"><code>[DEPEND] Dependency failed for Postfix Mail Transport Agent.</code></span></span>
+<span class="line"><span class="ld"><code>Welcome to emergency shell</code></span></span>
+<span class="line"><span class="ld"><code>Give root password for maintenance</code></span></span>
+<span class="line"><span class="ld"><code>(or press Control-D to continue):</code></span></span></pre>
+               </div>
+               
+               <div class="formalobject procedure" id="sec-multipath-trouble-steps_proc1">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">18<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Steps for analyzing the situation in emergency mode</div>
+                  </header>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Try to figure out what failed by examining failed systemd units and the journal.</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>systemctl --failed</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>journalctl -b -o short-monotonic</code></span></span></pre>
+                        </div>
+                        
+                        <p>When looking at the journal, determine the <em>first</em> failed unit. When you have found the first failure, examine the messages before and
+                           around that point in time very carefully. Are there any warnings or other suspicious
+                           messages?</p>
+                        
+                        <p>Watch out for the root switch ("<code class="literal">Switching root.</code>") and for messages about SCSI devices, device mapper, multipath and LVM2. Look for
+                           <code class="command">systemd</code> messages about devices and file systems ("<code class="literal">Found device</code>…", "<code class="literal">Mounting</code>…", "<code class="literal">Mounted</code>…").</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Examine the existing devices, both low-level devices and device mapper devices (note
+                           that some of the commands below may not be available in the initramfs):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>cat /proc/partitions</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>ls -l /sys/class/block</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>ls -l /dev/disk/by-id/* /dev/mapper/*</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>dmsetup ls --tree</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>lsblk</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>lsscsi</code></span></span></pre>
+                        </div>
+                        
+                        <p>From the output of the commands above, you should get an idea whether the low-level
+                           devices were successfully probed, and whether any multipath maps and multipath partitions
+                           were set up.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the device mapper multipath setup is not as you expect, examine the udev properties,
+                           in particular, <code class="literal">SYSTEMD_READY</code> (see above)</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>udevadm info -e</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the previous step showed unexpected udev properties, something may have gone wrong
+                           during udev rule processing. Check other properties, in particular, those used for
+                           device identification (see <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-conf-file-wwid">the section called “WWIDs and device Identification”</a>). If the udev properties are correct, check the journal for <code class="command">multipathd</code> messages again. Look for "<code class="literal">Device or resource busy</code>" messages.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the system failed to mount or otherwise activate a device, it is often helpful
+                           to try activating this device manually:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span>mount /var</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>swapon -a</code></span></span>
+<span class="line"><span class="ld"><code><span class="prompt root">#</span>vgchange -a y</code></span></span></pre>
+                        </div>
+                        
+                        <p>Mostly, the manual activation will succeed and allow to proceed with system boot (usually
+                           by simply logging out from the emergency shell) and examine the situation further
+                           in the booted system.</p>
+                        
+                        <p>If manual activation fails, you will probably see error messages that provide clues
+                           about what is going wrong. You can also try the commands again with increased verbosity.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>At this point, you should have some idea what went wrong (if not, contact SUSE support
+                           and be prepared to answer most of the questions raised above).</p>
+                        
+                        <p>You should be able to correct the situation with a few shell commands, exit the emergency
+                           shell, and boot successfully. You will still need to adjust your configuration to
+                           make sure the same problem will not occur again in the future.</p>
+                        
+                        <p>Otherwise, you will need to boot the rescue system, set up the devices manually to
+                           <code class="command">chroot</code> into the real root file system, and attempt to fix the problem based on the insight
+                           you got in the previous steps. Be aware that in this situation, the storage stack
+                           for the root file system may differ from normal. Depending on your setup, you may
+                           have force addition or omission of dracut modules when building a new initramfs. See
+                           also <a class="xref xref-sect3" href="bk09partivch05s07.html#sec-multipath-initrd-disable">the section called “Enabling or disabling multipathing in the initramfs”</a>.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>If the problem occurs frequently or even on every boot attempt, try booting with increased
+                           verbosity in order to get more information about the failure. The following kernel
+                           parameters, or a combination of them, are often helpful:</p>
+                        
+                        <div class="informalexample informalobject" id="sec-multipath-trouble-steps_proc1_step7_informalexample1">
+                           
+                           <div class="pre-wrap screen-wrap">
+                              <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>udev.log-priority=debug<span class="co" id="mp-co-kparm-udev">⣥</span></code></span></span>
+<span class="line"><span class="ld"><code>systemd.log_level=debug<span class="co" id="mp-co-kparm-sl">⣦</span></code></span></span>
+<span class="line"><span class="ld"><code>scsi_mod.scsi_logging_level=020400<span class="co" id="mp-co-kparm-sc">⣧</span></code></span></span>
+<span class="line"><span class="ld"><code>rd.debug<span class="co" id="mp-co-kparm-rd">⣨</span></code></span></span></pre>
+                           </div>
+                           
+                           <div class="calloutlist">
+                              <dl>
+                                 <dt class="callout"><a class="callout-bug" href="#mp-co-kparm-udev">⣥</a></dt>
+                                 <dd>
+                                    
+                                    <p>Increase the log level of <code class="command">systemd-udevd</code> and udev rule processing.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#mp-co-kparm-sl">⣦</a></dt>
+                                 <dd>
+                                    
+                                    <p>Increase the log level of <code class="command">systemd</code>.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#mp-co-kparm-sc">⣧</a></dt>
+                                 <dd>
+                                    
+                                    <p>Increase the logging level of the kernel's SCSI subsystem.</p>
+                                    </dd>
+                                 <dt class="callout"><a class="callout-bug" href="#mp-co-kparm-rd">⣨</a></dt>
+                                 <dd>
+                                    
+                                    <p>Trace the scripts in the initramfs.</p>
+                                    </dd>
+                              </dl>
+                           </div>
+                           </div>
+                        
+                        <p>In addition, it may make sense to enable logging for certain drivers and configure
+                           a serial console to capture the output during boot.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-trouble-tids">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>15<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Technical information documents</h3>
+               </header>
+               
+               
+               <p>For more information about troubleshooting multipath I/O issues on SUSE Linux Enterprise
+                  Server, see the following Technical Information Documents (TIDs) in the SUSE Knowledgebase:</p>
+               
+               <ul class="itemizedlist" db-mark="bullet">
+                  
+                  <li>
+                     
+                     <p><a class="link" href="https://www.suse.com/support/kb/doc/?id=000016331"><cite class="citetitle">Using LVM on local and SAN attached devices</cite></a></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><a class="link" href="https://www.suse.com/support/kb/doc/?id=000017521"><cite class="citetitle">Using LVM on Multipath (DM MPIO) Devices</cite></a></p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p><a class="link" href="https://www.suse.com/support/kb/doc/?id=000017762"><cite class="citetitle">HOWTO: Add, Resize and Remove LUN without restarting SLES</cite></a></p>
+                     </li>
+                  </ul>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s14.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>14</span><span class="sep">.&nbsp;</span>Best practice</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next">Chapter&nbsp;<span class="label">19</span><span class="sep">.&nbsp;</span>Sharing file systems with NFS</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

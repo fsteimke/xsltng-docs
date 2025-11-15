@@ -1,0 +1,303 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.8.&nbsp;Using SSSD to manage LDAP authentication</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s07.html" rel="prev">
+      <link href="bk06partich04s09.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s09.html">Next</a> <a href="bk06partich04s07.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s08.html" db-id="d616951e158748" id="sec-security-ldap-server-sssd" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Using SSSD to manage LDAP authentication</h2>
+            </header>
+            
+            
+            <p>The System Security Services Daemon (SSSD) manages authentication, identification,
+               and access controls for remote users. This section describes how to use SSSD to manage
+               authentication and identification for your 389 Directory Server.</p>
+            
+            <p>SSSD mediates between your LDAP server and clients. It supports several provider back-ends,
+               such as LDAP, Active Directory, and Kerberos. SSSD supports services, including SSH,
+               PAM, NSS and sudo. SSSD provides performance benefits and resilience through caching
+               user IDs and credentials. Caching reduces the number of requests to your 389&nbsp;DS server,
+               and provides authentication and identity services when the back-ends are unavailable.</p>
+            
+            <p>If the Name Services Caching Daemon (nscd) is running on your network, you should
+               disable or remove it. nscd caches only the common name service requests, such as passwd,
+               group, hosts, service and netgroup, and will conflict with SSSD.</p>
+            
+            <p>Your LDAP server is the provider, and your SSSD instance is the client of the provider.
+               You may install SSSD on your 389&nbsp;DS server, but installing it on a separate machine
+               provides some resilience in case the 389&nbsp;DS server becomes unavailable. Use the following
+               procedure to install and configure an SSSD client. The example 389&nbsp;DS instance name
+               is <em class="replaceable">LDAP1</em>:</p>
+            
+            <div class="informalobject procedure" id="sec-security-ldap-server-sssd_proc1">
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Install the <code class="systemitem">sssd</code> and <code class="systemitem">sssd-ldap</code> packages:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">zypper in sssd sssd-ldap</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Back up the <code class="filename">/etc/sssd/sssd.conf</code> file, if it exists:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">old /etc/sssd/sssd.conf</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Create your new SSSD configuration template. The allowed output file names are <code class="literal">sssd.conf</code> and <code class="literal">ldap.conf</code>. <code class="literal">display</code> sends the output to stdout. The following example creates a client configuration
+                        in <code class="filename">/etc/sssd/sssd.conf</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">cd /etc/sssd</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsidm <em class="replaceable">LDAP1</em> client_config sssd.conf</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Review the output and make any necessary changes to suit your environment. The following
+                        <code class="filename">/etc/sssd/sssd.conf</code> file demonstrates a working example.</p>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">MemberOf</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>The LDAP access filter relies on <code class="literal">MemberOf</code> being configured. For details, see <a class="xref xref-sect1" href="bk06partich04s07.html">the section called “Managing plug-ins”</a>.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[sssd]</code></span></span>
+<span class="line"><span class="ld"><code>services = nss, pam, ssh, sudo</code></span></span>
+<span class="line"><span class="ld"><code>config_file_version = 2</code></span></span>
+<span class="line"><span class="ld"><code>domains = default</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[nss]</code></span></span>
+<span class="line"><span class="ld"><code>homedir_substring = <em class="replaceable">/home</em></code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[domain/default]</code></span></span>
+<span class="line"><span class="ld"><code># If you have large groups (for example, 50+ members),</code></span></span>
+<span class="line"><span class="ld"><code># you should set this to True</code></span></span>
+<span class="line"><span class="ld"><code>ignore_group_members = False</code></span></span>
+<span class="line"><span class="ld"><code>debug_level=3</code></span></span>
+<span class="line"><span class="ld"><code>cache_credentials = True</code></span></span>
+<span class="line"><span class="ld"><code>id_provider = ldap</code></span></span>
+<span class="line"><span class="ld"><code>auth_provider = ldap</code></span></span>
+<span class="line"><span class="ld"><code>access_provider = ldap</code></span></span>
+<span class="line"><span class="ld"><code>chpass_provider = ldap</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>ldap_schema = rfc2307bis</code></span></span>
+<span class="line"><span class="ld"><code>ldap_search_base = <em class="replaceable">dc=example,dc=com</em></code></span></span>
+<span class="line"><span class="ld"><code># We strongly recommend ldaps</code></span></span>
+<span class="line"><span class="ld"><code>ldap_uri = <em class="replaceable">ldaps://ldap.example.com</em></code></span></span>
+<span class="line"><span class="ld"><code>ldap_tls_reqcert = demand</code></span></span>
+<span class="line"><span class="ld"><code>ldap_tls_cacert = /etc/openldap/ldap.crt</code></span></span>
+<span class="line"><span class="ld"><code>ldap_access_filter = (|(memberof=cn=&lt;login group&gt;,ou=Groups,dc=example,dc=com))</code></span></span>
+<span class="line"><span class="ld"><code>enumerate = false</code></span></span>
+<span class="line"><span class="ld"><code>access_provider = ldap</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>ldap_user_member_of = memberof</code></span></span>
+<span class="line"><span class="ld"><code>ldap_user_gecos = cn</code></span></span>
+<span class="line"><span class="ld"><code>ldap_user_uuid = nsUniqueId</code></span></span>
+<span class="line"><span class="ld"><code>ldap_group_uuid = nsUniqueId</code></span></span>
+<span class="line"><span class="ld"><code>ldap_account_expire_policy = rhds</code></span></span>
+<span class="line"><span class="ld"><code>ldap_access_order = filter, expire</code></span></span>
+<span class="line"><span class="ld"><code># add these lines to /etc/ssh/sshd_config</code></span></span>
+<span class="line"><span class="ld"><code>#  AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys</code></span></span>
+<span class="line"><span class="ld"><code>#  AuthorizedKeysCommandUser nobody</code></span></span>
+<span class="line"><span class="ld"><code>ldap_user_ssh_public_key = nsSshPublicKey</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Set file ownership to root, and restrict read-write permissions to root:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">chown root:root /etc/sssd/sssd.conf</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">chmod 600 /etc/sssd/sssd.conf</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Edit the <code class="filename">/etc/nsswitch.conf</code> configuration file on the SSSD server to include the following lines:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>passwd: compat sss</code></span></span>
+<span class="line"><span class="ld"><code>group:  compat sss</code></span></span>
+<span class="line"><span class="ld"><code>shadow: compat sss</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Edit the PAM configuration on the SSSD server, modifying <code class="filename">common-account-pc</code>, <code class="filename">common-auth-pc</code>, <code class="filename">common-password-pc</code>, and <code class="filename">common-session-pc</code>. <span class="phrase productname">SUSE Linux Enterprise Server</span> provides a command to modify all of these files at once, <code class="command">pam-config</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">pam-config -a --sss</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Verify the modified configuration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">pam-config -q --sss</code></code></span></span>
+<span class="line"><span class="ld"><code>auth:</code></span></span>
+<span class="line"><span class="ld"><code>account:</code></span></span>
+<span class="line"><span class="ld"><code>password:</code></span></span>
+<span class="line"><span class="ld"><code>session:</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Copy <code class="filename">/etc/dirsrv/slapd-<em class="replaceable">LDAP1/</em>ca.crt</code> from the 389&nbsp;DS server to <code class="filename">/etc/openldap/certs</code> on your SSSD server, then rehash it:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">c_rehash /etc/openldap/certs</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Enable and start SSSD:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl enable --now sssd</code></code></span></span></pre>
+                     </div>
+                     </li>
+               </ol>
+            </div>
+            
+            
+            <p>See <a class="xref xref-chapter" href="bk06partich03.html">Chapter&nbsp;<span class="label">4</span>, Setting up authentication clients using YaST</a> for information on managing the sssd.service with systemctl.</p>
+            
+            <section class="sect2" id="sec-security-ldap-server-sssd-unsupported-password-hash">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>8<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Unsupported password hashes and authentication schemes</h3>
+               </header>
+               
+               
+               <p>The following are not supported as configuration values in <code class="systemitem">dse.ldif</code> for the settings <code class="systemitem">nsslapd-rootpwstoragescheme</code> or <code class="systemitem">passwordStorageScheme</code>, or as a value of <code class="systemitem">passwordStorageScheme</code> in the account policy objects:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>SHA</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SSHA</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SHA256</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SSHA256</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SHA384</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SSHA384</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SHA512</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SSHA512</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>NS-MTA-MD5</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>clear</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>MD5</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>SMD5</p>
+                     </li>
+                  </ul>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Note</div>
+                        </header>
+                        <div>
+                           
+                           <p>Database imports that contain these values are supported if <code class="systemitem">nsslapd-enable-upgrade-hash</code> is set to <code class="systemitem">on</code> (defaults to <code class="systemitem">on</code>).</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s07.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s09.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>7</span><span class="sep">.&nbsp;</span>Managing plug-ins</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Migrating to 389 Directory Server from OpenLDAP</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

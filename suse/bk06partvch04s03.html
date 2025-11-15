@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>34.3.&nbsp;Include statements</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partvch04s02.html" rel="prev">
+      <link href="bk06partvch04s04.html" rel="next">
+      <link href="bk06partvch04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partvch04.html">Up</a> <a href="bk06partvch04s04.html">Next</a> <a href="bk06partvch04s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partvch04s03.html" db-id="d616951e184431" id="sec-apparmor-profiles-includes">
+            <header>
+               <h2><span class="label">34<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Include statements</h2>
+            </header>
+            
+            
+            <p>Include statements are directives that pull in components of other AppArmor profiles
+               to simplify profiles. Include files retrieve access permissions for programs. By using
+               an include, you can give the program access to directory paths or files that are also
+               required by other programs. Using includes can reduce the size of a profile.</p>
+            
+            <p>Include statements normally begin with a hash (<code class="literal">#</code>) sign. This is confusing because the same hash sign is used for comments inside profile
+               files. Because of this, <code class="literal">#include</code> is treated as an include only if there is no preceding # (<code class="literal">##include</code> is a comment) and there is no whitespace between <code class="literal">#</code> and <code class="literal">include</code> (<code class="literal"># include</code> is a comment).</p>
+            
+            <p>You can also use <code class="literal">include</code> without the leading <code class="literal">#</code>.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>include "/etc/apparmor.d/abstractions/foo"</code></span></span></pre>
+            </div>
+            
+            <p>is the same as using</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>#include "/etc/apparmor.d/abstractions/foo"</code></span></span></pre>
+            </div>
+            
+            <div class="admonition note">
+               <div>
+                  <div class="icon">ⓘ</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">No trailing ','</div>
+                     </header>
+                     <div>
+                        
+                        
+                        <p>Because includes follow the C pre-processor syntax, they do not have a trailing ','
+                           like most AppArmor rules.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>By slight changes in syntax, you can modify the behavior of <code class="literal">include</code>. If you use <code class="literal">""</code> around the including path, you instruct the parser to do an absolute or relative
+               path lookup.</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>include "/etc/apparmor.d/abstractions/foo"   # absolute path</code></span></span>
+<span class="line"><span class="ld"><code>include "abstractions/foo"   # relative path to the directory of current file</code></span></span></pre>
+            </div>
+            
+            <p>When using relative path includes, when the file is included, it is considered the
+               new current file for its includes. For example, suppose you are in the <code class="filename">/etc/apparmor.d/bar</code> file, then</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>include "abstractions/foo"</code></span></span></pre>
+            </div>
+            
+            <p>includes the file <code class="filename">/etc/apparmor.d/abstractions/foo</code>. If then there is</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>include "example"</code></span></span></pre>
+            </div>
+            
+            <p>inside the <code class="filename">/etc/apparmor.d/abstractions/foo</code> file, it includes <code class="filename">/etc/apparmor.d/abstractions/example</code>.</p>
+            
+            <p>The use of <code class="literal">&lt;&gt;</code> specifies to try the include path (specified by <code class="option">-I</code>, defaults to the <code class="filename">/etc/apparmor.d</code> directory) in an ordered way. So assuming the include path is</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>-I /etc/apparmor.d/ -I /usr/share/apparmor/</code></span></span></pre>
+            </div>
+            
+            <p>then the include statement</p>
+            
+            <div class="pre-wrap screen-wrap">
+               <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>include &lt;abstractions/foo&gt;</code></span></span></pre>
+            </div>
+            
+            <p>tries <code class="filename">/etc/apparmor.d/abstractions/foo</code>, and if that file does not exist, the next try is <code class="filename">/usr/share/apparmor/abstractions/foo</code>.</p>
+            
+            <div class="admonition tip">
+               <div>
+                  <div class="icon">☞</div>
+                  <div class="body">
+                     <header>
+                        <div class="title">Tip</div>
+                     </header>
+                     <div>
+                        
+                        <p>The default include path can be overridden manually by passing <code class="option">-I</code> to the <code class="command">apparmor_parser</code>, or by setting the include paths in <code class="filename">/etc/apparmor/parser.conf</code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>Include /usr/share/apparmor/</code></span></span>
+<span class="line"><span class="ld"><code>Include /etc/apparmor.d/</code></span></span></pre>
+                        </div>
+                        
+                        <p>Multiple entries are allowed, and they are taken in the same order as when they are
+                           when using <code class="option">-I</code> or <code class="option">--Include</code> from the <code class="command">apparmor_parser</code> command line.</p>
+                        </div>
+                  </div>
+               </div>
+            </div>
+            
+            <p>If an include ends with '/', this is considered a directory include, and all files
+               within the directory are included.</p>
+            
+            <p>To assist you in profiling your applications, AppArmor provides three classes of includes:
+               abstractions, program chunks and tunables.</p>
+            
+            <section class="sect2" id="sec-apparmor-profiles-includes-abstractions">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Abstractions</h3>
+               </header>
+               
+               
+               <p>Abstractions are includes that are grouped by common application tasks. These tasks
+                  include access to authentication mechanisms, access to name service routines, common
+                  graphics requirements, and system accounting. Files listed in these abstractions are
+                  specific to the named task. Programs that require one of these files also requires
+                  other files listed in the abstraction file (depending on the local configuration and
+                  the specific requirements of the program). Find abstractions in <code class="filename">/etc/apparmor.d/abstractions</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-includes-chunks">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Program chunks</h3>
+               </header>
+               
+               
+               <p>The program-chunks directory (<code class="filename">/etc/apparmor.d/program-chunks</code>) contains certain chunks of profiles that are specific to program suites and not
+                  generally useful outside of the suite, thus are never suggested for use in profiles
+                  by the profile wizards (<code class="command">aa-logprof</code> and <code class="command">aa-genprof</code>). Currently, program chunks are only available for the postfix program suite.</p>
+               </section>
+            
+            <section class="sect2" id="sec-apparmor-profiles-includes-tunables">
+               <header>
+                  <h3><span class="label">34<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Tunables</h3>
+               </header>
+               
+               
+               <p>The tunables directory (<code class="filename">/etc/apparmor.d/tunables</code>) contains global variable definitions. When used in a profile, these variables expand
+                  to a value that can be changed without changing the entire profile. Add all the tunables
+                  definitions that should be available to every profile to <code class="filename">/etc/apparmor.d/tunables/global</code>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partvch04s02.html">Prev</a></td>
+                  <td class="up"><a href="bk06partvch04.html">Up</a></td>
+                  <td class="next"><a href="bk06partvch04s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">34<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Profile types</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">34<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Capability entries (POSIX.1e)</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

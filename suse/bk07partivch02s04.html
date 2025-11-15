@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>10.4.&nbsp;Preventing fork bombs with TasksMax
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partivch02s03.html" rel="prev">
+      <link href="bk07partivch02s05.html" rel="next">
+      <link href="bk07partivch02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partivch02.html">Up</a> <a href="bk07partivch02s05.html">Next</a> <a href="bk07partivch02s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partivch02s04.html" db-id="d616951e211763" id="sec-tuning-cgroups-tasksmax">
+            <header>
+               <h2><span class="label">10<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Preventing fork bombs with <code class="literal">TasksMax</code>
+                  </h2>
+            </header>
+            
+            
+            <p><code class="daemon systemitem">systemd</code> supports configuring task count limits both for each individual leaf unit, or aggregated
+               on slices. Upstream <code class="daemon systemitem">systemd</code> ships with defaults that limit the number of tasks in each unit (15% of the kernel
+               global limit, run <code class="command">/usr/sbin/sysctl kernel.pid_max</code> to see the total limit). Each user's slice is limited to 33% of the kernel limit.
+               However, this is different for <span class="phrase productname">SUSE Linux Enterprise Server</span>.</p>
+            
+            <section class="sect2" id="sec-tasksmax-defaults">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Finding the current default <code class="literal">TasksMax</code> values</h3>
+               </header>
+               
+               
+               <p>It became apparent, in practice, that there is not a single default that applies to
+                  all use cases. <span class="phrase productname">SUSE Linux Enterprise Server</span> ships with two custom configurations that override the upstream defaults for system
+                  units and for user slices, and sets them both to <code class="literal">infinity</code>. <code class="filename">/usr/lib/systemd/system.conf.d/__25-defaults-SLE.conf</code> contains these lines:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Manager]</code></span></span>
+<span class="line"><span class="ld"><code>DefaultTasksMax=infinity</code></span></span></pre>
+               </div>
+               
+               <p><code class="filename">/usr/lib/systemd/system/user-.slice.d/25-defaults-SLE.conf</code> contains these lines:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>[Slice]</code></span></span>
+<span class="line"><span class="ld"><code>TasksMax=infinity</code></span></span></pre>
+               </div>
+               
+               <p>Use <code class="command">systemctl</code> to verify the DefaultTasksMax value:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">systemctl show --property DefaultTasksMax</code></code></span></span>
+<span class="line"><span class="ld"><code>DefaultTasksMax=infinity</code></span></span></pre>
+               </div>
+               
+               <p><code class="literal">infinity</code> means having no limit. It is not a requirement to change the default, but setting
+                  certain limits may help to prevent system crashes from runaway processes.</p>
+               </section>
+            
+            <section class="sect2" id="sec-edit-taskmax-default">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Overriding the <code class="literal">DefaultTasksMax</code> value</h3>
+               </header>
+               
+               
+               <p>Change the global <code class="literal">DefaultTasksMax</code> value by creating a new override file, <code class="filename">/etc/systemd/system.conf.d/90-system-tasksmax.conf</code>, and write the following lines to set a new default limit of 256 tasks per system
+                  unit:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Manager]</code></span></span>
+<span class="line"><span class="ld"><code>DefaultTasksMax=256</code></span></span></pre>
+               </div>
+               
+               <p>Load the new setting, then verify that it changed:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl daemon-reload</code><span class="prompt">&gt;</span><code class="command">systemctl show --property DefaultTasksMax</code></code></span></span>
+<span class="line"><span class="ld"><code>DefaultTasksMax=256</code></span></span></pre>
+               </div>
+               
+               <p>Adjust this default value to suit your needs. You can set different limits on individual
+                  services as needed. This example is for MariaDB. First check the current active value:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">systemctl status mariadb.service</code></code></span></span>
+<span class="line"><span class="ld"><code>  ● mariadb.service - MariaDB database server</code></span></span>
+<span class="line"><span class="ld"><code>   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset&gt;</code></span></span>
+<span class="line"><span class="ld"><code>   Active: active (running) since Tue 2020-05-26 14:15:03 PDT; 27min ago</code></span></span>
+<span class="line"><span class="ld"><code>     Docs: man:mysqld(8)</code></span></span>
+<span class="line"><span class="ld"><code>           https://mariadb.com/kb/en/library/systemd/</code></span></span>
+<span class="line"><span class="ld"><code> Main PID: 11845 (mysqld)</code></span></span>
+<span class="line"><span class="ld"><code>   Status: "Taking your SQL requests now..."</code></span></span>
+<span class="line"><span class="ld"><code>    Tasks: 30 (limit: 256)</code></span></span>
+<span class="line"><span class="ld"><code>   CGroup: /system.slice/mariadb.service</code></span></span>
+<span class="line"><span class="ld"><code>           └─11845 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql</code></span></span></pre>
+               </div>
+               
+               <p>The Tasks line shows that MariaDB currently has 30 tasks running, and has an upper
+                  limit of the default 256, which is inadequate for a database. The following example
+                  demonstrates how to raise MariaDB's limit to 8192.</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl set-property mariadb.service TasksMax=8192</code><span class="prompt">&gt;</span><code class="command">systemctl status mariadb.service</code></code></span></span>
+<span class="line"><span class="ld"><code>● mariadb.service - MariaDB database server</code></span></span>
+<span class="line"><span class="ld"><code>   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset: disab&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  Drop-In: /etc/systemd/system/mariadb.service.d</code></span></span>
+<span class="line"><span class="ld"><code>           └─50-TasksMax.conf</code></span></span>
+<span class="line"><span class="ld"><code>   Active: active (running) since Tue 2020-06-02 17:57:48 PDT; 7min ago</code></span></span>
+<span class="line"><span class="ld"><code>     Docs: man:mysqld(8)</code></span></span>
+<span class="line"><span class="ld"><code>           https://mariadb.com/kb/en/library/systemd/</code></span></span>
+<span class="line"><span class="ld"><code>  Process: 3446 ExecStartPre=/usr/lib/mysql/mysql-systemd-helper upgrade (code=exited, sta&gt;</code></span></span>
+<span class="line"><span class="ld"><code>  Process: 3440 ExecStartPre=/usr/lib/mysql/mysql-systemd-helper install (code=exited, sta&gt;</code></span></span>
+<span class="line"><span class="ld"><code> Main PID: 3452 (mysqld)</code></span></span>
+<span class="line"><span class="ld"><code>   Status: "Taking your SQL requests now..."</code></span></span>
+<span class="line"><span class="ld"><code>    Tasks: 30 (limit: 8192)</code></span></span>
+<span class="line"><span class="ld"><code>   CGroup: /system.slice/mariadb.service</code></span></span>
+<span class="line"><span class="ld"><code>           └─3452 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql</code></span></span></pre>
+               </div>
+               
+               <p><code class="command">systemctl set-property</code> applies the new limit and creates a drop-in file for persistence, <code class="filename">/etc/systemd/system/mariadb.service.d/50-TasksMax.conf</code>, that contains only the changes you want to apply to the existing unit file. The
+                  value does not have to be 8192, but should be whatever limit is appropriate for your
+                  workloads.</p>
+               </section>
+            
+            <section class="sect2" id="sec-tuning-cgroups-tasksmax_s2_3">
+               <header>
+                  <h3><span class="label">10<span class="sep">.</span>4<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Default <code class="literal">TasksMax</code> limit on users</h3>
+               </header>
+               
+               
+               <p>The default limit on users should be high, because user sessions need more resources.
+                  Set your own default for any user by creating a new file, for example <code class="filename">/etc/systemd/system/user-.slice.d/40-user-taskmask.conf</code>. The following example sets a default of 16284:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>[Slice]</code></span></span>
+<span class="line"><span class="ld"><code>TasksMax=16284</code></span></span></pre>
+               </div>
+               
+               <div class="admonition note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Numeric prefixes reference</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>See <a class="xref xref-sect2" href="bk01partiich04s05.html#sec-boot-systemd-custom-drop-in">the section called “Creating drop-in files manually”</a> to learn what numeric prefixes are expected for drop-in files.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>Then reload systemd to load the new value, and verify the change:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl daemon-reload</code><span class="prompt">&gt;</span><code class="command">systemctl show --property TasksMax user-1000.slice</code></code></span></span>
+<span class="line"><span class="ld"><code>TasksMax=16284</code></span></span></pre>
+               </div>
+               
+               <p>How do you know what values to use? This varies according to your workloads, system
+                  resources, and other resource configurations. When your <code class="literal">TasksMax</code> value is too low, you may see error messages such as <em>Failed to fork (Resources temporarily unavailable)</em>, <em>Can't create thread to handle new connection</em>, and <em>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</em>.</p>
+               
+               <p>For more information on configuring system resources in systemd, see <code class="literal">systemd.resource-control (5)</code>.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partivch02s03.html">Prev</a></td>
+                  <td class="up"><a href="bk07partivch02.html">Up</a></td>
+                  <td class="next"><a href="bk07partivch02s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">10<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Setting resource limits</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">10<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>I/O control with cgroups</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

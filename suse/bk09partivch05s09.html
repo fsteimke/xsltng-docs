@@ -1,0 +1,333 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.9.&nbsp;Configuring policies for failover, queuing, and failback</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s08.html" rel="prev">
+      <link href="bk09partivch05s10.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s10.html">Next</a> <a href="bk09partivch05s08.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s09.html" db-id="d616951e255276" id="sec-multipath-policies-default">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>9</span><span class="sep">.&nbsp;</span>Configuring policies for failover, queuing, and failback</h2>
+            </header>
+            
+            
+            <p>The goal of multipath I/O is to provide connectivity fault tolerance between the storage
+               system and the server. The desired default behavior depends on whether the server
+               is a stand-alone server or a node in a high-availability cluster.</p>
+            
+            <p>This section discusses the most important <code class="systemitem">multipath-tools</code> configuration parameters for achieving fault tolerance.</p>
+            
+            <dl class="variablelist">
+               
+               <div class="varlistentry">
+                  <dt><span class="term">polling_interval</span></dt>
+                  <dd>
+                     
+                     <p>The time interval (in seconds) between health checks for path devices. The default
+                        is 5 seconds. Failed devices are checked at this time interval. For healthy devices,
+                        the time interval may be increased up to <code class="literal">max_polling_interval</code> seconds.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">detect_checker</span></dt>
+                  <dd>
+                     
+                     <p>If this is set to <code class="literal">yes</code> (default, recommended), <code class="command">multipathd</code> automatically detects the best path checking algorithm.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">path_checker</span></dt>
+                  <dd>
+                     
+                     <p>The algorithm used to check path state. If you need to enable the checker, disable
+                        <code class="literal">detect_checker</code> as follows:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>defaults {</code></span></span>
+<span class="line"><span class="ld"><code>          detect_checker no</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                     </div>
+                     
+                     <p>The following list contains only the most important algorithms. See <code class="systemitem">multipath.conf(5)</code> for the full list.</p>
+                     
+                     <dl class="variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">tur</span></dt>
+                           <dd>
+                              
+                              <p>Send TEST UNIT READY command. This is the default for SCSI devices with ALUA support.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">directio</span></dt>
+                           <dd>
+                              
+                              <p>Read a device sector using asynchronous I/O (aio).</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">rdac</span></dt>
+                           <dd>
+                              
+                              <p>Device-specific checker for NetAPP E-Series and similar arrays.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">none</span></dt>
+                           <dd>
+                              
+                              <p>No path checking is performed.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">checker_timeout</span></dt>
+                  <dd>
+                     
+                     <p>If a device does not respond to a path checker command in the given time, it is considered
+                        failed. The default is the kernel's SCSI command timeout for the device (usually 30
+                        seconds).</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">fast_io_fail_tmo</span></dt>
+                  <dd>
+                     
+                     <p>If an error on the SCSI transport layer is detected (for example on a Fibre Channel
+                        remote port), the kernel transport layer waits for this amount of time (in seconds)
+                        for the transport to recover. After that, the path device fails with “transport offline”
+                        state. This is very useful for multipath, because it allows a quick path failover
+                        for a frequently occurring class of errors. The value must match typical time scale
+                        for reconfiguration in the fabric. The default value of 5 seconds works well for Fibre
+                        Channel. Other transports, like iSCSI, may require longer timeouts.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">dev_loss_tmo</span></dt>
+                  <dd>
+                     
+                     <p>If a SCSI transport endpoint (for example a Fibre Channel remote port) is not reachable
+                        any more, the kernel waits for this amount of time (in seconds) for the port to reappear
+                        until it removes the SCSI device node for good. Device node removal is a complex operation
+                        which is prone to race conditions or deadlocks and should best be avoided. We therefore
+                        recommend setting this to a high value. The special value <code class="literal">infinity</code> is supported. The default is 10 minutes. To avoid deadlock situations, <code class="command">multipathd</code> ensures that I/O queuing (see <code class="literal">no_path_retry</code>) is stopped before <code class="literal">dev_loss_tmo</code> expires.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">no_path_retry</span></dt>
+                  <dd>
+                     
+                     <p>Determine what happens if all paths of a given multipath map have failed. The possible
+                        values are:</p>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">fail</span></dt>
+                           <dd>
+                              
+                              <p>Fail I/O on the multipath map. This will cause I/O errors in upper layers such as
+                                 mounted file systems. The affected file systems, and possibly the entire host, will
+                                 enter degraded mode.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">queue</span></dt>
+                           <dd>
+                              
+                              <p>I/O on the multipath map is queued in the device mapper layer and sent to the device
+                                 when path devices become available again. This is the safest option to avoid losing
+                                 data, but it can have negative effects if the path devices do not get reinstated for
+                                 a long time. Processes reading from the device will hang in uninterruptible sleep
+                                 (<code class="literal">D</code>) state. Queued data occupies memory, which becomes unavailable for processes. Eventually,
+                                 memory will be exhausted.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <em class="replaceable">N</em>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p><em class="replaceable">N</em> is a positive integer. Keep the map device in queuing mode for <em class="replaceable">N</em> polling intervals. When the time elapses, <code class="command">multipathd</code> fails the map device. If <code class="literal">polling_interval</code> is 5 seconds and <code class="literal">no_path_retry</code> is 6, <code class="command">multipathd</code> will queue I/O for approximately 6 * 5s = 30s before failing I/O on the map device.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">flush_on_last_del</span></dt>
+                  <dd>
+                     
+                     <p>If set to <code class="literal">yes</code> and all path devices of a map are deleted (as opposed to just failed), fail all I/O
+                        in the map before removing it. The default is <code class="literal">no</code>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">deferred_remove</span></dt>
+                  <dd>
+                     
+                     <p>If set to <code class="literal">yes</code> and all path devices of a map are deleted, wait for holders to close the file descriptors
+                        for the map device before flushing and removing it. If paths reappear before the last
+                        holder closed the map, the deferred remove operation will be cancelled. The default
+                        is <code class="literal">no</code>.</p>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry" id="vle-failback">
+                  <dt><span class="term">failback</span></dt>
+                  <dd>
+                     
+                     <p>If a failed path device in an inactive path group recovers, <code class="command">multipathd</code> reevaluates the path group priorities of all path groups (see <a class="xref xref-sect1" href="bk09partivch05s10.html">the section called “Configuring path grouping and priorities”</a>). After the reevaluation, the highest-priority path group may be one of the currently
+                        inactive path groups. This parameter determines what happens in this situation.</p>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Observe vendor recommendations</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>The optimal failback policy depends on the property of the storage device. It is therefore
+                                    strongly encouraged to verify <code class="option">failback</code> settings with the storage vendor.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <dl class="long-terms variablelist">
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">manual</span></dt>
+                           <dd>
+                              
+                              <p>Nothing happens unless the administrator runs a <code class="command">multipathd switchgroup</code> (see <a class="xref xref-sect2" href="bk09partivch05s06.html#sec-multipath-mpiotools-multipathd">the section called “The <code class="command">multipathd</code> daemon”</a>).</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">immediate</span></dt>
+                           <dd>
+                              
+                              <p>The highest-priority path group is activated immediately. This is often beneficial
+                                 for performance, especially on stand-alone servers, but it should not be used for
+                                 arrays on which the change of the path group is a costly operation.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">followover</span></dt>
+                           <dd>
+                              
+                              <p>Like <code class="literal">immediate</code>, but only perform failback when the path that has just become active is the only
+                                 healthy path in its path group. This is useful for cluster configurations: It keeps
+                                 a node from automatically failing back when another node requested a failover before.</p>
+                              </dd>
+                        </div>
+                        
+                        <div class="varlistentry">
+                           <dt><span class="term">
+                                 <em class="replaceable">N</em>
+                                 </span></dt>
+                           <dd>
+                              
+                              <p><em class="replaceable">N</em> is a positive integer. Wait for <em class="replaceable">N</em> polling intervals before activating the highest priority path group. If the priorities
+                                 change again during this time, the wait period starts anew.</p>
+                              </dd>
+                        </div>
+                        </dl>
+                     </dd>
+               </div>
+               
+               <div class="varlistentry">
+                  <dt><span class="term">eh_deadline</span></dt>
+                  <dd>
+                     
+                     <p>Set an approximate upper limit for the time (in seconds) spent in SCSI error handling
+                        if devices are unresponsive and SCSI commands time out without error response. When
+                        the deadline has elapsed, the kernel will perform a full HBA reset.</p>
+                     </dd>
+               </div>
+               </dl>
+            
+            <p>After modifying the <code class="filename">/etc/multipath.conf</code> file, apply your settings as described in <a class="xref xref-sect2" href="bk09partivch05s08.html#sec-multipath-conf-file-apply">the section called “Applying <code class="filename">multipath.conf</code> modifications”</a>.</p>
+            
+            <section class="sect2" id="sec-multipath-policies-standalone">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>9<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Queuing policy on stand-alone servers</h3>
+               </header>
+               
+               
+               <p>When you configure multipath I/O for a stand-alone server, a <code class="literal">no_path_retry</code> setting with value <code class="literal">queue</code> protects the server operating system from receiving I/O errors as long as possible.
+                  It queues messages until a multipath failover occurs. If “infinite” queuing is not
+                  desired (see above), select a numeric value that is deemed high enough for the storage
+                  paths to recover under ordinary circumstances (see above).</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-policies-cluster">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>9<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Queuing policy on clustered servers</h3>
+               </header>
+               
+               
+               <p>When you configure multipath I/O for a node in a high-availability cluster, you want
+                  multipath to report the I/O failure to trigger the resource failover instead of waiting
+                  for a multipath failover to be resolved. In cluster environments, you must modify
+                  the <code class="literal">no_path_retry</code>setting so that the cluster node receives an I/O error in relation to the cluster
+                  verification process (recommended to be 50% of the heartbeat tolerance) if the connection
+                  is lost to the storage system. In addition, you want the multipath <code class="literal">failback</code> to be set to <code class="literal">manual</code> or <code class="literal">followover</code> to avoid a ping-pong of resources because of path failures.</p>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s08.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s10.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>8</span><span class="sep">.&nbsp;</span>Multipath configuration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>10</span><span class="sep">.&nbsp;</span>Configuring path grouping and priorities</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>18.4.&nbsp;Installing SUSE Linux Enterprise Server on multipath systems</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk09partivch05s03.html" rel="prev">
+      <link href="bk09partivch05s05.html" rel="next">
+      <link href="bk09partivch05.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk09partivch05.html">Up</a> <a href="bk09partivch05s05.html">Next</a> <a href="bk09partivch05s03.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk09partivch05s04.html" db-id="d616951e253276" id="sec-multipath-installing">
+            <header>
+               <h2><span class="label">18<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Installing <span class="phrase productname">SUSE Linux Enterprise Server</span> on multipath systems</h2>
+            </header>
+            
+            
+            <p>No special installation parameters are required for the installation of <span class="phrase productname">SUSE Linux Enterprise Server</span> on systems with multipath hardware.</p>
+            
+            <section class="sect2" id="sec-multipath-installing-nomp">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Installing without connected multipath devices</h3>
+               </header>
+               
+               
+               <p>You may want to perform installation on a local disk, without configuring the fabric
+                  and the storage first, with the intention to add multipath SAN devices to the system
+                  later. In this case, the installation will proceed like on a non-multipath system.
+                  After installation, <code class="systemitem">multipath-tools</code> will be installed, but the <code class="daemon systemitem">systemd</code> service <code class="filename">multipathd.service</code> will be disabled. The system will be configured as described in <a class="xref xref-varlistentry" href="bk09partivch05s03.html#vl-multipath-planning-type-noroot-noinitrd"><span class="label"><span class="term">Multipath disabled in the initramfs</span></span></a> in <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-noroot">the section called “Root file system on a local disk”</a>. Before adding SAN hardware, you will need to enable and start <code class="filename">multipathd.service</code>. We recommend creating a <code class="literal">blacklist</code> entry in the <code class="filename">/etc/multipath.conf</code> for the root device (see <a class="xref xref-sect2" href="bk09partivch05s11.html#sec-multipath-blacklist">the section called “The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                     ”</a>).</p>
+               </section>
+            
+            <section class="sect2" id="sec-multipath-installing-mp">
+               <header>
+                  <h3><span class="label">18<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Installing with connected multipath devices</h3>
+               </header>
+               
+               
+               <p>If multipath devices are connected to the system at installation time, YaST will detect
+                  them and display a pop-up window asking you whether multipath should be enabled before
+                  entering the partitioning stage.</p>
+               
+               <div class="informalfigure informalobject" id="sec-multipath-installing-mp_informalfigure1">
+                  
+                  <div class="mediaobject">
+                     <div class="media image"><span class="viewport-table" style="width:278px;"><span class="viewport-row"><span class="viewport-cell"><span><span class="viewport"><picture class="imageobject"><img src="media/multipath-popup.png" style="width:278px;"></picture></span></span></span></span></span></div>
+                  </div>
+                  </div>
+               
+               <p>If you select “No” at this prompt (not recommended), the installation will proceed
+                  as in <a class="xref xref-sect2" href="#sec-multipath-installing-nomp">the section called “Installing without connected multipath devices”</a>. In the partitioning stage, do not use/edit devices that will later be part of a
+                  multipath map.</p>
+               
+               <p>If you select “Yes” at the multipath prompt, <code class="command">multipathd</code> will run during the installation. No device will be added to the <code class="literal">blacklist</code> section of <code class="filename">/etc/multipath.conf</code>, thus all SCSI and DASD devices, including local disks, will appear as multipath
+                  devices in the partitioning dialogs. After installation, all SCSI and DASD devices
+                  will be multipath devices, as described in <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-root">the section called “Root file system on multipath (SAN-boot)”</a>.</p>
+               
+               <div class="formalobject procedure" id="pr-multipath-disable-root">
+                  <header>
+                     <div class="title">Procedure&nbsp;<span class="label">18<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Disabling multipathing for the root disk after installation</div>
+                  </header>
+                  <p>This procedure assumes that you installed on a local disk and enabled multipathing
+                     during installation, so that the root device is on multipath now, but you prefer to
+                     set up the system as described in <a class="xref xref-varlistentry" href="bk09partivch05s03.html#vl-multipath-planning-type-noroot-ignore"><span class="label"><span class="term">Local disk is excluded from multipath</span></span></a> in <a class="xref xref-sect3" href="bk09partivch05s03.html#sec-multipath-planning-type-noroot">the section called “Root file system on a local disk”</a>.</p>
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>Check your system for <code class="filename">/dev/mapper/...</code> references to your local root device, and replace them with references that will
+                           still work if the device is not a multipath map anymore (see <a class="xref xref-sect2" href="bk09partivch05s12.html#sec-multipath-referring">the section called “Referring to multipath maps”</a>). If the following command finds no references, you do not need to apply changes:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> grep -rl /dev/mapper/ /etc</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Switch to <code class="literal">by-uuid</code> persistent device policy for <code class="command">dracut</code> (see <a class="xref xref-sect3" href="bk09partivch05s07.html#sec-multipath-initrd-persistent">the section called “Persistent device names in the initramfs”</a>):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>echo 'persistent_policy="by-uuid"' | \</code></span></span>
+<span class="line"><span class="ld"><code>      sudo tee /etc/dracut.conf.d/10-persistent-policy.conf</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Determine the WWID of the root device:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span>multipathd show paths format "%i %d %w %s"</code></span></span>
+<span class="line"><span class="ld"><code>0:2:0:0 sda 3600605b009e7ed501f0e45370aaeb77f IBM,ServeRAID M5210</code></span></span>
+<span class="line"><span class="ld"><code>...</code></span></span></pre>
+                        </div>
+                        
+                        <p>This command prints all paths devices with their WWIDs and vendor/product information.
+                           You will be able to identify the root device (here, the ServeRAID device) and note
+                           the WWID.</p>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Create a blacklist entry in <code class="filename">/etc/multipath.conf</code> (see <a class="xref xref-sect2" href="bk09partivch05s11.html#sec-multipath-blacklist">the section called “The <code class="literal">blacklist</code> section in <code class="filename">multipath.conf</code>
+                              ”</a>) with the WWID you just determined (do <em>not</em> apply these settings just yet):</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code>blacklist {</code></span></span>
+<span class="line"><span class="ld"><code>    wwid 3600605b009e7ed501f0e45370aaeb77f</code></span></span>
+<span class="line"><span class="ld"><code>}</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Rebuild the initramfs:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code> dracut -f</code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Reboot. Your system should boot with a non-multipath root disk.</p>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk09partivch05s03.html">Prev</a></td>
+                  <td class="up"><a href="bk09partivch05.html">Up</a></td>
+                  <td class="next"><a href="bk09partivch05s05.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">18<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Planning for multipathing</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">18<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Updating SLE on multipath systems</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

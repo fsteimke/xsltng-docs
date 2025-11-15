@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>3.5.&nbsp;Configuring mail forwarding for root
+      </title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk07partiich02s04.html" rel="prev">
+      <link href="bk07partiich02s06.html" rel="next">
+      <link href="bk07partiich02.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk07partiich02.html">Up</a> <a href="bk07partiich02s06.html">Next</a> <a href="bk07partiich02s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk07partiich02s05.html" db-id="d616951e206803" id="sec-tuning-syslog-forward">
+            <header>
+               <h2><span class="label">3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Configuring mail forwarding for <code class="systemitem username">root</code>
+                  </h2>
+            </header>
+            
+            
+            <p>System daemons, <code class="daemon systemitem">cron</code> jobs, <code class="daemon systemitem">systemd</code> timers, and other applications can generate messages and send them to the <code class="systemitem username">root</code> user of the system. By default, each user account owns a local mailbox and will be
+               notified about new mail messages upon login.</p>
+            
+            <p>These messages can contain security relevant reports and incidents that require a
+               quick response by the system administrator. To get notified about these messages in
+               a timely fashion, it is strongly recommended to forward these mails to a dedicated
+               remote e-mail account that is regularly checked.</p>
+            
+            <div class="formalobject procedure" id="pro-tuning-syslog-forward">
+               <header>
+                  <div class="title">Procedure&nbsp;<span class="label">3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Configure mail forwarding for the <code class="systemitem username">root</code> user</div>
+               </header>
+               <p>To forward mail for the <code class="systemitem username">root</code> user, perform the following steps:</p>
+               <ol class="procedure" type="1">
+                  <li class="step">
+                     
+                     <p>Install the <code class="package">yast2-mail</code> package:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">zypper in yast2-mail</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Run the interactive YaST mail configuration:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt root">#</span><code class="command">yast mail</code></code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Choose <span class="guimenu">Permanent</span> as <span class="guimenu">Connection type</span> and proceed with <span class="guimenu">Next</span>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Enter the address of the <span class="guimenu">Outgoing mail server</span>. If necessary, configure <span class="guimenu">Authentication</span>. It is strongly recommended to <span class="guimenu">Enforce TLS encryption</span> to prevent potentially sensitive system data from being sent unencrypted over the
+                        network. Proceed with <span class="guimenu">Next</span>.</p>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Enter the e-mail address to <span class="guimenu">Forward root's mail to</span> and <span class="guimenu">Finish</span> the configuration.</p>
+                     
+                     <div class="admonition important">
+                        <div>
+                           <div class="icon">☝</div>
+                           <div class="body">
+                              <header>
+                                 <div class="title">Do not accept remote SMTP connections</div>
+                              </header>
+                              <div>
+                                 
+                                 
+                                 <p>Do <em>not</em> enable <span class="guimenu">Accept remote SMTP connections</span>, otherwise the local machine will act as a mail relay.</p>
+                                 </div>
+                           </div>
+                        </div>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Send a message to test whether mail forwarding works correctly:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">mail root</code></code></span></span>
+<span class="line"><span class="ld"><code>subject: test</code></span></span>
+<span class="line"><span class="ld"><code>test</code></span></span>
+<span class="line"><span class="ld"><code>.</code></span></span></pre>
+                     </div>
+                     </li>
+                  <li class="step">
+                     
+                     <p>Use the <code class="command">mailq</code> command to verify that the test message has been sent. Upon success, the queue should
+                        be empty. The message should be received by the dedicated mail address configured
+                        previously.</p>
+                     </li>
+               </ol>
+            </div>
+            
+            <p>Depending on the number of managed machines and the number of persons who need to
+               be informed about system events, different e-mail address models can be established:</p>
+            
+            <ul class="itemizedlist">
+               
+               <li>
+                  
+                  <p>Collect messages from different systems in an e-mail account that is only accessed
+                     by a single person.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Collect messages from different systems in a group e-mail account (aliases or mailing
+                     list) that can be accessed by all relevant persons.</p>
+                  </li>
+               
+               <li>
+                  
+                  <p>Create separate e-mail accounts for each system.</p>
+                  </li>
+               </ul>
+            
+            <p>It is crucial that administrators regularly check the related e-mail accounts. To
+               facilitate this effort and identify important events, avoid sending unnecessary information.
+               Configure applications to only send relevant information.</p>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk07partiich02s04.html">Prev</a></td>
+                  <td class="up"><a href="bk07partiich02.html">Up</a></td>
+                  <td class="next"><a href="bk07partiich02s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Monitoring log files with <code class="command">logwatch</code>
+                     </td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">3<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Forwarding log messages to a central syslog server</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

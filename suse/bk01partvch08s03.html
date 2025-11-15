@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>45.3.&nbsp;Basic usage of Squid</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk01partvch08s02.html" rel="prev">
+      <link href="bk01partvch08s04.html" rel="next">
+      <link href="bk01partvch08.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk01partvch08.html">Up</a> <a href="bk01partvch08s04.html">Next</a> <a href="bk01partvch08s02.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk01partvch08s03.html" db-id="d616951e65576" id="sec-squid-start">
+            <header>
+               <h2><span class="label">45<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Basic usage of Squid</h2>
+            </header>
+            
+            
+            <p>Since <code class="systemitem">squid</code> is not installed by default on <span class="phrase productname">SUSE® Linux Enterprise Server</span>, make sure the package is installed on your system.</p>
+            
+            <p>As Squid is preconfigured in <span class="phrase productname">SUSE Linux Enterprise Server</span>, you can start it immediately after the installation. To avoid problems during the
+               start-up, make sure that the network is connected to the Internet connection and has
+               at least one name server. Using a dial-up connection with a dynamic DNS configuration
+               may cause problems. In this case, specify at least the name server, as Squid does
+               not start if it does not detect a DNS server in <code class="filename">/var/run/netconfig/resolv.conf</code>.</p>
+            
+            <section class="sect2" id="sec-squid-start-commands">
+               <header>
+                  <h3><span class="label">45<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Starting Squid</h3>
+               </header>
+               
+               
+               <p>To start Squid, run the following command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl start squid</code></code></span></span></pre>
+               </div>
+               
+               <p>To start Squid on system boot, enable the service with <code class="command">systemctl enable squid</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-squid-check">
+               <header>
+                  <h3><span class="label">45<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Checking whether Squid is working</h3>
+               </header>
+               
+               
+               <p>There are several ways to check whether Squid is running:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Using <code class="command">systemctl</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">systemctl status squid</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>The output should indicate that Squid is <code class="literal">loaded</code> and <code class="literal">active (running)</code>.</p>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Using Squid itself:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">squid -k check | echo $?</code></code></span></span></pre>
+                     </div>
+                     
+                     <p>The output should be <code class="literal">0</code>, but it can also contain additional messages, such as warnings.</p>
+                     </li>
+                  </ul>
+               
+               <p>To test the functionality of Squid on the local system, choose one of the following
+                  options:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Use <code class="command">squidclient</code>, a command-line tool that outputs the response to a Web request, similar to <code class="command">wget</code> or <code class="command">curl</code>.</p>
+                     
+                     <p>Unlike <code class="command">wget</code> or <code class="command">curl</code>, <code class="command">squidclient</code> automatically connects to the default proxy setup of Squid, <code class="literal">localhost:3128</code>. However, if you modified the configuration of Squid, you must configure <code class="command">squidclient</code> accordingly. For more information, see <code class="command">squidclient --help</code>.</p>
+                     
+                     <div class="example formalobject" id="ex-squidclient-request">
+                        
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">squidclient http://www.example.org</code></code></span></span>
+<span class="line"><span class="ld"><code>HTTP/1.1 200 OK</code></span></span>
+<span class="line"><span class="ld"><code>Cache-Control: max-age=604800</code></span></span>
+<span class="line"><span class="ld"><code>Content-Type: text/html</code></span></span>
+<span class="line"><span class="ld"><code>Date: Fri, 22 Jun 2016 12:00:00 GMT</code></span></span>
+<span class="line"><span class="ld"><code>Expires: Fri, 29 Jun 2016 12:00:00 GMT</code></span></span>
+<span class="line"><span class="ld"><code>Last-Modified: Fri, 09 Aug 2013 23:54:35 GMT</code></span></span>
+<span class="line"><span class="ld"><code>Server: ECS (iad/182A)</code></span></span>
+<span class="line"><span class="ld"><code>Vary: Accept-Encoding</code></span></span>
+<span class="line"><span class="ld"><code>X-Cache: HIT</code></span></span>
+<span class="line"><span class="ld"><code>x-ec-custom-error: 1</code></span></span>
+<span class="line"><span class="ld"><code>Content-Length: 1270</code></span></span>
+<span class="line"><span class="ld"><code>X-Cache: MISS from moon<span class="co" id="co-squid-miss">⟓</span></code></span></span>
+<span class="line"><span class="ld"><code>X-Cache-Lookup: MISS from moon:3128</code></span></span>
+<span class="line"><span class="ld"><code>Via: 1.1 moon (squid/3.5.16)<span class="co" id="co-squid-via">⟔</span></code></span></span>
+<span class="line"><span class="ld"><code>Connection: close</code></span></span>
+<span class="line"><span class="ld"><code> </code></span></span>
+<span class="line"><span class="ld"><code>&lt;!doctype html&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;html&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;head&gt;</code></span></span>
+<span class="line"><span class="ld"><code>    &lt;title&gt;Example domain&lt;/title&gt;</code></span></span>
+<span class="line"><span class="ld"><code>[...]</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/body&gt;</code></span></span>
+<span class="line"><span class="ld"><code>&lt;/html&gt;</code></span></span></pre>
+                        </div>
+                        
+                        <p>The output shown in <a class="xref xref-example" href="#ex-squidclient-request">Example&nbsp;<span class="label">45<span class="sep">.</span>1</span>, “A request with <code class="command">squidclient</code>
+                              ”</a> consists of two parts:</p>
+                        
+                        <ol class="orderedlist" type="1">
+                           
+                           <li>
+                              
+                              <p>The protocol headers of the response (the lines before the blank line).</p>
+                              </li>
+                           
+                           <li>
+                              
+                              <p>The actual content of the response (the lines after the blank line).</p>
+                              </li>
+                           </ol>
+                        
+                        <p>To verify that Squid is used, refer to the selected header lines:</p>
+                        
+                        <div class="calloutlist">
+                           <dl>
+                              <dt class="callout"><a class="callout-bug" href="#co-squid-miss">⟓</a></dt>
+                              <dd>
+                                 
+                                 <p>The value of the header <code class="literal">X-Cache</code> shows that the requested document was not in the Squid cache (<code class="literal">MISS</code>) of the computer <code class="systemitem">moon</code>.</p>
+                                 
+                                 <p>The example above contains two <code class="literal">X-Cache</code> lines. The first <code class="literal">X-Cache</code> header can be safely ignored, as it is produced by the internal caching software
+                                    of the originating Web server.</p>
+                                 </dd>
+                              <dt class="callout"><a class="callout-bug" href="#co-squid-via">⟔</a></dt>
+                              <dd>
+                                 
+                                 <p>The value of the header <code class="literal">Via</code> shows the HTTP version, the name of the computer, and the version of Squid in use.</p>
+                                 </dd>
+                           </dl>
+                        </div>
+                        
+                        <header>
+                           <div class="title">Example&nbsp;<span class="label">45<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>A request with <code class="command">squidclient</code>
+                              </div>
+                        </header>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Using a browser: set up <code class="option">localhost</code> as the proxy and <code class="option">3128</code> as the port. Then load a page and check the response headers in the <span class="guimenu">Network</span> panel of the browser's <em>Inspector</em> or <em>Developer Tools</em>. The headers should be reproduced similarly to the way shown in <a class="xref xref-example" href="#ex-squidclient-request">Example&nbsp;<span class="label">45<span class="sep">.</span>1</span>, “A request with <code class="command">squidclient</code>
+                           ”</a>.</p>
+                     </li>
+                  </ul>
+               
+               <p>To allow users from the local system and other systems to access Squid and the Internet,
+                  change the entry in the configuration files <code class="filename">/etc/squid/squid.conf</code> from <code class="option">http_access deny all</code> to <code class="option">http_access allow all</code>. However, keep in mind that this makes Squid fully accessible to anyone. Therefore,
+                  define ACLs (access control lists) that control access to the proxy server. After
+                  modifying the configuration file, Squid must be reloaded or restarted. For more information
+                  on ACLs, see <a class="xref xref-sect2" href="bk01partvch08s05.html#sec-squid-acl">the section called “Options for access controls”</a>.</p>
+               
+               <p>If Squid stops working after a short period of time, check whether there is an incorrect
+                  name server entry or whether the <code class="filename">/var/run/netconfig/resolv.conf</code> file is missing. Squid logs the cause of a start-up failure in the file <code class="filename">/var/log/squid/cache.log</code>.</p>
+               </section>
+            
+            <section class="sect2" id="sec-squid-stop">
+               <header>
+                  <h3><span class="label">45<span class="sep">.</span>3<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Stopping, reloading, and restarting Squid</h3>
+               </header>
+               
+               
+               <p>There are two ways to reload Squid:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Using <code class="command">systemctl</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl</code> reload squid</code></span></span></pre>
+                     </div>
+                     
+                     <p>or</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl</code> restart squid</code></span></span></pre>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Using YaST:</p>
+                     
+                     <p>In the Squid module, click the <span class="guimenu">Save Settings and Restart Squid Now</span> button.</p>
+                     </li>
+                  </ul>
+               
+               <p>To stop Squid, use one of the following options:</p>
+               
+               <ul class="itemizedlist">
+                  
+                  <li>
+                     
+                     <p>Using <code class="command">systemctl</code>:</p>
+                     
+                     <div class="pre-wrap screen-wrap">
+                        <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">systemctl</code> stop squid</code></span></span></pre>
+                     </div>
+                     </li>
+                  
+                  <li>
+                     
+                     <p>Using YaST</p>
+                     
+                     <p>In the Squid module click the <span class="guimenu">Stop Squid Now</span>. button.</p>
+                     </li>
+                  </ul>
+               
+               <p>Shutting down Squid can take a while, because Squid waits up to half a minute before
+                  dropping the connections to the clients and writing its data to the disk (see <code class="option">shutdown_lifetime</code> option in <code class="filename">/etc/squid/squid.conf</code>),</p>
+               
+               <div class="admonition warning">
+                  <div>
+                     <div class="icon">🛑</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Terminating Squid</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>Terminating Squid with <code class="command">kill</code> or <code class="command">killall</code> can damage the cache. To be able to restart Squid, damaged caches must be deleted.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-squid-remove">
+               <header>
+                  <h3><span class="label">45<span class="sep">.</span>3<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Removing Squid</h3>
+               </header>
+               
+               
+               <p>Removing Squid from the system does not remove the cache hierarchy and log files.
+                  To remove them, delete the <code class="filename">/var/cache/squid</code> directory manually.</p>
+               </section>
+            
+            <section class="sect2" id="sec-squid-start-local-dns">
+               <header>
+                  <h3><span class="label">45<span class="sep">.</span>3<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Local DNS server</h3>
+               </header>
+               
+               
+               <p>Setting up a local DNS server makes sense even if it does not manage its own domain.
+                  In that case, it acts as a caching-only name server, and it can also resolve DNS requests
+                  via the root name servers without requiring any special configuration (see <a class="xref xref-sect1" href="bk01partvch03s04.html">the section called “Starting the BIND name server”</a>). How this can be done depends on whether you chose dynamic DNS during the configuration
+                  of the Internet connection.</p>
+               
+               <dl class="variablelist">
+                  
+                  <div class="varlistentry" id="vle-squid-dynamicdns">
+                     <dt><span class="term">Dynamic DNS</span></dt>
+                     <dd>
+                        
+                        <p>Normally, with dynamic DNS, the DNS server is set by the provider when establishing
+                           the Internet connection and the local <code class="filename">/var/run/netconfig/resolv.conf</code> file is adjusted automatically. This behavior is specified in the <code class="filename">/etc/sysconfig/network/config</code> file using the <code class="constant">NETCONFIG_DNS_POLICY</code> sysconfig variable. Set <code class="constant">NETCONFIG_DNS_POLICY</code> to <code class="constant">""</code> with the YaST sysconfig editor.</p>
+                        
+                        <p>Then add the local DNS server in the <code class="filename">/var/run/netconfig/resolv.conf</code> file with the IP address <code class="ipaddress systemitem">127.0.0.1</code> for <code class="domainname systemitem">localhost</code>. This way, Squid can always find the local name server when it starts.</p>
+                        
+                        
+                        <p>To make the provider's name server accessible, specify it in the configuration file
+                           <code class="filename">/etc/named.conf</code> under <code class="systemitem">forwarders</code> along with its IP address. With dynamic DNS, this can be done automatically when
+                           establishing the connection by setting the sysconfig variable <code class="constant">NETCONFIG_DNS_POLICY</code> to <code class="constant">auto</code>.</p>
+                        </dd>
+                  </div>
+                  
+                  <div class="varlistentry">
+                     <dt><span class="term">Static DNS</span></dt>
+                     <dd>
+                        
+                        <p>With static DNS, no automatic DNS adjustments take place while establishing a connection,
+                           so there is no need to change any sysconfig variables. However, you must specify the
+                           local DNS server in the file <code class="filename">/var/run/netconfig/resolv.conf</code> as described in <a class="xref xref-varlistentry" href="#vle-squid-dynamicdns"><span class="label"><span class="term">Dynamic DNS</span></span></a>. Additionally, the provider's static name server must be specified manually in the
+                           <code class="filename">/etc/named.conf</code> file under <code class="systemitem">forwarders</code> along with its IP address.</p>
+                        </dd>
+                  </div>
+                  </dl>
+               
+               <div class="admonition tip">
+                  <div>
+                     <div class="icon">☞</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">DNS and firewall</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>If you have a firewall running, make sure DNS requests can pass through it.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk01partvch08s02.html">Prev</a></td>
+                  <td class="up"><a href="bk01partvch08.html">Up</a></td>
+                  <td class="next"><a href="bk01partvch08s04.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">45<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>System requirements</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">45<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>The YaST Squid module</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

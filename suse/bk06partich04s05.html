@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" class="no-js">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>5.5.&nbsp;Backing up and restoring 389 Directory Server</title>
+      <link href="./css/pygments.css" rel="stylesheet">
+      <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      <link href="https://purl.org/dc/elements/1.1/" rel="schema.dc">
+      <meta content="2025-11-15T09:53:18Z" name="dc.modified">
+      <meta content="DocBook xslTNG version 2.7.0 / df163a03 / SAXON HE 12.9" name="generator">
+      <link href="./css/docbook-toc.css" rel="stylesheet">
+      <link href="./css/docbook.css" media="screen" rel="stylesheet">
+      <link href="bk06partich04s04.html" rel="prev">
+      <link href="bk06partich04s06.html" rel="next">
+      <link href="bk06partich04.html" rel="up">
+      <link href="index.html" rel="home"><script defer src="./js/persistent-toc.js"></script><script defer src="./js/copy-verbatim.js"></script><script defer src="./js/chunk-nav.js"></script></head>
+   <body class="sect1">
+      <nav class="top">
+         <div><a href="index.html">Home</a> <a href="bk06partich04.html">Up</a> <a href="bk06partich04s06.html">Next</a> <a href="bk06partich04s04.html">Prev</a></div>
+      </nav>
+      <main>
+         <section class="sect1" db-chunk="bk06partich04s05.html" db-id="d616951e157830" id="sec-security-ldap-backup" lang="">
+            <header>
+               <h2><span class="label">5<span class="sep">.</span>5</span><span class="sep">.&nbsp;</span>Backing up and restoring 389 Directory Server</h2>
+            </header>
+            
+            
+            <p>389 Directory Server supports making offline and online backups. The <code class="command">dsctl</code> command makes offline database backups, and the <code class="command">dsconf</code> command makes online database backups. Back up the LDAP server configuration directory
+               to enable complete restoration in case of a major failure.</p>
+            
+            <section class="sect2" id="sec-security-ldap-backup-config">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>5<span class="sep">.</span>1</span><span class="sep">.&nbsp;</span>Backing up the LDAP server configuration</h3>
+               </header>
+               
+               
+               <p>Your LDAP server configuration is in the directory <code class="filename">/etc/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em></code>. This directory contains certificates, keys and the <code class="filename">dse.ldif</code> file. Make a compressed backup of this directory with the <code class="command">tar</code> command:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">tar caf \</code><code class="command">config_slapd-<em class="replaceable">INSTANCE_NAME</em>-$(date +%Y-%m-%d_%H-%M-%S).tar.gz \</code><code class="command">/etc/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em>/</code></code></span></span></pre>
+               </div>
+               
+               <div class="admonition compact note">
+                  <div>
+                     <div class="icon">ⓘ</div>
+                     <div class="body">
+                        <header>
+                           <div class="title">Harmless tar error message</div>
+                        </header>
+                        <div>
+                           
+                           
+                           <p>When running <code class="command">tar</code>, you may see the harmless informational message <code class="literal">tar: Removing leading `/' from member names</code>.</p>
+                           </div>
+                     </div>
+                  </div>
+               </div>
+               
+               <p>To restore a previous configuration, unpack it to the same directory:</p>
+               
+               <div class="informalobject procedure" id="sec-security-ldap-backup-config_proc1">
+                  <ol class="procedure" type="1">
+                     <li class="step">
+                        
+                        <p>To avoid overwriting an existing configuration, move it:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">old /etc/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em>/</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Unpack the backup archive:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">tar -xvzf</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">config_slapd-<em class="replaceable">INSTANCE_NAME-DATE</em>.tar.gz</code></code></span></span></pre>
+                        </div>
+                        </li>
+                     <li class="step">
+                        
+                        <p>Copy it to <code class="filename">/etc/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em></code>:</p>
+                        
+                        <div class="pre-wrap screen-wrap">
+                           <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">cp -r etc/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em></code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">/etc/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em></code></code></span></span></pre>
+                        </div>
+                        </li>
+                  </ol>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-offline-backup">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>5<span class="sep">.</span>2</span><span class="sep">.&nbsp;</span>Creating an offline backup of the LDAP database and restoring from it</h3>
+               </header>
+               
+               
+               <p>The <code class="command">dsctl</code> command makes offline backups. Stop the server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> stop</code></code></span></span>
+<span class="line"><span class="ld"><code>Instance "<em class="replaceable">INSTANCE_NAME</em>" has been stopped</code></span></span></pre>
+               </div>
+               
+               <p>Then make the backup using your instance name. The following example creates a backup
+                  archive at <em class="replaceable">/var/lib/dirsrv/slapd-INSTANCE_NAME/bak/INSTANCE_NAME-DATE</em>:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> db2bak</code></code></span></span>
+<span class="line"><span class="ld"><code>db2bak successful</code></span></span></pre>
+               </div>
+               
+               <p>For example, on a test instance named ldap1 it looks like this:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><code class="filename">/var/lib/dirsrv/slapd-ldap1/bak/ldap1-2021_10_25_13_03_17</code></code></span></span></pre>
+               </div>
+               
+               <p>Restore from this backup, naming the directory containing the backup archive:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> bak2db</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">/var/lib/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em>/bak/<em class="replaceable">INSTANCE_NAME-DATE</em>/</code></code></span></span>
+<span class="line"><span class="ld"><code>bak2db successful</code></span></span></pre>
+               </div>
+               
+               <p>Then start the server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> start</code></code></span></span>
+<span class="line"><span class="ld"><code>Instance "INSTANCE_NAME" has been started</code></span></span></pre>
+               </div>
+               
+               <p>You can also create LDIF backups:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> db2ldif --replication userRoot</code></code></span></span>
+<span class="line"><span class="ld"><code>ldiffile: /var/lib/dirsrv/slapd-INSTANCE_NAME/ldif/INSTANCE_NAME-userRoot-DATE.ldif</code></span></span>
+<span class="line"><span class="ld"><code>db2ldif successful</code></span></span></pre>
+               </div>
+               
+               <p>Restore an LDIF backup with the name of the archive, then start the server:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl ldif2db userRoot</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">/var/lib/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em>/ldif/<em class="replaceable">INSTANCE_NAME</em>-userRoot-<em class="replaceable">DATE</em>.ldif</code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsctl <em class="replaceable">INSTANCE_NAME</em> start</code></code></span></span></pre>
+               </div>
+               </section>
+            
+            <section class="sect2" id="sec-security-ldap-online-backup">
+               <header>
+                  <h3><span class="label">5<span class="sep">.</span>5<span class="sep">.</span>3</span><span class="sep">.&nbsp;</span>Creating an online backup of the LDAP database and restoring from it</h3>
+               </header>
+               
+               
+               <p>Use the <code class="command">dsconf</code> to make an online backup of your LDAP database:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> backup create</code></code></span></span>
+<span class="line"><span class="ld"><code>The backup create task has finished successfully</code></span></span></pre>
+               </div>
+               
+               <p>This creates <code class="filename">/var/lib/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em>/bak/<em class="replaceable">INSTANCE_NAME-DATE</em></code>.</p>
+               
+               <p>Restore it:</p>
+               
+               <div class="pre-wrap screen-wrap">
+                  <pre class="screen verbatim verblines"><span class="line"><span class="ld"><code><span class="prompt">&gt;</span><code class="command">sudo</code><code class="command">dsconf <em class="replaceable">INSTANCE_NAME</em> backup restore</code> \</code></span></span>
+<span class="line"><span class="ld"><code><code class="command">/var/lib/dirsrv/slapd-<em class="replaceable">INSTANCE_NAME</em>/bak/<em class="replaceable">INSTANCE_NAME-DATE</em></code></code></span></span></pre>
+               </div>
+               </section>
+            </section>
+      </main>
+      <nav class="bottom">
+         <table>
+            <tbody>
+               <tr>
+                  <td class="previous"><a href="bk06partich04s04.html">Prev</a></td>
+                  <td class="up"><a href="bk06partich04.html">Up</a></td>
+                  <td class="next"><a href="bk06partich04s06.html">Next</a></td>
+               </tr>
+               <tr>
+                  <td class="previous"><span class="label">5<span class="sep">.</span>4</span><span class="sep">.&nbsp;</span>Firewall configuration</td>
+                  <td class="up"><a href="index.html">Home</a></td>
+                  <td class="next"><span class="label">5<span class="sep">.</span>6</span><span class="sep">.&nbsp;</span>Managing LDAP users and groups</td>
+               </tr>
+            </tbody>
+         </table>
+         <nav class="tocopen"></nav>
+         <nav class="toc"></nav><script class="tocopen" type="text/html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQCAYAAAAWGF8bAAAACXBIWXMAABYlAAAWJQFJUiTwAAABDklEQVQ4je2UUW3EMAyGv0wDUAhlkDBIyuAYXCEclEJoGZRBUgYOgzJoGHgPW6o7rWq35+2TIkWW9duW7N+oKuM46jiOGGMAaNsW5xzee5xzn8EvRESXZUFEWNcVAFWl73v6vjcGUIAYIyEEANZ1RUSY55lSCo/HA4BhGGiahtvthnOOtm0BSCnRdd1eVAGNMeoR27aptVattbpt22FOjFGrzjsX1I7q/4q3y4xf8i/4FwT3Pcw5Y4zBWvujfQMopZBzJuf8XbCeVyWEgHOO+/2+x0SEaZpIKSEih0X2Wz6jdlxKuezaqL7qpZS0lLKbw/M4ANba3RyapiGE8OJGqOrpizGq916999VATvM/AGFn1sxsVjL5AAAAAElFTkSuQmCC" alt="[toc]" /></script><script class="toc" type="text/html"><header><span>Table of Contents</span><span class="close"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAtklEQVQ4jaWT0Q3DIAxEz52AEbyB2cDZhBEY3SNcPyqqBEwqpZaQAHNP5jBCEiJCPAiSIgAeiUe8zoveO9x9e9jd0XtfKwHA1hpHtNY49rO8u59zn4mqMiJSyFkcEVTVFQCAtdYFMotrrXN111JnyA/xCsggN2JeXmGEmaGU8l2XUmBm29fZuh0RW2PTK2SGZcamADPb3nmGmNkKOI7j1rAzJG2kcWhqkstQ1QX+/2ciKU/FJOUN6JFZYWpmK3sAAAAASUVORK5CYII=" alt="X" /></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%" /></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav>
+   </body>
+</html>

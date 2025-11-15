@@ -123,17 +123,17 @@ Besonderheiten:
   so ähnlich wie möglich zum Original umzusetzen. Hierfür gibt es [ein
   eigenes Repository](https://github.com/fsteimke/sdoc). Es sind
   folgende PDF Dokumente entstanden:  
-- [book-administration.pdf](suse/book-administration.pdf)
-- [book-autoyast.pdf](suse/book-autoyast.pdf)
-- [book-deployment.pdf](suse/book-deployment.pdf)
-- [book-gnome-user.pdf](suse/book-gnome-user.pdf)
-- [book-quick-start.pdf](suse/book-quick-start.pdf)
-- [book-rmt.pdf](suse/book-rmt.pdf)
-- [book-security.pdf](suse/book-security.pdf)
-- [book-storage.pdf](suse/book-storage.pdf)
-- [book-tuning.pdf](suse/book-tuning.pdf)
-- [book-upgrade.pdf](suse/book-upgrade.pdf)
-- [book-virtualization.pdf](suse/book-virtualization.pdf)
+- [Quick Start Guides](suse/book-quick-start.pdf)
+- [Administration Guide](suse/book-administration.pdf)
+- [AutoYast Guide](suse/book-autoyast.pdf)
+- [Deployment Guide](suse/book-deployment.pdf)
+- [GNOME User Guide](suse/book-gnome-user.pdf)
+- [RMT Guide](suse/book-rmt.pdf)
+- [Security and Hardening Guide](suse/book-security.pdf)
+- [Storage Administration Guide](suse/book-storage.pdf)
+- [System Analysis and Tunig Guide](suse/book-tuning.pdf)
+- [Upgrade Guide](suse/book-upgrade.pdf)
+- [Virtualization Guide](suse/book-virtualization.pdf)
   
 
 

@@ -106,6 +106,39 @@ Darüberhinaus gibt es eine *experimentelle* Unterstützung für Office Formate.
   [PDF](handbuch/handbuch.pdf)) wird irgendwann den Umgang mit DocBook
   tng Framework für Oxygen im Detail beschreiben. Derzeit ist es nur
   eine Sammlung von Textfragmenten.
+  
+## Die SUSE Dokumentation  
+
+Erprobung der xslTNG Stylesheets für die in DocBook vorliegende
+Dokumentation der SUSE Software. Dieser Test bietet einige
+Besonderheiten:
+  
+  -  Das Layout weicht erheblich vom Gewohnten ab;
+  -  Es handelt sich um ein DocBook `set` mit mehreren Büchern, die in
+     jeweils ein PDF Dokument überführt werden. Insofern müssen
+     Querverweise zwischen verschiedenen Büchern umgesetzt werden.
+  -  In `programlisting` wird der `co` / `coref` Mechanismus genutzt.
+  
+  Ich habe mich auf die PDF Dokumente konzentriert und versucht, diese
+  so ähnlich wie möglich zum Original umzusetzen. Hierfür gibt es [ein
+  eigenes Repository](https://github.com/fsteimke/sdoc). Es sind
+  folgende PDF Dokumente entstanden:  
+- [book-administration.pdf](suse/book-administration.pdf)
+- [book-autoyast.pdf](suse/book-autoyast.pdf)
+- [book-deployment.pdf](suse/book-deployment.pdf)
+- [book-gnome-user.pdf](suse/book-gnome-user.pdf)
+- [book-quick-start.pdf](suse/book-quick-start.pdf)
+- [book-rmt.pdf](suse/book-rmt.pdf)
+- [book-security.pdf](suse/book-security.pdf)
+- [book-storage.pdf](suse/book-storage.pdf)
+- [book-tuning.pdf](suse/book-tuning.pdf)
+- [book-upgrade.pdf](suse/book-upgrade.pdf)
+- [book-virtualization.pdf](suse/book-virtualization.pdf)
+  
+
+
+
+  
 
 ## Impressum
 Dies ist eine private Webseite, die ich ausschließlich mit dem Ziel

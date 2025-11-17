@@ -65,7 +65,7 @@ Verfügung:
 
 Darüberhinaus gibt es eine *experimentelle* Unterstützung für Office Formate.
 
-## Dokumente
+## Dokumente der KoSIT
 
 - Der **Datensatz für das Meldewesen** ([HTML](dsmeld/index.html) |
   [PDF](dsmeld/dsmeld.pdf)) wird von der KoSIT herausgegeben. Im
